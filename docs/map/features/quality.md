@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md#310-оценка-качества), [../../tasks/014-quality.md](../../tasks/014-quality.md), [../../history/2026-11.md](../../history/2026-11.md)
+Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md#310-оценка-качества), [../../history/2026-11.md](../../history/2026-11.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 `pnpm eval` гоняет контрольный набор через тот же `PipelineEngine`, что и демо, и считает оценщики
 раздела 5 харнесса. Результат — таблица «эталон / ИИ» в `reports/quality.md` (её владелец переносит

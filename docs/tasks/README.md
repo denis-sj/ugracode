@@ -76,7 +76,6 @@ PR: —
 
 **Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
 
-- [033-ui-screens-redesign.md](033-ui-screens-redesign.md) — перерисовать 14 экранов по макетам (ждёт 032)
 
 **Код, после чекпоинта 1:**
 

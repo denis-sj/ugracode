@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-features.md](../../specs/case9-features.md#32-профиль-заявителя-и-гость), [../../tasks/025-applicant-profile-guest.md](../../tasks/025-applicant-profile-guest.md)
+Связано: [../README.md](../README.md), [../../specs/case9-features.md](../../specs/case9-features.md#32-профиль-заявителя-и-гость), [../../history/2026-11.md](../../history/2026-11.md)
 
 Профиль заявителя — подсказка, а не источник истины: шаг подставляет место и однозначную технику
 в пустые поля, а всё, что человек написал в обращении, остаётся главнее. Гость `guest` профиля не имеет,
