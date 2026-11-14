@@ -1,0 +1,217 @@
+{
+  "engineers": [
+    {
+      "id": "u-engineer-1",
+      "fullName": "Игорь Лебедев",
+      "departmentId": "dep-service",
+      "level": "first_line",
+      "skills": [
+        { "skill": "windows", "level": 4 },
+        { "skill": "printer", "level": 3 },
+        { "skill": "consult", "level": 4 }
+      ],
+      "buildings": ["А", "Б"],
+      "onShift": false,
+      "openTickets": 4,
+      "resolvedSimilar": 12
+    },
+    {
+      "id": "u-engineer-2",
+      "fullName": "Артём Кузнецов",
+      "departmentId": "dep-it",
+      "level": "second_line",
+      "skills": [
+        { "skill": "printer", "level": 5 },
+        { "skill": "mfu", "level": 4 },
+        { "skill": "peripheral", "level": 4 },
+        { "skill": "hp", "level": 5 }
+      ],
+      "buildings": ["А", "Б"],
+      "onShift": true,
+      "openTickets": 2,
+      "resolvedSimilar": 9
+    },
+    {
+      "id": "u-engineer-3",
+      "fullName": "Марина Соловьёва",
+      "departmentId": "dep-it",
+      "level": "second_line",
+      "skills": [
+        { "skill": "pc", "level": 5 },
+        { "skill": "monitor", "level": 3 },
+        { "skill": "windows", "level": 4 }
+      ],
+      "buildings": ["Б", "В"],
+      "onShift": false,
+      "openTickets": 3,
+      "resolvedSimilar": 11
+    },
+    {
+      "id": "u-engineer-4",
+      "fullName": "Павел Дорохов",
+      "departmentId": "dep-it",
+      "level": "lead",
+      "skills": [
+        { "skill": "printer", "level": 4 },
+        { "skill": "mfu", "level": 5 },
+        { "skill": "scanner", "level": 4 },
+        { "skill": "peripheral", "level": 3 }
+      ],
+      "buildings": ["В", "ПРОМ"],
+      "onShift": false,
+      "openTickets": 1,
+      "resolvedSimilar": 15
+    },
+    {
+      "id": "u-engineer-5",
+      "fullName": "Сергей Гаврилов",
+      "departmentId": "dep-service",
+      "level": "first_line",
+      "skills": [
+        { "skill": "windows", "level": 3 },
+        { "skill": "software", "level": 3 },
+        { "skill": "consult", "level": 4 }
+      ],
+      "buildings": ["А", "Б", "В"],
+      "onShift": false,
+      "openTickets": 5,
+      "resolvedSimilar": 20
+    },
+    {
+      "id": "u-engineer-6",
+      "fullName": "Ольга Тимченко",
+      "departmentId": "dep-service",
+      "level": "first_line",
+      "skills": [
+        { "skill": "windows", "level": 4 },
+        { "skill": "1c", "level": 3 },
+        { "skill": "consult", "level": 5 }
+      ],
+      "buildings": ["А", "В"],
+      "onShift": false,
+      "openTickets": 4,
+      "resolvedSimilar": 18
+    },
+    {
+      "id": "u-engineer-7",
+      "fullName": "Дмитрий Ковалёв",
+      "departmentId": "dep-network",
+      "level": "second_line",
+      "skills": [
+        { "skill": "network", "level": 5 },
+        { "skill": "cisco", "level": 5 },
+        { "skill": "wi-fi", "level": 4 },
+        { "skill": "vpn", "level": 3 }
+      ],
+      "buildings": ["Б", "ПРОМ"],
+      "onShift": true,
+      "openTickets": 2,
+      "resolvedSimilar": 8
+    },
+    {
+      "id": "u-engineer-8",
+      "fullName": "Алина Фадеева",
+      "departmentId": "dep-network",
+      "level": "second_line",
+      "skills": [
+        { "skill": "network", "level": 4 },
+        { "skill": "vpn", "level": 5 },
+        { "skill": "wi-fi", "level": 4 }
+      ],
+      "buildings": ["А", "Б"],
+      "onShift": false,
+      "openTickets": 3,
+      "resolvedSimilar": 10
+    },
+    {
+      "id": "u-engineer-9",
+      "fullName": "Роман Беляев",
+      "departmentId": "dep-network",
+      "level": "lead",
+      "skills": [
+        { "skill": "network", "level": 5 },
+        { "skill": "telephony", "level": 4 },
+        { "skill": "cisco", "level": 4 }
+      ],
+      "buildings": ["А", "Б", "В", "ПРОМ"],
+      "onShift": false,
+      "openTickets": 1,
+      "resolvedSimilar": 14
+    },
+    {
+      "id": "u-engineer-10",
+      "fullName": "Екатерина Лаврова",
+      "departmentId": "dep-software",
+      "level": "second_line",
+      "skills": [
+        { "skill": "1c", "level": 5 },
+        { "skill": "software", "level": 4 },
+        { "skill": "access", "level": 4 }
+      ],
+      "buildings": ["А", "Б"],
+      "onShift": false,
+      "openTickets": 2,
+      "resolvedSimilar": 13
+    },
+    {
+      "id": "u-engineer-11",
+      "fullName": "Максим Ершов",
+      "departmentId": "dep-software",
+      "level": "second_line",
+      "skills": [
+        { "skill": "1c", "level": 4 },
+        { "skill": "email", "level": 5 },
+        { "skill": "access", "level": 4 }
+      ],
+      "buildings": ["Б", "В"],
+      "onShift": false,
+      "openTickets": 3,
+      "resolvedSimilar": 9
+    },
+    {
+      "id": "u-engineer-12",
+      "fullName": "Виктор Самойлов",
+      "departmentId": "dep-server",
+      "level": "lead",
+      "skills": [
+        { "skill": "server", "level": 5 },
+        { "skill": "linux", "level": 5 },
+        { "skill": "backup", "level": 4 }
+      ],
+      "buildings": ["Б", "ПРОМ"],
+      "onShift": true,
+      "openTickets": 2,
+      "resolvedSimilar": 7
+    },
+    {
+      "id": "u-engineer-13",
+      "fullName": "Наталья Крылова",
+      "departmentId": "dep-server",
+      "level": "second_line",
+      "skills": [
+        { "skill": "server", "level": 4 },
+        { "skill": "backup", "level": 5 },
+        { "skill": "linux", "level": 4 }
+      ],
+      "buildings": ["ПРОМ"],
+      "onShift": false,
+      "openTickets": 1,
+      "resolvedSimilar": 6
+    },
+    {
+      "id": "u-engineer-14",
+      "fullName": "Григорий Мельник",
+      "departmentId": "dep-software",
+      "level": "first_line",
+      "skills": [
+        { "skill": "access", "level": 5 },
+        { "skill": "email", "level": 4 },
+        { "skill": "windows", "level": 4 }
+      ],
+      "buildings": ["В", "ПРОМ"],
+      "onShift": false,
+      "openTickets": 4,
+      "resolvedSimilar": 11
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "fields": [
+    { "key": "object", "value": "мышь", "quote": "мышь", "confidence": 0.95 },
+    { "key": "category", "value": "peripheral", "quote": "мышь", "confidence": 0.94 },
+    { "key": "department", "value": "dep-it", "quote": null, "confidence": 0.7 },
+    { "key": "impact", "value": "one", "quote": "на моём компьютере", "confidence": 0.88 },
+    { "key": "urgency", "value": "workaround", "quote": null, "confidence": 0.65 },
+    {
+      "key": "symptoms",
+      "value": "не работает мышь на моём компьютере",
+      "quote": "не работает мышь на моём компьютере",
+      "confidence": 0.93
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.05 },
+    "summary": { "text": "Не работает мышь, заявитель раздражён повтором обращения." }
+  }
+}

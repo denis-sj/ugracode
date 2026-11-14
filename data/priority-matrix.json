@@ -1,0 +1,37 @@
+{
+  "levels": {
+    "emergency": {
+      "label": "Авария",
+      "reactMinutes": 15,
+      "slaMinutes": 60,
+      "order": 0,
+      "computed": true
+    },
+    "critical": { "label": "Критический", "reactMinutes": 60, "slaMinutes": 240, "order": 1 },
+    "high": { "label": "Высокий", "reactMinutes": 120, "slaMinutes": 480, "order": 2 },
+    "medium": { "label": "Средний", "reactMinutes": 240, "slaMinutes": 1440, "order": 3 },
+    "low": { "label": "Низкий", "reactMinutes": 480, "slaMinutes": 4320, "order": 4 }
+  },
+  "matrix": {
+    "one": {
+      "down": "high",
+      "workaround": "medium",
+      "planned": "low"
+    },
+    "group": {
+      "down": "critical",
+      "workaround": "high",
+      "planned": "medium"
+    },
+    "building": {
+      "down": "critical",
+      "workaround": "critical",
+      "planned": "high"
+    },
+    "enterprise": {
+      "down": "critical",
+      "workaround": "critical",
+      "planned": "high"
+    }
+  }
+}

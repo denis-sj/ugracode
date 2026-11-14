@@ -9,3 +9,6 @@ coverage/
 reports/*.lcov
 __pycache__/
 *.pyc
+
+.claude/
+generated_images/

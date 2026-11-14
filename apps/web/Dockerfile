@@ -6,9 +6,17 @@ WORKDIR /app
 
 ENV CI=true
 
-COPY . .
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc tsconfig.json ./
+COPY packages ./packages
+COPY apps ./apps
+COPY modules ./modules
+COPY data ./data
+COPY scripts ./scripts
+COPY eslint.config.js vitest.config.ts .prettierrc.json ./
 
-RUN pnpm install --frozen-lockfile && pnpm build:web
+RUN pnpm install --frozen-lockfile && pnpm build:web && chown -R node:node /app
+
+USER node
 
 EXPOSE 5173
 

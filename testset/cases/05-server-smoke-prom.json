@@ -1,0 +1,20 @@
+{
+  "id": "case-05",
+  "channel": "chat",
+  "text": "На промплощадке, кабинет 2, искрит и дымит сервер, пахнет горелым. Мы его обесточили, но запах остался.",
+  "expected": {
+    "fields": {
+      "object": "сервер",
+      "building": "ПРОМ",
+      "cabinet": "2",
+      "category": "server",
+      "department": "dep-server",
+      "impact": "group",
+      "urgency": "down",
+      "symptoms": "искрит и дымит сервер, пахнет горелым"
+    },
+    "priority": "emergency",
+    "emergency": true,
+    "assigneeTop3": ["u-engineer-12", "u-engineer-13", "u-engineer-9"]
+  }
+}

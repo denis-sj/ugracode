@@ -1,0 +1,22 @@
+{
+  "id": "case-09",
+  "channel": "chat",
+  "text": "прив, на 3 этаже в Б не пашет сеть, свитч моргает, инет отвалился, каб 314",
+  "expected": {
+    "fields": {
+      "object": "свитч",
+      "building": "Б",
+      "floor": "3",
+      "cabinet": "314",
+      "category": "network",
+      "department": "dep-network",
+      "impact": "group",
+      "urgency": "down",
+      "symptoms": "не пашет сеть, свитч моргает, инет отвалился"
+    },
+    "priority": "critical",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-7", "u-engineer-8", "u-engineer-9"],
+    "kbArticle": "kb-dhcp-error"
+  }
+}

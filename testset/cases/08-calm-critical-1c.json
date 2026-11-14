@@ -1,0 +1,20 @@
+{
+  "id": "case-08",
+  "channel": "chat",
+  "text": "Добрый день. Не хочу никого подгонять, но, кажется, у всего отдела в корпусе А после обновления не открывается 1С. Пожалуйста, посмотрите, когда будет возможность.",
+  "expected": {
+    "fields": {
+      "object": "1С",
+      "building": "А",
+      "category": "software",
+      "department": "dep-software",
+      "impact": "group",
+      "urgency": "down",
+      "symptoms": "после обновления не открывается 1С"
+    },
+    "priority": "critical",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-10", "u-engineer-11", "u-engineer-6"],
+    "kbArticle": "kb-1c-access"
+  }
+}

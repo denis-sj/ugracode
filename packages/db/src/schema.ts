@@ -11,6 +11,7 @@ import {
   uuid,
   vector,
 } from 'drizzle-orm/pg-core';
+import type { ChatCard } from '@ugra/contracts';
 
 const tstz = (name: string) => timestamp(name, { withTimezone: true, mode: 'string' });
 
@@ -34,15 +35,21 @@ export const appealTable = pgTable('appeal', {
 });
 
 /** Чат заявителя с системой: вопросы-карточки, ответы, системные сообщения. */
-export const appealMessageTable = pgTable('appeal_message', {
-  id: text('id').primaryKey(),
-  appealId: text('appeal_id').notNull(),
-  direction: text('direction').notNull(),
-  kind: text('kind').notNull(),
-  body: text('body').notNull(),
-  fieldKey: text('field_key'),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-});
+export const appealMessageTable = pgTable(
+  'appeal_message',
+  {
+    id: text('id').primaryKey(),
+    appealId: text('appeal_id').notNull(),
+    direction: text('direction').notNull(),
+    kind: text('kind').notNull(),
+    body: text('body').notNull(),
+    fieldKey: text('field_key'),
+    /** Карточка сообщения (`cardType` + `payload`): вопрос по полю, «Проблема решена?» и будущие. */
+    card: jsonb('card').$type<ChatCard | null>(),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (table) => [index('appeal_message_appeal_created_idx').on(table.appealId, table.createdAt)],
+);
 
 /**
  * Заявка. Колонки priority…confirmed_at — копия полей для быстрых отчётов.
@@ -60,9 +67,14 @@ export const ticketTable = pgTable(
     assigneeId: text('assignee_id'),
     isEmergency: boolean('is_emergency').notNull().default(false),
     incidentId: text('incident_id'),
+    reactDueAt: tstz('react_due_at'),
     slaDueAt: tstz('sla_due_at'),
+    equipmentId: text('equipment_id'),
+    locationId: text('location_id'),
     confirmedBy: text('confirmed_by'),
     confirmedAt: tstz('confirmed_at'),
+    resolution: text('resolution'),
+    resolvedAt: tstz('resolved_at'),
     createdAt: tstz('created_at').notNull(),
     updatedAt: tstz('updated_at').notNull(),
   },
@@ -135,6 +147,28 @@ export const eventLogTable = pgTable(
   (table) => [index('event_log_ticket_at_idx').on(table.ticketId, table.at)],
 );
 
+/** След агента: один вызов инструмента (или `submit`) внутри прогона. */
+export const agentStepTable = pgTable(
+  'agent_step',
+  {
+    runId: text('run_id').notNull(),
+    n: integer('n').notNull(),
+    tool: text('tool').notNull(),
+    args: jsonb('args'),
+    resultSummary: text('result_summary').notNull(),
+    blocked: boolean('blocked').notNull().default(false),
+    error: text('error'),
+    durationMs: integer('duration_ms').notNull(),
+    tokensIn: integer('tokens_in'),
+    tokensOut: integer('tokens_out'),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.runId, table.n] }),
+    index('agent_step_run_id_idx').on(table.runId),
+  ],
+);
+
 /** Справочники: здания, категории, важность, срочность, каналы. */
 export const dictionaryItemTable = pgTable(
   'dictionary_item',
@@ -184,6 +218,28 @@ export const cmdbEquipmentTable = pgTable('cmdb_equipment', {
   criticality: text('criticality').notNull(),
 });
 
+/** Профиль заявителя: место работы для предзаполнения полей (модуль `applicant-profile`). */
+export const applicantProfileTable = pgTable('applicant_profile', {
+  userId: text('user_id').primaryKey(),
+  building: text('building'),
+  floor: text('floor'),
+  cabinet: text('cabinet'),
+  equipmentId: text('equipment_id'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
+/** Техника, закреплённая за заявителем; `note` — чем именно занята единица. */
+export const applicantEquipmentTable = pgTable(
+  'applicant_equipment',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    equipmentId: text('equipment_id').notNull(),
+    note: text('note'),
+  },
+  (table) => [index('applicant_equipment_user_id_idx').on(table.userId)],
+);
+
 /** Профиль инженера для маршрутизации. */
 export const engineerProfileTable = pgTable('engineer_profile', {
   userId: text('user_id').primaryKey(),
@@ -225,6 +281,22 @@ export const kbArticleTable = pgTable('kb_article', {
   embedding: vector('embedding', { dimensions: 768 }),
 });
 
+/** Отметки шагов статьи базы знаний у заявки (чек-лист инженера, модуль `knowledge`). */
+export const ticketArticleStepTable = pgTable(
+  'ticket_article_step',
+  {
+    ticketId: text('ticket_id').notNull(),
+    articleId: text('article_id').notNull(),
+    stepIndex: integer('step_index').notNull(),
+    done: boolean('done').notNull().default(false),
+    updatedAt: tstz('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.ticketId, table.articleId, table.stepIndex] }),
+    index('ticket_article_step_ticket_idx').on(table.ticketId),
+  ],
+);
+
 /** Уведомления пользователям. */
 export const notificationTable = pgTable('notification', {
   id: text('id').primaryKey(),
@@ -237,13 +309,24 @@ export const notificationTable = pgTable('notification', {
   createdAt: tstz('created_at').notNull().defaultNow(),
 });
 
-/** Кэш ответов моделей (порт + ключ запроса). */
-export const aiCacheTable = pgTable('ai_cache', {
-  key: text('key').primaryKey(),
-  port: text('port').notNull(),
-  response: jsonb('response').notNull(),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-});
+
+/** Инцидент массовости: склейка похожих обращений (модуль `mass-incident`). */
+export const incidentTable = pgTable(
+  'incident',
+  {
+    id: text('id').primaryKey(),
+    number: text('number').notNull(),
+    status: text('status').notNull(),
+    category: text('category'),
+    building: text('building'),
+    system: text('system'),
+    size: integer('size').notNull().default(0),
+    priority: text('priority'),
+    openedAt: tstz('opened_at').notNull(),
+    closedAt: tstz('closed_at'),
+  },
+  (table) => [index('incident_status_opened_at_idx').on(table.status, table.openedAt)],
+);
 
 export const schema = {
   userTable,
@@ -253,24 +336,35 @@ export const schema = {
   ticketFieldTable,
   pipelineRunTable,
   pipelineStepTable,
+  agentStepTable,
   eventLogTable,
   dictionaryItemTable,
   fieldDefTable,
   settingTable,
   cmdbLocationTable,
   cmdbEquipmentTable,
+  applicantProfileTable,
+  applicantEquipmentTable,
   engineerProfileTable,
   engineerSkillTable,
   dutyShiftTable,
   kbArticleTable,
+  ticketArticleStepTable,
   notificationTable,
-  aiCacheTable,
+  incidentTable,
 };
 
 export type UserRow = typeof userTable.$inferSelect;
 export type AppealRow = typeof appealTable.$inferSelect;
+export type AppealMessageRow = typeof appealMessageTable.$inferSelect;
 export type TicketRow = typeof ticketTable.$inferSelect;
 export type TicketFieldRow = typeof ticketFieldTable.$inferSelect;
 export type PipelineRunRow = typeof pipelineRunTable.$inferSelect;
 export type PipelineStepRow = typeof pipelineStepTable.$inferSelect;
+export type AgentStepRow = typeof agentStepTable.$inferSelect;
 export type EventLogRow = typeof eventLogTable.$inferSelect;
+export type KbArticleRow = typeof kbArticleTable.$inferSelect;
+export type TicketArticleStepRow = typeof ticketArticleStepTable.$inferSelect;
+export type ApplicantProfileRow = typeof applicantProfileTable.$inferSelect;
+export type ApplicantEquipmentRow = typeof applicantEquipmentTable.$inferSelect;
+export type IncidentRow = typeof incidentTable.$inferSelect;

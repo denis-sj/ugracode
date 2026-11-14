@@ -1,0 +1,29 @@
+{
+  "fields": [
+    { "key": "object", "value": "сервер", "quote": "сервер", "confidence": 0.96 },
+    { "key": "building", "value": "ПРОМ", "quote": "промплощадке", "confidence": 0.92 },
+    { "key": "cabinet", "value": "2", "quote": "кабинет 2", "confidence": 0.94 },
+    { "key": "category", "value": "server", "quote": "сервер", "confidence": 0.96 },
+    { "key": "department", "value": "dep-server", "quote": null, "confidence": 0.78 },
+    { "key": "impact", "value": "group", "quote": null, "confidence": 0.7 },
+    { "key": "urgency", "value": "down", "quote": "обесточили", "confidence": 0.85 },
+    {
+      "key": "symptoms",
+      "value": "искрит и дымит сервер, пахнет горелым",
+      "quote": "искрит и дымит сервер, пахнет горелым",
+      "confidence": 0.96
+    }
+  ],
+  "aspects": {
+    "emergency": {
+      "suspected": true,
+      "signs": [
+        { "sign": "sparks", "quote": "искрит" },
+        { "sign": "smoke", "quote": "дымит" },
+        { "sign": "burning_smell", "quote": "пахнет горелым" }
+      ],
+      "confidence": 0.96
+    },
+    "summary": { "text": "Сервер на промплощадке искрит и дымит, есть запах горелого." }
+  }
+}

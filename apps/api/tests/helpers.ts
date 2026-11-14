@@ -57,12 +57,12 @@ export function testReferenceData(): ReferenceData {
   });
 }
 
-export function testPorts(): Ports {
+export function testPorts(overrides: Partial<Ports> = {}): Ports {
   const notConfigured = (name: string) => async (): Promise<never> => {
     throw new Error(`порт не настроен: ${name}`);
   };
   return {
-    llm: { structured: notConfigured('llm') },
+    llm: { structured: notConfigured('llm'), chat: notConfigured('llm') },
     embeddings: { embed: notConfigured('embeddings') },
     speech: { transcribe: notConfigured('speech') },
     vision: { describe: notConfigured('vision') },
@@ -70,6 +70,7 @@ export function testPorts(): Ports {
     history: { similar: async () => [] },
     notifications: { send: async () => ({ delivered: true }) },
     clock: { now: () => new Date('2026-11-14T10:00:00.000Z') },
+    ...overrides,
   };
 }
 

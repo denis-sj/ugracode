@@ -5,6 +5,7 @@ import type { ReferenceData } from './data';
 import type { Ports } from './ports';
 import type { KernelStore } from './storage';
 import type { DraftPatch, PipelineStep, RunOptions, RunResult, StepProgress, StepResultLike } from './types';
+import type { ToolDef } from './agent';
 
 export interface PipelineDeps {
   bus: EventBus;
@@ -13,6 +14,8 @@ export interface PipelineDeps {
   steps: readonly PipelineStep[];
   store?: KernelStore;
   mode?: string;
+  /** Инструменты ядра и модулей: агенты шагов видят их через `StepContext.tools`. */
+  tools?: ReadonlyMap<string, ToolDef>;
   onProgress?: (progress: StepProgress & { runId: string; appealId: string }) => void;
 }
 
@@ -94,6 +97,7 @@ export class PipelineEngine {
       missing: [],
       ext: {},
     };
+    const author = this.deps.store ? ((await this.deps.store.getUser(appeal.authorId)) ?? undefined) : undefined;
     const steps = this.selectSteps(options.fromStage);
     const results: StepResultLike[] = [];
     let failed = false;
@@ -105,7 +109,7 @@ export class PipelineEngine {
       if (inStage.length === 0) continue;
       for (const batch of planBatches(inStage)) {
         const outcomes = await Promise.all(
-          batch.map((step) => this.runStep(step, appeal, draft, runId, options)),
+          batch.map((step) => this.runStep(step, appeal, draft, runId, options, author)),
         );
         batch.forEach((_step, index) => {
           const outcome = outcomes[index];
@@ -133,6 +137,8 @@ export class PipelineEngine {
       appealId: appeal.id,
       fields: Object.keys(draft.fields),
       status: failed ? 'failed' : 'ok',
+      // Черновик целиком — чтобы карточка заявки показала аварию, вопросы и «почему».
+      draft,
     });
     this.report(options, { stepId: 'run', status: failed ? 'failed' : 'completed', runId, appealId: appeal.id });
     return { runId, draft, steps: results, status: failed ? 'failed' : 'ok' };
@@ -155,6 +161,7 @@ export class PipelineEngine {
     draft: AnalysisDraft,
     runId: string,
     options: RunOptions,
+    author?: import('@ugra/contracts').User,
   ): Promise<StepOutcome> {
     const startedAt = Date.now();
     const controller = new AbortController();
@@ -165,6 +172,10 @@ export class PipelineEngine {
     const ctx = {
       runId,
       appeal,
+      user: author,
+      db: this.deps.store,
+      bus: this.deps.bus,
+      tools: this.deps.tools,
       draft: draft as Readonly<AnalysisDraft>,
       ports: this.deps.ports,
       data: this.deps.data,

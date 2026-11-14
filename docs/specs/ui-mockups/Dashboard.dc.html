@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Дашборд руководителя</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer}
+.icb svg{position:relative;z-index:1}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.seg{font:inherit;position:relative;z-index:1;font-size:13px;font-weight:600;color:#6B7189;background:transparent;border:none;border-radius:9px;padding:0 14px;min-height:36px;cursor:pointer}
+.kpi{padding:18px 20px}
+.kv{font-size:32px;font-weight:700;letter-spacing:-.04em;margin-top:4px;font-variant-numeric:tabular-nums}
+.dl{font-size:12px;font-weight:700;margin-top:2px}
+.lgd{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5B6178}
+.lgd i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.mean{margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(15,18,34,.035);font-size:14px;line-height:1.55;color:#2A2F45}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) 80px 90px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:14px}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:42px;padding:0 16px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25)}
+.fl{font:inherit;font-size:13px;font-weight:600;color:#2A2F45;background:rgba(255,255,255,.7);border:none;border-radius:999px;padding:0 12px;min-height:34px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);display:inline-flex;align-items:center;gap:6px}
+.fl:hover{background:#fff}
+.fl b{font-weight:700;color:#0F1222}
+.mi{font:inherit;display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;text-align:left;border:none;background:transparent;cursor:pointer;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:600;color:#0F1222}
+.mi:hover{background:rgba(15,18,34,.04)}
+.mi span{font-size:12px;font-weight:500;color:#8A90A6}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:42px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:1200px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:1100px;height:800px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px">
+<span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span>
+<nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px">
+<a class="tab on" href="#dash">Дашборд</a>
+<a class="tab" href="#reports">Отчёты</a>
+<a class="tab" href="Quality.dc.html">Качество ИИ</a>
+<a class="tab" href="Compare.dc.html">С ИИ / без ИИ</a>
+</nav>
+<div style="display:flex;align-items:center;gap:10px;justify-content:flex-end">
+<button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button>
+<a href="#profile" aria-label="Профиль" style="width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)">НМ</a>
+</div>
+</header>
+
+<main style="position:relative;z-index:1;max-width:1376px;margin:0 auto;padding:4px 32px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div>
+<h1 style="margin:0;font-size:38px;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent">Обращения за {{ periodName }}</h1>
+<div style="font-size:14px;color:#5B6178;margin-top:4px">Сравнение с прошлым таким же периодом. Клик по цифре откроет заявки.</div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<div class="lg" style="display:flex;gap:2px;padding:3px;border-radius:12px">
+<sc-for list="{{ periods }}" as="p" hint-placeholder-count="4"><button class="seg" onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+</div>
+<button class="sec">Даты: 1–14 нояб.</button>
+<div style="position:relative;z-index:8">
+<button class="pri" onClick="{{ toggleX }}" aria-expanded="{{ xOpen }}" style="display:flex;align-items:center;gap:8px">Выгрузить<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<sc-if value="{{ xOpen }}" hint-placeholder-val="{{ false }}">
+<div class="glass" role="menu" style="position:absolute;right:0;top:50px;z-index:8;width:300px;padding:6px;background:rgba(255,255,255,.95);box-shadow:inset 0 0 0 1px #fff,0 24px 60px rgba(40,46,110,.2)">
+<button class="mi" role="menuitem">Excel (.xlsx)<span>все разрезы, по листам</span></button>
+<button class="mi" role="menuitem">PDF-отчёт<span>с выводами, для печати</span></button>
+<button class="mi" role="menuitem">CSV<span>сырые заявки периода</span></button>
+<div style="height:1px;background:rgba(15,18,34,.07);margin:4px 8px"></div>
+<button class="mi" role="menuitem">Отправить на почту<span>сейчас</span></button>
+<button class="mi" role="menuitem">Присылать сводку<span>каждый понедельник</span></button>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span class="k" style="margin-right:4px">Фильтры</span>
+<button class="fl">Категория: <b>все</b></button>
+<button class="fl">Исполнитель: <b>все</b></button>
+<button class="fl">Канал: <b>чат, звонок</b></button>
+<button class="fl">Объект: <b>все корпуса</b></button>
+<button class="fl">Статус: <b>все</b></button>
+<span class="k" style="margin-left:auto">Сравнение: с прошлыми {{ periodName }}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px">
+<sc-for list="{{ kpis }}" as="m" hint-placeholder-count="5">
+<a href="Queue.dc.html" class="glass kpi" style="text-decoration:none;color:#0F1222;display:block;animation:rise .4s both">
+<div class="k">{{ m.l }}</div>
+<div class="kv">{{ m.v }}</div>
+<div class="dl" style="color:{{ m.c }}">{{ m.d }}</div>
+</a>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start">
+<section class="glass" style="padding:22px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+<h2 class="h">По приоритетам</h2>
+<div style="display:flex;gap:14px;flex-wrap:wrap"><span class="lgd"><i style="background:#C8341A"></i>Критический</span><span class="lgd"><i style="background:#E0A100"></i>Высокий</span><span class="lgd"><i style="background:#5A49E0"></i>Средний</span><span class="lgd"><i style="background:#C9CDE0"></i>Низкий</span></div>
+</div>
+<div style="display:flex;align-items:flex-end;gap:14px;height:220px;margin-top:22px;padding-bottom:4px;border-bottom:1px solid rgba(15,18,34,.08)">
+<sc-for list="{{ bars }}" as="b" hint-placeholder-count="7">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px">
+<span style="display:block;border-radius:4px 4px 1px 1px;height:{{ b.c }};background:#C8341A;transition:height .6s cubic-bezier(.2,.8,.2,1)"></span>
+<span style="display:block;border-radius:1px;height:{{ b.h }};background:#E0A100;transition:height .6s cubic-bezier(.2,.8,.2,1)"></span>
+<span style="display:block;border-radius:1px;height:{{ b.m }};background:#5A49E0;transition:height .6s cubic-bezier(.2,.8,.2,1)"></span>
+<span style="display:block;border-radius:1px 1px 3px 3px;height:{{ b.l }};background:#C9CDE0;transition:height .6s cubic-bezier(.2,.8,.2,1)"></span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:14px;margin-top:8px"><sc-for list="{{ bars }}" as="b" hint-placeholder-count="7"><span class="k" style="flex:1;text-align:center">{{ b.x }}</span></sc-for></div>
+<div class="mean"><strong>Что это значит.</strong> {{ meaning }}</div>
+</section>
+
+<section class="glass" style="padding:22px">
+<h2 class="h">Когда приходят обращения</h2>
+<div style="display:grid;grid-template-columns:28px repeat(10,minmax(0,1fr));gap:4px;margin-top:18px;align-items:center">
+<span></span><sc-for list="{{ hours }}" as="h" hint-placeholder-count="10"><span class="k" style="text-align:center;font-size:11px">{{ h }}</span></sc-for>
+</div>
+<sc-for list="{{ heat }}" as="r" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:28px repeat(10,minmax(0,1fr));gap:4px;margin-top:4px;align-items:center">
+<span class="k">{{ r.d }}</span>
+<sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="10"><span title="{{ c.t }}" style="height:28px;border-radius:6px;background:{{ c.bg }};transition:background .5s"></span></sc-for>
+</div>
+</sc-for>
+<div class="mean"><strong>Что это значит.</strong> Пик — <strong>понедельник 9–11</strong>: в среднем 14 обращений в час, в 3 раза больше обычного. <strong>Что сделать:</strong> ставить в понедельник утром двух диспетчеров.</div>
+</section>
+</div>
+
+<section class="glass" style="padding:24px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+<div><h2 class="h">Отчёт · горячие точки оборудования</h2><div style="font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:6px">Что ломается снова и снова</div></div>
+<button class="pri">Открыть полный отчёт</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;margin-top:16px;align-items:start">
+<div>
+<div class="hrow" style="padding-top:4px" aria-hidden="true"><span class="k">Оборудование</span><span class="k">Заявок</span><span class="k">Простой</span></div>
+<a class="hrow" href="Engineer.dc.html" style="text-decoration:none;color:#0F1222"><span><b>Принтер HP M428</b><span class="k" style="display:block;margin-top:2px">корп. Б, каб. 312 · инв. 00417</span></span><b style="color:#C8341A">7</b><span>5 ч</span></a>
+<a class="hrow" href="#e2" style="text-decoration:none;color:#0F1222"><span><b>Коммутатор 3 этажа</b><span class="k" style="display:block;margin-top:2px">корп. Б · сеть</span></span><b style="color:#B26A00">2 сбоя</b><span>3 ч 40 мин</span></a>
+<a class="hrow" href="#e3" style="text-decoration:none;color:#0F1222;border-bottom:none"><span><b>МФУ Kyocera</b><span class="k" style="display:block;margin-top:2px">корп. А, каб. 220</span></span><b>4</b><span>2 ч</span></a>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="padding:16px;border-radius:14px;background:rgba(15,18,34,.035)"><div style="font-size:12px;font-weight:700;color:#5B6178;letter-spacing:.06em;text-transform:uppercase">Что это значит</div><div style="font-size:14px;line-height:1.55;margin-top:6px">Принтер в 312 кабинете — <strong>7 заявок за месяц и 5 часов простоя</strong>. Каждый раз меняют ролик подачи: деталь изношена, ремонт не помогает надолго.</div></div>
+<div style="padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(123,77,255,.09),rgba(2,125,234,.07))"><div style="font-size:12px;font-weight:700;color:#5A49E0;letter-spacing:.06em;text-transform:uppercase">Что сделать</div><div style="font-size:14px;line-height:1.55;margin-top:6px"><strong>Заменить принтер.</strong> Ремонты за месяц обошлись дороже нового аппарата этого класса.</div></div>
+<div class="k">Цифры посчитал код, вывод сформулировал ИИ</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { period: '7', xOpen: false }; }
+  renderVals() {
+    const p = this.state.period;
+    const D = {
+      shift: { name: 'смену', x: ['8', '9', '10', '11', '12', '13', '14'], k: [['Обращений', '47', '▲ 12%', '#B26A00'], ['Аварий', '1', 'как обычно', '#8A90A6'], ['В срок', '96%', '▲ 2 п.', '#0E8A5F'], ['Решение, среднее', '1 ч 50 мин', '▼ 15 мин', '#0E8A5F'], ['ИИ без правок', '83%', '▲ 4 п.', '#0E8A5F']], m: 'Смена спокойная: 1 авария (дым из принтера, корпус А) закрыта за 38 минут. Две заявки под угрозой просрочки — обе по сети корпуса Б.' },
+      '7': { name: '7 дней', x: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], k: [['Обращений', '312', '▲ 9%', '#B26A00'], ['Аварий', '3', '▲ 2', '#C8341A'], ['В срок', '92%', '▼ 1 п.', '#B26A00'], ['Решение, среднее', '2 ч 40 мин', '▼ 20 мин', '#0E8A5F'], ['ИИ без правок', '81%', '▲ 3 п.', '#0E8A5F']], m: 'Критических за неделю 6 — вдвое больше обычного, 4 из них — сеть корпуса Б. Похоже на одну причину: коммутатор третьего этажа.' },
+      '30': { name: '30 дней', x: ['1 нед', '2 нед', '3 нед', '4 нед', '', '', ''], k: [['Обращений', '1 284', '▲ 4%', '#B26A00'], ['Аварий', '7', '▼ 2', '#0E8A5F'], ['В срок', '93%', '▲ 1 п.', '#0E8A5F'], ['Решение, среднее', '2 ч 55 мин', '▼ 10 мин', '#0E8A5F'], ['ИИ без правок', '79%', '▲ 6 п.', '#0E8A5F']], m: 'Доля критических стабильна, но средних выросла на 12% — в основном печать. Половина из них — три принтера, см. отчёт ниже.' },
+      q: { name: 'квартал', x: ['Сен', 'Окт', 'Ноя', '', '', '', ''], k: [['Обращений', '3 790', '▲ 6%', '#B26A00'], ['Аварий', '18', '▼ 5', '#0E8A5F'], ['В срок', '91%', '▲ 3 п.', '#0E8A5F'], ['Решение, среднее', '3 ч 05 мин', '▼ 25 мин', '#0E8A5F'], ['ИИ без правок', '76%', '▲ 11 п.', '#0E8A5F']], m: 'С подключением ИИ среднее время решения упало на 25 минут, а доля заявок без правок выросла с 65% до 76%.' }
+    };
+    const d = D[p];
+    const seed = { shift: 3, '7': 7, '30': 11, q: 5 }[p];
+    const n = d.x.filter(Boolean).length;
+    const bars = d.x.slice(0, n).map((x, i) => {
+      const r = (a) => ((i * 7 + seed * 3 + a) % 9);
+      const c = 4 + r(1) * 2, h = 14 + r(2) * 4, m = 40 + r(3) * 9, l = 22 + r(4) * 5;
+      return { x, c: c + 'px', h: h + 'px', m: m + 'px', l: l + 'px' };
+    });
+    const periods = [['shift', 'Смена'], ['7', '7 дней'], ['30', '30 дней'], ['q', 'Квартал']].map((o) => ({
+      label: o[1], style: o[0] === p ? 'background:#fff;color:#0F1222;box-shadow:0 2px 8px rgba(40,46,110,.1)' : '', pick: () => this.setState({ period: o[0] })
+    }));
+    const hours = ['8', '9', '10', '11', '12', '13', '14', '15', '16', '17'];
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'];
+    const heat = days.map((dd, di) => ({ d: dd, cells: hours.map((h, hi) => {
+      let v = [0.35, 0.9, 0.8, 0.55, 0.3, 0.25, 0.4, 0.45, 0.35, 0.2][hi] * (di === 0 ? 1 : 0.6) + ((di * 3 + hi * 5 + seed) % 4) * 0.04;
+      v = Math.min(1, v);
+      return { t: dd + ' ' + h + ':00', bg: 'rgba(90,73,224,' + (0.08 + v * 0.8).toFixed(2) + ')' };
+    }) }));
+    return {
+      periodName: d.name, periods, meaning: d.m,
+      xOpen: this.state.xOpen, toggleX: () => this.setState({ xOpen: !this.state.xOpen }),
+      kpis: d.k.map((k) => ({ l: k[0], v: k[1], d: k[2], c: k[3] })),
+      bars, hours, heat
+    };
+  }
+}
+</script>
+</body>
+</html>

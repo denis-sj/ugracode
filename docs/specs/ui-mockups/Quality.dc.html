@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Качество ИИ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(212,56,13,.45)}60%{box-shadow:0 0 0 8px rgba(212,56,13,0)}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#8A90A6}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer;text-decoration:none}
+.ava{width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)}
+.ava:hover{color:#fff}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+.h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:14px;color:#5B6178;margin-top:4px;max-width:720px;line-height:1.5}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25);display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
+.pri:hover{background:#262A45;color:#fff}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16);display:inline-flex;align-items:center;gap:8px}
+.sec:hover{background:#fff}
+.chip{font:inherit;font-size:13px;font-weight:600;color:#2A2F45;background:rgba(255,255,255,.6);border:none;border-radius:999px;padding:0 14px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.12)}
+.chip:hover{background:#fff}
+.seg{font:inherit;position:relative;z-index:1;font-size:13px;font-weight:600;color:#6B7189;background:transparent;border:none;border-radius:9px;padding:0 14px;min-height:36px;cursor:pointer}
+.inp{font:inherit;font-size:15px;color:#0F1222;border:none;outline:none;border-radius:10px;padding:0 14px;min-height:44px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);width:100%;box-sizing:border-box}
+.inp:focus{box-shadow:inset 0 0 0 1.5px #5A49E0}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:14px}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.16)}
+.bar{display:block;height:5px;border-radius:3px;background:rgba(15,18,34,.08);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:3px;animation:grow .8s ease-out both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:1000px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div><div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div><div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px"><span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span><nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px"><a class="tab" href="Dashboard.dc.html">Дашборд</a><a class="tab" href="#reports">Отчёты</a><a class="tab on" href="Quality.dc.html">Качество ИИ</a><a class="tab" href="Compare.dc.html">С ИИ / без ИИ</a></nav><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button><a class="ava" href="#profile" aria-label="Профиль" style="">НМ</a></div></header>
+<main style="position:relative;z-index:1;max-width:1376px;margin:0 auto;padding:8px 32px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div><h1 class="h1">Качество ИИ</h1><div class="sub">Тестовый набор: 10 обращений с эталонной разметкой. Сравниваем ответ ИИ с эталоном по каждому полю.</div></div>
+<button class="pri" onClick="{{ run }}">{{ runLabel }}</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+<sc-for list="{{ kpis }}" as="m" hint-placeholder-count="4"><div class="glass" style="padding:18px 20px"><div class="k">{{ m.l }}</div><div style="font-size:32px;font-weight:700;letter-spacing:-.04em;margin-top:4px;font-variant-numeric:tabular-nums">{{ m.v }}</div><div class="k" style="margin-top:2px">{{ m.d }}</div></div></sc-for>
+</div>
+<section class="glass" style="padding:8px 22px 14px;overflow:hidden">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) repeat(7,76px);gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(15,18,34,.08)">
+<span></span><span class="k">Обращение</span><sc-for list="{{ cols }}" as="c" hint-placeholder-count="7"><span class="k" style="text-align:center">{{ c }}</span></sc-for>
+</div>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) repeat(7,76px);gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(15,18,34,.06)">
+<span class="k" style="font-variant-numeric:tabular-nums">{{ r.i }}</span>
+<span style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</span>
+<sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7"><span title="{{ c.tip }}" style="height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;transition:background .3s;{{ c.style }}">{{ c.m }}</span></sc-for>
+</div>
+</sc-for>
+<div class="k" style="margin-top:12px">✓ совпало с эталоном · ✕ ошибка (наведите — увидите эталон и ответ ИИ) · ? ИИ честно не нашёл и спросил</div>
+</section>
+<section class="glass" style="padding:22px">
+<h2 class="h">Где ошибается и что делаем</h2>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;font-size:14px;line-height:1.55">
+<div><b>Исполнитель в № 4.</b> ИИ выбрал «Группу 1С», эталон — Лебедев К. Добавить в справочник навыков «лицензии 1С».</div>
+<div><b>Категория в № 6.</b> VPN отнёс к «Сеть», эталон — «Удалённый доступ». Уточнить описание категорий.</div>
+<div><b>Приоритет в № 10.</b> «Сервер не отвечает» — средний вместо высокого. Добавить в правила «сервер» как признак влияния на многих.</div>
+</div>
+</section></main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+
+  constructor(p) { super(p); this.state = { n: 10, running: false }; }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const C = ['Категория', 'Место', 'Техника', 'Приоритет', 'Авария', 'Исполн.', 'Статья'];
+    const T = [
+      ['Не печатает принтер HP, 312 кабинет', 'ooooooo'],
+      ['Дым из принтера, запах гари', 'ooooooo'],
+      ['Нет интернета на 3 этаже', 'ooooooo'],
+      ['Не открывается 1С, ошибка лицензии', 'ooooo' + 'xo'],
+      ['Забыла пароль от почты', 'ooooooo'],
+      ['VPN из дома не подключается', 'xoooooo'],
+      ['«У меня ничего не работает»', 'oqqoooq'],
+      ['Мерцает монитор', 'ooooooo'],
+      ['Поставить архиватор', 'oooooo' + 'o'],
+      ['Голосом: «сервер бухгалтерии не отвечает»', 'oooxooo']
+    ];
+    const tips = { '3-5': 'эталон: Лебедев К. · ИИ: Группа 1С', '5-0': 'эталон: Удалённый доступ · ИИ: Сеть', '9-3': 'эталон: высокий · ИИ: средний' };
+    const st = this.state;
+    let ok = 0, all = 0;
+    const rows = T.map((t, i) => ({ i: String(i + 1), t: t[0], cells: t[1].split('').map((m, j) => {
+      const shown = i < st.n;
+      if (shown) { all++; if (m !== 'x') ok++; }
+      const S = { o: ['✓', 'background:rgba(14,138,95,.1);color:#0E8A5F'], x: ['✕', 'background:rgba(212,56,13,.1);color:#D4380D'], q: ['?', 'background:rgba(15,18,34,.05);color:#5B6178'] }[m];
+      return shown ? { m: S[0], style: S[1], tip: tips[i + '-' + j] || (m === 'q' ? 'в тексте нет — ИИ спросил у заявителя' : 'совпало') } : { m: '', style: 'background:rgba(15,18,34,.03)', tip: '' };
+    }) }));
+    const pct = all ? Math.round(ok / all * 100) + '%' : '—';
+    return {
+      cols: C, rows,
+      kpis: [
+        { l: 'Поля заполнены верно', v: pct, d: ok + ' из ' + all + ' полей' },
+        { l: 'Исполнитель угадан', v: st.n >= 10 ? '9 из 10' : '—', d: 'в топ-3 — 10 из 10' },
+        { l: 'Аварии распознаны', v: st.n >= 3 ? '2 из 2' : '—', d: 'ложных тревог: 0' },
+        { l: 'Время на обращение', v: '4,2 с', d: 'среднее по набору' }
+      ],
+      runLabel: st.running ? 'Идёт прогон…' : 'Прогнать набор заново',
+      run: () => {
+        if (st.running) return;
+        this.setState({ n: 0, running: true });
+        clearInterval(this.iv);
+        this.iv = setInterval(() => {
+          const n = this.state.n + 1;
+          this.setState({ n, running: n < 10 });
+          if (n >= 10) clearInterval(this.iv);
+        }, 500);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

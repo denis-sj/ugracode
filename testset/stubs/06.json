@@ -1,0 +1,7 @@
+{
+  "fields": [],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.05 },
+    "summary": { "text": "Заявитель не указал, что именно не работает, нужны уточнения." }
+  }
+}

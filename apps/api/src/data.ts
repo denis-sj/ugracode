@@ -28,7 +28,15 @@ export async function loadReferenceData(root = process.cwd()): Promise<Reference
   const dictionaries = dictionariesRaw ? DictionariesFile.parse(dictionariesRaw).items : [];
   const settings = settingsRaw ? SettingsFile.parse(settingsRaw).settings : {};
   const extra: Record<string, unknown> = {};
-  const cmdb = await readJson(join(dir, 'cmdb.json'));
+  const [cmdb, priorityMatrix, emergencyRules, engineers] = await Promise.all([
+    readJson(join(dir, 'cmdb.json')),
+    readJson(join(dir, 'priority-matrix.json')),
+    readJson(join(dir, 'emergency-rules.json')),
+    readJson(join(dir, 'engineers.json')),
+  ]);
   if (cmdb) extra.cmdb = cmdb;
+  if (priorityMatrix) extra.priorityMatrix = priorityMatrix;
+  if (emergencyRules) extra.emergencyRules = emergencyRules;
+  if (engineers) extra.engineers = engineers;
   return createReferenceData({ fields, dictionaries, settings, extra });
 }

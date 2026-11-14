@@ -5,7 +5,7 @@
 Ветка: feature/skeleton (документы не закоммичены)
 PR: —
 Коммиты: —
-Связано: [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../tasks/031-agent-harness.md](../tasks/031-agent-harness.md), [../plans/case9-core.md](../plans/case9-core.md), [2026-11-14-feature-intake.md](2026-11-14-feature-intake.md)
+Связано: [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../history/2026-11.md](../history/2026-11.md), [../plans/case9-core.md](../plans/case9-core.md), [2026-11-14-feature-intake.md](2026-11-14-feature-intake.md)
 
 Роль агента: Данкония.
 

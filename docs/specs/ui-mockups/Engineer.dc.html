@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Задача инженера</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#5A49E0}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer}
+.icb svg{position:relative;z-index:1}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
+.task{display:block;text-decoration:none;color:#0F1222;padding:14px;border-radius:14px}
+.task:hover{background:rgba(255,255,255,.6);color:#0F1222}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25)}
+.pri:hover{background:#262A45}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16)}
+.sec:hover{background:#fff}
+.chip{font:inherit;font-size:13px;font-weight:600;color:#0F1222;background:transparent;border:none;border-radius:999px;padding:0 14px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.14)}
+.chip:hover{background:#fff}
+.ck{font:inherit;color:#0F1222;text-align:left;width:100%;border:none;background:transparent;cursor:pointer;display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(15,18,34,.06)}
+.box{width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:1000px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px">
+<span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span>
+<nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px">
+<a class="tab on" href="#tasks">Мои задачи <span class="cnt">3</span></a>
+<a class="tab" href="KB.dc.html">База знаний</a>
+</nav>
+<div style="display:flex;align-items:center;gap:10px;justify-content:flex-end">
+<button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button>
+<a href="#profile" aria-label="Профиль" style="width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)">ПС</a>
+</div>
+</header>
+
+<main style="position:relative;z-index:1;max-width:1376px;margin:0 auto;padding:4px 32px 48px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+<aside class="glass" style="flex:1 1 260px;max-width:300px;min-width:0;padding:10px">
+<div class="k" style="padding:10px 14px 6px">Сегодня · 3 задачи</div>
+<a class="task" href="#t1" style="background:#fff;box-shadow:inset 0 0 0 1.5px #14172B">
+<div style="display:flex;justify-content:space-between;gap:8px"><span class="k">№ 2026-0412</span><span style="font-size:12px;font-weight:700;color:#B26A00">до 14:30</span></div>
+<div style="font-size:15px;font-weight:700;margin-top:4px">Не печатает принтер HP</div>
+<div class="k" style="margin-top:2px">Корп. Б, каб. 312 · высокий</div>
+</a>
+<a class="task" href="#t2">
+<div style="display:flex;justify-content:space-between;gap:8px"><span class="k">№ 2026-0416</span><span class="k">до 17:00</span></div>
+<div style="font-size:15px;font-weight:700;margin-top:4px">Мерцает монитор</div>
+<div class="k" style="margin-top:2px">Корп. В, каб. 301 · средний</div>
+</a>
+<a class="task" href="#t3">
+<div style="display:flex;justify-content:space-between;gap:8px"><span class="k">№ 2026-0389</span><span class="k">завтра</span></div>
+<div style="font-size:15px;font-weight:700;margin-top:4px">Подключить второй монитор</div>
+<div class="k" style="margin-top:2px">Корп. Б, каб. 207 · низкий</div>
+</a>
+</aside>
+
+<div style="flex:999 1 640px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<section class="glass" style="padding:24px;animation:rise .4s both">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap">
+<div>
+<div class="k" style="font-size:13px">№ 2026-0412 · назначил диспетчер Смирнова О. в 10:44</div>
+<h1 style="margin:4px 0 6px;font-size:32px;font-weight:700;letter-spacing:-.04em">Не печатает принтер HP</h1>
+<div style="font-size:15px;color:#3A3F55">Корпус Б, кабинет 312 · <strong>HP LaserJet M428</strong>, инв. 00417 · ошибка подачи бумаги</div>
+</div>
+<div style="text-align:right">
+<div class="k">Осталось по регламенту</div>
+<div style="font-size:30px;font-weight:700;letter-spacing:-.03em;color:#B26A00">3 ч 26 мин</div>
+</div>
+</div>
+<div style="display:flex;gap:28px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(15,18,34,.07);flex-wrap:wrap">
+<div><div class="k">Заявитель</div><div style="font-size:14px;font-weight:700;margin-top:2px">Иванова А. С., доб. 4127</div></div>
+<div><div class="k">Статус</div><div style="font-size:14px;font-weight:700;margin-top:2px;color:{{ statusColor }}">{{ status }}</div></div>
+<div><div class="k">Этот принтер</div><div style="font-size:14px;font-weight:700;margin-top:2px">7 заявок за месяц</div></div>
+</div>
+<sc-if value="{{ notStarted }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:18px"><button class="pri" onClick="{{ start }}">Взять в работу</button></div>
+</sc-if>
+</section>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start">
+<section class="glass" style="padding:22px;animation:rise .4s .06s both">
+<h2 class="h">Диагностика · {{ stepsDone }} из 4</h2>
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+<button class="ck" onClick="{{ s.toggle }}" aria-pressed="{{ s.on }}">
+<span class="box" style="{{ s.box }}"><sc-if value="{{ s.on }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></sc-if></span>
+<span><span style="display:block;font-size:15px;font-weight:700;{{ s.dim }}">{{ s.t }}</span><span class="k" style="display:block;margin-top:2px">{{ s.d }}</span></span>
+</button>
+</sc-for>
+<div class="k" style="margin-top:12px">Из статьи «Ошибка подачи бумаги HP M428» · помогла в 9 из 11 случаев</div>
+</section>
+
+<section class="glass" style="padding:22px;animation:rise .4s .12s both">
+<h2 class="h">Похожие решённые</h2>
+<div style="padding:14px;border-radius:14px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px rgba(15,18,34,.07)">
+<div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px">№ 2026-0287 · этот же принтер</b><span class="k">40 мин</span></div>
+<div style="font-size:13px;color:#3A3F55;margin-top:4px;line-height:1.5">Заменён <strong>ролик подачи</strong> лотка 2</div>
+</div>
+<div style="padding:14px;border-radius:14px;margin-top:8px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px rgba(15,18,34,.07)">
+<div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px">№ 2026-0198 · HP M428, корп. А</b><span class="k">25 мин</span></div>
+<div style="font-size:13px;color:#3A3F55;margin-top:4px;line-height:1.5">Посторонний предмет в тракте, почищен датчик</div>
+</div>
+<div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(224,161,0,.09);font-size:13px;line-height:1.5;color:#5C4300"><strong>7 заявок за месяц</strong> по этому принтеру. Возможно, его дешевле заменить — вывод попадёт в отчёт руководителю.</div>
+</section>
+</div>
+
+<section class="glass" style="padding:22px;animation:rise .4s .18s both">
+<h2 class="h">Результат работы</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+<button class="chip" onClick="{{ q1 }}">Заменён ролик подачи</button>
+<button class="chip" onClick="{{ q2 }}">Удалён застрявший лист</button>
+<button class="chip" onClick="{{ q3 }}">Почищен датчик</button>
+</div>
+<label for="res" style="position:absolute;left:-9999px">Что сделано</label>
+<textarea id="res" rows="3" value="{{ result }}" onChange="{{ onResult }}" placeholder="Что сделано — заявитель увидит это в своём чате" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;line-height:1.55;color:#0F1222;padding:12px 14px;border:none;border-radius:12px;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);resize:vertical;outline:none"></textarea>
+<label style="display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;cursor:pointer;min-height:32px"><input type="checkbox" checked style="width:18px;height:18px;accent-color:#14172B">Сохранить как статью базы знаний</label>
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+<button class="pri" onClick="{{ finish }}">Выполнено</button>
+<button class="sec">Продлить срок</button>
+<button class="sec">Вернуть диспетчеру</button>
+</div>
+<sc-if value="{{ finished }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(14,138,95,.08);animation:pop .4s both">
+<div style="font-size:14px;font-weight:700;color:#0E8A5F">Отправлено заявителю на подтверждение</div>
+<div style="font-size:13px;color:#3A3F55;margin-top:4px">Иванова А. С. увидит результат в чате. Статья сохранена в базу знаний.</div>
+</div>
+</sc-if>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { started: false, steps: [false, false, false, false], result: '', finished: false }; }
+  renderVals() {
+    const st = this.state;
+    const S = [
+      ['Открыть лоток 2 и переднюю крышку', 'Проверить, нет ли смятого листа'],
+      ['Осмотреть ролик подачи', 'Износ — гладкая блестящая поверхность'],
+      ['Почистить датчик бумаги', 'Сухой салфеткой, без спирта'],
+      ['Распечатать тестовую страницу', 'Меню → Отчёты → Конфигурация']
+    ];
+    const steps = S.map((s, i) => {
+      const on = st.steps[i];
+      return { t: s[0], d: s[1], on, box: on ? 'background:#14172B' : 'box-shadow:inset 0 0 0 1.5px rgba(15,18,34,.25)', dim: on ? 'color:#5B6178' : '',
+        toggle: () => { const n = st.steps.slice(); n[i] = !n[i]; this.setState({ steps: n, started: true }); } };
+    });
+    const add = (t) => () => this.setState({ result: st.result ? st.result + '. ' + t : t });
+    const status = st.finished ? 'Выполнена, ждём заявителя' : (st.started ? 'В работе' : 'Назначена');
+    return {
+      steps, stepsDone: String(st.steps.filter(Boolean).length),
+      notStarted: !st.started, start: () => this.setState({ started: true }),
+      status, statusColor: st.finished ? '#0E8A5F' : (st.started ? '#027DEA' : '#5B6178'),
+      result: st.result, onResult: (e) => this.setState({ result: e.target.value }),
+      q1: add('Заменён ролик подачи'), q2: add('Удалён застрявший лист'), q3: add('Почищен датчик'),
+      finished: st.finished, finish: () => this.setState({ finished: true, started: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

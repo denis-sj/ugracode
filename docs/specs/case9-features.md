@@ -145,30 +145,30 @@ sequenceDiagram
 
 | Фича | Приоритет | Модуль | Точки расширения | Задача |
 |---|---|---|---|---|
-| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../tasks/007-ui-shell-chat-card.md), [009](../tasks/009-clarify-chat.md) |
-| Профиль и гость | MUST | `applicant-profile` | шаг, таблицы, сид | [025](../tasks/025-applicant-profile-guest.md) |
+| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../history/2026-11.md), [009](../history/2026-11.md) |
+| Профиль и гость | MUST | `applicant-profile` | шаг, таблицы, сид | [025](../history/2026-11.md) |
 | а4 Голос | MUST | `voice-call` + общий `MicButton` | шаг `enrich`, страница «Входящий звонок» | [019](../tasks/019-voice-call.md) |
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |
-| а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../tasks/026-screenshot.md) |
-| а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../tasks/018-engineer-desk.md) |
-| б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../tasks/006-extraction-priority.md) |
-| б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../tasks/006-extraction-priority.md), [008](../tasks/008-data-testset.md) |
-| б4, в6 Авария | MUST | `emergency` | аспект, шаг, подписчик, виджеты | [011](../tasks/011-emergency.md) |
-| б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../tasks/016-mass-incident.md) |
-| в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../tasks/010-dispatcher-review.md) |
-| в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../tasks/012-routing.md) |
-| г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../tasks/013-knowledge.md) |
-| г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../tasks/018-engineer-desk.md) |
-| г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../tasks/021-reports-insights.md) |
-| г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |
-| д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../tasks/015-history-dashboard.md) |
-| д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../tasks/021-reports-insights.md) |
-| д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../tasks/027-reports-sla-workload.md) |
-| д8, д10 О6 пробелы базы, О7 хронология аварии | COULD | `report-kb-gaps`, `report-emergency` | подписчик, отчёты | [028](../tasks/028-reports-kb-gaps-emergency.md) |
-| е1 Тестовый набор | MUST | — (`testset/`) | данные | [008](../tasks/008-data-testset.md) |
-| е2, е4 Проверка точности, отчёт о качестве | MUST | `quality` (только скрипт) | `evaluate()` шагов | [014](../tasks/014-quality.md) |
-| е3 Замер «с ИИ / без ИИ» | MUST | `ai-vs-manual` (ручная форма + счётчик) | страница | [017](../tasks/017-ai-vs-manual.md) |
-| е5 История настройки | COULD | `quality` | сохранение прогонов | [030](../tasks/030-tuning-history.md) |
+| а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../history/2026-11.md) |
+| а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../history/2026-11.md) |
+| б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../history/2026-11.md) |
+| б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../history/2026-11.md), [008](../history/2026-11.md) |
+| б4, в6 Авария | MUST | `emergency` | аспект, шаг, подписчик, виджеты | [011](../history/2026-11.md) |
+| б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../history/2026-11.md) |
+| в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../history/2026-11.md) |
+| в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../history/2026-11.md) |
+| г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |
+| г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../history/2026-11.md) |
+| г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../history/2026-11.md) |
+| г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../history/2026-11.md) |
+| д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../history/2026-11.md) |
+| д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../history/2026-11.md) |
+| д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../history/2026-11.md) |
+| д8, д10 О6 пробелы базы, О7 хронология аварии | COULD | `report-kb-gaps`, `report-emergency` | подписчик, отчёты | [028](../history/2026-11.md) |
+| е1 Тестовый набор | MUST | — (`testset/`) | данные | [008](../history/2026-11.md) |
+| е2, е4 Проверка точности, отчёт о качестве | MUST | `quality` (только скрипт) | `evaluate()` шагов | [014](../history/2026-11.md) |
+| е3 Замер «с ИИ / без ИИ» | MUST | `ai-vs-manual` (ручная форма + счётчик) | страница | [017](../history/2026-11.md) |
+| е5 История настройки | COULD | `quality` | сохранение прогонов | [030](../history/2026-11.md) |
 
 Проверка: ни одна фича, кроме правки 024, не требует изменений в `packages/core` и `packages/contracts`.
 

@@ -228,7 +228,9 @@ describe('уведомления', () => {
       payload: { assigneeId: 'u-engineer-1' },
     });
     const list = await ctx.app.inject({ method: 'GET', url: '/api/notifications', headers: { cookie: applicant } });
-    expect((list.json() as { notifications: unknown[] }).notifications).toHaveLength(0);
+    const notifications = (list.json() as { notifications: { toUserId: string }[] }).notifications;
+    // Заявитель видит только свои уведомления (например, «заявка принята»), чужие — нет.
+    expect(notifications.every((item) => item.toUserId === 'u-applicant-1')).toBe(true);
   });
 });
 

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Обращение</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes drawer{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{from{transform:translateY(-8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+@keyframes sticker{from{transform:translateX(30px) rotate(2deg);opacity:0}to{transform:rotate(.6deg);opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes blob1{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,40px)}}
+@keyframes blob2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,50px)}}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.76),rgba(255,255,255,.54));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 20px;min-height:40px;display:flex;align-items:center;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer;text-decoration:none}
+.icb svg{position:relative;z-index:1}
+.ib{width:40px;height:40px;border-radius:10px;border:none;background:transparent;color:#6B7189;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ib:hover{background:rgba(15,18,34,.05);color:#0F1222}
+.go{width:40px;height:40px;border-radius:50%;border:none;background:#14172B;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25)}
+.think{font-weight:600;background:linear-gradient(90deg,#9AA0B8 0%,#4B2FD0 50%,#9AA0B8 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.8s linear infinite}
+.me{align-self:flex-end;max-width:80%;padding:13px 18px;font-size:16px;line-height:1.55;border-radius:18px 18px 4px 18px;color:#fff;background:linear-gradient(135deg,#6A45F5,#4F6BFF);box-shadow:0 10px 28px rgba(90,70,230,.26);animation:rise .4s both}
+.ai{font-size:16px;line-height:1.65;color:#2A2F45;animation:rise .45s both}
+.ai strong{color:#0F1222;font-weight:700}
+.qo{font:inherit;color:#0F1222;text-align:left;width:100%;display:flex;align-items:center;gap:14px;padding:12px 14px;border:none;background:transparent;border-radius:12px;cursor:pointer;transition:background .15s,box-shadow .15s}
+.qo:hover{background:rgba(102,58,243,.06);box-shadow:inset 0 0 0 1px rgba(102,58,243,.28)}
+.num{width:26px;height:26px;flex:none;border-radius:7px;background:rgba(15,18,34,.05);color:#5B6178;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.qd{display:block;font-size:13px;color:#8A90A6;margin-top:2px}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.25)}
+.hi{display:block;text-decoration:none;color:#0F1222;padding:12px 14px;border-radius:12px}
+.hi:hover{background:rgba(15,18,34,.04);color:#0F1222}
+.sf{padding:11px 0;border-bottom:1px solid rgba(15,18,34,.06)}
+.sk{font-size:12px;color:#8A90A6}
+.sv{font-size:15px;font-weight:600;margin-top:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;height:900px;position:relative;overflow:hidden;display:flex;flex-direction:column">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-240px;top:-360px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.30),rgba(123,77,255,0));animation:blob1 20s ease-in-out infinite"></div>
+<div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-260px;top:-320px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.26),rgba(2,125,234,0));animation:blob2 24s ease-in-out infinite"></div>
+<div aria-hidden="true" style="position:absolute;width:1000px;height:600px;left:50%;bottom:-380px;margin-left:-500px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.6),rgba(182,217,252,0))"></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(15,18,34,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,18,34,.045) 1px,transparent 1px);background-size:80px 80px;-webkit-mask-image:radial-gradient(ellipse 55% 55% at 50% 40%,#000 15%,transparent 75%);mask-image:radial-gradient(ellipse 55% 55% at 50% 40%,#000 15%,transparent 75%)"></div>
+
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px">
+<span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span>
+<nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px">
+<a class="tab on" href="#chat">Обращение</a>
+<a class="tab" href="Cabinet.dc.html">Мои заявки</a>
+</nav>
+<div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;position:relative">
+<button class="icb lg" aria-label="История обращений" onClick="{{ toggleH }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="2.6"></path></svg></button>
+<button class="icb lg" aria-label="Уведомления, 2 новых" onClick="{{ toggleN }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg><span style="position:absolute;z-index:2;right:-2px;top:-2px;min-width:17px;height:17px;border-radius:9px;background:#14172B;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 2px #fff">2</span></button>
+<a href="Profile.dc.html" aria-label="Профиль" style="width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)">АИ</a>
+
+<sc-if value="{{ nOpen }}" hint-placeholder-val="{{ false }}">
+<div class="glass" role="dialog" aria-label="Уведомления" style="position:absolute;right:54px;top:56px;width:360px;padding:8px;background:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px #fff,0 24px 60px rgba(40,46,110,.2);animation:pop .25s both;text-align:left">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px"><b style="font-size:15px">Уведомления</b><button style="font:inherit;font-size:13px;font-weight:600;color:#5A49E0;background:none;border:none;cursor:pointer;padding:4px">Прочитать все</button></div>
+<a class="hi" href="Cabinet.dc.html" style="background:rgba(102,58,243,.06)"><div style="font-size:14px;line-height:1.45"><strong>№ 2026-0371</strong> выполнена. Подтвердите, что картридж работает</div><div class="sk" style="margin-top:4px">10 мин назад</div></a>
+<a class="hi" href="Cabinet.dc.html" style="background:rgba(102,58,243,.06)"><div style="font-size:14px;line-height:1.45">Орлов И. взял <strong>№ 2026-0398</strong> в работу</div><div class="sk" style="margin-top:4px">вчера, 16:20</div></a>
+<a class="hi" href="Cabinet.dc.html"><div style="font-size:14px;line-height:1.45;color:#5B6178">Заявка <strong>№ 2026-0350</strong> закрыта</div><div class="sk" style="margin-top:4px">8 нояб.</div></a>
+</div>
+</sc-if>
+</div>
+</header>
+
+<div style="position:relative;z-index:1;flex:1;min-height:0;display:flex;gap:28px;padding:8px 32px 28px;box-sizing:border-box">
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:{{ justify }};overflow:auto">
+<div style="width:100%;max-width:700px;display:flex;flex-direction:column;gap:18px;padding-top:{{ padTop }}">
+
+<sc-if value="{{ s0 }}" hint-placeholder-val="{{ true }}">
+<h1 style="margin:0 0 12px;text-align:center;font-size:60px;line-height:1.05;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent;animation:rise .6s both">Что случилось?</h1>
+</sc-if>
+
+<sc-if value="{{ chat }}" hint-placeholder-val="{{ false }}">
+<div class="me">{{ sent }}</div>
+<sc-if value="{{ think1 }}" hint-placeholder-val="{{ false }}"><div class="think" style="font-size:15px">Разбираю обращение</div></sc-if>
+<sc-if value="{{ ai1 }}" hint-placeholder-val="{{ false }}">
+<div class="ai">Поняла: <strong>принтер HP</strong> в <strong>312 кабинете</strong>, <strong>горит оранжевая лампочка</strong>. Нашла его в базе оборудования. Пара уточнений — заявка справа собирается по ходу.</div>
+</sc-if>
+
+<sc-if value="{{ q1 }}" hint-placeholder-val="{{ false }}">
+<div class="glass" style="padding:18px 16px 14px;animation:rise .45s both">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 6px 10px"><b style="font-size:17px;letter-spacing:-.01em">В каком корпусе 312 кабинет?</b><span style="display:flex;align-items:center;gap:2px;font-size:13px;color:#8A90A6"><button class="ib" aria-label="Предыдущий вопрос" style="width:30px;height:30px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>1 из 2<button class="ib" aria-label="Следующий вопрос" style="width:30px;height:30px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button></span></div>
+<button class="qo" onClick="{{ a1 }}"><span class="num">1</span><span>Корпус А</span></button>
+<button class="qo" onClick="{{ a2 }}" style="background:rgba(102,58,243,.05)"><span class="num" style="background:#14172B;color:#fff">2</span><span>Корпус Б<span class="qd">Указан в вашем профиле</span></span></button>
+<button class="qo" onClick="{{ a3 }}"><span class="num">3</span><span>Корпус В</span></button>
+<button class="qo" onClick="{{ a4 }}"><span class="num">4</span><span>Не знаю<span class="qd">Диспетчер уточнит сам</span></span></button>
+<div style="display:flex;align-items:center;gap:14px;padding:8px 14px;margin-top:2px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(15,18,34,.08);background:rgba(255,255,255,.7)">
+<span class="num">5</span>
+<label for="o1" style="position:absolute;left:-9999px">Свой вариант</label>
+<input id="o1" value="{{ other }}" onChange="{{ onOther }}" placeholder="Свой вариант, например: склад, 2 этаж" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:inherit;font-size:15px;color:#0F1222;min-height:30px">
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px">
+<button onClick="{{ a4 }}" style="font:inherit;font-size:14px;font-weight:600;color:#6B7189;background:none;border:none;cursor:pointer;min-height:40px;padding:0 8px">Пропустить</button>
+<button onClick="{{ aOther }}" style="font:inherit;font-size:14px;font-weight:700;color:#fff;border:none;border-radius:10px;min-height:40px;padding:0 16px;cursor:pointer;display:flex;align-items:center;gap:10px;background:#14172B;box-shadow:0 1px 2px rgba(15,18,34,.25)">Ответить <span class="kbd">Enter</span></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ ans1 }}" hint-placeholder-val="{{ false }}"><div class="me">{{ corpus }}</div></sc-if>
+
+<sc-if value="{{ q2 }}" hint-placeholder-val="{{ false }}">
+<div class="glass" style="padding:18px 16px 14px;animation:rise .45s both">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 6px 10px"><b style="font-size:17px;letter-spacing:-.01em">Насколько срочно?</b><span style="font-size:13px;color:#8A90A6;padding-right:8px">2 из 2</span></div>
+<button class="qo" onClick="{{ u1 }}"><span class="num">1</span><span>Работа стоит<span class="qd">Нужно в течение часа</span></span></button>
+<button class="qo" onClick="{{ u2 }}"><span class="num">2</span><span>Мешает, но терпит<span class="qd">Сегодня</span></span></button>
+<button class="qo" onClick="{{ u3 }}"><span class="num">3</span><span>Не срочно<span class="qd">В ближайшие дни</span></span></button>
+<div style="display:flex;align-items:center;gap:14px;padding:8px 14px;margin-top:2px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(15,18,34,.08);background:rgba(255,255,255,.7)">
+<span class="num">4</span><input aria-label="Свой вариант" placeholder="Свой вариант, например: нужно к 15:00" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:inherit;font-size:15px;color:#0F1222;min-height:30px">
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ ans2 }}" hint-placeholder-val="{{ false }}"><div class="me">{{ urg }}</div></sc-if>
+<sc-if value="{{ think2 }}" hint-placeholder-val="{{ false }}"><div class="think" style="font-size:15px">Оформляю заявку и подбираю инженера</div></sc-if>
+<sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+<div class="ai">Готово: заявка <strong>№ 2026-0412</strong> принята, её проверил диспетчер. Инженер <strong>Петров С. В.</strong> придёт <strong>до 14:30</strong>. Пока ждёте, откройте <strong>лоток 2</strong>: часто там застревает лист.</div>
+</sc-if>
+</sc-if>
+
+<div class="glass" style="padding:16px 16px 12px;border-radius:20px">
+<label for="q" style="position:absolute;left:-9999px">Опишите проблему</label>
+<textarea id="q" rows="{{ rows }}" value="{{ text }}" onChange="{{ onText }}" placeholder="{{ ph }}" style="width:100%;box-sizing:border-box;background:transparent;border:none;outline:none;resize:none;color:#0F1222;font:inherit;font-size:17px;line-height:1.5;padding:4px 6px"></textarea>
+<div style="display:flex;align-items:center;gap:4px;margin-top:8px">
+<button class="ib" aria-label="Прикрепить файл"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"></path></svg></button>
+<button class="ib" aria-label="Сказать голосом"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+<button class="ib" aria-label="Позвонить диспетчеру"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"></path></svg></button>
+<button class="go" aria-label="Отправить" onClick="{{ send }}" style="margin-left:auto"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
+</div>
+</div>
+</div>
+</main>
+
+<sc-if value="{{ stick }}" hint-placeholder-val="{{ false }}">
+<aside aria-label="Ваше обращение" style="flex:none;width:340px;align-self:flex-start;margin-top:8px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.7));-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:inset 0 0 0 1px #fff,0 2px 0 rgba(15,18,34,.03),0 22px 60px rgba(40,46,110,.16);animation:sticker .55s cubic-bezier(.2,.8,.2,1) both;transform:rotate(.6deg)">
+<div style="padding:16px 20px 14px;background:linear-gradient(135deg,rgba(123,77,255,.16),rgba(2,125,234,.12));border-bottom:1px solid rgba(15,18,34,.05)">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<span style="font-size:12px;font-weight:700;color:#5A49E0;letter-spacing:.06em;text-transform:uppercase">Ваше обращение</span>
+<span style="font-size:12px;font-weight:700;color:{{ stColor }};padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.75)">{{ stText }}</span>
+</div>
+<div style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin-top:8px">Не печатает принтер</div>
+<div style="font-size:13px;color:#5B6178;margin-top:2px">{{ numText }}</div>
+</div>
+<div style="padding:4px 20px 18px">
+<sc-for list="{{ sfields }}" as="f" hint-placeholder-count="5">
+<div class="sf"><div class="sk">{{ f.k }}</div><div class="sv" style="color:{{ f.c }}">{{ f.v }}</div></div>
+</sc-for>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:16px">
+<sc-for list="{{ segs }}" as="g" hint-placeholder-count="4"><span style="height:5px;border-radius:3px;background:{{ g.bg }};transition:background .5s"></span></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px;font-size:11px;color:#8A90A6"><span>Собрана</span><span>Проверена</span><span>Назначена</span><span>Выполнена</span></div>
+</div>
+</aside>
+</sc-if>
+</div>
+
+<sc-if value="{{ hOpen }}" hint-placeholder-val="{{ false }}">
+<button aria-label="Закрыть историю" onClick="{{ toggleH }}" style="position:absolute;inset:0;z-index:7;border:none;padding:0;cursor:default;background:rgba(15,18,34,.08);animation:fade .25s both"></button>
+<aside aria-label="История обращений" style="position:absolute;z-index:8;top:12px;right:12px;bottom:12px;width:380px;box-sizing:border-box;display:flex;flex-direction:column;border-radius:22px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);box-shadow:inset 0 0 0 1px #fff,0 24px 70px rgba(40,46,110,.22);animation:drawer .35s cubic-bezier(.2,.8,.2,1) both">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 14px 8px 22px"><h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.02em">История обращений</h2><button class="ib" aria-label="Закрыть" onClick="{{ toggleH }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div style="flex:1;overflow:auto;padding:0 8px 8px">
+<div style="font-size:12px;color:#8A90A6;padding:12px 14px 4px">Активные</div>
+<a class="hi" href="#h"><div style="display:flex;justify-content:space-between;gap:10px"><b style="font-size:14px">Не работает VPN из дома</b><span class="sk">вчера</span></div><div class="sk" style="margin-top:3px">№ 2026-0398 · <span style="color:#027DEA;font-weight:700">В работе</span></div></a>
+<a class="hi" href="#h"><div style="display:flex;justify-content:space-between;gap:10px"><b style="font-size:14px">Закончился картридж</b><span class="sk">12 нояб.</span></div><div class="sk" style="margin-top:3px">№ 2026-0371 · <span style="color:#B26A00;font-weight:700">Подтвердите выполнение</span></div></a>
+<div style="font-size:12px;color:#8A90A6;padding:14px 14px 4px">Ранее</div>
+<a class="hi" href="#h"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:14px;color:#3A3F55">Доступ к папке отдела</span><span class="sk">8 нояб.</span></div><div class="sk" style="margin-top:3px">№ 2026-0350 · Закрыта</div></a>
+<a class="hi" href="#h"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:14px;color:#3A3F55">Не открывается 1С</span><span class="sk">2 нояб.</span></div><div class="sk" style="margin-top:3px">№ 2026-0322 · Закрыта</div></a>
+</div>
+</aside>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { step: 0, text: '', sent: '', corpus: '', urg: '', other: '', hOpen: false, nOpen: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  renderVals() {
+    const s = this.state.step;
+    const c = this.state.corpus, u = this.state.urg;
+    const ans1 = (v) => () => { if (this.state.step === 2) this.setState({ step: 3, corpus: v }); };
+    const ans2 = (v) => () => {
+      if (this.state.step !== 3) return;
+      this.setState({ step: 4, urg: v });
+      this.later(() => this.setState({ step: 5 }), 1600);
+    };
+    const WAIT = '#9AA0B8', OK = '#0F1222';
+    const corpusVal = s < 3 ? 'уточняем…' : (c === 'Не знаю' ? 'уточнит диспетчер' : c);
+    const sfields = [
+      { k: 'Оборудование', v: 'HP LaserJet M428, инв. 00417', c: OK },
+      { k: 'Место', v: 'Кабинет 312, ' + (s < 3 ? 'корпус уточняем…' : corpusVal.toLowerCase()), c: s < 3 ? WAIT : OK },
+      { k: 'Признак', v: 'Горит оранжевая лампочка', c: OK },
+      { k: 'Срочность', v: s < 4 ? 'уточняем…' : u, c: s < 4 ? WAIT : OK }
+    ];
+    if (s >= 5) sfields.push({ k: 'Инженер', v: 'Петров С. В., до 14:30', c: '#4B2FD0' });
+    const filled = s >= 5 ? 3 : (s >= 4 ? 1 : 0);
+    const segs = [0, 1, 2, 3].map((i) => ({ bg: i < filled ? 'linear-gradient(90deg,#7B4DFF,#4F6BFF)' : 'rgba(15,18,34,.08)' }));
+    const st = s >= 5 ? ['Принята', '#027DEA'] : (s >= 4 ? ['Оформляется', '#5A49E0'] : ['Собирается', '#5A49E0']);
+    return {
+      hOpen: this.state.hOpen, nOpen: this.state.nOpen,
+      toggleH: () => this.setState({ hOpen: !this.state.hOpen, nOpen: false }),
+      toggleN: () => this.setState({ nOpen: !this.state.nOpen }),
+      justify: s === 0 ? 'center' : 'flex-start', padTop: s === 0 ? '0' : '8px',
+      rows: s === 0 ? 4 : 1, ph: s === 0 ? 'Например: в 312 кабинете не печатает принтер' : 'Напишите сообщение',
+      s0: s === 0, chat: s >= 1, think1: s === 1, ai1: s >= 2, q1: s === 2, ans1: s >= 3, q2: s === 3, ans2: s >= 4, think2: s === 4, done: s >= 5,
+      stick: s >= 2, sfields, segs, stText: st[0], stColor: st[1], numText: s >= 5 ? '№ 2026-0412 · сегодня 10:42' : 'Черновик · сегодня 10:42',
+      text: this.state.text, sent: this.state.sent, corpus: c, urg: u, other: this.state.other,
+      onText: (e) => this.setState({ text: e.target.value }),
+      onOther: (e) => this.setState({ other: e.target.value }),
+      send: () => {
+        if (this.state.step !== 0) return;
+        const v = this.state.text.trim() || 'У нас в 312 кабинете опять не печатает принтер HP, горит оранжевая лампочка';
+        this.setState({ step: 1, sent: v, text: '' });
+        this.later(() => this.setState({ step: 2 }), 1500);
+      },
+      a1: ans1('Корпус А'), a2: ans1('Корпус Б'), a3: ans1('Корпус В'), a4: ans1('Не знаю'),
+      aOther: () => { const o = this.state.other.trim(); ans1(o || 'Корпус Б')(); },
+      u1: ans2('Работа стоит'), u2: ans2('Мешает, но терпит'), u3: ans2('Не срочно')
+    };
+  }
+}
+</script>
+</body>
+</html>

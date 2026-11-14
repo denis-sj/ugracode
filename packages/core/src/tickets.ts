@@ -48,9 +48,14 @@ export class TicketService {
       assigneeId: null,
       isEmergency: false,
       incidentId: null,
+      reactDueAt: null,
       slaDueAt: null,
+      equipmentId: null,
+      locationId: null,
       confirmedBy: null,
       confirmedAt: null,
+      resolution: null,
+      resolvedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -85,7 +90,10 @@ export class TicketService {
     const patch: Partial<Ticket> = {
       category,
       departmentId: department,
+      equipmentId: asText(draft.fields.equipmentId?.value) ?? ticket.equipmentId,
+      locationId: asText(draft.fields.locationId?.value) ?? ticket.locationId,
       priority: draft.priority?.value ?? ticket.priority,
+      reactDueAt: draft.priority?.reactDueAt ?? ticket.reactDueAt,
       slaDueAt: draft.priority?.slaDueAt ?? ticket.slaDueAt,
       isEmergency: draft.emergency ? draft.emergency.level !== 'none' : false,
       incidentId: draft.incident?.incidentId ?? null,
@@ -94,13 +102,21 @@ export class TicketService {
     await this.deps.store.updateTicket(ticketId, patch);
     let current = ticket;
     if (current.status === 'new') current = await this.transition(ticketId, 'ai_draft', actor);
+    // Есть вопросы к заявителю — заявка ждёт ответа, диспетчеру она пока не нужна.
+    if (current.status === 'waiting_applicant' && draft.missing.length > 0) return current;
     if (['ai_draft', 'waiting_applicant'].includes(current.status)) {
       return this.transition(ticketId, 'in_review', { kind: 'system' });
     }
     return this.requireTicket(ticketId);
   }
 
-  async transition(ticketId: string, to: TicketStatus, actor: Actor, role?: Role): Promise<Ticket> {
+  async transition(
+    ticketId: string,
+    to: TicketStatus,
+    actor: Actor,
+    role?: Role,
+    reason?: string,
+  ): Promise<Ticket> {
     const ticket = await this.requireTicket(ticketId);
     const transition = findTransition(ticket.status, to);
     if (!transition) {
@@ -111,12 +127,48 @@ export class TicketService {
       if (!transition.roles.includes(role)) throw new Error(`Роль ${role} не может выполнить переход ${ticket.status} → ${to}`);
       if (!hasPermission(role, transition.permission)) throw new Error(`Нет права ${transition.permission}`);
     }
+    const now = this.deps.clock.now().toISOString();
     const updated = await this.deps.store.updateTicket(ticketId, {
       status: to,
+      resolvedAt: to === 'resolved' ? now : ticket.resolvedAt,
+      updatedAt: now,
+    });
+    if (!updated) throw new Error(`Заявка ${ticketId} не найдена`);
+    await this.publish('ticket.status.changed', actor, ticketId, { from: ticket.status, to, reason });
+    if (to === 'in_review') {
+      await this.publish('ticket.returned', actor, ticketId, { from: ticket.status, reason });
+    }
+    return updated;
+  }
+
+  /** Результат работ инженера и перевод в `resolved` (одним действием). */
+  async resolve(
+    ticketId: string,
+    resolution: string,
+    actor: Actor,
+    role?: Role,
+  ): Promise<Ticket> {
+    await this.requireTicket(ticketId);
+    await this.deps.store.updateTicket(ticketId, {
+      resolution,
+      updatedAt: this.deps.clock.now().toISOString(),
+    });
+    return this.transition(ticketId, 'resolved', actor, role);
+  }
+
+  /** Продление срока решения с причиной: событие `ticket.deadline.extended`. */
+  async extendDeadline(ticketId: string, newDueAt: string, reason: string, actor: Actor): Promise<Ticket> {
+    const ticket = await this.requireTicket(ticketId);
+    const updated = await this.deps.store.updateTicket(ticketId, {
+      slaDueAt: newDueAt,
       updatedAt: this.deps.clock.now().toISOString(),
     });
     if (!updated) throw new Error(`Заявка ${ticketId} не найдена`);
-    await this.publish('ticket.status.changed', actor, ticketId, { from: ticket.status, to });
+    await this.publish('ticket.deadline.extended', actor, ticketId, {
+      previous: ticket.slaDueAt,
+      slaDueAt: newDueAt,
+      reason,
+    });
     return updated;
   }
 

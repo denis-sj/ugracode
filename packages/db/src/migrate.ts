@@ -1,19 +1,22 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client } from 'pg';
 import { DEFAULT_DATABASE_URL } from './pg-store';
 
-const MIGRATION_FILE = fileURLToPath(new URL('../migrations/0001_init.sql', import.meta.url));
+const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
 
-/** Выполняет идемпотентную миграцию ядра (расширение pgvector, таблицы, индексы, триггер). */
+/** Применяет все SQL-файлы миграций по порядку имён; каждый файл идемпотентен. */
 export async function runMigrations(
   connectionString = process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
 ): Promise<void> {
-  const sql = await readFile(MIGRATION_FILE, 'utf8');
+  const files = (await readdir(MIGRATIONS_DIR)).filter((file) => file.endsWith('.sql')).sort();
   const client = new Client({ connectionString });
   await client.connect();
   try {
-    await client.query(sql);
+    for (const file of files) {
+      const sql = await readFile(`${MIGRATIONS_DIR}${file}`, 'utf8');
+      await client.query(sql);
+    }
   } finally {
     await client.end();
   }

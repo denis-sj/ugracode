@@ -133,3 +133,52 @@ describe('TicketService', () => {
     await expect(tickets.transition('missing', 'ai_draft', { kind: 'system' })).rejects.toThrow('не найдена');
   });
 });
+
+describe('сроки и возврат диспетчеру', () => {
+  it('продлевает срок решения с причиной', async () => {
+    const { tickets, store } = service();
+    const ticket = await tickets.createDraft(appeal);
+    const updated = await tickets.extendDeadline(
+      ticket.id,
+      '2026-11-15T12:00:00.000Z',
+      'ждём запчасть',
+      { kind: 'user', id: 'u-dispatcher-1' },
+    );
+    expect(updated.slaDueAt).toBe('2026-11-15T12:00:00.000Z');
+    const events = await store.listEvents({ ticketId: ticket.id });
+    const extended = events.find((event) => event.type === 'ticket.deadline.extended');
+    expect(extended?.payload).toMatchObject({ reason: 'ждём запчасть' });
+  });
+
+  it('инженер возвращает заявку диспетчеру с причиной', async () => {
+    const { tickets, store } = service();
+    const ticket = await tickets.createDraft(appeal);
+    await tickets.transition(ticket.id, 'ai_draft', { kind: 'system' });
+    await tickets.transition(ticket.id, 'in_review', { kind: 'system' });
+    await tickets.confirm(ticket.id, 'u-engineer-1', { kind: 'user', id: 'u-dispatcher-1' }, 'dispatcher');
+    const returned = await tickets.transition(
+      ticket.id,
+      'in_review',
+      { kind: 'user', id: 'u-engineer-1' },
+      'engineer',
+      'нужна помощь с доступом',
+    );
+    expect(returned.status).toBe('in_review');
+    const events = await store.listEvents({ ticketId: ticket.id });
+    expect(events.map((event) => event.type)).toContain('ticket.returned');
+    const changed = events.find(
+      (event) =>
+        event.type === 'ticket.status.changed' &&
+        (event.payload as { to?: string } | undefined)?.to === 'in_review' &&
+        (event.payload as { reason?: string } | undefined)?.reason !== undefined,
+    );
+    expect(changed?.payload).toMatchObject({ reason: 'нужна помощь с доступом' });
+  });
+
+  it('не продлевает срок несуществующей заявкой', async () => {
+    const { tickets } = service();
+    await expect(
+      tickets.extendDeadline('missing', '2026-11-15T12:00:00.000Z', 'причина', { kind: 'system' }),
+    ).rejects.toThrow('не найдена');
+  });
+});

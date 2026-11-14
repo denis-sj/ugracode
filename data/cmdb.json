@@ -1,19 +1,703 @@
 {
   "locations": [
-    { "id": "bld-a", "kind": "building", "name": "Корпус А", "parentId": null },
-    { "id": "bld-b", "kind": "building", "name": "Корпус Б", "parentId": null },
-    { "id": "bld-v", "kind": "building", "name": "Корпус В", "parentId": null },
-    { "id": "bld-prom", "kind": "building", "name": "Промплощадка", "parentId": null },
-    { "id": "floor-b-3", "kind": "floor", "name": "Этаж 3", "parentId": "bld-b" },
-    { "id": "cab-b-312", "kind": "cabinet", "name": "Каб. 312", "parentId": "floor-b-3" },
-    { "id": "cab-b-311", "kind": "cabinet", "name": "Каб. 311", "parentId": "floor-b-3" }
+    {
+      "id": "bld-a",
+      "kind": "building",
+      "name": "Корпус А",
+      "parentId": null
+    },
+    {
+      "id": "floor-a-1",
+      "kind": "floor",
+      "name": "Этаж 1",
+      "parentId": "bld-a"
+    },
+    {
+      "id": "floor-a-2",
+      "kind": "floor",
+      "name": "Этаж 2",
+      "parentId": "bld-a"
+    },
+    {
+      "id": "floor-a-3",
+      "kind": "floor",
+      "name": "Этаж 3",
+      "parentId": "bld-a"
+    },
+    {
+      "id": "bld-b",
+      "kind": "building",
+      "name": "Корпус Б",
+      "parentId": null
+    },
+    {
+      "id": "floor-b-1",
+      "kind": "floor",
+      "name": "Этаж 1",
+      "parentId": "bld-b"
+    },
+    {
+      "id": "floor-b-2",
+      "kind": "floor",
+      "name": "Этаж 2",
+      "parentId": "bld-b"
+    },
+    {
+      "id": "floor-b-3",
+      "kind": "floor",
+      "name": "Этаж 3",
+      "parentId": "bld-b"
+    },
+    {
+      "id": "floor-b-4",
+      "kind": "floor",
+      "name": "Этаж 4",
+      "parentId": "bld-b"
+    },
+    {
+      "id": "bld-v",
+      "kind": "building",
+      "name": "Корпус В",
+      "parentId": null
+    },
+    {
+      "id": "floor-v-1",
+      "kind": "floor",
+      "name": "Этаж 1",
+      "parentId": "bld-v"
+    },
+    {
+      "id": "floor-v-2",
+      "kind": "floor",
+      "name": "Этаж 2",
+      "parentId": "bld-v"
+    },
+    {
+      "id": "bld-prom",
+      "kind": "building",
+      "name": "Промплощадка",
+      "parentId": null
+    },
+    {
+      "id": "floor-prom-1",
+      "kind": "floor",
+      "name": "Этаж 1",
+      "parentId": "bld-prom"
+    },
+    {
+      "id": "floor-prom-2",
+      "kind": "floor",
+      "name": "Этаж 2",
+      "parentId": "bld-prom"
+    },
+    {
+      "id": "cab-a-101",
+      "kind": "cabinet",
+      "name": "Каб. 101",
+      "parentId": "floor-a-1"
+    },
+    {
+      "id": "cab-a-102",
+      "kind": "cabinet",
+      "name": "Каб. 102",
+      "parentId": "floor-a-1"
+    },
+    {
+      "id": "cab-a-104",
+      "kind": "cabinet",
+      "name": "Каб. 104",
+      "parentId": "floor-a-1"
+    },
+    {
+      "id": "cab-a-201",
+      "kind": "cabinet",
+      "name": "Каб. 201",
+      "parentId": "floor-a-2"
+    },
+    {
+      "id": "cab-a-205",
+      "kind": "cabinet",
+      "name": "Каб. 205",
+      "parentId": "floor-a-2"
+    },
+    {
+      "id": "cab-a-210",
+      "kind": "cabinet",
+      "name": "Каб. 210",
+      "parentId": "floor-a-2"
+    },
+    {
+      "id": "cab-a-301",
+      "kind": "cabinet",
+      "name": "Каб. 301",
+      "parentId": "floor-a-3"
+    },
+    {
+      "id": "cab-a-305",
+      "kind": "cabinet",
+      "name": "Каб. 305",
+      "parentId": "floor-a-3"
+    },
+    {
+      "id": "cab-b-110",
+      "kind": "cabinet",
+      "name": "Каб. 110",
+      "parentId": "floor-b-1"
+    },
+    {
+      "id": "cab-b-115",
+      "kind": "cabinet",
+      "name": "Каб. 115",
+      "parentId": "floor-b-1"
+    },
+    {
+      "id": "cab-b-208",
+      "kind": "cabinet",
+      "name": "Каб. 208",
+      "parentId": "floor-b-2"
+    },
+    {
+      "id": "cab-b-214",
+      "kind": "cabinet",
+      "name": "Каб. 214",
+      "parentId": "floor-b-2"
+    },
+    {
+      "id": "cab-b-311",
+      "kind": "cabinet",
+      "name": "Каб. 311",
+      "parentId": "floor-b-3"
+    },
+    {
+      "id": "cab-b-312",
+      "kind": "cabinet",
+      "name": "Каб. 312",
+      "parentId": "floor-b-3"
+    },
+    {
+      "id": "cab-b-314",
+      "kind": "cabinet",
+      "name": "Каб. 314",
+      "parentId": "floor-b-3"
+    },
+    {
+      "id": "cab-b-401",
+      "kind": "cabinet",
+      "name": "Каб. 401",
+      "parentId": "floor-b-4"
+    },
+    {
+      "id": "cab-b-405",
+      "kind": "cabinet",
+      "name": "Каб. 405",
+      "parentId": "floor-b-4"
+    },
+    {
+      "id": "cab-v-105",
+      "kind": "cabinet",
+      "name": "Каб. 105",
+      "parentId": "floor-v-1"
+    },
+    {
+      "id": "cab-v-110",
+      "kind": "cabinet",
+      "name": "Каб. 110",
+      "parentId": "floor-v-1"
+    },
+    {
+      "id": "cab-v-205",
+      "kind": "cabinet",
+      "name": "Каб. 205",
+      "parentId": "floor-v-2"
+    },
+    {
+      "id": "cab-v-210",
+      "kind": "cabinet",
+      "name": "Каб. 210",
+      "parentId": "floor-v-2"
+    },
+    {
+      "id": "cab-v-215",
+      "kind": "cabinet",
+      "name": "Каб. 215",
+      "parentId": "floor-v-2"
+    },
+    {
+      "id": "cab-prom-1",
+      "kind": "cabinet",
+      "name": "Каб. 1",
+      "parentId": "floor-prom-1"
+    },
+    {
+      "id": "cab-prom-2",
+      "kind": "cabinet",
+      "name": "Каб. 2",
+      "parentId": "floor-prom-1"
+    },
+    {
+      "id": "cab-prom-5",
+      "kind": "cabinet",
+      "name": "Каб. 5",
+      "parentId": "floor-prom-2"
+    }
   ],
   "equipment": [
+    {
+      "id": "eq-printer-a101",
+      "type": "printer",
+      "model": "Kyocera ECOSYS P2040dn",
+      "serial": "VNC-A101-0001",
+      "inventoryNo": "INV-000001",
+      "ip": "10.10.1.21",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-scanner-a101",
+      "type": "scanner",
+      "model": "Epson DS-530 II",
+      "serial": "EPS-A101-0002",
+      "inventoryNo": "INV-000002",
+      "ip": "10.10.1.22",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a101-pc1",
+      "type": "pc",
+      "model": "HP ProDesk 400 G9",
+      "serial": "DL-A101-0003",
+      "inventoryNo": "INV-000003",
+      "ip": "10.10.1.20",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a101-ups1",
+      "type": "ups",
+      "model": "Ippon Back Basic 650",
+      "serial": "AS-A101-0004",
+      "inventoryNo": "INV-000004",
+      "ip": "10.10.1.23",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a102-pc1",
+      "type": "pc",
+      "model": "Dell OptiPlex 7010",
+      "serial": "DL-A102-0005",
+      "inventoryNo": "INV-000005",
+      "ip": "10.10.1.24",
+      "building": "А",
+      "cabinet": "102",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a102-monitor1",
+      "type": "monitor",
+      "model": "Dell P2422H",
+      "serial": "CN-A102-0006",
+      "inventoryNo": "INV-000006",
+      "ip": "10.10.1.25",
+      "building": "А",
+      "cabinet": "102",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a102-mfu1",
+      "type": "mfu",
+      "model": "Kyocera ECOSYS M2040dn",
+      "serial": "CNB-A102-0007",
+      "inventoryNo": "INV-000007",
+      "ip": "10.10.1.26",
+      "building": "А",
+      "cabinet": "102",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a104-mfu1",
+      "type": "mfu",
+      "model": "HP LaserJet MFP M428fdn",
+      "serial": "CNB-A104-0008",
+      "inventoryNo": "INV-000008",
+      "ip": "10.10.1.27",
+      "building": "А",
+      "cabinet": "104",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-a104-pc1",
+      "type": "pc",
+      "model": "HP EliteDesk 800 G6",
+      "serial": "DL-A104-0009",
+      "inventoryNo": "INV-000009",
+      "ip": "10.10.1.28",
+      "building": "А",
+      "cabinet": "104",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a104-ups1",
+      "type": "ups",
+      "model": "APC Back-UPS 650",
+      "serial": "AS-A104-0010",
+      "inventoryNo": "INV-000010",
+      "ip": "10.10.1.29",
+      "building": "А",
+      "cabinet": "104",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a201-pc1",
+      "type": "pc",
+      "model": "Lenovo ThinkCentre M70q",
+      "serial": "DL-A201-0011",
+      "inventoryNo": "INV-000011",
+      "ip": "10.10.1.30",
+      "building": "А",
+      "cabinet": "201",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a201-monitor1",
+      "type": "monitor",
+      "model": "Samsung S24R350",
+      "serial": "CN-A201-0012",
+      "inventoryNo": "INV-000012",
+      "ip": "10.10.1.31",
+      "building": "А",
+      "cabinet": "201",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a201-printer1",
+      "type": "printer",
+      "model": "HP LaserJet Pro M404dn",
+      "serial": "VNC-A201-0013",
+      "inventoryNo": "INV-000013",
+      "ip": "10.10.1.32",
+      "building": "А",
+      "cabinet": "201",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a205-printer1",
+      "type": "printer",
+      "model": "Brother HL-L2350DW",
+      "serial": "VNC-A205-0014",
+      "inventoryNo": "INV-000014",
+      "ip": "10.10.1.33",
+      "building": "А",
+      "cabinet": "205",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a205-pc1",
+      "type": "pc",
+      "model": "Acer Veriton X",
+      "serial": "DL-A205-0015",
+      "inventoryNo": "INV-000015",
+      "ip": "10.10.1.34",
+      "building": "А",
+      "cabinet": "205",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a205-ups1",
+      "type": "ups",
+      "model": "Ippon Back Basic 650",
+      "serial": "AS-A205-0016",
+      "inventoryNo": "INV-000016",
+      "ip": "10.10.1.35",
+      "building": "А",
+      "cabinet": "205",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a210-pc1",
+      "type": "pc",
+      "model": "HP ProDesk 400 G9",
+      "serial": "DL-A210-0017",
+      "inventoryNo": "INV-000017",
+      "ip": "10.10.1.36",
+      "building": "А",
+      "cabinet": "210",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a210-ups1",
+      "type": "ups",
+      "model": "APC Back-UPS 650",
+      "serial": "AS-A210-0018",
+      "inventoryNo": "INV-000018",
+      "ip": "10.10.1.37",
+      "building": "А",
+      "cabinet": "210",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a210-mfu1",
+      "type": "mfu",
+      "model": "HP LaserJet MFP M428fdn",
+      "serial": "CNB-A210-0019",
+      "inventoryNo": "INV-000019",
+      "ip": "10.10.1.38",
+      "building": "А",
+      "cabinet": "210",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a301-pc1",
+      "type": "pc",
+      "model": "Dell OptiPlex 7090",
+      "serial": "DL-A301-0020",
+      "inventoryNo": "INV-000020",
+      "ip": "10.10.1.39",
+      "building": "А",
+      "cabinet": "301",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a301-printer1",
+      "type": "printer",
+      "model": "Canon i-SENSYS LBP223dw",
+      "serial": "VNC-A301-0021",
+      "inventoryNo": "INV-000021",
+      "ip": "10.10.1.40",
+      "building": "А",
+      "cabinet": "301",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a301-scanner1",
+      "type": "scanner",
+      "model": "Epson DS-530 II",
+      "serial": "EPS-A301-0022",
+      "inventoryNo": "INV-000022",
+      "ip": "10.10.1.41",
+      "building": "А",
+      "cabinet": "301",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-a305-network1",
+      "type": "network",
+      "model": "Cisco Catalyst 2960",
+      "serial": "FOC-A305-0023",
+      "inventoryNo": "INV-000023",
+      "ip": "10.10.1.42",
+      "building": "А",
+      "cabinet": "305",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-a305-pc1",
+      "type": "pc",
+      "model": "HP EliteBook 840",
+      "serial": "DL-A305-0024",
+      "inventoryNo": "INV-000024",
+      "ip": "10.10.1.43",
+      "building": "А",
+      "cabinet": "305",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-a305-phone1",
+      "type": "phone",
+      "model": "Cisco IP Phone 7841",
+      "serial": "FCW-A305-0025",
+      "inventoryNo": "INV-000025",
+      "ip": "10.10.1.44",
+      "building": "А",
+      "cabinet": "305",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b110-printer1",
+      "type": "printer",
+      "model": "HP LaserJet Pro M404dn",
+      "serial": "VNC-B110-0026",
+      "inventoryNo": "INV-000026",
+      "ip": "10.10.3.10",
+      "building": "Б",
+      "cabinet": "110",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-b110-pc1",
+      "type": "pc",
+      "model": "Dell OptiPlex 7010",
+      "serial": "DL-B110-0027",
+      "inventoryNo": "INV-000027",
+      "ip": "10.10.3.13",
+      "building": "Б",
+      "cabinet": "110",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b110-ups1",
+      "type": "ups",
+      "model": "APC Back-UPS 650",
+      "serial": "AS-B110-0028",
+      "inventoryNo": "INV-000028",
+      "ip": "10.10.3.14",
+      "building": "Б",
+      "cabinet": "110",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b115-mfu1",
+      "type": "mfu",
+      "model": "Kyocera ECOSYS M3145idn",
+      "serial": "CNB-B115-0029",
+      "inventoryNo": "INV-000029",
+      "ip": "10.10.3.15",
+      "building": "Б",
+      "cabinet": "115",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b115-pc1",
+      "type": "pc",
+      "model": "Lenovo ThinkCentre M75q",
+      "serial": "DL-B115-0030",
+      "inventoryNo": "INV-000030",
+      "ip": "10.10.3.16",
+      "building": "Б",
+      "cabinet": "115",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b115-printer1",
+      "type": "printer",
+      "model": "Brother HL-L2350DW",
+      "serial": "VNC-B115-0031",
+      "inventoryNo": "INV-000031",
+      "ip": "10.10.3.17",
+      "building": "Б",
+      "cabinet": "115",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b208-pc1",
+      "type": "pc",
+      "model": "HP ProDesk 600 G6",
+      "serial": "DL-B208-0032",
+      "inventoryNo": "INV-000032",
+      "ip": "10.10.3.18",
+      "building": "Б",
+      "cabinet": "208",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b208-monitor1",
+      "type": "monitor",
+      "model": "LG 24MK430H",
+      "serial": "CN-B208-0033",
+      "inventoryNo": "INV-000033",
+      "ip": "10.10.3.19",
+      "building": "Б",
+      "cabinet": "208",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b208-phone1",
+      "type": "phone",
+      "model": "Cisco IP Phone 7841",
+      "serial": "FCW-B208-0034",
+      "inventoryNo": "INV-000034",
+      "ip": "10.10.3.20",
+      "building": "Б",
+      "cabinet": "208",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b214-pc1",
+      "type": "pc",
+      "model": "Dell OptiPlex 7010",
+      "serial": "DL-B214-0035",
+      "inventoryNo": "INV-000035",
+      "ip": "10.10.3.21",
+      "building": "Б",
+      "cabinet": "214",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b214-monitor1",
+      "type": "monitor",
+      "model": "Dell P2222H",
+      "serial": "CN-B214-0036",
+      "inventoryNo": "INV-000036",
+      "ip": "10.10.3.22",
+      "building": "Б",
+      "cabinet": "214",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b214-printer1",
+      "type": "printer",
+      "model": "HP LaserJet P2035",
+      "serial": "VNC-B214-0037",
+      "inventoryNo": "INV-000037",
+      "ip": "10.10.3.23",
+      "building": "Б",
+      "cabinet": "214",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b214-ups1",
+      "type": "ups",
+      "model": "Ippon Back Basic 650",
+      "serial": "AS-B214-0038",
+      "inventoryNo": "INV-000038",
+      "ip": "10.10.3.24",
+      "building": "Б",
+      "cabinet": "214",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-pc-b311",
+      "type": "pc",
+      "model": "Dell OptiPlex 7010",
+      "serial": "DL-B311-0039",
+      "inventoryNo": "INV-000039",
+      "ip": "10.10.3.11",
+      "building": "Б",
+      "cabinet": "311",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b311-monitor1",
+      "type": "monitor",
+      "model": "Dell P2422H",
+      "serial": "CN-B311-0040",
+      "inventoryNo": "INV-000040",
+      "ip": "10.10.3.25",
+      "building": "Б",
+      "cabinet": "311",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b311-peripheral1",
+      "type": "peripheral",
+      "model": "Logitech M170",
+      "serial": "LGT-B311-0041",
+      "inventoryNo": "INV-000041",
+      "ip": "10.10.3.26",
+      "building": "Б",
+      "cabinet": "311",
+      "criticality": "low"
+    },
     {
       "id": "eq-printer-b312",
       "type": "printer",
       "model": "HP LaserJet Pro M404dn",
-      "serial": "VNC3K12345",
+      "serial": "VNC-B312-0042",
       "inventoryNo": "INV-000312",
       "ip": "10.10.3.12",
       "building": "Б",
@@ -21,81 +705,400 @@
       "criticality": "high"
     },
     {
-      "id": "eq-pc-b311",
-      "type": "pc",
-      "model": "Dell OptiPlex 7010",
-      "serial": "DLOP7010-311",
-      "inventoryNo": "INV-000311",
-      "ip": "10.10.3.11",
-      "building": "Б",
-      "cabinet": "311",
-      "criticality": "medium"
-    },
-    {
       "id": "eq-switch-b3",
       "type": "network",
       "model": "Cisco Catalyst 2960",
-      "serial": "FOC1234X5YZ",
-      "inventoryNo": "INV-000313",
+      "serial": "FOC-B312-0043",
+      "inventoryNo": "INV-000043",
       "ip": "10.10.3.2",
       "building": "Б",
       "cabinet": "312",
       "criticality": "high"
     },
     {
-      "id": "eq-server-prom",
-      "type": "server",
-      "model": "Dell PowerEdge R650",
-      "serial": "SRV-R650-01",
-      "inventoryNo": "INV-000401",
-      "ip": "10.10.4.10",
-      "building": "ПРОМ",
-      "cabinet": "1",
-      "criticality": "critical"
-    },
-    {
-      "id": "eq-printer-a101",
-      "type": "printer",
-      "model": "Kyocera ECOSYS P2040dn",
-      "serial": "KYO2040-A101",
-      "inventoryNo": "INV-000101",
-      "ip": "10.10.1.21",
-      "building": "А",
-      "cabinet": "101",
+      "id": "eq-b312-pc1",
+      "type": "pc",
+      "model": "HP ProDesk 400 G9",
+      "serial": "DL-B312-0044",
+      "inventoryNo": "INV-000044",
+      "ip": "10.10.3.27",
+      "building": "Б",
+      "cabinet": "312",
       "criticality": "medium"
     },
     {
-      "id": "eq-pc-v205",
+      "id": "eq-b312-ups1",
+      "type": "ups",
+      "model": "APC Back-UPS 650",
+      "serial": "AS-B312-0045",
+      "inventoryNo": "INV-000045",
+      "ip": "10.10.3.28",
+      "building": "Б",
+      "cabinet": "312",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b314-network1",
+      "type": "network",
+      "model": "Cisco Catalyst 2960",
+      "serial": "FOC-B314-0046",
+      "inventoryNo": "INV-000046",
+      "ip": "10.10.3.29",
+      "building": "Б",
+      "cabinet": "314",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-b314-pc1",
+      "type": "pc",
+      "model": "Acer Veriton X",
+      "serial": "DL-B314-0047",
+      "inventoryNo": "INV-000047",
+      "ip": "10.10.3.30",
+      "building": "Б",
+      "cabinet": "314",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b314-phone1",
+      "type": "phone",
+      "model": "Cisco IP Phone 7841",
+      "serial": "FCW-B314-0048",
+      "inventoryNo": "INV-000048",
+      "ip": "10.10.3.31",
+      "building": "Б",
+      "cabinet": "314",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-b401-server1",
+      "type": "server",
+      "model": "Dell PowerEdge R450",
+      "serial": "SRV-B401-0049",
+      "inventoryNo": "INV-000049",
+      "ip": "10.10.3.32",
+      "building": "Б",
+      "cabinet": "401",
+      "criticality": "critical"
+    },
+    {
+      "id": "eq-b401-ups1",
+      "type": "ups",
+      "model": "APC Smart-UPS 1500",
+      "serial": "AS-B401-0050",
+      "inventoryNo": "INV-000050",
+      "ip": "10.10.3.33",
+      "building": "Б",
+      "cabinet": "401",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-b401-network1",
+      "type": "network",
+      "model": "Cisco Catalyst 2960",
+      "serial": "FOC-B401-0051",
+      "inventoryNo": "INV-000051",
+      "ip": "10.10.3.34",
+      "building": "Б",
+      "cabinet": "401",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-b405-network1",
+      "type": "network",
+      "model": "MikroTik CRS326",
+      "serial": "FOC-B405-0052",
+      "inventoryNo": "INV-000052",
+      "ip": "10.10.3.35",
+      "building": "Б",
+      "cabinet": "405",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-b405-pc1",
+      "type": "pc",
+      "model": "HP EliteDesk 800 G6",
+      "serial": "DL-B405-0053",
+      "inventoryNo": "INV-000053",
+      "ip": "10.10.3.36",
+      "building": "Б",
+      "cabinet": "405",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-b405-mfu1",
+      "type": "mfu",
+      "model": "Kyocera ECOSYS M3145idn",
+      "serial": "CNB-B405-0054",
+      "inventoryNo": "INV-000054",
+      "ip": "10.10.3.37",
+      "building": "Б",
+      "cabinet": "405",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v105-pc1",
       "type": "pc",
       "model": "HP ProDesk 400 G9",
-      "serial": "HPPD400-V205",
-      "inventoryNo": "INV-000205",
-      "ip": "10.10.5.15",
+      "serial": "DL-V105-0055",
+      "inventoryNo": "INV-000055",
+      "ip": "10.10.5.20",
       "building": "В",
-      "cabinet": "205",
+      "cabinet": "105",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v105-printer1",
+      "type": "printer",
+      "model": "Kyocera ECOSYS P2040dn",
+      "serial": "VNC-V105-0056",
+      "inventoryNo": "INV-000056",
+      "ip": "10.10.5.21",
+      "building": "В",
+      "cabinet": "105",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v105-monitor1",
+      "type": "monitor",
+      "model": "AOC 24B2XH",
+      "serial": "CN-V105-0057",
+      "inventoryNo": "INV-000057",
+      "ip": "10.10.5.22",
+      "building": "В",
+      "cabinet": "105",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-v110-mfu1",
+      "type": "mfu",
+      "model": "Canon i-SENSYS MF3010",
+      "serial": "CNB-V110-0058",
+      "inventoryNo": "INV-000058",
+      "ip": "10.10.5.23",
+      "building": "В",
+      "cabinet": "110",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v110-pc1",
+      "type": "pc",
+      "model": "Lenovo ThinkCentre M70q",
+      "serial": "DL-V110-0059",
+      "inventoryNo": "INV-000059",
+      "ip": "10.10.5.24",
+      "building": "В",
+      "cabinet": "110",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v110-printer1",
+      "type": "printer",
+      "model": "Brother HL-L2350DW",
+      "serial": "VNC-V110-0060",
+      "inventoryNo": "INV-000060",
+      "ip": "10.10.5.25",
+      "building": "В",
+      "cabinet": "110",
       "criticality": "low"
     },
     {
       "id": "eq-router-v205",
       "type": "network",
       "model": "MikroTik hEX S",
-      "serial": "MTHEXS-V205",
-      "inventoryNo": "INV-000206",
+      "serial": "FOC-V205-0061",
+      "inventoryNo": "INV-000061",
       "ip": "10.10.5.1",
+      "building": "В",
+      "cabinet": "205",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-pc-v205",
+      "type": "pc",
+      "model": "HP ProDesk 400 G9",
+      "serial": "DL-V205-0062",
+      "inventoryNo": "INV-000062",
+      "ip": "10.10.5.15",
       "building": "В",
       "cabinet": "205",
       "criticality": "medium"
     },
     {
-      "id": "eq-scanner-a101",
+      "id": "eq-v205-scanner1",
       "type": "scanner",
       "model": "Epson DS-530 II",
-      "serial": "EPSDS530-A1",
-      "inventoryNo": "INV-000102",
-      "ip": "10.10.1.22",
-      "building": "А",
-      "cabinet": "101",
+      "serial": "EPS-V205-0063",
+      "inventoryNo": "INV-000063",
+      "ip": "10.10.5.26",
+      "building": "В",
+      "cabinet": "205",
       "criticality": "low"
+    },
+    {
+      "id": "eq-v205-ups1",
+      "type": "ups",
+      "model": "Ippon Back Basic 650",
+      "serial": "AS-V205-0064",
+      "inventoryNo": "INV-000064",
+      "ip": "10.10.5.27",
+      "building": "В",
+      "cabinet": "205",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-v210-pc1",
+      "type": "pc",
+      "model": "Dell OptiPlex 3080",
+      "serial": "DL-V210-0065",
+      "inventoryNo": "INV-000065",
+      "ip": "10.10.5.28",
+      "building": "В",
+      "cabinet": "210",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-v210-monitor1",
+      "type": "monitor",
+      "model": "AOC 24B2XH",
+      "serial": "CN-V210-0066",
+      "inventoryNo": "INV-000066",
+      "ip": "10.10.5.29",
+      "building": "В",
+      "cabinet": "210",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-v215-server1",
+      "type": "server",
+      "model": "Dell PowerEdge T350",
+      "serial": "SRV-V215-0067",
+      "inventoryNo": "INV-000067",
+      "ip": "10.10.5.30",
+      "building": "В",
+      "cabinet": "215",
+      "criticality": "critical"
+    },
+    {
+      "id": "eq-v215-network1",
+      "type": "network",
+      "model": "Cisco Catalyst 2960",
+      "serial": "FOC-V215-0068",
+      "inventoryNo": "INV-000068",
+      "ip": "10.10.5.31",
+      "building": "В",
+      "cabinet": "215",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-v215-ups1",
+      "type": "ups",
+      "model": "APC Smart-UPS 1500",
+      "serial": "AS-V215-0069",
+      "inventoryNo": "INV-000069",
+      "ip": "10.10.5.32",
+      "building": "В",
+      "cabinet": "215",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-server-prom",
+      "type": "server",
+      "model": "Dell PowerEdge R650",
+      "serial": "SRV-PROM1-0070",
+      "inventoryNo": "INV-000070",
+      "ip": "10.10.4.10",
+      "building": "ПРОМ",
+      "cabinet": "1",
+      "criticality": "critical"
+    },
+    {
+      "id": "eq-prom1-ups1",
+      "type": "ups",
+      "model": "APC Smart-UPS 3000",
+      "serial": "AS-PROM1-0071",
+      "inventoryNo": "INV-000071",
+      "ip": "10.10.4.11",
+      "building": "ПРОМ",
+      "cabinet": "1",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-prom1-network1",
+      "type": "network",
+      "model": "Cisco Catalyst 9200",
+      "serial": "FOC-PROM1-0072",
+      "inventoryNo": "INV-000072",
+      "ip": "10.10.4.12",
+      "building": "ПРОМ",
+      "cabinet": "1",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-prom2-server1",
+      "type": "server",
+      "model": "HP ProLiant DL380 Gen10",
+      "serial": "SRV-PROM2-0073",
+      "inventoryNo": "INV-000073",
+      "ip": "10.10.4.13",
+      "building": "ПРОМ",
+      "cabinet": "2",
+      "criticality": "critical"
+    },
+    {
+      "id": "eq-prom2-ups1",
+      "type": "ups",
+      "model": "Ippon Innova RT 3000",
+      "serial": "AS-PROM2-0074",
+      "inventoryNo": "INV-000074",
+      "ip": "10.10.4.14",
+      "building": "ПРОМ",
+      "cabinet": "2",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-prom5-pc1",
+      "type": "pc",
+      "model": "Advantech IPC-510",
+      "serial": "DL-PROM5-0075",
+      "inventoryNo": "INV-000075",
+      "ip": "10.10.4.15",
+      "building": "ПРОМ",
+      "cabinet": "5",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-prom5-printer1",
+      "type": "printer",
+      "model": "Zebra ZT230",
+      "serial": "VNC-PROM5-0076",
+      "inventoryNo": "INV-000076",
+      "ip": "10.10.4.16",
+      "building": "ПРОМ",
+      "cabinet": "5",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-prom5-network1",
+      "type": "network",
+      "model": "Moxa EDS-408A",
+      "serial": "FOC-PROM5-0077",
+      "inventoryNo": "INV-000077",
+      "ip": "10.10.4.17",
+      "building": "ПРОМ",
+      "cabinet": "5",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-prom5-ups1",
+      "type": "ups",
+      "model": "Ippon Innova RT 3000",
+      "serial": "AS-PROM5-0078",
+      "inventoryNo": "INV-000078",
+      "ip": "10.10.4.18",
+      "building": "ПРОМ",
+      "cabinet": "5",
+      "criticality": "high"
     }
   ]
 }

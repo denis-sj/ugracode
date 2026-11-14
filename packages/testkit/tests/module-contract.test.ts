@@ -2,8 +2,9 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { defineModule } from '@ugra/core';
-import type { ModuleDefinition } from '@ugra/core';
+import type { AgentProfile, ModuleDefinition, ToolDef } from '@ugra/core';
 import { assertModuleContract, makeField, runModuleContract } from '../src/index';
 
 const readmeDir = mkdtempSync(join(tmpdir(), 'ugra-testkit-'));
@@ -53,6 +54,7 @@ const assessModule = defineModule({
         return {
           priority: {
             value: known ? 'medium' : 'low',
+            reactDueAt: null,
             slaDueAt: '2026-11-15T10:00:00.000Z',
             rule: 'тест',
             reasons: [],
@@ -110,6 +112,69 @@ describe('assertModuleContract', () => {
       },
     });
     await expect(assertModuleContract(module, { readmePath })).rejects.toThrow(/access/);
+  });
+
+  it('пропускает модуль с инструментом и агентом', async () => {
+    const echo: ToolDef<{ text: string }, { echo: string }> = {
+      name: 'sample_echo',
+      description: 'Повторяет текст',
+      input: z.object({ text: z.string() }),
+      capability: 'tickets.read',
+      async execute(args) {
+        return { echo: args.text };
+      },
+    };
+    const module = makeSample({
+      tools: [echo],
+      agents: [
+        {
+          id: 'sample-agent',
+          promptId: 'sample.v1.md',
+          tools: ['sample_echo'],
+          submit: z.object({ answer: z.string() }),
+        },
+      ],
+    });
+    await expect(assertModuleContract(module, { readmePath })).resolves.toBeUndefined();
+  });
+
+  it('падает, если у инструмента пустое описание', async () => {
+    const tool: ToolDef<{ text: string }, { echo: string }> = {
+      name: 'sample_echo',
+      description: '   ',
+      input: z.object({ text: z.string() }),
+      capability: 'tickets.read',
+      async execute(args) {
+        return { echo: args.text };
+      },
+    };
+    const module = makeSample({ tools: [tool] });
+    await expect(assertModuleContract(module, { readmePath })).rejects.toThrow(/описание/);
+  });
+
+  it('падает, если у инструмента неизвестное право', async () => {
+    const tool = {
+      name: 'sample_echo',
+      description: 'Повторяет текст',
+      input: z.object({ text: z.string() }),
+      capability: 'made.up',
+      async execute() {
+        return {};
+      },
+    } as unknown as ToolDef;
+    const module = makeSample({ tools: [tool] });
+    await expect(assertModuleContract(module, { readmePath })).rejects.toThrow(/право/);
+  });
+
+  it('падает, если агент ссылается на несуществующий инструмент', async () => {
+    const agent: AgentProfile<{ answer: string }> = {
+      id: 'sample-agent',
+      promptId: 'sample.v1.md',
+      tools: ['нет_такого'],
+      submit: z.object({ answer: z.string() }),
+    };
+    const module = makeSample({ agents: [agent] });
+    await expect(assertModuleContract(module, { readmePath })).rejects.toThrow(/несуществующий инструмент/);
   });
 });
 

@@ -1,0 +1,23 @@
+{
+  "fields": [
+    { "key": "object", "value": "МФУ", "quote": "МФУ", "confidence": 0.93 },
+    { "key": "building", "value": "А", "quote": "корпус А", "confidence": 0.95 },
+    { "key": "cabinet", "value": "104", "quote": "кабинет 104", "confidence": 0.96 },
+    { "key": "category", "value": "printer", "quote": "МФУ", "confidence": 0.92 },
+    { "key": "serviceType", "value": "repair", "quote": "не сканирует", "confidence": 0.85 },
+    { "key": "department", "value": "dep-it", "quote": null, "confidence": 0.72 },
+    { "key": "errorCode", "value": "E-05", "quote": "ошибка E-05", "confidence": 0.97 },
+    { "key": "impact", "value": "one", "quote": null, "confidence": 0.8 },
+    { "key": "urgency", "value": "workaround", "quote": "Печатает нормально", "confidence": 0.85 },
+    {
+      "key": "symptoms",
+      "value": "МФУ не сканирует, на панели горит ошибка E-05",
+      "quote": "МФУ не сканирует, на панели горит ошибка E-05",
+      "confidence": 0.94
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.05 },
+    "summary": { "text": "МФУ в кабинете 104 не сканирует, ошибка E-05." }
+  }
+}

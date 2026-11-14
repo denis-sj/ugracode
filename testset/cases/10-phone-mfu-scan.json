@@ -1,0 +1,24 @@
+{
+  "id": "case-10",
+  "channel": "phone",
+  "audioFile": "testset/audio/call-01.m4a",
+  "text": "Алло, здравствуйте, это из бухгалтерии, корпус А, кабинет 104. У нас МФУ не сканирует, на панели горит ошибка E-05. Печатает нормально, а сканировать не могу.",
+  "expected": {
+    "fields": {
+      "object": "МФУ",
+      "building": "А",
+      "cabinet": "104",
+      "category": "printer",
+      "serviceType": "repair",
+      "department": "dep-it",
+      "errorCode": "E-05",
+      "impact": "one",
+      "urgency": "workaround",
+      "symptoms": "МФУ не сканирует, на панели горит ошибка E-05"
+    },
+    "priority": "medium",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-2", "u-engineer-4", "u-engineer-1"],
+    "kbArticle": "kb-mfu-scan"
+  }
+}

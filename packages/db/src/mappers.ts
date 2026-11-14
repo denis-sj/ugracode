@@ -1,5 +1,6 @@
 import type {
   Appeal,
+  AppealMessage,
   Channel,
   DomainEvent,
   FieldOrigin,
@@ -14,11 +15,19 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
+import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, ArticleStepState, Incident, KnowledgeArticle } from '@ugra/core';
 import type {
+  AppealMessageRow,
   AppealRow,
+  ApplicantEquipmentRow,
+  ApplicantProfileRow,
   EventLogRow,
+  AgentStepRow,
+  IncidentRow,
+  KbArticleRow,
   PipelineRunRow,
   PipelineStepRow,
+  TicketArticleStepRow,
   TicketFieldRow,
   TicketRow,
   UserRow,
@@ -68,6 +77,20 @@ export function mapAppealRow(row: AppealRow): Appeal {
   };
 }
 
+/** Строка БД → сообщение чата обращения. */
+export function mapAppealMessageRow(row: AppealMessageRow): AppealMessage {
+  return {
+    id: row.id,
+    appealId: row.appealId,
+    direction: row.direction as AppealMessage['direction'],
+    kind: row.kind as AppealMessage['kind'],
+    body: row.body,
+    fieldKey: row.fieldKey ?? null,
+    ...(row.card ? { card: row.card } : {}),
+    createdAt: toIso(row.createdAt),
+  };
+}
+
 /** Строка БД → заявка. */
 export function mapTicketRow(row: TicketRow): Ticket {
   return {
@@ -81,9 +104,14 @@ export function mapTicketRow(row: TicketRow): Ticket {
     assigneeId: row.assigneeId,
     isEmergency: row.isEmergency,
     incidentId: row.incidentId,
+    reactDueAt: toIsoOrNull(row.reactDueAt),
     slaDueAt: toIsoOrNull(row.slaDueAt),
+    equipmentId: row.equipmentId,
+    locationId: row.locationId,
     confirmedBy: row.confirmedBy,
     confirmedAt: toIsoOrNull(row.confirmedAt),
+    resolution: row.resolution,
+    resolvedAt: toIsoOrNull(row.resolvedAt),
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
   };
@@ -131,6 +159,84 @@ export function mapPipelineStepRow(row: PipelineStepRow): StepRun {
     error: row.error ?? undefined,
     model: row.model,
     promptVersion: row.promptVersion,
+  };
+}
+
+/** Строка БД → шаг агента. */
+export function mapAgentStepRow(row: AgentStepRow): AgentStepRecord {
+  return {
+    runId: row.runId,
+    n: row.n,
+    tool: row.tool,
+    args: row.args ?? null,
+    resultSummary: row.resultSummary,
+    blocked: row.blocked,
+    durationMs: row.durationMs,
+    createdAt: toIso(row.createdAt),
+    error: row.error ?? undefined,
+    tokensIn: row.tokensIn ?? undefined,
+    tokensOut: row.tokensOut ?? undefined,
+  };
+}
+
+/** Строка БД → статья базы знаний (эмбеддинг не читаем: поиск по словам). */
+export function mapKbArticleRow(row: KbArticleRow): KnowledgeArticle {
+  return {
+    id: row.id,
+    title: row.title,
+    symptoms: row.symptoms ?? [],
+    steps: row.steps ?? [],
+    solution: row.solution,
+    category: row.category,
+  };
+}
+
+/** Строка БД → отметка шага статьи у заявки. */
+export function mapTicketArticleStepRow(row: TicketArticleStepRow): ArticleStepState {
+  return {
+    ticketId: row.ticketId,
+    articleId: row.articleId,
+    stepIndex: row.stepIndex,
+    done: row.done,
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+/** Строка БД → профиль заявителя. */
+export function mapApplicantProfileRow(row: ApplicantProfileRow): ApplicantProfile {
+  return {
+    userId: row.userId,
+    building: row.building,
+    floor: row.floor,
+    cabinet: row.cabinet,
+    equipmentId: row.equipmentId,
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+/** Строка БД → техника заявителя. */
+export function mapApplicantEquipmentRow(row: ApplicantEquipmentRow): ApplicantEquipment {
+  return {
+    id: row.id,
+    userId: row.userId,
+    equipmentId: row.equipmentId,
+    note: row.note,
+  };
+}
+
+/** Строка БД → инцидент массовости. */
+export function mapIncidentRow(row: IncidentRow): Incident {
+  return {
+    id: row.id,
+    number: row.number,
+    status: row.status as Incident['status'],
+    category: row.category,
+    building: row.building,
+    system: row.system,
+    size: row.size,
+    priority: row.priority as Incident['priority'],
+    openedAt: toIso(row.openedAt),
+    closedAt: toIsoOrNull(row.closedAt),
   };
 }
 

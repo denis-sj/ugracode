@@ -1,116 +1,133 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import type { MetaResponse } from '@ugra/contracts';
-import { describeMeta } from './meta';
-import { webModules } from './web-modules';
+import type { MetaResponse, SessionResponse, User, UsersResponse } from '@ugra/contracts';
+import { ThemeToggle, useBlockMotion } from '@ugra/ui';
+import { ApiError, api } from './api';
+import { LoginScreen } from './LoginScreen';
+import { useHashRoute } from './router';
+import { AppShell } from './shell/AppShell';
 
-type MetaState =
+type BootState =
   | { status: 'loading' }
-  | { status: 'ok'; meta: MetaResponse }
-  | { status: 'error'; message: string };
-
-const TOPBAR_SLOT = 'shell.topbar';
+  | { status: 'down'; message: string }
+  | { status: 'ready'; meta: MetaResponse; user: User | null; users: User[]; usersError: boolean };
 
 async function loadMeta(): Promise<MetaResponse> {
-  const response = await fetch('/api/meta', {
-    credentials: 'include',
-    headers: { accept: 'application/json' },
-  });
+  return api.get<MetaResponse>('/api/meta');
+}
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
-  return (await response.json()) as MetaResponse;
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function App(): JSX.Element {
-  const [state, setState] = useState<MetaState>({ status: 'loading' });
+  const [boot, setBoot] = useState<BootState>({ status: 'loading' });
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const route = useHashRoute();
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  useBlockMotion(contentRef);
 
-  useEffect(() => {
-    let alive = true;
-
-    loadMeta()
-      .then((meta) => {
-        if (alive) {
-          setState({ status: 'ok', meta });
-        }
-      })
-      .catch((error: unknown) => {
-        if (alive) {
-          setState({ status: 'error', message: error instanceof Error ? error.message : String(error) });
-        }
+  const bootLoad = useCallback(async (): Promise<void> => {
+    setBoot({ status: 'loading' });
+    try {
+      const [meta, usersResponse, session] = await Promise.all([
+        loadMeta(),
+        api.get<UsersResponse>('/api/users').catch(() => null),
+        api.get<SessionResponse>('/api/session').catch((error: unknown) => {
+          if (error instanceof ApiError && error.status === 401) return null;
+          throw error;
+        }),
+      ]);
+      setBoot({
+        status: 'ready',
+        meta,
+        user: session?.user ?? null,
+        users: usersResponse?.users ?? [],
+        usersError: usersResponse === null,
       });
-
-    return () => {
-      alive = false;
-    };
+    } catch (error) {
+      setBoot({ status: 'down', message: errorText(error) });
+    }
   }, []);
 
-  const topbarWidgets = webModules.flatMap((module) =>
-    module.widgets
-      .filter((widget) => widget.slot === TOPBAR_SLOT)
-      .map((widget) => ({ moduleId: module.id, widget })),
-  );
+  useEffect(() => {
+    void bootLoad();
+  }, [bootLoad]);
 
-  const pages = webModules.flatMap((module) =>
-    module.pages.map((page) => ({ moduleId: module.id, page })),
-  );
+  const logout = useCallback(async (): Promise<void> => {
+    try {
+      await api.post('/api/logout', {});
+    } finally {
+      setBoot((previous) => (previous.status === 'ready' ? { ...previous, user: null } : previous));
+    }
+  }, []);
+
+  const login = useCallback(async (userId: string): Promise<void> => {
+    setBusyUserId(userId);
+    setLoginError(null);
+    try {
+      const session = await api.post<SessionResponse>('/api/session', { userId });
+      setBoot((previous) => (previous.status === 'ready' ? { ...previous, user: session.user } : previous));
+    } catch (error) {
+      setLoginError(`Не удалось войти: ${errorText(error)}`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }, []);
 
   return (
-    <main>
-      <h1>Диспетчерская с ИИ</h1>
+    <div className="app">
+      <div className="ugra-ambient" aria-hidden="true">
+        <span className="ugra-ambient__blob ugra-ambient__blob--violet" />
+        <span className="ugra-ambient__blob ugra-ambient__blob--blue" />
+        <span className="ugra-ambient__blob ugra-ambient__blob--ice" />
+      </div>
 
-      {state.status === 'loading' && <p className="muted">Загружаем метаданные…</p>}
+      {/* Вне шапки (заставка, ошибка API, вход) переключатель плавает в углу. */}
+      {(boot.status !== 'ready' || boot.user === null) && <ThemeToggle floating />}
 
-      {state.status === 'error' && (
-        <section className="panel">
-          <p className="status-error">API не отвечает</p>
-          <p className="muted">Детали: {state.message}</p>
-        </section>
-      )}
-
-      {state.status === 'ok' && (
-        <section className="panel">
-          <p className="status-ok">Каркас работает</p>
-          <p className="muted">{describeMeta(state.meta)}</p>
-
-          <div className="row">
-            {state.meta.modules.map((module) => (
-              <span className="badge" key={module.id}>
-                {module.id} — {module.title}
-              </span>
-            ))}
-            {state.meta.modules.length === 0 && <span className="muted">Модулей нет</span>}
-          </div>
-        </section>
-      )}
-
-      <section className="panel">
-        <h2>Верхняя панель</h2>
-        <div className="row">
-          {topbarWidgets.map(({ moduleId, widget }) => (
-            <span className="badge" key={`${moduleId}:${widget.id}`}>
-              {widget.id}
+      <div className="app__content" ref={contentRef}>
+        {boot.status === 'loading' && (
+          <main className="splash">
+            <span className="splash__mark" aria-hidden="true">
+              Д
             </span>
-          ))}
-          {topbarWidgets.length === 0 && <span className="muted">Виджетов нет</span>}
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2>Страницы модулей</h2>
-        {pages.length === 0 && <p className="muted">Страниц нет</p>}
-        {pages.length > 0 && (
-          <ul>
-            {pages.map(({ moduleId, page }) => (
-              <li key={`${moduleId}:${page.path}`}>
-                <code>{page.path}</code> — {page.title} <span className="muted">({moduleId})</span>
-              </li>
-            ))}
-          </ul>
+            <p className="ugra-muted">Загружаем диспетчерскую…</p>
+          </main>
         )}
-      </section>
-    </main>
+
+        {boot.status === 'down' && (
+          <main className="api-down">
+            <section className="api-down__card ugra-card">
+              <span className="api-down__dot" aria-hidden="true" />
+              <h1>API не отвечает</h1>
+              <p className="ugra-muted">
+                Интерфейс загрузился, но сервер не ответил. Проверьте, что запущен <code>pnpm dev:api</code>.
+              </p>
+              <p className="api-down__details">{boot.message}</p>
+              <button type="button" className="ugra-btn ugra-btn--primary" onClick={() => void bootLoad()}>
+                Обновить
+              </button>
+            </section>
+          </main>
+        )}
+
+        {boot.status === 'ready' && boot.user === null && (
+          <LoginScreen
+            users={boot.users}
+            busyUserId={busyUserId}
+            error={loginError}
+            usersError={boot.usersError}
+            onLogin={(userId) => void login(userId)}
+            onRetry={() => void bootLoad()}
+          />
+        )}
+
+        {boot.status === 'ready' && boot.user !== null && (
+          <AppShell user={boot.user} meta={boot.meta} api={api} route={route} onLogout={() => void logout()} />
+        )}
+      </div>
+    </div>
   );
 }

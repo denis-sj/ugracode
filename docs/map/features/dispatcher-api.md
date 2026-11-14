@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../tasks/010-dispatcher-review.md](../../tasks/010-dispatcher-review.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Серверная часть задачи 010, без интерфейса и без ИИ. Интерфейс очереди и карточки — отдельная работа в `apps/web`.
 

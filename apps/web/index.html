@@ -3,7 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Диспетчерская с ИИ</title>
+    <!-- Тема до первого рендера: иначе при загрузке тёмной страницы мелькает светлая.
+         Светлая — по умолчанию, системную тему не используем. Ошибка хранилища не ломает страницу. -->
+    <script>
+      (function () {
+        try {
+          if (window.localStorage.getItem('ugra.theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (error) {
+          /* localStorage недоступен — остаётся светлая тема. */
+        }
+        /* Плавный переход цветов включаем после первой отрисовки: иначе в dev
+           текст проявляется из чёрного, пока Vite подключает стили. */
+        window.addEventListener('load', function () {
+          document.documentElement.classList.add('theme-animated');
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Журнал действий</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(212,56,13,.45)}60%{box-shadow:0 0 0 8px rgba(212,56,13,0)}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#8A90A6}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer;text-decoration:none}
+.ava{width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)}
+.ava:hover{color:#fff}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+.h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:14px;color:#5B6178;margin-top:4px;max-width:720px;line-height:1.5}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25);display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
+.pri:hover{background:#262A45;color:#fff}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16);display:inline-flex;align-items:center;gap:8px}
+.sec:hover{background:#fff}
+.chip{font:inherit;font-size:13px;font-weight:600;color:#2A2F45;background:rgba(255,255,255,.6);border:none;border-radius:999px;padding:0 14px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.12)}
+.chip:hover{background:#fff}
+.seg{font:inherit;position:relative;z-index:1;font-size:13px;font-weight:600;color:#6B7189;background:transparent;border:none;border-radius:9px;padding:0 14px;min-height:36px;cursor:pointer}
+.inp{font:inherit;font-size:15px;color:#0F1222;border:none;outline:none;border-radius:10px;padding:0 14px;min-height:44px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);width:100%;box-sizing:border-box}
+.inp:focus{box-shadow:inset 0 0 0 1.5px #5A49E0}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:14px}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.16)}
+.bar{display:block;height:5px;border-radius:3px;background:rgba(15,18,34,.08);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:3px;animation:grow .8s ease-out both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:900px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div><div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div><div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px"><span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span><nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px"><a class="tab" href="Queue.dc.html">Очередь <span class="cnt" style="color:#5A49E0">10</span></a><a class="tab" href="Incident.dc.html">Аварии <span class="cnt" style="color:#D4380D">1</span></a><a class="tab on" href="Log.dc.html">Журнал</a><a class="tab" href="People.dc.html">Исполнители</a></nav><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button><a class="ava" href="#profile" aria-label="Профиль" style="">ОС</a></div></header>
+<main style="position:relative;z-index:1;max-width:1376px;margin:0 auto;padding:8px 32px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div><h1 class="h1">Журнал действий</h1><div class="sub">Кто и что поменял в заявках. Правки «ИИ предложил → человек исправил» идут в настройку модели.</div></div>
+<div class="lg" style="display:flex;gap:2px;padding:3px;border-radius:12px"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><button class="seg" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.n }}</button></sc-for></div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start">
+<section class="glass" style="padding:6px 22px 10px">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+<div style="display:grid;grid-template-columns:52px 120px minmax(0,1fr) 92px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(15,18,34,.06);animation:rise .3s both">
+<span style="font-size:13px;color:#8A90A6;font-variant-numeric:tabular-nums">{{ r.t }}</span>
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;flex:none;background:{{ r.dot }}"></span>{{ r.who }}</span>
+<span style="min-width:0"><span style="display:block;font-size:14px;line-height:1.45">{{ r.what }}</span><sc-if value="{{ r.diff }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-size:13px"><s style="color:#8A90A6">{{ r.from }}</s><span style="color:#8A90A6">→</span><b>{{ r.to }}</b></span></sc-if></span>
+<a href="Review.dc.html" style="font-size:13px;font-weight:700;text-decoration:none;color:#5A49E0;text-align:right">№ {{ r.n }}</a>
+</div>
+</sc-for>
+</section>
+<div style="display:flex;flex-direction:column;gap:20px">
+<section class="glass" style="padding:22px">
+<h2 class="h">За смену</h2>
+<div style="display:flex;gap:24px"><div><div style="font-size:30px;font-weight:700;letter-spacing:-.03em">81%</div><div class="k">заявок без правок</div></div><div><div style="font-size:30px;font-weight:700;letter-spacing:-.03em">9</div><div class="k">правок ИИ</div></div></div>
+</section>
+<section class="glass" style="padding:22px">
+<h2 class="h">Что чаще исправляют</h2>
+<sc-for list="{{ fixes }}" as="f" hint-placeholder-count="5">
+<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>{{ f.n }}</span><b>{{ f.v }}</b></div><span class="bar"><span style="width:{{ f.v }};background:#14172B"></span></span></div>
+</sc-for>
+<div style="font-size:13px;line-height:1.5;color:#5B6178;margin-top:6px"><strong style="color:#0F1222">Подразделение</strong> ИИ путает чаще всего: в обращениях его почти не пишут. Подставлять из профиля заявителя.</div>
+</section>
+</div>
+</div></main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+
+  constructor(p) { super(p); this.state = { f: 'all' }; }
+  renderVals() {
+    const AI = '#5A49E0', ME = '#14172B', AL = '#D4380D';
+    const L = [
+      ['10:58', 'alarm', 'ИИ', AI, 'Признал аварию: «дым», «запах гари»', '0415'],
+      ['10:58', 'alarm', 'Система', AL, 'Уведомлён дежурный Ковалёв Д., письмо начальнику смены', '0415'],
+      ['10:44', 'edit', 'Смирнова О.', ME, 'Исправила подразделение', '0412', 'Бухгалтерия', 'Отдел кадров'],
+      ['10:44', 'ok', 'Смирнова О.', ME, 'Подтвердила и назначила Петрова С. В.', '0412'],
+      ['10:42', 'ai', 'ИИ', AI, 'Собрал заявку: 6 полей, 2 уточнения у заявителя, уверенность 86%', '0412'],
+      ['10:39', 'edit', 'Смирнова О.', ME, 'Сменила исполнителя', '0409', 'Группа 1С', 'Лебедев К.'],
+      ['10:31', 'ok', 'Смирнова О.', ME, 'Подтвердила без правок', '0405'],
+      ['10:20', 'edit', 'Смирнова О.', ME, 'Повысила приоритет', '0401', 'Средний', 'Высокий'],
+      ['10:12', 'ai', 'ИИ', AI, 'Склеил 4 обращения в возможный массовый сбой', '0414']
+    ];
+    const T = [['all', 'Все'], ['edit', 'Правки ИИ'], ['ok', 'Подтверждения'], ['alarm', 'Аварии']];
+    const f = this.state.f;
+    return {
+      tabs: T.map((t) => ({ n: t[1], style: t[0] === f ? 'background:#fff;color:#0F1222;box-shadow:0 2px 8px rgba(40,46,110,.1)' : '', pick: () => this.setState({ f: t[0] }) })),
+      rows: L.filter((r) => f === 'all' || r[1] === f).map((r) => ({ t: r[0], who: r[2], dot: r[3], what: r[4], n: r[5], diff: !!r[6], from: r[6] || '', to: r[7] || '' })),
+      fixes: [['Подразделение', '41%'], ['Исполнитель', '22%'], ['Приоритет', '17%'], ['Категория', '12%'], ['Место', '8%']].map((x) => ({ n: x[0], v: x[1] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

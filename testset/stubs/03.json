@@ -1,0 +1,24 @@
+{
+  "fields": [
+    { "key": "object", "value": "компьютер", "quote": "Компьютер", "confidence": 0.94 },
+    { "key": "building", "value": "Б", "quote": "корпуса Б", "confidence": 0.97 },
+    { "key": "cabinet", "value": "214", "quote": "кабинете 214", "confidence": 0.97 },
+    { "key": "category", "value": "software", "quote": "1С", "confidence": 0.9 },
+    { "key": "serviceType", "value": "repair", "quote": "не открывает", "confidence": 0.82 },
+    { "key": "department", "value": "dep-software", "quote": null, "confidence": 0.7 },
+    { "key": "errorCode", "value": "0x80004005", "quote": "0x80004005", "confidence": 0.99 },
+    { "key": "ip", "value": "10.10.2.214", "quote": "10.10.2.214", "confidence": 0.99 },
+    { "key": "impact", "value": "one", "quote": null, "confidence": 0.8 },
+    { "key": "urgency", "value": "down", "quote": "Работа стоит", "confidence": 0.92 },
+    {
+      "key": "symptoms",
+      "value": "Выдаёт ошибку 0x80004005 и закрывается",
+      "quote": "Выдаёт ошибку 0x80004005 и закрывается",
+      "confidence": 0.92
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.06 },
+    "summary": { "text": "1С не открывается на компьютере в кабинете 214, ошибка 0x80004005." }
+  }
+}

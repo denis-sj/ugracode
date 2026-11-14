@@ -4,7 +4,7 @@
 Дата: 2026-11-14
 Связано: [../history/2026-11.md](../history/2026-11.md), [../plans/README.md](../plans/README.md)
 
-**Следующий свободный номер: 032.** Номера идут подряд и не переиспользуются.
+**Следующий свободный номер: 034.** Номера идут подряд и не переиспользуются.
 
 ## Как взять задачу
 
@@ -64,37 +64,18 @@ PR: —
 
 **Код, до чекпоинта 1** (порядок и потоки — [../plans/case9-core.md](../plans/case9-core.md)):
 
-- [006-extraction-priority.md](006-extraction-priority.md) — поток А: извлечение полей и приоритет
-- [007-ui-shell-chat-card.md](007-ui-shell-chat-card.md) — поток Б: дизайн-система, чат заявителя, карточка заявки
-- [008-data-testset.md](008-data-testset.md) — поток В: данные и тестовый набор
 
 **После брейншторма** (что и почему — [../specs/case9-features.md](../specs/case9-features.md); в задачах 006–023 в конце добавлен раздел «Изменения после брейншторма»):
 
-- [024-core-contract-update.md](024-core-contract-update.md) — **MUST, идёт первой и одна:** правка ядра и контрактов
-- [031-agent-harness.md](031-agent-harness.md) — **MUST, сразу после 024:** агентный харнесс в ядре (цикл инструментов вместо RAG). В задачах 006, 008, 009, 013–016, 018, 021, 024, 026, 029, 030 добавлен раздел «Агентный харнесс»
-- [025-applicant-profile-guest.md](025-applicant-profile-guest.md) — MUST: профиль заявителя и гость
-- [026-screenshot.md](026-screenshot.md) — SHOULD: скриншот и фото шильдика
-- [027-reports-sla-workload.md](027-reports-sla-workload.md) — SHOULD: отчёты О3 и О4
-- [028-reports-kb-gaps-emergency.md](028-reports-kb-gaps-emergency.md) — COULD: отчёты О6 и О7
-- [029-knowledge-extras.md](029-knowledge-extras.md) — COULD: чек-лист шагов, вопрос базе знаний
-- [030-tuning-history.md](030-tuning-history.md) — COULD: история настройки
+ — **MUST, идёт первой и одна:** правка ядра и контрактов
+
+**Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
+
 
 **Код, после чекпоинта 1:**
 
-- [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
-- [010-dispatcher-review.md](010-dispatcher-review.md) — поток Б: проверка диспетчером: очередь, правка, подтверждение, журнал
-- [011-emergency.md](011-emergency.md) — поток А: авария: правила + модель, уведомление дежурному, красный режим
-- [012-routing.md](012-routing.md) — поток В: исполнитель: топ-3 с объяснением
-- [013-knowledge.md](013-knowledge.md) — поток В: база знаний: поиск по смыслу, статьи и похожие заявки
-- [014-quality.md](014-quality.md) — поток В: оценщик и экран «Качество»
-- [015-history-dashboard.md](015-history-dashboard.md) — поток Г: история заявок за 6 месяцев и дашборд О0
-- [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
-- [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
-- [018-engineer-desk.md](018-engineer-desk.md) — поток Б: рабочее место инженера и замыкание цикла
-- [019-voice-call.md](019-voice-call.md) — поток А: звонок: голос → текст → тот же пайплайн
+- [019-voice-call.md](019-voice-call.md) — поток А: звонок: голос → текст → тот же пайплайн. **Самый низкий приоритет: делать последней**, после 016, 022, 023, 026
 - [020-feedback-sentiment.md](020-feedback-sentiment.md) — поток А: обратная связь заявителю и метка тональности
-- [021-reports-insights.md](021-reports-insights.md) — поток Г: отчёты О2, О1, О5 с выводами
-- [022-demo-hardening.md](022-demo-hardening.md) — поток В: стабильное демо: кэш, офлайн-режим, сброс, запасная копия
 - [023-delivery.md](023-delivery.md) — поток Г: сдача: README, отчёт о качестве и ограничениях, план внедрения, SonarQube
 
 **Организационные:**

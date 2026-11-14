@@ -13,6 +13,7 @@ import type { ExtractionAspect, ReportDef } from './reports';
 import type { KernelStore } from './storage';
 import type { Ports } from './ports';
 import type { TicketService } from './tickets';
+import type { AgentProfile, ToolDef } from './agent';
 
 export interface ModuleDeps {
   bus: { publish(event: Omit<DomainEvent, 'id' | 'at'> & { id?: string; at?: string }): Promise<void> };
@@ -67,6 +68,10 @@ export interface ServerModule {
   subscribers: Subscriber[];
   routes?: (router: ModuleRouter, deps: ModuleDeps) => void;
   reports: ReportDef[];
+  /** Инструменты агентов: новый инструмент = запись в модуле, ядро не правится. */
+  tools: ToolDef[];
+  /** Профили агентов модуля. */
+  agents: AgentProfile[];
   seed?: (deps: SeedDeps) => Promise<void>;
 }
 
@@ -81,6 +86,8 @@ export interface ModuleDefinition {
   subscribers?: Subscriber[];
   routes?: (router: ModuleRouter, deps: ModuleDeps) => void;
   reports?: ReportDef[];
+  tools?: ToolDef[];
+  agents?: AgentProfile[];
   seed?: (deps: SeedDeps) => Promise<void>;
 }
 
@@ -99,6 +106,8 @@ export function defineModule(definition: ModuleDefinition): ServerModule {
     subscribers: definition.subscribers ?? [],
     routes: definition.routes,
     reports: definition.reports ?? [],
+    tools: definition.tools ?? [],
+    agents: definition.agents ?? [],
     seed: definition.seed,
   };
 }

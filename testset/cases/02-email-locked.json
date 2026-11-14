@@ -1,0 +1,22 @@
+{
+  "id": "case-02",
+  "channel": "chat",
+  "text": "Не могу войти в корпоративную почту: после ввода пароля появляется сообщение «Учётная запись заблокирована». Работаю в корпусе Б, кабинет 208. Почта нужна для переписки с подрядчиками, пока пишу с телефона.",
+  "expected": {
+    "fields": {
+      "object": "почта",
+      "building": "Б",
+      "cabinet": "208",
+      "category": "software",
+      "serviceType": "access",
+      "department": "dep-software",
+      "impact": "one",
+      "urgency": "workaround",
+      "symptoms": "после ввода пароля появляется сообщение «Учётная запись заблокирована»"
+    },
+    "priority": "medium",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-11", "u-engineer-14", "u-engineer-5"],
+    "kbArticle": "kb-email-login"
+  }
+}

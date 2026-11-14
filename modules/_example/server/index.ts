@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import type { FieldValue } from '@ugra/contracts';
 import { defineModule } from '@ugra/core';
+import type { AgentProfile, ToolDef } from '@ugra/core';
 
 interface ExampleExtras {
   matched: string[];
@@ -54,10 +56,51 @@ const extractStep = {
       fields.equipment = field('equipment', equipment[1].trim(), equipment[1], 0.7, at);
       ctx.progress({ stepId: 'example.extract', status: 'progress', fields: ['equipment'] });
     }
+    const category = /(принтер|мфу)/i.exec(text)
+      ? { value: 'printer', quote: /(принтер|мфу)[^,.;]*/i.exec(text)?.[0] ?? 'принтер' }
+      : /(свитч|сеть|интернет|вай-?фай|wi-?fi)/i.exec(text)
+        ? { value: 'network', quote: /(свитч|сеть|интернет|вай-?фай|wi-?fi)[^,.;]*/i.exec(text)?.[0] ?? 'сеть' }
+        : /(компьютер|пк|ноутбук)/i.exec(text)
+          ? { value: 'pc', quote: /(компьютер|пк|ноутбук)[^,.;]*/i.exec(text)?.[0] ?? 'компьютер' }
+          : /(1с|программ)/i.exec(text)
+            ? { value: 'software', quote: /(1с|программ)[^,.;]*/i.exec(text)?.[0] ?? 'программа' }
+            : null;
+    if (category) {
+      fields.category = field('category', category.value, category.quote, 0.85, at);
+      ctx.progress({ stepId: 'example.extract', status: 'progress', fields: ['category'] });
+    }
     return { fields };
   },
   async fallback() {
     return { fields: {} };
+  },
+};
+
+/** Образец инструмента агента: принимает текст, возвращает эхо. */
+const EchoInput = z.object({ text: z.string().min(1) });
+
+const echoTool: ToolDef<z.infer<typeof EchoInput>, { echo: string }> = {
+  name: 'example_echo',
+  description: 'Повторяет переданный текст. Показывает, как агент вызывает инструмент модуля.',
+  input: EchoInput,
+  capability: 'tickets.read',
+  async execute(args) {
+    return { echo: args.text };
+  },
+  summarize(result) {
+    return `эхо: ${result.echo.slice(0, 40)}`;
+  },
+};
+
+/** Образец агента: один инструмент, результат — `{ answer }`. */
+const exampleAgent: AgentProfile<{ answer: string }> = {
+  id: 'example',
+  promptId: 'modules/_example/prompts/example.v1.md',
+  tools: ['example_echo'],
+  submit: z.object({ answer: z.string().min(1) }),
+  maxSteps: 4,
+  async state() {
+    return { module: 'example', hint: 'Сдай ответ через submit' };
   },
 };
 
@@ -67,6 +110,8 @@ export default defineModule({
   enabledByDefault: true,
   fields: [],
   steps: [extractStep],
+  tools: [echoTool],
+  agents: [exampleAgent],
   events: [{ type: 'example.matched', description: 'Модуль-образец отреагировал на подтверждение заявки' }],
   subscribers: [
     {

@@ -60,11 +60,14 @@ AGENTS.md  (ты здесь)
 │   ├── files/case-2|8|9/   презентации кейсов (оригиналы; агенты их НЕ открывают — читают MD)
 │   ├── mentor-notes.md     вопросы ментору кейса 9 и его ответы
 │   ├── case-analysis.md    анализ и выбор кейса (история)
+│   ├── demo-script.md      сценарий демо на защите: шаги, тайминг, что делать при сбое
+│   ├── delivery.md         чек-лист сдачи, SonarQube, флаги фич, план внедрения
 │   └── winning-strategy.md как побеждаем: демо, презентация, тайминг
 ├── Правила ──────────── docs/rules/
 │   ├── git-and-deploy.md
 │   ├── testing.md
 │   ├── code-quality.md     качество кода под проверку SonarQube (влияет на баллы)
+│   ├── animations.md       ★ анимации интерфейса: как делать, чем, что запрещено (фронтенд)
 │   └── secrets-and-data.md
 ├── Архитектура и код ── docs/map/
 │   ├── README.md           слои, точки входа (заполняется по мере появления кода)
@@ -73,9 +76,10 @@ AGENTS.md  (ты здесь)
 ├── Знания ───────────── docs/knowledge/
 │   ├── people.md
 │   ├── project.md
-│   └── environments.md
+│   ├── environments.md
+│   └── limitations.md      честные ограничения версии: качество, синтетика, что не работает
 ├── Работа ───────────── docs/tasks/ · docs/specs/ · docs/plans/ · docs/history/ · docs/sessions/ · docs/ideas/
-├── Промпты ──────────── docs/prompts/: brainstorm-kickoff.md ∥ architect-kickoff.md (параллельно) → feature-intake.md (каждая новая фича) · frontend-kickoff.md (интерфейс)
+├── Промпты ──────────── docs/prompts/: brainstorm-kickoff.md ∥ architect-kickoff.md (параллельно) → feature-intake.md (каждая новая фича) · frontend-kickoff.md (интерфейс) · animations-rollout.md (анимации на все экраны)
 └── Проверки ─────────── scripts/check_doc_links.py · tests/docs/ · .github/
 ```
 
@@ -84,21 +88,21 @@ AGENTS.md  (ты здесь)
 [criteria](docs/hackathon/criteria.md) · [cases](docs/hackathon/cases/README.md) ·
 [raw-cases](docs/hackathon/cases/raw-cases.md) · [case-analysis](docs/hackathon/case-analysis.md) ·
 [**case9-brief**](docs/hackathon/case9-brief.md) · [case9-presentation](docs/hackathon/cases/case9-presentation.md) ·
-[mentor-notes](docs/hackathon/mentor-notes.md) · [промпт брейншторма](docs/prompts/brainstorm-kickoff.md) · [промпт архитектора](docs/prompts/architect-kickoff.md) · [промпт новой фичи](docs/prompts/feature-intake.md) · [промпт фронтенда](docs/prompts/frontend-kickoff.md) ·
-[winning-strategy](docs/hackathon/winning-strategy.md) ·
+[mentor-notes](docs/hackathon/mentor-notes.md) · [промпт брейншторма](docs/prompts/brainstorm-kickoff.md) · [промпт архитектора](docs/prompts/architect-kickoff.md) · [промпт новой фичи](docs/prompts/feature-intake.md) · [промпт фронтенда](docs/prompts/frontend-kickoff.md) · [промпт анимаций](docs/prompts/animations-rollout.md) ·
+[demo-script](docs/hackathon/demo-script.md) · [delivery](docs/hackathon/delivery.md) · [winning-strategy](docs/hackathon/winning-strategy.md) ·
 [git-and-deploy](docs/rules/git-and-deploy.md) · [testing](docs/rules/testing.md) ·
-[code-quality](docs/rules/code-quality.md) · [банк фич](docs/ideas/case9-features.md) ·
+[code-quality](docs/rules/code-quality.md) · [**анимации**](docs/rules/animations.md) · [банк фич](docs/ideas/case9-features.md) ·
 [сценка](docs/ideas/pitch-scene.md) ·
 [secrets-and-data](docs/rules/secrets-and-data.md) ·
 [map](docs/map/README.md) · [recipes](docs/map/recipes.md) ·
 [people](docs/knowledge/people.md) · [project](docs/knowledge/project.md) ·
-[environments](docs/knowledge/environments.md) ·
+[environments](docs/knowledge/environments.md) · [limitations](docs/knowledge/limitations.md) ·
 [tasks](docs/tasks/README.md) · [specs](docs/specs/README.md) · [plans](docs/plans/README.md) ·
 [history](docs/history/2026-11.md) · [sessions](docs/sessions/2026-11-14-kickoff.md) ·
 [последняя сессия](docs/sessions/2026-11-14-agent-harness.md) ·
 [**агентный харнесс и проверки**](docs/specs/case9-agent-harness.md) ·
 [**фичи в архитектуре**](docs/specs/case9-features.md) ·
-[**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
+[**дизайн интерфейса**](docs/specs/case9-ui-design.md) · [**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
 [ideas](docs/ideas/README.md)
 
 Правило: новый файл в `docs/rules/`, `docs/map/`, `docs/knowledge/` или `docs/hackathon/`
@@ -113,6 +117,7 @@ AGENTS.md  (ты здесь)
 2b. [docs/specs/case9-core.md](docs/specs/case9-core.md) — **как строим**: ядро, модули, точки расширения, «как добавить фичу».
 2c. [docs/specs/case9-features.md](docs/specs/case9-features.md) — **что изменил брейншторм**: при расхождении с ядром прав этот файл.
 2d. [docs/specs/case9-agent-harness.md](docs/specs/case9-agent-harness.md) — **как работает ИИ**: агент с инструментами вместо RAG, проверки настройки. Важнее 2b и 2c.
+2e. Фронтенд: [docs/specs/case9-ui-design.md](docs/specs/case9-ui-design.md) — **утверждённый дизайн** и макеты экранов; старт сессии — [docs/prompts/frontend-kickoff.md](docs/prompts/frontend-kickoff.md).
 3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-agent-harness.md) — что решили в прошлый раз.
 
 ## Сохранение материалов владельца
@@ -136,4 +141,5 @@ AGENTS.md  (ты здесь)
 - Задача закрыта записью в `docs/history/` и удалением файла задачи в том же PR.
 - Проверка ссылок проходит: `python3 -m unittest discover -s tests`.
 - Нет новых замечаний SonarQube уровня Blocker/Critical/Major ([code-quality](docs/rules/code-quality.md)): код оценивает машина, это баллы.
+- Экран фронтенда анимирован по [правилам анимаций](docs/rules/animations.md) и проверен в браузере.
 - Фича **работает в демо-сценарии**: то, что нельзя показать на защите, не считается сделанным.

@@ -12,7 +12,6 @@ import { StubCmdb, parseEquipment } from './cmdb/stub';
 import { StubTicketHistory } from './history/stub';
 import { InMemoryNotifications } from './notifications/stub';
 import { SystemClock } from './clock/system';
-import { cacheOnlyLlm, memoryCacheStore } from './cache/with-cache';
 
 export * from './llm/stub';
 export * from './llm/polza';
@@ -26,18 +25,19 @@ export * from './history/stub';
 export * from './notifications/stub';
 export * from './clock/system';
 export * from './clock/fixed';
-export * from './cache/with-cache';
 
-export type AiMode = 'stub' | 'cloud' | 'cache-only';
+export type AiMode = 'stub' | 'cloud';
 
 export interface CreatePortsResult extends Ports {
   /** Фактический режим ИИ после проверки ключа и флага AI_MODE. */
   aiMode: AiMode;
 }
 
+/** `AI_MODE` не задан — работаем через Polza, если есть ключ; иначе заглушка. */
 function aiModeFrom(env: NodeJS.ProcessEnv): AiMode {
   const raw = env.AI_MODE;
-  return raw === 'cloud' || raw === 'cache-only' ? raw : 'stub';
+  if (raw === 'stub' || raw === 'cloud') return raw;
+  return env.POLZA_API_KEY ? 'cloud' : 'stub';
 }
 
 function loadEquipment(env: NodeJS.ProcessEnv) {
@@ -68,25 +68,22 @@ function buildCloudPorts(env: NodeJS.ProcessEnv): {
 
 /**
  * Собирает все порты по окружению.
- * AI_MODE=stub (по умолчанию) — заглушки; cloud — Polza при наличии ключа;
- * cache-only — кэш, при промахе заглушка.
+ * AI_MODE=stub (по умолчанию) — заглушки; cloud — Polza при наличии ключа.
+ * Кэша ответов модели нет (решение владельца 2026-11-14).
  */
 export function createPorts(env: NodeJS.ProcessEnv = process.env): CreatePortsResult {
   const requested = aiModeFrom(env);
   const useCloud = requested === 'cloud' && Boolean(env.POLZA_API_KEY);
   const cloud = useCloud ? buildCloudPorts(env) : undefined;
+  const effective: AiMode = useCloud ? 'cloud' : 'stub';
 
-  const stubLlm = new StubLlm();
-  const llm =
-    requested === 'cache-only'
-      ? cacheOnlyLlm(memoryCacheStore(), stubLlm)
-      : (cloud?.llm ?? stubLlm);
+  const llm = cloud?.llm ?? new StubLlm();
 
   const embeddings: EmbeddingsPort = cloud?.embeddings ?? new StubEmbeddings();
   const speech: SpeechPort = cloud?.speech ?? new StubSpeech();
 
   return {
-    aiMode: requested,
+    aiMode: effective,
     llm,
     embeddings,
     speech,

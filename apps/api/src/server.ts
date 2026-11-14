@@ -2,26 +2,42 @@ import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { z } from 'zod';
 import {
+  AppealMessagesResponse,
   ConfirmTicketInput,
   CreateAppealInput,
+  DeadlineInput,
+  EngineerInfo,
+  EngineersResponse,
   HealthResponse,
   NotificationsResponse,
+  PostAppealMessageInput,
+  PostAppealMessageResponse,
   PriorityLevel,
+  ProfileResponse,
   ReanalyzeResponse,
+  ResolutionInput,
   Role,
+  ScreenshotInput,
+  ScreenshotResponse,
   SessionInput,
   SessionResponse,
   SettingsResponse,
+  TicketAnalysisResponse,
   TicketField,
   TicketListQuery,
   TicketResponse,
+  TranscribeInput,
+  TranscribeResponse,
   TransitionInput,
   UpdateFieldInput,
   UpdateSettingInput,
   type Appeal,
+  type AppealMessage,
   type DictionaryItem,
   type Permission,
   type RunStreamEvent,
+  type Ticket,
+  type TicketStatus,
   type User,
 } from '@ugra/contracts';
 import { hasPermission } from '@ugra/contracts';
@@ -33,6 +49,8 @@ import {
   collectRoutes,
   coreSteps,
   createSettingsService,
+  findField,
+  missingFields,
   resolveEnabledModules,
   subscribeModules,
   type KernelStore,
@@ -43,6 +61,7 @@ import {
 } from '@ugra/core';
 import { serverModules } from '../../../modules/registry.server';
 import { resolveRequestUser, sessionCookieHeader } from './auth';
+import { canSeeEvent } from './event-access';
 import { ProgressHub } from './hub';
 
 export interface BuildServerOptions {
@@ -91,6 +110,11 @@ function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
+function effectiveAiMode(env: Record<string, string | undefined>): 'stub' | 'cloud' {
+  if (env.AI_MODE === 'stub') return 'stub';
+  return env.POLZA_API_KEY ? 'cloud' : 'stub';
+}
+
 function httpError(message: string, statusCode: number): Error {
   return Object.assign(new Error(message), { statusCode });
 }
@@ -98,6 +122,133 @@ function httpError(message: string, statusCode: number): Error {
 function requireUser(user: User | null): User {
   if (!user) throw httpError('Нужен вход', 401);
   return user;
+}
+
+/** Шаг, который пишет след ответа в поле: видно, откуда значение. */
+const ANSWER_STEP = 'clarify-chat.answer';
+
+/** Промпт распознавания картинки: тот же файл, что у агента `vision`. */
+const SCREENSHOT_PROMPT_ID = 'modules/screenshot/prompts/read.v1.md';
+
+/** `data:image/png;base64,AAAA` → `AAAA`; обычный base64 возвращается как есть. */
+function stripImagePrefix(image: string): string {
+  const comma = image.indexOf(',');
+  return image.startsWith('data:') && comma >= 0 ? image.slice(comma + 1) : image;
+}
+
+/** Base64 картинки: пустая строка, мусорные символы и нулевая длина — 400. */
+function isBase64Image(image: string): boolean {
+  const compact = image.replace(/\s+/g, '');
+  if (compact === '' || !/^[A-Za-z0-9+/]+={0,2}$/.test(compact)) return false;
+  return Buffer.from(compact, 'base64').length > 0;
+}
+
+async function requireAppeal(store: KernelStore, id: string | undefined): Promise<Appeal> {
+  const appeal = await store.getAppeal(id ?? '');
+  if (!appeal) throw httpError('Обращение не найдено', 404);
+  return appeal;
+}
+
+/** Чат обращения видят автор и диспетчер (админ — как диспетчер), остальным — 403. */
+function assertAppealAccess(actor: User, appeal: Appeal): void {
+  if (actor.role === 'dispatcher' || actor.role === 'admin') return;
+  if (appeal.authorId !== actor.id) throw httpError('Чужое обращение', 403);
+}
+
+async function ticketOfAppeal(store: KernelStore, appealId: string): Promise<Ticket | null> {
+  const tickets = await store.listTickets({ limit: 1000 });
+  return tickets.find((ticket) => ticket.appealId === appealId) ?? null;
+}
+
+/** «Не знаю» в любом виде: `unknown` или текст, начинающийся с «не знаю». */
+function isUnknownAnswer(body: string): boolean {
+  const normalized = body.trim().toLowerCase();
+  return normalized === 'unknown' || normalized.startsWith('не знаю') || normalized.startsWith('незнаю');
+}
+
+/** Поля, которые заявка уже знала: рерун с `validate` не должен их потерять. */
+function restoreFields(current: readonly TicketField[], previous: readonly TicketField[]): TicketField[] {
+  const byKey = new Map(current.map((field) => [field.fieldKey, field]));
+  for (const field of previous) byKey.set(field.fieldKey, field);
+  return [...byKey.values()];
+}
+
+/** Статус из цепочки разбора; закрытую или назначенную заявку не трогаем. */
+async function setAnalysisStatus(
+  store: KernelStore,
+  ticketId: string,
+  to: TicketStatus,
+  at: string,
+): Promise<void> {
+  const ticket = await store.getTicket(ticketId);
+  if (!ticket || ticket.status === to) return;
+  if (!['new', 'ai_draft', 'waiting_applicant', 'in_review'].includes(ticket.status)) return;
+  await store.updateTicket(ticketId, { status: to, updatedAt: at });
+}
+
+interface AnswerInput {
+  ctx: AppContext;
+  store: KernelStore;
+  data: ReferenceData;
+  appeal: Appeal;
+  ticket: Ticket;
+  message: AppealMessage;
+  actor: User;
+  at: string;
+}
+
+/**
+ * Ответ на карточку: поле с `origin: asked` и следом «спросили → ответил» (или `no_answer`),
+ * повторный разбор с `validate` и перенос итога в заявку. Возвращает id прогона.
+ */
+async function applyAnswer(input: AnswerInput): Promise<string> {
+  const { ctx, store, data, appeal, ticket, message, actor, at } = input;
+  const fieldKey = message.fieldKey ?? '';
+  const unknown = isUnknownAnswer(message.body);
+  const topic = { kind: 'user' as const, id: actor.id };
+  const before = await store.getTicketFields(ticket.id);
+  const previous = before.find((field) => field.fieldKey === fieldKey);
+  const answered: TicketField = {
+    ticketId: ticket.id,
+    fieldKey,
+    value: unknown ? null : message.body,
+    confidence: unknown ? 0 : 1,
+    quote: null,
+    origin: 'asked',
+    needsReview: unknown,
+    trace: [
+      ...(previous?.trace ?? []),
+      { kind: 'asked', step: ANSWER_STEP, at, note: message.body },
+      { kind: unknown ? 'no_answer' : 'answered', step: ANSWER_STEP, at, note: message.body },
+    ],
+    aiValue: previous?.aiValue ?? previous?.value ?? null,
+  };
+  const answeredFields = [...before.filter((field) => field.fieldKey !== fieldKey), answered];
+  await store.saveTicketFields(ticket.id, answeredFields);
+  await ctx.bus.publish({
+    type: 'ticket.field.set',
+    actor: topic,
+    ticketId: ticket.id,
+    payload: { fieldKey, value: answered.value, origin: answered.origin, needsReview: answered.needsReview },
+  });
+
+  const run = await ctx.engine.rerun(appeal, 'validate', { ticketId: ticket.id, actor: topic });
+  await ctx.tickets.applyAnalysis(ticket.id, run.draft, topic);
+  // Рерун начинается с пустого черновика и перезаписывает поля заявки — возвращаем ответы на место.
+  const after = await store.getTicketFields(ticket.id);
+  const restored = restoreFields(after, answeredFields);
+  await store.saveTicketFields(ticket.id, restored);
+
+  if (unknown) {
+    await setAnalysisStatus(store, ticket.id, 'in_review', at);
+    return run.runId;
+  }
+  const values: Record<string, { value: unknown }> = {};
+  for (const field of restored) values[field.fieldKey] = { value: field.value };
+  if (missingFields(data.fields, values).length > 0) {
+    await setAnalysisStatus(store, ticket.id, 'waiting_applicant', at);
+  }
+  return run.runId;
 }
 
 export async function buildServer(options: BuildServerOptions): Promise<AppContext> {
@@ -131,10 +282,11 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     steps: [...coreSteps(), ...registries.steps],
     store: options.store,
     mode: env.AI_MODE ?? 'stub',
+    tools: registries.tools,
     onProgress: (progress) => hub.publish(progress),
   });
 
-  const app = Fastify({ logger: options.logger ?? false });
+  const app = Fastify({ logger: options.logger ?? false, bodyLimit: 25 * 1024 * 1024 });
   const ctx: AppContext = { app, store: options.store, tickets, engine, bus, hub, modules: enabled };
 
   const addRoute = (def: RouteDef): void => {
@@ -175,7 +327,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     });
   };
 
-  registerCoreRoutes(addRoute, options.store, ctx, data, env);
+  registerCoreRoutes(addRoute, options.store, ctx, data, env, options.ports);
 
   for (const mounted of collectRoutes(enabled, deps)) {
     for (const route of mounted.routes) {
@@ -209,6 +361,7 @@ function registerCoreRoutes(
   ctx: AppContext,
   data: ReferenceData,
   env: Record<string, string | undefined>,
+  ports: Ports,
 ): void {
   const { tickets, engine } = ctx;
   addRoute({
@@ -227,10 +380,110 @@ function registerCoreRoutes(
       modules: ctx.modules.map((module) => ({ id: module.id, title: module.title })),
       fields: data.fields,
       dictionaries: data.dictionaries as DictionaryItem[],
-      aiMode: (env.AI_MODE ?? 'stub') as 'stub' | 'cloud' | 'cache-only',
+      aiMode: effectiveAiMode(env),
       roles: [...Role.options],
       priorities: [...PriorityLevel.options],
     }),
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/profile',
+    access: 'any',
+    response: ProfileResponse,
+    handler: async ({ user }) => {
+      const actor = requireUser(user);
+      const [profile, equipment] = await Promise.all([
+        store.getApplicantProfile(actor.id),
+        store.listApplicantEquipment(actor.id),
+      ]);
+      const cmdb = asRecord(data.extra.cmdb);
+      const equipmentList = Array.isArray(cmdb.equipment)
+        ? (cmdb.equipment as { id?: string; type?: string; model?: string }[])
+        : [];
+      const labelById = new Map(
+        equipmentList
+          .filter((item): item is { id: string; type?: string; model?: string } => typeof item.id === 'string')
+          .map((item) => [item.id, [item.type, item.model].filter(Boolean).join(' ')]),
+      );
+      return {
+        user: actor,
+        profile: profile
+          ? {
+              userId: profile.userId,
+              building: profile.building,
+              floor: profile.floor,
+              cabinet: profile.cabinet,
+              equipmentId: profile.equipmentId,
+              updatedAt: profile.updatedAt,
+            }
+          : null,
+        equipment: equipment.map((item) => ({
+          id: item.id,
+          equipmentId: item.equipmentId,
+          note: item.note,
+          label: labelById.get(item.equipmentId) || item.equipmentId,
+        })),
+      };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/logout',
+    access: 'any',
+    handler: async ({ setCookie }) => {
+      setCookie('ugra_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+      return { ok: true };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/transcribe',
+    access: 'any',
+    body: TranscribeInput,
+    response: TranscribeResponse,
+    handler: async ({ body, user }) => {
+      requireUser(user);
+      const input = body as { audio: string; mimeType: string };
+      try {
+        const transcript = await ports.speech.transcribe({
+          kind: 'audio',
+          data: input.audio,
+          mimeType: input.mimeType,
+        });
+        return { text: transcript.text, language: transcript.language, confidence: transcript.confidence };
+      } catch {
+        throw httpError('Не удалось распознать речь', 502);
+      }
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/screenshot',
+    access: 'appeal.create',
+    body: ScreenshotInput,
+    response: ScreenshotResponse,
+    handler: async ({ body, user }) => {
+      requireUser(user);
+      const input = body as { image: string; mimeType: string };
+      const data = stripImagePrefix(input.image.trim());
+      if (!isBase64Image(data)) throw httpError('Битая картинка: нужен base64', 400);
+      let described;
+      try {
+        described = await ports.vision.describe(
+          { kind: 'image', data, mimeType: input.mimeType },
+          SCREENSHOT_PROMPT_ID,
+        );
+      } catch {
+        throw httpError('Не удалось распознать изображение', 502);
+      }
+      const text = described.text.trim();
+      if (text === '') throw httpError('На изображении нечего распознать', 502);
+      return { text, confidence: described.confidence };
+    },
   });
 
   addRoute({
@@ -292,6 +545,70 @@ function registerCoreRoutes(
       const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' } });
       await tickets.applyAnalysis(ticket.id, run.draft);
       return { appealId: appeal.id, ticketId: ticket.id, runId: run.runId };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/appeals/:id/messages',
+    access: 'appeal.answer',
+    response: AppealMessagesResponse,
+    handler: async ({ params, user }) => {
+      const actor = requireUser(user);
+      const appeal = await requireAppeal(store, params.id);
+      assertAppealAccess(actor, appeal);
+      return { messages: await store.listAppealMessages(appeal.id) };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/appeals/:id/messages',
+    access: 'appeal.answer',
+    body: PostAppealMessageInput,
+    response: PostAppealMessageResponse,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const appeal = await requireAppeal(store, params.id);
+      assertAppealAccess(actor, appeal);
+      const input = body as PostAppealMessageInput;
+      const text = input.body.trim();
+      if (text === '') throw httpError('Пустое сообщение', 400);
+      if (input.fieldKey && !findField(data, input.fieldKey)) {
+        throw httpError(`Поле «${input.fieldKey}» не найдено в реестре`, 400);
+      }
+      const ticket = await ticketOfAppeal(store, appeal.id);
+      if (!ticket) throw httpError('Заявка не найдена', 404);
+
+      const at = ports.clock.now().toISOString();
+      const message: AppealMessage = {
+        id: randomUUID(),
+        appealId: appeal.id,
+        direction: 'in',
+        kind: input.kind,
+        body: text,
+        fieldKey: input.fieldKey ?? null,
+        ...(input.card ? { card: input.card } : {}),
+        createdAt: at,
+      };
+      await store.saveAppealMessage(message);
+      await ctx.bus.publish({
+        type: 'message.sent',
+        actor: { kind: 'user', id: actor.id },
+        ticketId: ticket.id,
+        payload: {
+          appealId: appeal.id,
+          messageId: message.id,
+          kind: message.kind,
+          fieldKey: message.fieldKey,
+        },
+      });
+
+      const runId =
+        message.kind === 'answer' && message.fieldKey
+          ? await applyAnswer({ ctx, store, data, appeal, ticket, message, actor, at })
+          : null;
+      return { message, ticketId: ticket.id, runId };
     },
   });
 
@@ -381,9 +698,15 @@ function registerCoreRoutes(
     body: TransitionInput,
     handler: async ({ params, body, user }) => {
       const actor = requireUser(user);
-      const input = body as { to: Parameters<typeof tickets.transition>[1] };
+      const input = body as { to: Parameters<typeof tickets.transition>[1]; reason?: string };
       try {
-        return await tickets.transition(params.id ?? '', input.to, { kind: 'user', id: actor.id }, actor.role);
+        return await tickets.transition(
+          params.id ?? '',
+          input.to,
+          { kind: 'user', id: actor.id },
+          actor.role,
+          input.reason,
+        );
       } catch (error) {
         throw httpError(error instanceof Error ? error.message : 'Переход запрещён', 403);
       }
@@ -404,6 +727,121 @@ function registerCoreRoutes(
       const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'user', id: actor.id } });
       await tickets.applyAnalysis(ticket.id, run.draft, { kind: 'user', id: actor.id });
       return { runId: run.runId, ticketId: ticket.id };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/tickets/:id/analysis',
+    access: 'tickets.read',
+    response: TicketAnalysisResponse,
+    handler: async ({ params, user }) => {
+      const ticket = await store.getTicket(params.id ?? '');
+      if (!ticket) throw httpError('Заявка не найдена', 404);
+      const appeal = await store.getAppeal(ticket.appealId);
+      if (user?.role === 'applicant' && appeal?.authorId !== user.id) {
+        throw httpError('Чужая заявка', 403);
+      }
+      const events = await store.listEvents({ ticketId: ticket.id, type: 'analysis.completed', limit: 20 });
+      const last = events.at(-1);
+      const payload = asRecord(last?.payload);
+      const analysis = asRecord(payload.draft);
+      if (!last || Object.keys(analysis).length === 0) throw httpError('Разбор не найден', 404);
+      return {
+        ticketId: ticket.id,
+        runId: typeof payload.runId === 'string' ? payload.runId : '',
+        analysis,
+      };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/deadline',
+    // Срок продлевает и диспетчер, и инженер по своей заявке.
+    access: 'tickets.transition',
+    body: DeadlineInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { slaDueAt: string; reason: string };
+      return tickets.extendDeadline(params.id ?? '', input.slaDueAt, input.reason, {
+        kind: 'user',
+        id: actor.id,
+      });
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/resolution',
+    access: 'tickets.transition',
+    body: ResolutionInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { text: string };
+      try {
+        return await tickets.resolve(params.id ?? '', input.text, { kind: 'user', id: actor.id }, actor.role);
+      } catch (error) {
+        throw httpError(error instanceof Error ? error.message : 'Не удалось сохранить результат', 403);
+      }
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/events',
+    access: 'tickets.events',
+    handler: async ({ query }) => {
+      const limit = Math.min(Number(query.limit ?? 200) || 200, 500);
+      return { events: await store.listEvents({ limit }) };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/engineers',
+    access: 'tickets.read',
+    response: EngineersResponse,
+    handler: async () => {
+      const raw = asRecord(data.extra.engineers);
+      const rows = Array.isArray(raw.engineers) ? raw.engineers : [];
+      const users = await store.listUsers();
+      const tickets = await store.listTickets({ limit: 1000 });
+      const openByUser = new Map<string, number>();
+      for (const ticket of tickets) {
+        if (!ticket.assigneeId) continue;
+        if (['closed', 'cancelled', 'resolved'].includes(ticket.status)) continue;
+        openByUser.set(ticket.assigneeId, (openByUser.get(ticket.assigneeId) ?? 0) + 1);
+      }
+      const engineers: EngineerInfo[] = rows.map((row) => {
+        const item = asRecord(row);
+        const id = typeof item.id === 'string' ? item.id : '';
+        const user = users.find((candidate) => candidate.id === id);
+        const skills = Array.isArray(item.skills)
+          ? item.skills
+              .map((skill) => asRecord(skill))
+              .filter((skill) => typeof skill.skill === 'string' && typeof skill.level === 'number')
+              .map((skill) => ({ skill: skill.skill as string, level: skill.level as number }))
+          : [];
+        return {
+          id,
+          fullName: typeof item.fullName === 'string' ? item.fullName : (user?.fullName ?? id),
+          departmentId: typeof item.departmentId === 'string' ? item.departmentId : (user?.departmentId ?? null),
+          position: user?.position ?? null,
+          level: typeof item.level === 'string' || typeof item.level === 'number' ? item.level : undefined,
+          skills,
+          buildings: Array.isArray(item.buildings)
+            ? item.buildings.filter((value): value is string => typeof value === 'string')
+            : [],
+          onShift: item.onShift === true,
+          openTickets: Math.max(
+            typeof item.openTickets === 'number' ? item.openTickets : 0,
+            openByUser.get(id) ?? 0,
+          ),
+          resolvedSimilar: typeof item.resolvedSimilar === 'number' ? item.resolvedSimilar : 0,
+        };
+      });
+      return { engineers };
     },
   });
 
@@ -472,6 +910,40 @@ function registerCoreRoutes(
 }
 
 function registerStreamRoute(ctx: AppContext, store: KernelStore): void {
+  /** Живой поток доменных событий для экранов: фильтр по роли и заявке. */
+  ctx.app.get('/api/events/stream', async (request, reply) => {
+    const user = await resolveRequestUser(request, store);
+    if (!user) return reply.code(401).send({ error: 'unauthorized', message: 'Нужен вход' });
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    reply.hijack();
+    let closed = false;
+    const send = (event: unknown): void => {
+      if (!closed) reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+    };
+    const heartbeat = setInterval(() => {
+      if (!closed) reply.raw.write(': ping\n\n');
+    }, 25000);
+    const unsubscribe = ctx.bus.subscribe('*', async (event) => {
+      const ticket = event.ticketId ? await store.getTicket(event.ticketId) : null;
+      const appeal = ticket ? await store.getAppeal(ticket.appealId) : null;
+      const info = ticket
+        ? { ticketId: ticket.id, assignedTo: ticket.assigneeId, authorId: appeal?.authorId ?? null }
+        : null;
+      if (canSeeEvent(user, event, info)) send(event);
+    });
+    request.raw.on('close', () => {
+      closed = true;
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+    return reply;
+  });
+
   ctx.app.get('/api/appeals/:id/stream', async (request, reply) => {
     const user = await resolveRequestUser(request, store);
     if (!user) return reply.code(401).send({ error: 'unauthorized', message: 'Нужен вход' });

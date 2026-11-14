@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Вход</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(212,56,13,.45)}60%{box-shadow:0 0 0 8px rgba(212,56,13,0)}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#8A90A6}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer;text-decoration:none}
+.ava{width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)}
+.ava:hover{color:#fff}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+.h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:14px;color:#5B6178;margin-top:4px;max-width:720px;line-height:1.5}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25);display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
+.pri:hover{background:#262A45;color:#fff}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16);display:inline-flex;align-items:center;gap:8px}
+.sec:hover{background:#fff}
+.chip{font:inherit;font-size:13px;font-weight:600;color:#2A2F45;background:rgba(255,255,255,.6);border:none;border-radius:999px;padding:0 14px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.12)}
+.chip:hover{background:#fff}
+.seg{font:inherit;position:relative;z-index:1;font-size:13px;font-weight:600;color:#6B7189;background:transparent;border:none;border-radius:9px;padding:0 14px;min-height:36px;cursor:pointer}
+.inp{font:inherit;font-size:15px;color:#0F1222;border:none;outline:none;border-radius:10px;padding:0 14px;min-height:44px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);width:100%;box-sizing:border-box}
+.inp:focus{box-shadow:inset 0 0 0 1.5px #5A49E0}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:14px}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.16)}
+.bar{display:block;height:5px;border-radius:3px;background:rgba(15,18,34,.08);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:3px;animation:grow .8s ease-out both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:900px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div><div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div><div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+
+<main style="position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:72px 32px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="text-align:center">
+<div style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</div>
+<h1 class="h1" style="font-size:52px;margin-top:18px">Кто вы сегодня?</h1>
+<div class="sub" style="margin:8px auto 0">Демо-вход выбором готового пользователя. В рабочей версии — корпоративная учётная запись.</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:12px">
+<sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+<button class="glass" onClick="{{ r.pick }}" style="font:inherit;color:#0F1222;text-align:left;border:none;cursor:pointer;padding:20px;{{ r.style }}">
+<span style="display:block;font-size:18px;font-weight:700;letter-spacing:-.02em">{{ r.name }}</span>
+<span class="k" style="display:block;margin-top:6px;line-height:1.5;color:#5B6178">{{ r.what }}</span>
+</button>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;align-items:start">
+<section class="glass" style="padding:10px;animation:rise .35s both">
+<sc-for list="{{ users }}" as="u" hint-placeholder-count="2">
+<button onClick="{{ u.pick }}" style="font:inherit;color:#0F1222;width:100%;text-align:left;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;{{ u.style }}">
+<span style="width:40px;height:40px;border-radius:50%;flex:none;background:#14172B;color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ u.ini }}</span>
+<span><b style="display:block;font-size:15px">{{ u.name }}</b><span class="k">{{ u.note }}</span></span>
+</button>
+</sc-for>
+<div style="padding:10px 12px 8px"><button class="pri" style="width:100%">Войти: {{ who }} <span class="kbd">Enter</span></button></div>
+</section>
+<section class="glass" style="padding:22px">
+<h2 class="h">Обращение от жюри</h2>
+<div style="font-size:15px;line-height:1.55;color:#3A3F55">Вход без учётной записи. Помощник сам спросит место и контакт.</div>
+<label for="gn" class="k" style="display:block;margin:14px 0 6px">Как к вам обращаться</label>
+<input id="gn" class="inp" placeholder="Необязательно">
+<button class="sec" style="width:100%;justify-content:center;margin-top:12px">Войти как гость</button>
+</section>
+</div></main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+
+  constructor(p) { super(p); this.state = { role: 'a', user: 0 }; }
+  renderVals() {
+    const R = {
+      a: ['Заявитель', 'Пишет или говорит, что случилось, и следит за заявкой', [['АИ', 'Иванова А. С.', 'Отдел кадров · корп. Б, каб. 312'], ['КЕ', 'Ким Е.', 'Бухгалтерия · корп. В, каб. 210']]],
+      d: ['Диспетчер', 'Проверяет заявки ИИ и назначает исполнителей', [['ОС', 'Смирнова О.', 'Дневная смена до 20:00'], ['ЛК', 'Лебедев К.', 'Ночная смена']]],
+      e: ['Инженер', 'Получает задачи с подсказками и пишет результат', [['ПС', 'Петров С. В.', 'Рабочие места'], ['ОИ', 'Орлов И.', 'Сеть'], ['СА', 'Сидоров А.', 'ПО и почта']]],
+      m: ['Руководитель', 'Смотрит метрики, отчёты и качество ИИ', [['НМ', 'Никитина М.', 'Начальник службы АСУ']]]
+    };
+    const st = this.state;
+    const roles = Object.keys(R).map((k) => ({ name: R[k][0], what: R[k][1], style: k === st.role ? 'box-shadow:inset 0 0 0 1.5px #14172B,0 12px 40px rgba(40,46,110,.12);background:#fff' : '', pick: () => this.setState({ role: k, user: 0 }) }));
+    const list = R[st.role][2];
+    const users = list.map((u, i) => ({ ini: u[0], name: u[1], note: u[2], style: i === st.user ? 'background:rgba(15,18,34,.05)' : 'background:transparent', pick: () => this.setState({ user: i }) }));
+    return { roles, users, who: list[st.user][1] };
+  }
+}
+</script>
+</body>
+</html>

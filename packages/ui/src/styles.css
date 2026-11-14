@@ -1,0 +1,1916 @@
+/*
+ * Базовые стили и компоненты дизайн-системы.
+ * Все цвета, отступы и длительности — из tokens.css. Своих цветов здесь нет.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Смена темы: плавно только цвета. Класс `theme-animated` ставит inline-скрипт
+   после первой отрисовки, чтобы появление страницы не анимировалось.
+   При prefers-reduced-motion переходы отключаются общим правилом в конце файла. */
+:where(.theme-animated) body {
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
+}
+
+/* Поверхности тоже перекрашиваются плавно. `:where` — нулевая специфичность,
+   чтобы не перебивать собственные transition компонентов (hover, transform). */
+:where(.theme-animated) :where(
+    .ugra-card,
+    .ugra-stat,
+    .ugra-sticker,
+    .ugra-step,
+    .ugra-empty,
+    .ugra-modal__panel,
+    .ugra-toast,
+    .ugra-segmented,
+    .ugra-chip,
+    .ugra-search,
+    .ugra-actions,
+    .ugra-badge,
+    .ugra-field
+  ) {
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--ease-out);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+code,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.94em;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Утилиты ---------- */
+
+.ugra-muted {
+  color: var(--color-text-muted);
+}
+
+.ugra-dim {
+  color: var(--color-text-dim);
+}
+
+.ugra-mono {
+  font-family: var(--font-mono);
+}
+
+.ugra-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ugra-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ugra-spacer {
+  flex: 1 1 auto;
+}
+
+.ugra-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ugra-rise {
+  animation: ugra-rise var(--dur-rise) var(--ease-out) both;
+}
+
+.ugra-fade {
+  animation: ugra-fade var(--dur-base) var(--ease-out) both;
+}
+
+.ugra-pulse {
+  animation: ugra-pulse var(--dur-slow) var(--ease-out);
+}
+
+/* Новая строка очереди: въезжает сверху со вспышкой. */
+.ugra-row-flash {
+  animation: ugra-row-flash var(--dur-slow) var(--ease-out) both;
+}
+
+/* Заголовок страницы: 34–40 px, 700, графит → фиолетовый. */
+.ugra-page-title {
+  font-size: var(--text-page);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.045em;
+  background: var(--gradient-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Атмосфера: пятна и сетка ---------- */
+
+.ugra-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ugra-ambient__blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ugra-ambient__blob--violet {
+  width: 820px;
+  height: 820px;
+  left: -240px;
+  top: -360px;
+  background: radial-gradient(closest-side, var(--blob-violet), transparent);
+  animation: ugra-float var(--dur-ambient) var(--ease-out) infinite;
+}
+
+.ugra-ambient__blob--blue {
+  width: 860px;
+  height: 860px;
+  right: -260px;
+  top: -320px;
+  background: radial-gradient(closest-side, var(--blob-blue), transparent);
+  animation: ugra-drift calc(var(--dur-ambient) * 1.2) var(--ease-out) infinite;
+}
+
+.ugra-ambient__blob--ice {
+  width: 1000px;
+  height: 640px;
+  left: 50%;
+  bottom: -400px;
+  margin-left: -500px;
+  background: radial-gradient(closest-side, var(--blob-ice), transparent);
+}
+
+.ugra-ambient__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  -webkit-mask-image: radial-gradient(ellipse 55% 55% at 50% 40%, #000 15%, transparent 75%);
+  mask-image: radial-gradient(ellipse 55% 55% at 50% 40%, #000 15%, transparent 75%);
+}
+
+/* «Жидкое стекло» шапки: капсула меню и круглые кнопки. */
+.ugra-liquid {
+  position: relative;
+  -webkit-backdrop-filter: var(--glass-blur-liquid);
+  backdrop-filter: var(--glass-blur-liquid);
+  background: var(--glass-liquid);
+  box-shadow: var(--glass-inset-liquid), var(--shadow-liquid);
+}
+
+/* ---------- Card ---------- */
+
+.ugra-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
+}
+
+.ugra-card--padded {
+  padding: var(--space-5);
+}
+
+.ugra-card--glass {
+  background: var(--glass-card);
+}
+
+.ugra-card--hero {
+  background: var(--glass-card);
+}
+
+.ugra-card--sticker {
+  border-radius: var(--radius-xl);
+  background: var(--glass-sticker);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-sticker);
+}
+
+.ugra-card--accent {
+  box-shadow:
+    var(--glass-inset),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
+    0 18px 50px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.ugra-card--ok {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-ok) 24%, transparent),
+    var(--shadow-card);
+}
+
+.ugra-card--warn {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-warn) 24%, transparent),
+    var(--shadow-card);
+}
+
+.ugra-card--danger {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
+    var(--shadow-card);
+}
+
+.ugra-card--interactive {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+.ugra-card--interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-inset), var(--shadow-pop);
+}
+
+/* ---------- Badge ---------- */
+
+.ugra-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ugra-badge--accent {
+  border-color: var(--color-accent-ring);
+  color: var(--color-accent);
+}
+
+.ugra-badge--ok {
+  border-color: color-mix(in srgb, var(--color-ok) 30%, transparent);
+  color: var(--color-ok);
+}
+
+.ugra-badge--warn {
+  border-color: color-mix(in srgb, var(--color-warn) 32%, transparent);
+  color: var(--color-warn);
+}
+
+.ugra-badge--danger,
+.ugra-badge--emergency {
+  border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  color: var(--color-danger);
+}
+
+.ugra-badge--critical {
+  border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  color: var(--color-danger);
+}
+
+.ugra-badge--high {
+  border-color: color-mix(in srgb, var(--color-warn-bright) 36%, transparent);
+  color: var(--color-warn-bright);
+}
+
+.ugra-badge--medium {
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+  color: var(--color-info);
+}
+
+.ugra-badge--low {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-dim);
+}
+
+.ugra-badge--info {
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+  color: var(--color-info);
+}
+
+.ugra-badge--muted {
+  border-color: transparent;
+  color: var(--color-text-dim);
+}
+
+.ugra-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ugra-blink var(--dur-loop) var(--ease-out) infinite;
+}
+
+/* ---------- Button ---------- */
+
+.ugra-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+
+.ugra-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ugra-btn--primary {
+  background: var(--color-graphite);
+  color: var(--color-graphite-contrast);
+  box-shadow: var(--shadow-button);
+  font-weight: var(--weight-bold);
+}
+
+.ugra-btn--primary:hover:not(:disabled) {
+  background: var(--color-graphite-hover);
+}
+
+.ugra-btn--secondary {
+  background: transparent;
+  color: var(--color-text);
+  box-shadow: var(--ring-inset);
+}
+
+.ugra-btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+.ugra-btn--ghost {
+  color: var(--color-text-muted);
+}
+
+.ugra-btn--ghost:hover:not(:disabled) {
+  background: var(--color-graphite-soft);
+  color: var(--color-text);
+}
+
+.ugra-btn--danger {
+  background: transparent;
+  color: var(--color-danger);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-danger) 32%, transparent);
+}
+
+.ugra-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+}
+
+.ugra-btn--sm {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+}
+
+.ugra-btn--lg {
+  min-height: 48px;
+  padding: 0 22px;
+  font-size: var(--text-lg);
+}
+
+.ugra-btn--block {
+  width: 100%;
+}
+
+.ugra-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: ugra-spin var(--dur-loop-fast) linear infinite;
+}
+
+/* ---------- ConfidenceBar ---------- */
+
+.ugra-confidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 96px;
+  flex: 1 1 auto;
+}
+
+.ugra-confidence__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+}
+
+.ugra-confidence__value {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+}
+
+.ugra-confidence__track {
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-graphite-soft);
+  overflow: hidden;
+}
+
+.ugra-confidence__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-graphite);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.ugra-confidence--ok .ugra-confidence__fill {
+  background: var(--color-ok);
+}
+
+.ugra-confidence--ok .ugra-confidence__value {
+  color: var(--color-ok);
+}
+
+.ugra-confidence--warn .ugra-confidence__fill {
+  background: var(--color-warn-bright);
+}
+
+.ugra-confidence--warn .ugra-confidence__value {
+  color: var(--color-warn);
+}
+
+.ugra-confidence--danger .ugra-confidence__fill {
+  background: var(--color-danger);
+}
+
+.ugra-confidence--danger .ugra-confidence__value {
+  color: var(--color-danger);
+}
+
+.ugra-confidence--compact .ugra-confidence__track {
+  height: 4px;
+}
+
+/* ---------- QuoteChip ---------- */
+
+.ugra-quote {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px 2px;
+  border: none;
+  border-bottom: 1px dashed var(--color-accent-ring);
+  background: transparent;
+  color: var(--color-accent);
+  font-size: var(--text-xs);
+  cursor: help;
+  max-width: 100%;
+}
+
+.ugra-quote:hover,
+.ugra-quote:focus-visible {
+  border-bottom-color: var(--color-accent);
+  outline: none;
+}
+
+.ugra-quote__text {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ugra-quote__bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: var(--z-overlay);
+  width: max-content;
+  max-width: 320px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-pop);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.ugra-quote:hover .ugra-quote__bubble,
+.ugra-quote:focus-visible .ugra-quote__bubble,
+.ugra-quote:focus-within .ugra-quote__bubble {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ugra-quote__source {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+}
+
+/* ---------- FieldRow ---------- */
+
+.ugra-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-md);
+  transition:
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+.ugra-field + .ugra-field {
+  margin-top: 2px;
+}
+
+.ugra-field:hover {
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+}
+
+.ugra-field--needs-review {
+  border-left-color: var(--color-warn-bright);
+  background: color-mix(in srgb, var(--color-warn-bright) 7%, transparent);
+}
+
+.ugra-field--needs-review:hover {
+  background: color-mix(in srgb, var(--color-warn-bright) 11%, transparent);
+}
+
+.ugra-field--empty {
+  opacity: 0.62;
+}
+
+.ugra-field--new {
+  animation: ugra-field-flash var(--dur-slow) var(--ease-out);
+}
+
+.ugra-field__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ugra-field__label {
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ugra-field__value {
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  overflow-wrap: anywhere;
+}
+
+.ugra-field__value--empty {
+  color: var(--color-text-dim);
+  font-weight: var(--weight-regular);
+}
+
+.ugra-field__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ugra-field__aside {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ---------- StatTile ---------- */
+
+.ugra-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
+}
+
+.ugra-stat__label {
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ugra-stat__value {
+  color: var(--color-text);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.ugra-stat__hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.ugra-stat--accent .ugra-stat__value {
+  color: var(--color-accent);
+}
+
+.ugra-stat--ok .ugra-stat__value {
+  color: var(--color-ok);
+}
+
+.ugra-stat--warn .ugra-stat__value {
+  color: var(--color-warn);
+}
+
+.ugra-stat--danger .ugra-stat__value {
+  color: var(--color-danger);
+}
+
+.ugra-stat__icon {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  font-size: var(--text-xl);
+  opacity: 0.7;
+}
+
+/* ---------- Timeline ---------- */
+
+.ugra-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ugra-timeline__item {
+  position: relative;
+  padding-left: var(--space-6);
+  animation: ugra-fade var(--dur-base) var(--ease-out) both;
+}
+
+.ugra-timeline__item::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 16px;
+  bottom: calc(-1 * var(--space-4));
+  width: 1px;
+  background: var(--color-border-strong);
+}
+
+.ugra-timeline__item:last-child::before {
+  display: none;
+}
+
+.ugra-timeline__dot {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+.ugra-timeline__item--accent .ugra-timeline__dot {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-soft);
+}
+
+.ugra-timeline__item--ok .ugra-timeline__dot {
+  border-color: var(--color-ok);
+  background: var(--color-ok);
+}
+
+.ugra-timeline__item--warn .ugra-timeline__dot {
+  border-color: var(--color-warn-bright);
+  background: var(--color-warn-bright);
+}
+
+.ugra-timeline__item--danger .ugra-timeline__dot {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+}
+
+.ugra-timeline__item--muted .ugra-timeline__dot {
+  opacity: 0.5;
+}
+
+.ugra-timeline__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semi);
+}
+
+.ugra-timeline__desc {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.ugra-timeline__time {
+  margin-top: 2px;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- OriginBadge ---------- */
+
+.ugra-origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 0;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  max-width: 100%;
+}
+
+.ugra-origin__glyph {
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.ugra-origin--text,
+.ugra-origin--rule,
+.ugra-origin--profile {
+  color: var(--color-accent);
+}
+
+.ugra-origin--cmdb,
+.ugra-origin--human {
+  color: var(--color-ok);
+}
+
+.ugra-origin--asked {
+  color: var(--color-info);
+}
+
+.ugra-origin--none {
+  color: var(--color-warn);
+}
+
+/* ---------- PriorityBars (3.4) ---------- */
+
+.ugra-priority-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ugra-priority__label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+}
+
+.ugra-priority {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 15px;
+}
+
+.ugra-priority__bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--color-graphite-soft);
+}
+
+.ugra-priority__bar:nth-child(1) {
+  height: 7px;
+}
+
+.ugra-priority__bar:nth-child(2) {
+  height: 9px;
+}
+
+.ugra-priority__bar:nth-child(3) {
+  height: 12px;
+}
+
+.ugra-priority__bar:nth-child(4) {
+  height: 15px;
+}
+
+.ugra-priority__bar--on {
+  background: var(--color-graphite);
+}
+
+.ugra-priority--critical .ugra-priority__bar--on,
+.ugra-priority--emergency .ugra-priority__bar--on {
+  background: var(--color-danger);
+}
+
+/* ---------- MicButton ---------- */
+
+.ugra-mic {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+.ugra-mic:hover:not(:disabled) {
+  background: var(--color-graphite-soft);
+  color: var(--color-text);
+}
+
+.ugra-mic:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ugra-mic--recording {
+  color: var(--color-danger);
+}
+
+.ugra-mic--recording::before,
+.ugra-mic--recording::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-danger);
+  animation: ugra-mic-ring var(--dur-loop) var(--ease-out) infinite;
+}
+
+.ugra-mic--recording::after {
+  animation-delay: calc(var(--dur-loop) / 3);
+}
+
+/* ---------- ThemeToggle (2.4) ---------- */
+
+.ugra-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ugra-theme-btn:hover {
+  color: var(--color-accent);
+}
+
+.ugra-theme-btn__icon {
+  display: block;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+
+.ugra-theme-btn[aria-pressed='true'] .ugra-theme-btn__icon {
+  transform: rotate(-16deg);
+}
+
+/* На экране входа шапки нет — кнопка висит в правом верхнем углу. */
+.ugra-theme-btn--floating {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-sticky);
+}
+
+/* ---------- Slot ---------- */
+
+.ugra-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---------- Утилита: только для скринридера ---------- */
+
+.ugra-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- ProgressScale (4.1) ---------- */
+
+.ugra-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ugra-scale__bars,
+.ugra-scale__labels {
+  display: flex;
+  gap: 5px;
+}
+
+.ugra-scale__seg {
+  flex: 1 1 0;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--color-graphite-soft);
+  transition: background var(--dur-slow) var(--ease-out);
+}
+
+.ugra-scale__seg--on {
+  background: var(--gradient-progress);
+}
+
+.ugra-scale__labels > span {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+}
+
+/* ---------- DetailRow ---------- */
+
+.ugra-detail {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ugra-detail:last-child {
+  border-bottom: none;
+}
+
+.ugra-detail--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.ugra-detail__label {
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+.ugra-detail__value {
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semi);
+  text-align: right;
+}
+
+.ugra-detail--stack .ugra-detail__value {
+  font-size: 15px;
+  text-align: left;
+}
+
+.ugra-detail__value-text {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.ugra-detail__hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+}
+
+.ugra-detail__value--ok {
+  color: var(--color-ok);
+}
+
+.ugra-detail__value--warn {
+  color: var(--color-warn);
+}
+
+.ugra-detail__value--danger {
+  color: var(--color-danger);
+}
+
+.ugra-detail__value--accent {
+  color: var(--color-accent);
+}
+
+.ugra-detail__value--muted {
+  color: var(--color-text-dim);
+  font-weight: var(--weight-regular);
+}
+
+/* ---------- Modal ---------- */
+
+.ugra-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: ugra-fade var(--dur-base) var(--ease-out) both;
+}
+
+.ugra-modal__panel {
+  width: min(440px, 100%);
+  max-height: calc(100vh - var(--space-8));
+  overflow: auto;
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-pop);
+  outline: none;
+}
+
+.ugra-modal__panel--ok {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-ok) 24%, transparent),
+    var(--shadow-pop);
+}
+
+.ugra-modal__panel--danger {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
+    var(--shadow-pop);
+}
+
+.ugra-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ugra-modal__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.ugra-modal__close {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-dim);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ugra-modal__close:hover {
+  background: var(--color-graphite-soft);
+  color: var(--color-text);
+}
+
+.ugra-modal__body {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+.ugra-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* ---------- Toast ---------- */
+
+.ugra-toast {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-5);
+  left: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+  max-width: min(560px, 100%);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-pop);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  animation: ugra-rise var(--dur-base) var(--ease-out) both;
+}
+
+.ugra-toast--warn {
+  border-left-color: var(--color-warn);
+}
+
+.ugra-toast--ok {
+  border-left-color: var(--color-ok);
+}
+
+.ugra-toast--info {
+  border-left-color: var(--color-info);
+}
+
+.ugra-toast__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ugra-toast__close {
+  flex: none;
+  padding: 0 var(--space-1);
+  border: none;
+  background: none;
+  color: var(--color-text-dim);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ugra-toast__close:hover {
+  color: var(--color-text);
+}
+
+/* ---------- SearchField ---------- */
+
+.ugra-search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  box-shadow: var(--ring-inset-soft);
+  color: var(--color-text-dim);
+}
+
+.ugra-search:focus-within {
+  box-shadow: 0 0 0 1px var(--color-accent-ring);
+}
+
+.ugra-search__icon {
+  flex: none;
+}
+
+.ugra-search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-md);
+}
+
+.ugra-search__input::placeholder {
+  color: var(--color-text-dim);
+}
+
+/* ---------- EmptyState ---------- */
+
+.ugra-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-9) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
+  text-align: center;
+}
+
+.ugra-empty__icon {
+  font-size: var(--text-2xl);
+  opacity: 0.7;
+}
+
+.ugra-empty__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+}
+
+.ugra-empty__hint {
+  max-width: 46ch;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+.ugra-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* ---------- Timer ---------- */
+
+.ugra-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- InsightBlock ---------- */
+
+.ugra-insight {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-graphite-soft);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+.ugra-insight--action {
+  background: var(--gradient-insight);
+}
+
+.ugra-insight__title {
+  margin-bottom: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ugra-insight--action .ugra-insight__title {
+  color: var(--color-accent);
+}
+
+.ugra-insight__text strong {
+  color: var(--color-text);
+}
+
+/* ---------- ActionCounterPill ---------- */
+
+.ugra-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 75%, transparent);
+  box-shadow: var(--ring-inset-soft);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.ugra-actions b {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- PriorityMark (3.4) ---------- */
+
+.ugra-pmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-graphite);
+}
+
+.ugra-pmark__circle {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.ugra-pmark--critical,
+.ugra-pmark--emergency {
+  color: var(--color-danger);
+}
+
+.ugra-pmark--low {
+  color: var(--color-text-dim);
+}
+
+.ugra-pmark__label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  white-space: nowrap;
+}
+
+/* ---------- Segmented ---------- */
+
+.ugra-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--glass-liquid);
+  -webkit-backdrop-filter: var(--glass-blur-liquid);
+  backdrop-filter: var(--glass-blur-liquid);
+  box-shadow: var(--glass-inset-liquid);
+}
+
+.ugra-segmented__item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--weight-semi);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ugra-segmented__item:hover {
+  color: var(--color-text);
+}
+
+.ugra-segmented__item--on {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-1);
+}
+
+.ugra-segmented__count {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-graphite-soft);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-align: center;
+}
+
+.ugra-segmented__item--on .ugra-segmented__count {
+  color: var(--color-accent);
+}
+
+/* ---------- Chip ---------- */
+
+.ugra-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  box-shadow: var(--ring-inset-soft);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+}
+
+.ugra-chip:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.ugra-chip--active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--ring-inset);
+}
+
+/* ---------- Sticker ---------- */
+
+.ugra-sticker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--glass-sticker);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--shadow-sticker);
+}
+
+.ugra-sticker--danger {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px color-mix(in srgb, var(--color-danger) 28%, transparent),
+    var(--shadow-sticker);
+}
+
+/* ---------- StepBlock (4.4) ---------- */
+
+.ugra-step {
+  border-radius: var(--radius-lg);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+.ugra-step--open {
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px var(--color-border-strong),
+    0 18px 50px color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+.ugra-step__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 22px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ugra-step__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+  color: var(--color-text-dim);
+  font-size: 13px;
+  font-weight: var(--weight-black);
+}
+
+.ugra-step--open .ugra-step__mark {
+  background: var(--color-graphite);
+  box-shadow: none;
+  color: var(--color-graphite-contrast);
+}
+
+.ugra-step__mark--done {
+  background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+  box-shadow: none;
+  color: var(--color-ok);
+}
+
+.ugra-step__title {
+  margin-right: auto;
+  font-size: 17px;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.015em;
+}
+
+.ugra-step__summary {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+.ugra-step__chevron {
+  width: 20px;
+  flex: none;
+  color: var(--color-text-dim);
+  font-size: var(--text-lg);
+  text-align: center;
+}
+
+.ugra-step__body {
+  padding: 0 22px 22px 66px;
+  overflow: hidden;
+}
+
+.ugra-step__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* ---------- Checklist ---------- */
+
+.ugra-checklist {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ugra-checklist__item + .ugra-checklist__item {
+  border-top: 1px solid var(--color-border);
+}
+
+.ugra-checklist__button,
+.ugra-checklist__static {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+}
+
+.ugra-checklist__button {
+  cursor: pointer;
+}
+
+.ugra-checklist__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+  color: var(--color-graphite-contrast);
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+}
+
+.ugra-checklist__box--done {
+  background: var(--color-graphite);
+  box-shadow: none;
+}
+
+.ugra-checklist__text {
+  min-width: 0;
+}
+
+.ugra-checklist__label {
+  display: block;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+}
+
+.ugra-checklist__label--done {
+  color: var(--color-text-muted);
+}
+
+.ugra-checklist__hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes ugra-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ugra-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ugra-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ugra-drawer {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ugra-sticker {
+  from {
+    opacity: 0;
+    transform: translateX(30px) rotate(2deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0.6deg);
+  }
+}
+
+@keyframes ugra-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-accent-ring);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes ugra-field-flash {
+  0% {
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    transform: translateY(6px);
+  }
+  60% {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    transform: none;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes ugra-row-flash {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    background: transparent;
+  }
+}
+
+@keyframes ugra-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ugra-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes ugra-mic-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes ugra-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(70px, 40px, 0) scale(1.04);
+  }
+}
+
+@keyframes ugra-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-60px, 50px, 0);
+  }
+}
+
+@keyframes ugra-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Летящий «призрак» текста: из чата в поле заявки (flyToField). */
+.ugra-ghost {
+  position: fixed;
+  z-index: var(--z-toast);
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-accent-ring);
+  background: var(--color-graphite);
+  color: var(--color-graphite-contrast);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-pop);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

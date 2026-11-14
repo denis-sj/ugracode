@@ -5,7 +5,7 @@
 Ветка: feature/skeleton (документы; не закоммичено)
 PR: —
 Коммиты: —
-Связано: [case9-core.md](case9-core.md), [case9-features.md](case9-features.md), [../hackathon/criteria.md](../hackathon/criteria.md), [../hackathon/case9-brief.md](../hackathon/case9-brief.md), [../plans/case9-core.md](../plans/case9-core.md), [../tasks/031-agent-harness.md](../tasks/031-agent-harness.md), [../sessions/2026-11-14-agent-harness.md](../sessions/2026-11-14-agent-harness.md)
+Связано: [case9-core.md](case9-core.md), [case9-features.md](case9-features.md), [../hackathon/criteria.md](../hackathon/criteria.md), [../hackathon/case9-brief.md](../hackathon/case9-brief.md), [../plans/case9-core.md](../plans/case9-core.md), [../sessions/2026-11-14-agent-harness.md](../sessions/2026-11-14-agent-harness.md)
 
 Закрывает: К2 (правильность полей и исполнителя), К5 (стабильность и архитектурная логика), «Технологичность»
 ([criteria.md](../hackathon/criteria.md)); слова ментора «объективно объяснить» (бриф, раздел 1а).

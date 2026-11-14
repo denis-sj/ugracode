@@ -7,7 +7,7 @@ export type FieldGroup = z.infer<typeof FieldGroup>;
 export const FieldType = z.enum(['dictionary', 'string', 'number', 'ip', 'text', 'cmdbRef']);
 export type FieldType = z.infer<typeof FieldType>;
 
-export const FieldOrigin = z.enum(['text', 'asked', 'cmdb', 'rule', 'human', 'none']);
+export const FieldOrigin = z.enum(['text', 'asked', 'cmdb', 'rule', 'human', 'profile', 'none']);
 export type FieldOrigin = z.infer<typeof FieldOrigin>;
 
 export const TraceKind = z.enum([
@@ -19,6 +19,8 @@ export const TraceKind = z.enum([
   'answered',
   'corrected',
   'computed',
+  'from_profile',
+  'no_answer',
 ]);
 export type TraceKind = z.infer<typeof TraceKind>;
 

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Проверка заявки</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#8A90A6}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer}
+.icb svg{position:relative;z-index:1}
+.k{font-size:12px;color:#8A90A6}
+.sh{font:inherit;color:#0F1222;width:100%;text-align:left;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 22px}
+.n{width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.st{font-size:17px;font-weight:700;letter-spacing:-.015em}
+.sum{margin-left:auto;font-size:13px;color:#5B6178;text-align:right}
+.body{padding:0 22px 22px 66px;animation:open .3s both}
+.f{display:grid;grid-template-columns:130px minmax(0,1fr) 52px;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid rgba(15,18,34,.06)}
+.fv{font-size:15px;font-weight:700}
+.fo{display:block;font-size:12px;font-weight:600;margin-top:3px}
+.cf{font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.ch{font:inherit;font-size:13px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:9px;padding:0 12px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16)}
+.ch:hover{background:#fff}
+.eng{font:inherit;color:#0F1222;text-align:left;width:100%;border:none;cursor:pointer;padding:14px;border-radius:14px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(15,18,34,.08)}
+.bar{display:block;height:5px;border-radius:3px;background:rgba(15,18,34,.08);overflow:hidden;margin-top:8px}
+.bar span{display:block;height:100%;border-radius:3px;background:#5A49E0;animation:grow .8s ease-out both}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25);text-decoration:none}
+.pri:hover{background:#262A45;color:#fff}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16)}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.16)}
+.tr{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;padding:7px 0;font-size:14px;line-height:1.45}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:1000px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div>
+<div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px">
+<span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span>
+<nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px">
+<a class="tab on" href="Queue.dc.html">Очередь <span class="cnt" style="color:#5A49E0">10</span></a>
+<a class="tab" href="Incident.dc.html">Аварии <span class="cnt" style="color:#D4380D">1</span></a>
+<a class="tab" href="Log.dc.html">Журнал</a>
+<a class="tab" href="People.dc.html">Исполнители</a>
+</nav>
+<div style="display:flex;align-items:center;gap:10px;justify-content:flex-end">
+<button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button>
+<a href="#profile" aria-label="Профиль" style="width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)">ОС</a>
+</div>
+</header>
+
+<main style="position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:4px 32px 48px">
+<a href="Queue.dc.html" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;min-height:32px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Очередь</a>
+<div style="margin:6px 0 20px">
+<div class="k" style="font-size:13px">№ 2026-0412 · чат · 10:42 · Иванова А. С., отдел кадров</div>
+<h1 style="margin:4px 0 0;font-size:36px;font-weight:700;letter-spacing:-.04em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent">Не печатает принтер HP</h1>
+</div>
+
+<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+<div style="flex:999 1 600px;min-width:0;display:flex;flex-direction:column;gap:12px">
+
+<section class="glass" style="{{ b1.card }}">
+<button class="sh" onClick="{{ go1 }}" aria-expanded="{{ b1.open }}"><span class="n" style="{{ b1.dot }}">{{ b1.mark }}</span><span class="st">Обращение</span><span class="sum">{{ b1.sum }}</span></button>
+<sc-if value="{{ b1.open }}" hint-placeholder-val="{{ true }}">
+<div class="body">
+<div style="font-size:16px;line-height:1.65;color:#2A2F45;padding:14px 16px;border-radius:12px;background:rgba(15,18,34,.035)">У нас в <strong style="color:#0F1222">312 кабинете</strong> опять не печатает <strong style="color:#0F1222">принтер HP</strong>, <strong style="color:#0F1222">горит оранжевая лампочка</strong></div>
+<div style="margin-top:14px">
+<div class="tr"><span class="k">Нашёл</span><span>Кабинет, оборудование и признак — в тексте</span></div>
+<div class="tr"><span class="k">Сверил</span><span>Принтер с базой: <strong>HP LaserJet M428, инв. 00417</strong></span></div>
+<div class="tr"><span class="k">Спросил</span><span>«В каком корпусе?» — ответила <strong>«Корпус Б»</strong></span></div>
+<div class="tr"><span class="k">Спросил</span><span>«Насколько срочно?» — <strong>«Работа стоит»</strong></span></div>
+<div class="tr"><span class="k">Вам</span><span style="color:#B26A00;font-weight:700">Подразделение: ИИ не уверен</span></div>
+</div>
+<div style="margin-top:16px"><button class="pri" onClick="{{ go2 }}">Понятно, к полям</button></div>
+</div>
+</sc-if>
+</section>
+
+<section class="glass" style="{{ b2.card }}">
+<button class="sh" onClick="{{ go2 }}" aria-expanded="{{ b2.open }}"><span class="n" style="{{ b2.dot }}">{{ b2.mark }}</span><span class="st">Поля заявки</span><span class="sum">{{ b2.sum }}</span></button>
+<sc-if value="{{ b2.open }}" hint-placeholder-val="{{ false }}">
+<div class="body">
+<div class="f"><span class="k" style="padding-top:2px">Категория</span><span><span class="fv">Печать · принтер</span><span class="fo" style="color:#5A49E0">из текста: «не печатает принтер»</span></span><span class="cf">94%</span></div>
+<div class="f"><span class="k" style="padding-top:2px">Оборудование</span><span><span class="fv">HP LaserJet M428</span><span class="fo" style="color:#0E8A5F">сверено с базой оборудования</span></span><span class="cf">98%</span></div>
+<div class="f"><span class="k" style="padding-top:2px">Место</span><span><span class="fv">Корпус Б, кабинет 312</span><span class="fo" style="color:#027DEA">кабинет из текста, корпус — ответ заявителя</span></span><span class="cf">96%</span></div>
+<div class="f" style="{{ depStyle }}"><span class="k" style="padding-top:2px">Подразделение</span><span><span class="fv">{{ dep }}</span><span class="fo" style="color:{{ depColor }}">{{ depOrigin }}</span>
+<sc-if value="{{ needFix }}" hint-placeholder-val="{{ true }}"><span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><button class="ch" onClick="{{ fixA }}">Отдел кадров</button><button class="ch" onClick="{{ fixB }}">Бухгалтерия</button><button class="ch" onClick="{{ fixC }}">Другое</button></span></sc-if>
+</span><span class="cf" style="color:{{ depColor }}">{{ depConf }}</span></div>
+<div class="f" style="border-bottom:none"><span class="k" style="padding-top:2px">Приоритет</span><span><span class="fv" style="color:#B26A00">Высокий · до 14:30</span><span class="fo" style="color:#5B6178">влияние: 1 сотрудник · срочность: работа стоит</span></span><span class="cf">90%</span></div>
+<div style="margin-top:16px;display:flex;gap:8px"><button class="pri" onClick="{{ go3 }}">К исполнителю</button></div>
+</div>
+</sc-if>
+</section>
+
+<section class="glass" style="{{ b3.card }}">
+<button class="sh" onClick="{{ go3 }}" aria-expanded="{{ b3.open }}"><span class="n" style="{{ b3.dot }}">{{ b3.mark }}</span><span class="st">Исполнитель</span><span class="sum">{{ b3.sum }}</span></button>
+<sc-if value="{{ b3.open }}" hint-placeholder-val="{{ false }}">
+<div class="body">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ engs }}" as="e" hint-placeholder-count="3">
+<button class="eng" onClick="{{ e.pick }}" style="{{ e.style }}">
+<span style="display:flex;justify-content:space-between;gap:10px"><b style="font-size:15px">{{ e.name }}</b><span style="font-size:13px;font-weight:700;color:#5A49E0">{{ e.score }}</span></span>
+<span class="bar"><span style="width:{{ e.score }}"></span></span>
+</button>
+</sc-for>
+</div>
+<div style="padding:16px;border-radius:14px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px rgba(15,18,34,.07)">
+<div class="k">Почему ИИ предлагает</div>
+<div style="font-size:16px;font-weight:700;margin:4px 0 10px">{{ eng.name }}</div>
+<div class="srow"><span class="k">Похожих решил</span><b>{{ eng.similar }}</b></div>
+<div class="srow"><span class="k">Сейчас в работе</span><b>{{ eng.load }}</b></div>
+<div class="srow"><span class="k">Смена</span><b>{{ eng.shift }}</b></div>
+<div class="srow" style="border-bottom:none"><span class="k">Корпус</span><b>{{ eng.where }}</b></div>
+</div>
+</div>
+<div style="margin-top:16px"><button class="pri" onClick="{{ go4 }}">К ответу заявителю</button></div>
+</div>
+</sc-if>
+</section>
+
+<section class="glass" style="{{ b4.card }}">
+<button class="sh" onClick="{{ go4 }}" aria-expanded="{{ b4.open }}"><span class="n" style="{{ b4.dot }}">{{ b4.mark }}</span><span class="st">Ответ заявителю</span><span class="sum">{{ b4.sum }}</span></button>
+<sc-if value="{{ b4.open }}" hint-placeholder-val="{{ false }}">
+<div class="body">
+<label for="rep" class="k" style="display:block;margin-bottom:6px">Черновик ИИ — можно поправить</label>
+<textarea id="rep" rows="3" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;line-height:1.55;color:#0F1222;padding:12px 14px;border:none;border-radius:12px;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);resize:vertical;outline:none" value="{{ reply }}" onChange="{{ onReply }}"></textarea>
+<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"><button class="pri" onClick="{{ confirm }}">Подтвердить и назначить <span class="kbd">Enter</span></button><button class="sec">Вернуть заявителю</button></div>
+</div>
+</sc-if>
+</section>
+</div>
+
+<aside style="flex:1 1 300px;max-width:340px;min-width:0;position:sticky;top:20px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.72));-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:inset 0 0 0 1px #fff,0 22px 60px rgba(40,46,110,.14)">
+<div style="padding:16px 20px;background:linear-gradient(135deg,rgba(123,77,255,.14),rgba(2,125,234,.1))">
+<div style="font-size:12px;font-weight:700;color:#5A49E0;letter-spacing:.06em;text-transform:uppercase">Итог заявки</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:12px">
+<sc-for list="{{ segs }}" as="g" hint-placeholder-count="4"><span style="height:5px;border-radius:3px;background:{{ g }};transition:background .4s"></span></sc-for>
+</div>
+<div class="k" style="margin-top:6px;color:#5B6178">Шаг {{ stepNum }} из 4</div>
+</div>
+<div style="padding:6px 20px 18px">
+<div class="srow"><span class="k">Категория</span><b>Печать</b></div>
+<div class="srow"><span class="k">Место</span><b>Корп. Б, каб. 312</b></div>
+<div class="srow"><span class="k">Подразделение</span><b style="color:{{ depColor }}">{{ dep }}</b></div>
+<div class="srow"><span class="k">Приоритет</span><b style="color:#B26A00">Высокий</b></div>
+<div class="srow"><span class="k">Исполнитель</span><b>{{ eng.name }}</b></div>
+<div style="margin-top:14px;font-size:13px;color:#5B6178">Ваших действий: <b style="color:#0F1222">{{ actions }}</b>. Остальное заполнил ИИ.</div>
+</div>
+</aside>
+</div>
+</main>
+
+<sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:rgba(245,246,251,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)">
+<div class="glass" role="status" style="width:440px;padding:30px;text-align:center;background:rgba(255,255,255,.94);box-shadow:inset 0 0 0 1px #fff,0 30px 80px rgba(40,46,110,.25);animation:pop .45s cubic-bezier(.2,.8,.2,1) both">
+<div style="font-size:13px;font-weight:700;color:#0E8A5F">Заявка № 2026-0412 назначена</div>
+<div style="font-size:24px;font-weight:700;letter-spacing:-.03em;margin:8px 0 10px">{{ eng.name }} получил задачу</div>
+<div style="font-size:14px;line-height:1.55;color:#5B6178">Заявитель получил ответ. Правки записаны в журнал.</div>
+<div style="display:flex;gap:8px;justify-content:center;margin-top:20px"><a href="Queue.dc.html" class="pri">Следующая заявка</a><button class="sec" onClick="{{ undo }}">Остаться</button></div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { open: 1, reached: 1, dep: null, eng: 0, done: false, actions: 0 }; }
+  renderVals() {
+    const st = this.state, d = st.dep;
+    const goto = (n) => () => this.setState({ open: n, reached: Math.max(st.reached, n) });
+    const E = [
+      { name: 'Петров С. В.', score: '92%', similar: '6 заявок', load: '2 задачи', shift: 'до 17:00', where: 'Б' },
+      { name: 'Сидоров А.', score: '74%', similar: '3 заявки', load: '5 задач', shift: 'до 20:00', where: 'А' },
+      { name: 'Ковалёв Д.', score: '51%', similar: '1 заявка', load: '1 задача', shift: 'дежурный', where: 'В' }
+    ];
+    const engs = E.map((e, i) => ({ ...e, style: i === st.eng ? 'background:#fff;box-shadow:inset 0 0 0 1.5px #14172B' : '', pick: () => this.setState({ eng: i, actions: st.actions + (i === st.eng ? 0 : 1) }) }));
+    const sums = ['Текст, 2 уточнения, 1 вопрос вам', d ? '6 полей, 1 исправлено' : '6 полей, 1 ждёт вас', E[st.eng].name + ' · ' + E[st.eng].score, 'Черновик готов'];
+    const blk = (n) => {
+      const isOpen = st.open === n, passed = st.reached > n;
+      return {
+        open: isOpen,
+        mark: passed && !isOpen ? '✓' : String(n),
+        dot: isOpen ? 'background:#14172B;color:#fff' : (passed ? 'background:rgba(14,138,95,.12);color:#0E8A5F' : 'box-shadow:inset 0 0 0 1.5px rgba(15,18,34,.18);color:#8A90A6'),
+        sum: isOpen ? '' : (st.reached >= n ? sums[n - 1] : 'ещё не проверено'),
+        card: isOpen ? 'box-shadow:inset 0 0 0 1px #fff,0 0 0 1px rgba(15,18,34,.08),0 18px 50px rgba(40,46,110,.14)' : 'opacity:' + (st.reached >= n ? '1' : '.7')
+      };
+    };
+    const fix = (v) => () => this.setState({ dep: v, actions: st.actions + 1 });
+    return {
+      b1: blk(1), b2: blk(2), b3: blk(3), b4: blk(4),
+      go1: goto(1), go2: goto(2), go3: goto(3), go4: goto(4),
+      segs: [1, 2, 3, 4].map((n) => (st.reached > n || (st.done && n <= 4) ? '#14172B' : (st.reached === n ? '#5A49E0' : 'rgba(15,18,34,.08)'))),
+      stepNum: String(st.open),
+      dep: d || 'Бухгалтерия?', depOrigin: d ? 'исправил диспетчер · ИИ предлагал «Бухгалтерия»' : 'ИИ не уверен — выберите',
+      depColor: d ? '#0E8A5F' : '#B26A00', depConf: d ? 'вы' : '58%',
+      depStyle: d ? '' : 'background:rgba(224,161,0,.08);margin:0 -12px;padding:12px;border-radius:12px',
+      needFix: !d, fixA: fix('Отдел кадров'), fixB: fix('Бухгалтерия'), fixC: fix('Хозяйственный отдел'),
+      engs, eng: E[st.eng], actions: String(st.actions + 1),
+      reply: st.reply ?? ('Заявка принята, инженер ' + E[st.eng].name + ' придёт до 14:30. Пока ждёте, проверьте лоток 2: часто там застревает лист.'),
+      onReply: (e) => this.setState({ reply: e.target.value }),
+      done: st.done, confirm: () => this.setState({ done: true }), undo: () => this.setState({ done: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

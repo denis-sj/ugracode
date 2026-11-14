@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>База знаний</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6FB}
+a{color:#4B2FD0}a:hover{color:#2A1A8A}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(212,56,13,.45)}60%{box-shadow:0 0 0 8px rgba(212,56,13,0)}}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.58));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 1px 0 rgba(15,18,34,.04),0 12px 40px rgba(40,46,110,.10);position:relative}
+.lg{position:relative;-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(225,230,255,.35)),linear-gradient(180deg,rgba(255,255,255,.55),rgba(214,222,255,.3));box-shadow:inset 0 1px 1px #fff,inset 0 -3px 8px rgba(110,120,210,.16),inset 0 0 0 1px rgba(255,255,255,.75),0 0 0 1px rgba(15,18,34,.05),0 10px 26px rgba(40,46,110,.14)}
+.tab{position:relative;z-index:1;font-size:14px;font-weight:600;color:#5B6178;text-decoration:none;padding:0 18px;min-height:40px;display:flex;align-items:center;gap:8px;border-radius:999px}
+.tab:hover{color:#0F1222}
+.tab.on{color:#0F1222;background:linear-gradient(180deg,#FFFFFF,#F3F4FF);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(15,18,34,.05),0 4px 12px rgba(40,46,110,.14)}
+.cnt{font-size:12px;font-weight:700;color:#8A90A6}
+.icb{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;color:#2A2F45;cursor:pointer;text-decoration:none}
+.ava{width:44px;height:44px;border-radius:50%;background:radial-gradient(120% 90% at 30% 0%,#9B7BFF,#5B5BFF 55%,#027DEA);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -3px 8px rgba(0,0,60,.2),0 8px 20px rgba(80,70,220,.32)}
+.ava:hover{color:#fff}
+.k{font-size:12px;color:#8A90A6}
+.h{font-size:13px;font-weight:700;color:#8A90A6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+.h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.045em;background:linear-gradient(180deg,#0F1222 35%,#5A49E0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:14px;color:#5B6178;margin-top:4px;max-width:720px;line-height:1.5}
+.pri{font:inherit;font-size:14px;font-weight:700;color:#fff;background:#14172B;border:none;border-radius:10px;min-height:44px;padding:0 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(15,18,34,.25);display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
+.pri:hover{background:#262A45;color:#fff}
+.sec{font:inherit;font-size:14px;font-weight:700;color:#0F1222;background:transparent;border:none;border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.16);display:inline-flex;align-items:center;gap:8px}
+.sec:hover{background:#fff}
+.chip{font:inherit;font-size:13px;font-weight:600;color:#2A2F45;background:rgba(255,255,255,.6);border:none;border-radius:999px;padding:0 14px;min-height:36px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,18,34,.12)}
+.chip:hover{background:#fff}
+.seg{font:inherit;position:relative;z-index:1;font-size:13px;font-weight:600;color:#6B7189;background:transparent;border:none;border-radius:9px;padding:0 14px;min-height:36px;cursor:pointer}
+.inp{font:inherit;font-size:15px;color:#0F1222;border:none;outline:none;border-radius:10px;padding:0 14px;min-height:44px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);width:100%;box-sizing:border-box}
+.inp:focus{box-shadow:inset 0 0 0 1.5px #5A49E0}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(15,18,34,.06);font-size:14px}
+.kbd{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.16)}
+.bar{display:block;height:5px;border-radius:3px;background:rgba(15,18,34,.08);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:3px;animation:grow .8s ease-out both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</helmet>
+<div style="font-family:Manrope,system-ui,sans-serif;color:#0F1222;background:#F5F6FB;min-height:1000px;position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;width:820px;height:820px;left:-260px;top:-380px;border-radius:50%;background:radial-gradient(closest-side,rgba(123,77,255,.24),rgba(123,77,255,0))"></div><div aria-hidden="true" style="position:absolute;width:860px;height:860px;right:-280px;top:-340px;border-radius:50%;background:radial-gradient(closest-side,rgba(2,125,234,.2),rgba(2,125,234,0))"></div><div aria-hidden="true" style="position:absolute;width:1100px;height:700px;left:20%;bottom:-460px;border-radius:50%;background:radial-gradient(closest-side,rgba(182,217,252,.5),rgba(182,217,252,0))"></div>
+<header style="position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:20px 32px"><span style="font-weight:800;font-size:16px;letter-spacing:-.02em">Диспетчерская</span><nav class="lg" aria-label="Разделы" style="display:flex;gap:2px;padding:5px;border-radius:999px"><a class="tab" href="Engineer.dc.html">Мои задачи <span class="cnt" style="color:#5A49E0">3</span></a><a class="tab on" href="KB.dc.html">База знаний</a></nav><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><button class="icb lg" aria-label="Уведомления"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"></path></svg></button><a class="ava" href="#profile" aria-label="Профиль" style="">ПС</a></div></header>
+<main style="position:relative;z-index:1;max-width:1376px;margin:0 auto;padding:8px 32px 48px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div><h1 class="h1">База знаний</h1><div class="sub">Инструкции и решения из закрытых заявок. ИИ ищет здесь, когда подсказывает инженеру.</div></div>
+<label style="display:flex;align-items:center;gap:10px;width:360px;padding:0 14px;min-height:44px;border-radius:12px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(15,18,34,.1);color:#8A90A6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4-4"></path></svg><input placeholder="Своими словами: «принтер жуёт бумагу»" aria-label="Поиск" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:inherit;font-size:14px;color:#0F1222"></label>
+</div>
+<div style="display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<section class="glass" style="padding:8px">
+<sc-for list="{{ arts }}" as="a" hint-placeholder-count="5">
+<button onClick="{{ a.pick }}" style="font:inherit;color:#0F1222;width:100%;text-align:left;border:none;cursor:pointer;padding:14px;border-radius:12px;{{ a.style }}">
+<b style="display:block;font-size:15px">{{ a.t }}</b>
+<span class="k" style="display:block;margin-top:4px">{{ a.cat }} · помогла в {{ a.ok }}</span>
+</button>
+</sc-for>
+</section>
+<section class="glass" style="padding:20px">
+<h2 class="h">Нет статьи, а заявки идут</h2>
+<div style="font-size:15px;font-weight:700">VPN не подключается из дома</div>
+<div class="k" style="margin:4px 0 14px;font-size:13px;color:#5B6178">23 заявки за месяц, статьи нет</div>
+<sc-if value="{{ noDraft }}" hint-placeholder-val="{{ true }}"><button class="pri" onClick="{{ draft }}" style="width:100%">Собрать черновик из 23 решений</button></sc-if>
+<sc-if value="{{ drafted }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;line-height:1.5;padding:12px 14px;border-radius:12px;background:rgba(14,138,95,.08);animation:pop .3s both"><b style="color:#0E8A5F">Черновик готов.</b> Шагов 5, основа — 17 заявок с одинаковым решением. Нужна проверка инженера.</div></sc-if>
+</section>
+</div>
+<article class="glass" style="padding:28px">
+<div class="k">{{ cur.cat }} · {{ cur.src }}</div>
+<h2 style="margin:6px 0 4px;font-size:26px;font-weight:700;letter-spacing:-.03em">{{ cur.t }}</h2>
+<div style="font-size:14px;color:#5B6178">Подходит для: <strong style="color:#0F1222">{{ cur.models }}</strong></div>
+<div style="display:flex;gap:28px;margin:18px 0;padding:14px 0;border-top:1px solid rgba(15,18,34,.07);border-bottom:1px solid rgba(15,18,34,.07)">
+<div><div class="k">Помогла</div><b style="font-size:18px">{{ cur.ok }}</b></div>
+<div><div class="k">В среднем</div><b style="font-size:18px">{{ cur.time }}</b></div>
+<div><div class="k">Обновлена</div><b style="font-size:18px">{{ cur.upd }}</b></div>
+</div>
+<ol style="margin:0;padding-left:22px;font-size:15px;line-height:1.75"><sc-for list="{{ cur.steps }}" as="s" hint-placeholder-count="4"><li>{{ s }}</li></sc-for></ol>
+<div class="k" style="margin-top:20px">Из заявок: {{ cur.from }}</div>
+</article>
+</div></main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+
+  constructor(p) { super(p); this.state = { a: 0, drafted: false }; }
+  renderVals() {
+    const A = [
+      ['Ошибка подачи бумаги HP M428', 'Печать', '9 из 11', 'HP LaserJet M428, M404', '25 мин', '12 нояб.', 'Статья инженера Петрова С. В.', ['Открыть лоток 2 и переднюю крышку, убрать смятый лист', 'Осмотреть ролик подачи: гладкая блестящая поверхность — износ', 'Почистить датчик бумаги сухой салфеткой', 'Распечатать тестовую страницу: Меню → Отчёты → Конфигурация'], '№ 0287, № 0198, № 0154'],
+      ['Нет сети на рабочем месте', 'Сеть', '14 из 18', 'все ПК', '35 мин', '3 нояб.', 'Инструкция сетевого отдела', ['Проверить кабель и индикатор порта', 'Посмотреть, есть ли сеть у соседей — если нет, это массовый сбой', 'Перезапустить сетевой адаптер', 'Проверить порт на коммутаторе этажа'], '№ 0311, № 0275'],
+      ['Ошибка лицензии 1С', 'ПО и 1С', '6 из 7', '1С:Предприятие 8.3', '1 ч 10 мин', '28 окт.', 'Статья Лебедева К.', ['Узнать текст ошибки и номер базы', 'Проверить сервер лицензий', 'Перевыпустить ключ пользователя'], '№ 0322, № 0190'],
+      ['Сброс пароля почты', 'Почта', '22 из 22', 'Exchange', '10 мин', '1 нояб.', 'Инструкция службы АСУ', ['Подтвердить личность по доб. номеру', 'Сбросить пароль в консоли', 'Сообщить временный пароль звонком'], '№ 0398, № 0287'],
+      ['Мерцает монитор', 'Рабочие места', '5 из 6', 'Dell P2422H, Samsung S24', '20 мин', '20 окт.', 'Статья Мухиной Т.', ['Заменить кабель DisplayPort', 'Проверить частоту обновления', 'Подключить к другому порту'], '№ 0244']
+    ];
+    const st = this.state, c = A[st.a];
+    return {
+      arts: A.map((a, i) => ({ t: a[0], cat: a[1], ok: a[2], style: i === st.a ? 'background:#fff;box-shadow:inset 0 0 0 1.5px #14172B' : 'background:transparent', pick: () => this.setState({ a: i }) })),
+      cur: { t: c[0], cat: c[1], ok: c[2], models: c[3], time: c[4], upd: c[5], src: c[6], steps: c[7], from: c[8] },
+      noDraft: !st.drafted, drafted: st.drafted, draft: () => this.setState({ drafted: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

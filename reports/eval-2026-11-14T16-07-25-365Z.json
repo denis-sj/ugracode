@@ -1,0 +1,3410 @@
+{
+  "startedAt": "2026-11-14T16:07:25.365Z",
+  "finishedAt": "2026-11-14T16:09:52.615Z",
+  "mode": "cloud",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "set": "/Users/denissakirbaev/Documents/hackathon/testset/cases",
+  "summary": {
+    "cases": 10,
+    "evaluators": [
+      {
+        "key": "fields",
+        "title": "Поля",
+        "value": 0.8426966292134831,
+        "display": "84 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 89
+      },
+      {
+        "key": "fabricated",
+        "title": "Выдуманные поля",
+        "value": 9,
+        "display": "9",
+        "ideal": "0",
+        "threshold": "0",
+        "passed": false,
+        "total": 10
+      },
+      {
+        "key": "emergency",
+        "title": "Авария: пропуски",
+        "value": 0,
+        "display": "0",
+        "ideal": "0",
+        "threshold": "0",
+        "passed": true,
+        "total": 10,
+        "note": "ложных тревог: 1"
+      },
+      {
+        "key": "priority",
+        "title": "Приоритет",
+        "value": 0.8,
+        "display": "80 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 10
+      },
+      {
+        "key": "assigneeTop1",
+        "title": "Исполнитель в топ-1",
+        "value": 0.8888888888888888,
+        "display": "89 %",
+        "ideal": "100 %",
+        "threshold": "≥ 70 %",
+        "passed": true,
+        "total": 9
+      },
+      {
+        "key": "assigneeTop3",
+        "title": "Исполнитель в топ-3",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": true,
+        "total": 9
+      },
+      {
+        "key": "article",
+        "title": "Статья в топ-3",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 80 %",
+        "passed": true,
+        "total": 8
+      },
+      {
+        "key": "question",
+        "title": "Нужный вопрос заявителю",
+        "value": 0,
+        "display": "—",
+        "ideal": "100 %",
+        "threshold": "≥ 80 %",
+        "passed": true,
+        "total": 0,
+        "note": "в наборе нет эталона вопроса (expected.question)"
+      },
+      {
+        "key": "trajectory",
+        "title": "Траектория агента",
+        "value": 0,
+        "display": "—",
+        "ideal": "100 %",
+        "threshold": "≥ 100 %",
+        "passed": true,
+        "total": 0,
+        "note": "в наборе нет эталона траектории (mustCall/mustNotCall/maxSteps)"
+      },
+      {
+        "key": "time",
+        "title": "Время на обращение (медиана)",
+        "value": 14750,
+        "display": "14,8 с",
+        "ideal": "≤ 8 с",
+        "threshold": "≤ 8 с",
+        "passed": false,
+        "total": 10
+      },
+      {
+        "key": "price",
+        "title": "Цена обращения (медиана)",
+        "value": 0,
+        "display": "—",
+        "ideal": "≤ 0,30 ₽",
+        "threshold": "≤ 0,30 ₽",
+        "passed": true,
+        "total": 10,
+        "note": "заглушка модели: цена не считается"
+      }
+    ],
+    "unmet": [
+      {
+        "key": "fields",
+        "title": "Поля",
+        "value": 0.8426966292134831,
+        "display": "84 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 89
+      },
+      {
+        "key": "fabricated",
+        "title": "Выдуманные поля",
+        "value": 9,
+        "display": "9",
+        "ideal": "0",
+        "threshold": "0",
+        "passed": false,
+        "total": 10
+      },
+      {
+        "key": "priority",
+        "title": "Приоритет",
+        "value": 0.8,
+        "display": "80 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 10
+      },
+      {
+        "key": "time",
+        "title": "Время на обращение (медиана)",
+        "value": 14750,
+        "display": "14,8 с",
+        "ideal": "≤ 8 с",
+        "threshold": "≤ 8 с",
+        "passed": false,
+        "total": 10
+      }
+    ],
+    "fabricatedTotal": 9,
+    "emergencyMisses": 0,
+    "emergencyFalseAlarms": 1,
+    "failedSteps": 0,
+    "medianMs": 14750,
+    "medianCostRub": 0,
+    "met": 7,
+    "withThreshold": 11
+  },
+  "skipped": [],
+  "warnings": [],
+  "cases": [
+    {
+      "id": "case-01",
+      "file": "01-printer-hp-312",
+      "channel": "chat",
+      "text": "Здравствуйте! В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает. Нужно срочно, до конца дня сдавать отчёт.",
+      "expected": {
+        "fields": {
+          "object": "принтер",
+          "building": "Б",
+          "cabinet": "312",
+          "equipment": "HP LaserJet Pro M404dn",
+          "model": "HP LaserJet Pro M404dn",
+          "category": "printer",
+          "serviceType": "repair",
+          "department": "dep-it",
+          "impact": "one",
+          "urgency": "down",
+          "symptoms": "мигает красный индикатор и ничего не печатает"
+        },
+        "priority": "high",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-3"
+        ],
+        "kbArticle": "kb-print-red-indicator"
+      },
+      "status": "ok",
+      "runId": "cfe299c2-60d7-431a-a1ce-536e1becfa61",
+      "observed": {
+        "text": "Здравствуйте! В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает. Нужно срочно, до конца дня сдавать отчёт.",
+        "fields": {
+          "building": {
+            "value": "Б",
+            "quoteText": "корпусе Б",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "312",
+            "quoteText": "кабинет 312",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "HP LaserJet Pro M404dn",
+            "quoteText": "принтер HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "object": {
+            "value": "принтер",
+            "quoteText": "принтер HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "model": {
+            "value": "HP LaserJet Pro M404dn",
+            "quoteText": "HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "мигает красный индикатор и ничего не печатает",
+            "quoteText": "мигает красный индикатор и ничего не печатает",
+            "origin": "text"
+          },
+          "category": {
+            "value": "printer",
+            "quoteText": "принтер",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "ничего не печатает",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "one",
+            "quoteText": "Нужно срочно, до конца дня сдавать отчёт",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "ничего не печатает",
+            "origin": "text"
+          },
+          "inventoryNo": {
+            "value": "INV-000312",
+            "quoteText": null,
+            "origin": "cmdb"
+          },
+          "ip": {
+            "value": "10.10.3.12",
+            "quoteText": null,
+            "origin": "cmdb"
+          }
+        },
+        "priority": "high",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-3"
+        ],
+        "articles": [
+          "kb-print-red-indicator"
+        ],
+        "askedField": null,
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "cmdb_find_equipment",
+          "cmdb_list_locations",
+          "submit"
+        ],
+        "steps": 5
+      },
+      "evaluation": {
+        "id": "case-01",
+        "fields": {
+          "total": 11,
+          "hits": 10,
+          "rate": 0.9090909090909091,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "принтер",
+              "actual": "принтер",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "Б",
+              "actual": "Б",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "312",
+              "actual": "312",
+              "hit": true
+            },
+            {
+              "key": "equipment",
+              "mode": "normalized",
+              "expected": "HP LaserJet Pro M404dn",
+              "actual": "HP LaserJet Pro M404dn",
+              "hit": true
+            },
+            {
+              "key": "model",
+              "mode": "normalized",
+              "expected": "HP LaserJet Pro M404dn",
+              "actual": "HP LaserJet Pro M404dn",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "printer",
+              "actual": "printer",
+              "hit": true
+            },
+            {
+              "key": "serviceType",
+              "mode": "exact",
+              "expected": "repair",
+              "actual": "repair",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-it",
+              "actual": null,
+              "hit": false
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "one",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "мигает красный индикатор и ничего не печатает",
+              "actual": "мигает красный индикатор и ничего не печатает",
+              "hit": true
+            }
+          ],
+          "fabricated": []
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-3"
+          ],
+          "actual": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-3"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 14413,
+        "costRub": 0,
+        "steps": 5,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "принтер",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "Б",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "312",
+              "passed": true
+            },
+            {
+              "key": "field_equipment",
+              "value": 1,
+              "expected": "HP LaserJet Pro M404dn",
+              "passed": true
+            },
+            {
+              "key": "field_model",
+              "value": 1,
+              "expected": "HP LaserJet Pro M404dn",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "printer",
+              "passed": true
+            },
+            {
+              "key": "field_serviceType",
+              "value": 1,
+              "expected": "repair",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 0,
+              "expected": "dep-it",
+              "passed": false
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "one",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 1,
+              "expected": "мигает красный индикатор и ничего не печатает",
+              "passed": true
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.9090909090909091
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "high",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-2",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-2, u-engineer-4, u-engineer-3",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 14394 мс",
+        "  extraction.ground — ok, 2 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 7 мс",
+        "  priority.compute — ok, 2 мс",
+        "  routing.recommend — ok, 6 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (5):",
+        "  1. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"312\",\"type\":\"принтер\",\"model\":\"HP LaserJet Pro M404dn\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"принтер не печатает мигает красный индикатор HP LaserJet\",\"category\":\"printer\"} → База знаний: 3 статей, первая — «Принтер HP не печатает, мигает красный индикатор»",
+        "  3. cmdb_find_equipment {\"model\":\"HP LaserJet Pro M404dn\"} → CMDB: найдено 1 единиц(ы) техники",
+        "  4. cmdb_list_locations {\"building\":\"Б\"} → CMDB: 3 мест(а)",
+        "  5. submit {\"fields\":[{\"key\":\"object\",\"value\":\"принтер\",\"quote\":\"принтер HP LaserJet Pro M404dn\",\"confidence\":0.98},{\"key\":\"building\",\"value\":\"Б\",\"quote\":\"корпусе Б\",\"confidence\":0.98},{\"key\":\"cabinet\",\"value\":\"312\",\"quote\":\"кабинет 312\",\"confidence\":0.98},{\"key\":\"equipment\",\"value\":\"HP LaserJet Pro M404dn\",\"quote\":\"принтер HP LaserJet Pro M404dn\",\"confidence\":0.95},{\"key\":\"model\",\"value\":\"HP LaserJet Pro M404dn\",\"quote\":\"HP LaserJet Pro M404dn\",\"confidence\":0.97},{\"key\":\"symptoms\",\"value\":\"мигает красный индикатор и ничего не печатает\",\"quote\":\"мигает красный индикатор и ничего не печатает\",\"confidence\":0.97},{\"key\":\"category\",\"value\":\"printer\",\"quote\":\"принтер\",\"confidence\":0.97},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"ничего не печатает\",\"confidence\":0.6},{\"key\":\"impact\",\"value\":\"one\",\"quote\":\"Нужно срочно, до конца дня сдавать отчёт\",\"confidence\":0.6},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"ничего не печатает\",\"confidence\":0.8}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":null,\"summary\":\"В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn: мигает красный индикатор и ничего не печатает, до конца дня нужно сдать отчёт.\",\"articles\":[{\"id\":\"kb-print-red-indicator\",\"title\":\"Принтер HP не печатает, мигает красный индикатор\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-02",
+      "file": "02-email-locked",
+      "channel": "chat",
+      "text": "Не могу войти в корпоративную почту: после ввода пароля появляется сообщение «Учётная запись заблокирована». Работаю в корпусе Б, кабинет 208. Почта нужна для переписки с подрядчиками, пока пишу с телефона.",
+      "expected": {
+        "fields": {
+          "object": "почта",
+          "building": "Б",
+          "cabinet": "208",
+          "category": "software",
+          "serviceType": "access",
+          "department": "dep-software",
+          "impact": "one",
+          "urgency": "workaround",
+          "symptoms": "после ввода пароля появляется сообщение «Учётная запись заблокирована»"
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-11",
+          "u-engineer-14",
+          "u-engineer-5"
+        ],
+        "kbArticle": "kb-email-login"
+      },
+      "status": "ok",
+      "runId": "e06faa1b-4e11-4104-9459-c70f087b839a",
+      "observed": {
+        "text": "Не могу войти в корпоративную почту: после ввода пароля появляется сообщение «Учётная запись заблокирована». Работаю в корпусе Б, кабинет 208. Почта нужна для переписки с подрядчиками, пока пишу с телефона.",
+        "fields": {
+          "building": {
+            "value": "Б",
+            "quoteText": "корпусе Б",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "208",
+            "quoteText": "кабинет 208",
+            "origin": "text"
+          },
+          "object": {
+            "value": "корпоративная почта",
+            "quoteText": "Не могу войти в корпоративную почту",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+            "quoteText": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+            "origin": "text"
+          },
+          "category": {
+            "value": "software",
+            "quoteText": "корпоративную почту",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "access",
+            "quoteText": "Учётная запись заблокирована",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-software",
+            "quoteText": "корпоративную почту",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "one",
+            "quoteText": "Работаю в корпусе Б, кабинет 208",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "workaround",
+            "quoteText": "пока пишу с телефона",
+            "origin": "text"
+          }
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-10",
+          "u-engineer-11",
+          "u-engineer-5"
+        ],
+        "articles": [
+          "kb-email-login"
+        ],
+        "askedField": null,
+        "tools": [
+          "kb_search",
+          "cmdb_find_equipment",
+          "submit"
+        ],
+        "steps": 3
+      },
+      "evaluation": {
+        "id": "case-02",
+        "fields": {
+          "total": 9,
+          "hits": 8,
+          "rate": 0.8888888888888888,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "почта",
+              "actual": "корпоративная почта",
+              "hit": false
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "Б",
+              "actual": "Б",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "208",
+              "actual": "208",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "software",
+              "actual": "software",
+              "hit": true
+            },
+            {
+              "key": "serviceType",
+              "mode": "exact",
+              "expected": "access",
+              "actual": "access",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-software",
+              "actual": "dep-software",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "one",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "workaround",
+              "actual": "workaround",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+              "actual": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+              "hit": true
+            }
+          ],
+          "fabricated": []
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": false,
+          "top3": true,
+          "expected": [
+            "u-engineer-11",
+            "u-engineer-14",
+            "u-engineer-5"
+          ],
+          "actual": [
+            "u-engineer-10",
+            "u-engineer-11",
+            "u-engineer-5"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 15902,
+        "costRub": 0,
+        "steps": 3,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 0,
+              "expected": "почта",
+              "passed": false
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "Б",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "208",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "software",
+              "passed": true
+            },
+            {
+              "key": "field_serviceType",
+              "value": 1,
+              "expected": "access",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-software",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "one",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "workaround",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 1,
+              "expected": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+              "passed": true
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.8888888888888888
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "medium",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 0,
+              "expected": "u-engineer-11",
+              "passed": false
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-11, u-engineer-14, u-engineer-5",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 15896 мс",
+        "  extraction.ground — ok, 1 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 3 мс",
+        "  priority.compute — ok, 1 мс",
+        "  routing.recommend — ok, 1 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (3):",
+        "  1. kb_search {\"query\":\"не могу войти в корпоративную почту учётная запись заблокирована\",\"category\":\"software\",\"limit\":5} → База знаний: 2 статей, первая — «Не удаётся войти в корпоративную почту, учётная запись заблокирована»",
+        "  2. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"208\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  3. submit {\"fields\":[{\"key\":\"object\",\"value\":\"корпоративная почта\",\"quote\":\"Не могу войти в корпоративную почту\",\"confidence\":0.9},{\"key\":\"building\",\"value\":\"Б\",\"quote\":\"корпусе Б\",\"confidence\":0.95},{\"key\":\"cabinet\",\"value\":\"208\",\"quote\":\"кабинет 208\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"после ввода пароля появляется сообщение «Учётная запись заблокирована»\",\"quote\":\"после ввода пароля появляется сообщение «Учётная запись заблокирована»\",\"confidence\":0.9},{\"key\":\"category\",\"value\":\"software\",\"quote\":\"корпоративную почту\",\"confidence\":0.88},{\"key\":\"serviceType\",\"value\":\"access\",\"quote\":\"Учётная запись заблокирована\",\"confidence\":0.7},{\"key\":\"department\",\"value\":\"dep-software\",\"quote\":\"корпоративную почту\",\"confidence\":0.6},{\"key\":\"impact\",\"value\":\"one\",\"quote\":\"Работаю в корпусе Б, кабинет 208\",\"confidence\":0.65},{\"key\":\"urgency\",\"value\":\"workaround\",\"quote\":\"пока пишу с телефона\",\"confidence\":0.7}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":null,\"summary\":\"Не может войти в корпоративную почту: после ввода пароля появляется сообщение «Учётная запись заблокирована». Корпус Б, кабинет 208; пока пишет с телефона.\",\"articles\":[{\"id\":\"kb-email-login\",\"title\":\"Не удаётся войти в корпоративную почту, учётная запись заблокирована\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-03",
+      "file": "03-1c-error-ip",
+      "channel": "screenshot",
+      "text": "Компьютер в кабинете 214 корпуса Б не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается. IP компьютера 10.10.2.214. Работа стоит, не могу провести накладные.",
+      "expected": {
+        "fields": {
+          "object": "компьютер",
+          "building": "Б",
+          "cabinet": "214",
+          "category": "software",
+          "serviceType": "repair",
+          "department": "dep-software",
+          "errorCode": "0x80004005",
+          "ip": "10.10.2.214",
+          "impact": "one",
+          "urgency": "down",
+          "symptoms": "Выдаёт ошибку 0x80004005 и закрывается"
+        },
+        "priority": "high",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-10",
+          "u-engineer-11",
+          "u-engineer-3"
+        ],
+        "kbArticle": "kb-1c-access"
+      },
+      "status": "ok",
+      "runId": "5e59524f-327a-4738-b751-94e2e9bd0a91",
+      "observed": {
+        "text": "Компьютер в кабинете 214 корпуса Б не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается. IP компьютера 10.10.2.214. Работа стоит, не могу провести накладные.",
+        "fields": {
+          "building": {
+            "value": "Б",
+            "quoteText": "корпуса Б",
+            "origin": "text"
+          },
+          "object": {
+            "value": "Компьютер",
+            "quoteText": "Компьютер в кабинете 214 корпуса Б",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "214",
+            "quoteText": "кабинете 214",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "Компьютер",
+            "quoteText": "Компьютер в кабинете 214 корпуса Б",
+            "origin": "text"
+          },
+          "ip": {
+            "value": "10.10.2.214",
+            "quoteText": "IP компьютера 10.10.2.214",
+            "origin": "text"
+          },
+          "errorCode": {
+            "value": "0x80004005",
+            "quoteText": "Выдаёт ошибку 0x80004005",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается",
+            "quoteText": "не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается",
+            "origin": "text"
+          },
+          "category": {
+            "value": "software",
+            "quoteText": "не открывает 1С: Предприятие",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "не открывает 1С: Предприятие",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-software",
+            "quoteText": "1С: Предприятие",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "one",
+            "quoteText": "не могу провести накладные",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "Работа стоит",
+            "origin": "text"
+          }
+        },
+        "priority": "high",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-10",
+          "u-engineer-11",
+          "u-engineer-5"
+        ],
+        "articles": [
+          "kb-1c-access"
+        ],
+        "askedField": null,
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "cmdb_find_equipment",
+          "cmdb_find_equipment",
+          "cmdb_list_locations",
+          "cmdb_find_equipment",
+          "submit"
+        ],
+        "steps": 7
+      },
+      "evaluation": {
+        "id": "case-03",
+        "fields": {
+          "total": 11,
+          "hits": 10,
+          "rate": 0.9090909090909091,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "компьютер",
+              "actual": "Компьютер",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "Б",
+              "actual": "Б",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "214",
+              "actual": "214",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "software",
+              "actual": "software",
+              "hit": true
+            },
+            {
+              "key": "serviceType",
+              "mode": "exact",
+              "expected": "repair",
+              "actual": "repair",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-software",
+              "actual": "dep-software",
+              "hit": true
+            },
+            {
+              "key": "errorCode",
+              "mode": "exact",
+              "expected": "0x80004005",
+              "actual": "0x80004005",
+              "hit": true
+            },
+            {
+              "key": "ip",
+              "mode": "exact",
+              "expected": "10.10.2.214",
+              "actual": "10.10.2.214",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "one",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "Выдаёт ошибку 0x80004005 и закрывается",
+              "actual": "не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "equipment",
+              "value": "Компьютер",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-10",
+            "u-engineer-11",
+            "u-engineer-3"
+          ],
+          "actual": [
+            "u-engineer-10",
+            "u-engineer-11",
+            "u-engineer-5"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 14503,
+        "costRub": 0,
+        "steps": 7,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "компьютер",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "Б",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "214",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "software",
+              "passed": true
+            },
+            {
+              "key": "field_serviceType",
+              "value": 1,
+              "expected": "repair",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-software",
+              "passed": true
+            },
+            {
+              "key": "field_errorCode",
+              "value": 1,
+              "expected": "0x80004005",
+              "passed": true
+            },
+            {
+              "key": "field_ip",
+              "value": 1,
+              "expected": "10.10.2.214",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "one",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "Выдаёт ошибку 0x80004005 и закрывается",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.9090909090909091
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "high",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-10",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-10, u-engineer-11, u-engineer-3",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 14498 мс",
+        "  extraction.ground — ok, 1 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 1 мс",
+        "  priority.compute — ok, 0 мс",
+        "  routing.recommend — ok, 0 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (7):",
+        "  1. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"214\",\"type\":\"ПК\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"1С Предприятие не открывается ошибка 0x80004005 закрывается\",\"category\":\"software\"} → База знаний: 1 статей, первая — «1С не открывается или выдаёт ошибку 0x80004005»",
+        "  3. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"214\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  4. cmdb_find_equipment {\"text\":\"компьютер 10.10.2.214\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  5. cmdb_list_locations {\"building\":\"Б\"} → CMDB: 3 мест(а)",
+        "  6. cmdb_find_equipment {\"text\":\"10.10.2.214\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  7. submit {\"fields\":[{\"key\":\"object\",\"value\":\"Компьютер\",\"quote\":\"Компьютер в кабинете 214 корпуса Б\",\"confidence\":0.95},{\"key\":\"building\",\"value\":\"Б\",\"quote\":\"корпуса Б\",\"confidence\":0.95},{\"key\":\"cabinet\",\"value\":\"214\",\"quote\":\"кабинете 214\",\"confidence\":0.95},{\"key\":\"equipment\",\"value\":\"Компьютер\",\"quote\":\"Компьютер в кабинете 214 корпуса Б\",\"confidence\":0.75},{\"key\":\"ip\",\"value\":\"10.10.2.214\",\"quote\":\"IP компьютера 10.10.2.214\",\"confidence\":0.95},{\"key\":\"errorCode\",\"value\":\"0x80004005\",\"quote\":\"Выдаёт ошибку 0x80004005\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается\",\"quote\":\"не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается\",\"confidence\":0.95},{\"key\":\"category\",\"value\":\"software\",\"quote\":\"не открывает 1С: Предприятие\",\"confidence\":0.9},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"не открывает 1С: Предприятие\",\"confidence\":0.65},{\"key\":\"department\",\"value\":\"dep-software\",\"quote\":\"1С: Предприятие\",\"confidence\":0.7},{\"key\":\"impact\",\"value\":\"one\",\"quote\":\"не могу провести накладные\",\"confidence\":0.8},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"Работа стоит\",\"confidence\":0.9}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":null,\"summary\":\"В кабинете 214 корпуса Б компьютер не открывает 1С: Предприятие, выдаёт ошибку 0x80004005 и закрывается; работа стоит, накладные провести нельзя.\",\"articles\":[{\"id\":\"kb-1c-access\",\"title\":\"1С не открывается или выдаёт ошибку 0x80004005\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-04",
+      "file": "04-network-building-outage",
+      "channel": "chat",
+      "text": "Во всём корпусе В пропала сеть и интернет: ни у кого не открываются сайты, не работает почта. Весь этаж не работает, люди не могут отправить документы.",
+      "expected": {
+        "fields": {
+          "object": "сеть",
+          "building": "В",
+          "category": "network",
+          "department": "dep-network",
+          "impact": "building",
+          "urgency": "down",
+          "symptoms": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта"
+        },
+        "priority": "emergency",
+        "emergency": true,
+        "assigneeTop3": [
+          "u-engineer-7",
+          "u-engineer-8",
+          "u-engineer-9"
+        ],
+        "kbArticle": "kb-network-outage"
+      },
+      "status": "ok",
+      "runId": "34dac4e0-8011-48e9-9c8d-e89e82359981",
+      "observed": {
+        "text": "Во всём корпусе В пропала сеть и интернет: ни у кого не открываются сайты, не работает почта. Весь этаж не работает, люди не могут отправить документы.",
+        "fields": {
+          "building": {
+            "value": "В",
+            "quoteText": "Во всём корпусе В",
+            "origin": "text"
+          },
+          "object": {
+            "value": "сеть и интернет",
+            "quoteText": "пропала сеть и интернет",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "ни у кого не открываются сайты, не работает почта, люди не могут отправить документы",
+            "quoteText": "ни у кого не открываются сайты, не работает почта",
+            "origin": "text"
+          },
+          "category": {
+            "value": "network",
+            "quoteText": "пропала сеть и интернет",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "пропала сеть и интернет",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-network",
+            "quoteText": "пропала сеть и интернет",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "building",
+            "quoteText": "Во всём корпусе В",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "люди не могут отправить документы",
+            "origin": "text"
+          }
+        },
+        "priority": "emergency",
+        "emergency": true,
+        "assignees": [
+          "u-engineer-9",
+          "u-engineer-7",
+          "u-engineer-8"
+        ],
+        "articles": [
+          "kb-network-outage",
+          "kb-dhcp-error"
+        ],
+        "askedField": "cabinet",
+        "tools": [
+          "cmdb_list_locations",
+          "kb_search",
+          "cmdb_list_locations",
+          "cmdb_find_equipment",
+          "submit"
+        ],
+        "steps": 5
+      },
+      "evaluation": {
+        "id": "case-04",
+        "fields": {
+          "total": 7,
+          "hits": 5,
+          "rate": 0.7142857142857143,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "сеть",
+              "actual": "сеть и интернет",
+              "hit": false
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "В",
+              "actual": "В",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "network",
+              "actual": "network",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-network",
+              "actual": "dep-network",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "building",
+              "actual": "building",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта",
+              "actual": "ни у кого не открываются сайты, не работает почта, люди не могут отправить документы",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "serviceType",
+              "value": "repair",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": true,
+        "emergency": {
+          "expected": true,
+          "actual": true,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-7",
+            "u-engineer-8",
+            "u-engineer-9"
+          ],
+          "actual": [
+            "u-engineer-9",
+            "u-engineer-7",
+            "u-engineer-8"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 16518,
+        "costRub": 0,
+        "steps": 5,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "true",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 0,
+              "expected": "сеть",
+              "passed": false
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "В",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "network",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-network",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "building",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.7142857142857143
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "emergency",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-7",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-7, u-engineer-8, u-engineer-9",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 16514 мс",
+        "  extraction.ground — ok, 1 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 2 мс",
+        "  priority.compute — ok, 0 мс",
+        "  routing.recommend — ok, 1 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (5):",
+        "  1. cmdb_list_locations {\"building\":\"В\"} → CMDB: 0 мест(а)",
+        "  2. kb_search {\"query\":\"пропала сеть и интернет не открываются сайты не работает почта массовый отказ сети в корпусе\",\"category\":\"network\"} → База знаний: 3 статей, первая — «Нет сети и интернета во всём корпусе»",
+        "  3. cmdb_list_locations {} → CMDB: 3 мест(а)",
+        "  4. cmdb_find_equipment {\"building\":\"В\",\"type\":\"сетевое оборудование\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  5. submit {\"fields\":[{\"key\":\"object\",\"value\":\"сеть и интернет\",\"quote\":\"пропала сеть и интернет\",\"confidence\":0.95},{\"key\":\"building\",\"value\":\"В\",\"quote\":\"Во всём корпусе В\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"ни у кого не открываются сайты, не работает почта, люди не могут отправить документы\",\"quote\":\"ни у кого не открываются сайты, не работает почта\",\"confidence\":0.95},{\"key\":\"category\",\"value\":\"network\",\"quote\":\"пропала сеть и интернет\",\"confidence\":0.95},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"пропала сеть и интернет\",\"confidence\":0.7},{\"key\":\"department\",\"value\":\"dep-network\",\"quote\":\"пропала сеть и интернет\",\"confidence\":0.65},{\"key\":\"impact\",\"value\":\"building\",\"quote\":\"Во всём корпусе В\",\"confidence\":0.85},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"люди не могут отправить документы\",\"confidence\":0.9}],\"emergency\":{\"suspected\":true,\"signs\":[{\"sign\":\"массовый отказ сети\",\"quote\":\"Во всём корпусе В пропала сеть и интернет\"}],\"confidence\":0.85},\"clarify\":{\"fieldKey\":\"cabinet\",\"question\":\"Назовите номер кабинета в корпусе В, откуда вы звоните: нужно, чтобы инженер проверил порт.\",\"options\":[]},\"summary\":\"В корпусе В пропала сеть и интернет: ни у кого не открываются сайты, не работает почта, люди не могут отправить документы.\",\"articles\":[{\"id\":\"kb-network-outage\",\"title\":\"Нет сети и интернета во всём корпусе\"},{\"id\":\"kb-dhcp-error\",\"title\":\"Компьютер не получает IP-адрес, свитч мигает\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-05",
+      "file": "05-server-smoke-prom",
+      "channel": "chat",
+      "text": "На промплощадке, кабинет 2, искрит и дымит сервер, пахнет горелым. Мы его обесточили, но запах остался.",
+      "expected": {
+        "fields": {
+          "object": "сервер",
+          "building": "ПРОМ",
+          "cabinet": "2",
+          "category": "server",
+          "department": "dep-server",
+          "impact": "group",
+          "urgency": "down",
+          "symptoms": "искрит и дымит сервер, пахнет горелым"
+        },
+        "priority": "emergency",
+        "emergency": true,
+        "assigneeTop3": [
+          "u-engineer-12",
+          "u-engineer-13",
+          "u-engineer-9"
+        ]
+      },
+      "status": "ok",
+      "runId": "879d1f9f-960c-4ce5-8b5d-cb18a268f7e6",
+      "observed": {
+        "text": "На промплощадке, кабинет 2, искрит и дымит сервер, пахнет горелым. Мы его обесточили, но запах остался.",
+        "fields": {
+          "object": {
+            "value": "сервер",
+            "quoteText": "искрит и дымит сервер",
+            "origin": "text"
+          },
+          "building": {
+            "value": "ПРОМ",
+            "quoteText": "На промплощадке",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "2",
+            "quoteText": "кабинет 2",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "сервер",
+            "quoteText": "сервер",
+            "origin": "text"
+          },
+          "category": {
+            "value": "server",
+            "quoteText": "сервер",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "искрит и дымит, пахнет горелым, после обесточивания запах остался",
+            "quoteText": "искрит и дымит сервер, пахнет горелым",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-server",
+            "quoteText": "сервер",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "group",
+            "quoteText": "искрит и дымит сервер",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "Мы его обесточили",
+            "origin": "text"
+          }
+        },
+        "priority": "emergency",
+        "emergency": true,
+        "assignees": [
+          "u-engineer-12",
+          "u-engineer-13",
+          "u-engineer-7"
+        ],
+        "articles": [
+          "kb-server-disk",
+          "kb-1c-access",
+          "kb-email-login"
+        ],
+        "askedField": "equipment",
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "cmdb_list_locations",
+          "kb_search",
+          "kb_search",
+          "submit"
+        ],
+        "steps": 6
+      },
+      "evaluation": {
+        "id": "case-05",
+        "fields": {
+          "total": 8,
+          "hits": 7,
+          "rate": 0.875,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "сервер",
+              "actual": "сервер",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "ПРОМ",
+              "actual": "ПРОМ",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "2",
+              "actual": "2",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "server",
+              "actual": "server",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-server",
+              "actual": "dep-server",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "group",
+              "actual": "group",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "искрит и дымит сервер, пахнет горелым",
+              "actual": "искрит и дымит, пахнет горелым, после обесточивания запах остался",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "equipment",
+              "value": "сервер",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": true,
+        "emergency": {
+          "expected": true,
+          "actual": true,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-12",
+            "u-engineer-13",
+            "u-engineer-9"
+          ],
+          "actual": [
+            "u-engineer-12",
+            "u-engineer-13",
+            "u-engineer-7"
+          ]
+        },
+        "article": null,
+        "question": null,
+        "trajectory": null,
+        "ms": 14997,
+        "costRub": 0,
+        "steps": 6,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "true",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "сервер",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "ПРОМ",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "2",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "server",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-server",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "group",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "искрит и дымит сервер, пахнет горелым",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.875
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "emergency",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-12",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-12, u-engineer-13, u-engineer-9",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 14993 мс",
+        "  extraction.ground — ok, 2 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 2 мс",
+        "  priority.compute — ok, 0 мс",
+        "  routing.recommend — ok, 0 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (6):",
+        "  1. cmdb_find_equipment {\"building\":\"ПРОМ\",\"cabinet\":\"2\",\"type\":\"сервер\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"сервер искрит дымит пахнет горелым запах остался\",\"category\":\"server\"} → База знаний: 1 статей, первая — «Сервер сообщает об ошибке диска или RAID»",
+        "  3. cmdb_list_locations {\"building\":\"ПРОМ\"} → CMDB: 0 мест(а)",
+        "  4. kb_search {\"query\":\"дым гарь запах горелого искрит оборудование возгорание отключить питание\",\"limit\":10} → База знаний: 2 статей, первая — «Компьютер не получает IP-адрес, свитч мигает»",
+        "  5. kb_search {\"query\":\"сервер не включается после отключения питания\",\"category\":\"server\",\"limit\":10} → База знаний: 1 статей, первая — «Сервер сообщает об ошибке диска или RAID»",
+        "  6. submit {\"fields\":[{\"key\":\"object\",\"value\":\"сервер\",\"quote\":\"искрит и дымит сервер\",\"confidence\":0.95},{\"key\":\"building\",\"value\":\"ПРОМ\",\"quote\":\"На промплощадке\",\"confidence\":0.95},{\"key\":\"cabinet\",\"value\":\"2\",\"quote\":\"кабинет 2\",\"confidence\":0.97},{\"key\":\"equipment\",\"value\":\"сервер\",\"quote\":\"сервер\",\"confidence\":0.75},{\"key\":\"category\",\"value\":\"server\",\"quote\":\"сервер\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"искрит и дымит, пахнет горелым, после обесточивания запах остался\",\"quote\":\"искрит и дымит сервер, пахнет горелым\",\"confidence\":0.95},{\"key\":\"department\",\"value\":\"dep-server\",\"quote\":\"сервер\",\"confidence\":0.85},{\"key\":\"impact\",\"value\":\"group\",\"quote\":\"искрит и дымит сервер\",\"confidence\":0.55},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"Мы его обесточили\",\"confidence\":0.7}],\"emergency\":{\"suspected\":true,\"signs\":[{\"sign\":\"искрение\",\"quote\":\"искрит\"},{\"sign\":\"дым\",\"quote\":\"дымит сервер\"},{\"sign\":\"запах горелого\",\"quote\":\"пахнет горелым\"}],\"confidence\":0.95},\"clarify\":{\"fieldKey\":\"equipment\",\"question\":\"Какой именно сервер искрит в кабинете 2 — назовите модель или инвентарный номер?\",\"options\":[]},\"summary\":\"На промплощадке в кабинете 2 сервер искрит и дымит, пахнет горелым; питание обесточили, но запах остался.\",\"articles\":[]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-06",
+      "file": "06-empty-appeal",
+      "channel": "chat",
+      "text": "опять ничего не работает",
+      "expected": {
+        "fields": {
+          "object": null,
+          "building": null,
+          "cabinet": null,
+          "equipment": null,
+          "category": null,
+          "impact": null,
+          "urgency": null,
+          "symptoms": null
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assigneeTop3": []
+      },
+      "status": "ok",
+      "runId": "ba97f763-0df5-4962-9d82-4e56dde14358",
+      "observed": {
+        "text": "опять ничего не работает",
+        "fields": {
+          "symptoms": {
+            "value": "ничего не работает",
+            "quoteText": "опять ничего не работает",
+            "origin": "text"
+          }
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-1",
+          "u-engineer-6",
+          "u-engineer-5"
+        ],
+        "articles": [
+          "kb-1c-access",
+          "kb-dhcp-error",
+          "kb-mfu-scan"
+        ],
+        "askedField": "object",
+        "tools": [
+          "kb_search",
+          "dictionary_lookup",
+          "submit"
+        ],
+        "steps": 3
+      },
+      "evaluation": {
+        "id": "case-06",
+        "fields": {
+          "total": 8,
+          "hits": 7,
+          "rate": 0.875,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "equipment",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": null,
+              "actual": "ничего не работает",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "symptoms",
+              "value": "ничего не работает",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": null,
+        "article": null,
+        "question": null,
+        "trajectory": null,
+        "ms": 7192,
+        "costRub": 0,
+        "steps": 3,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_equipment",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.875
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "medium",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 7191 мс",
+        "  extraction.ground — ok, 0 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 1 мс",
+        "  priority.compute — ok, 0 мс",
+        "  routing.recommend — ok, 0 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (3):",
+        "  1. kb_search {\"query\":\"ничего не работает оборудование не включается\",\"limit\":5} → База знаний: 5 статей, первая — «1С не открывается или выдаёт ошибку 0x80004005»",
+        "  2. dictionary_lookup {\"dictionary\":\"category\"} → Справочник: 6 вариант(ов)",
+        "  3. submit {\"fields\":[{\"key\":\"symptoms\",\"value\":\"ничего не работает\",\"quote\":\"опять ничего не работает\",\"confidence\":0.8}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.3},\"clarify\":{\"fieldKey\":\"object\",\"question\":\"Что именно не работает и где: принтер, компьютер, сеть или программа? Назовите корпус и кабинет.\",\"options\":[\"Принтер или МФУ\",\"Компьютер или монитор\",\"Сеть, интернет, Wi-Fi\",\"Программа (1С, почта)\",\"Мышь, клавиатура\"]},\"summary\":\"Заявитель пишет: «опять ничего не работает» — объект, место и характер неисправности не названы, уточняем у него.\",\"articles\":[]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-07",
+      "file": "07-emotional-mouse",
+      "channel": "chat",
+      "text": "Третий раз пишу, сколько можно! Опять не работает мышь на моём компьютере. Никто не реагирует, это уже невозможно терпеть!",
+      "expected": {
+        "fields": {
+          "object": "мышь",
+          "building": null,
+          "cabinet": null,
+          "equipment": null,
+          "category": "peripheral",
+          "department": "dep-it",
+          "impact": "one",
+          "urgency": "workaround",
+          "symptoms": "не работает мышь на моём компьютере"
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-2",
+          "u-engineer-1",
+          "u-engineer-3"
+        ],
+        "kbArticle": "kb-peripheral-input"
+      },
+      "status": "ok",
+      "runId": "9a8d3985-d5b1-4bf8-bf5b-4ebb9c68afe7",
+      "observed": {
+        "text": "Третий раз пишу, сколько можно! Опять не работает мышь на моём компьютере. Никто не реагирует, это уже невозможно терпеть!",
+        "fields": {
+          "object": {
+            "value": "мышь",
+            "quoteText": "не работает мышь",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "не работает мышь на компьютере, обращается не первый раз",
+            "quoteText": "Опять не работает мышь на моём компьютере",
+            "origin": "text"
+          },
+          "category": {
+            "value": "peripheral",
+            "quoteText": "мышь",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "мышь",
+            "quoteText": "мышь",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "не работает",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "one",
+            "quoteText": "на моём компьютере",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "Опять не работает мышь на моём компьютере",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-it",
+            "quoteText": "мышь",
+            "origin": "text"
+          }
+        },
+        "priority": "high",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-2",
+          "u-engineer-1",
+          "u-engineer-6"
+        ],
+        "articles": [
+          "kb-peripheral-input"
+        ],
+        "askedField": "cabinet",
+        "tools": [
+          "kb_search",
+          "dictionary_lookup",
+          "cmdb_list_locations",
+          "submit"
+        ],
+        "steps": 4
+      },
+      "evaluation": {
+        "id": "case-07",
+        "fields": {
+          "total": 9,
+          "hits": 6,
+          "rate": 0.6666666666666666,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "мышь",
+              "actual": "мышь",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": null,
+              "actual": null,
+              "hit": true
+            },
+            {
+              "key": "equipment",
+              "mode": "normalized",
+              "expected": null,
+              "actual": "мышь",
+              "hit": false
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "peripheral",
+              "actual": "peripheral",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-it",
+              "actual": "dep-it",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "one",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "workaround",
+              "actual": "down",
+              "hit": false
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "не работает мышь на моём компьютере",
+              "actual": "не работает мышь на компьютере, обращается не первый раз",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "equipment",
+              "value": "мышь",
+              "reason": "в эталоне поле пусто"
+            },
+            {
+              "key": "serviceType",
+              "value": "repair",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": false,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-2",
+            "u-engineer-1",
+            "u-engineer-3"
+          ],
+          "actual": [
+            "u-engineer-2",
+            "u-engineer-1",
+            "u-engineer-6"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 11109,
+        "costRub": 0,
+        "steps": 4,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "мышь",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "",
+              "passed": true
+            },
+            {
+              "key": "field_equipment",
+              "value": 0,
+              "expected": "",
+              "passed": false
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "peripheral",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-it",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "one",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 0,
+              "expected": "workaround",
+              "passed": false
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "не работает мышь на моём компьютере",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.6666666666666666
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 0,
+              "expected": "medium",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-2",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-2, u-engineer-1, u-engineer-3",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 1 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 11106 мс",
+        "  extraction.ground — ok, 0 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 1 мс",
+        "  priority.compute — ok, 0 мс",
+        "  routing.recommend — ok, 1 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (4):",
+        "  1. kb_search {\"query\":\"не работает мышь на компьютере\",\"category\":\"peripheral\"} → База знаний: 1 статей, первая — «Не работает мышь или клавиатура»",
+        "  2. dictionary_lookup {\"dictionary\":\"category\",\"query\":\"мышь периферия\"} → Справочник: 0 вариант(ов)",
+        "  3. cmdb_list_locations {} → CMDB: 3 мест(а)",
+        "  4. submit {\"fields\":[{\"key\":\"object\",\"value\":\"мышь\",\"quote\":\"не работает мышь\",\"confidence\":0.92},{\"key\":\"symptoms\",\"value\":\"не работает мышь на компьютере, обращается не первый раз\",\"quote\":\"Опять не работает мышь на моём компьютере\",\"confidence\":0.9},{\"key\":\"category\",\"value\":\"peripheral\",\"quote\":\"мышь\",\"confidence\":0.9},{\"key\":\"equipment\",\"value\":\"мышь\",\"quote\":\"мышь\",\"confidence\":0.6},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"не работает\",\"confidence\":0.7},{\"key\":\"impact\",\"value\":\"one\",\"quote\":\"на моём компьютере\",\"confidence\":0.85},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"Опять не работает мышь на моём компьютере\",\"confidence\":0.6},{\"key\":\"department\",\"value\":\"dep-it\",\"quote\":\"мышь\",\"confidence\":0.55}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":{\"fieldKey\":\"cabinet\",\"question\":\"В каком корпусе и кабинете стоит ваш компьютер с неработающей мышью?\",\"options\":[\"Корпус Б, каб. 312\",\"Корпус А\",\"Корпус В\",\"Промплощадка\"]},\"summary\":\"Заявитель повторно (третий раз) сообщает, что на его компьютере не работает мышь; корпус и кабинет не названы, требует реакции.\",\"articles\":[{\"id\":\"kb-peripheral-input\",\"title\":\"Не работает мышь или клавиатура\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-08",
+      "file": "08-calm-critical-1c",
+      "channel": "chat",
+      "text": "Добрый день. Не хочу никого подгонять, но, кажется, у всего отдела в корпусе А после обновления не открывается 1С. Пожалуйста, посмотрите, когда будет возможность.",
+      "expected": {
+        "fields": {
+          "object": "1С",
+          "building": "А",
+          "category": "software",
+          "department": "dep-software",
+          "impact": "group",
+          "urgency": "down",
+          "symptoms": "после обновления не открывается 1С"
+        },
+        "priority": "critical",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-10",
+          "u-engineer-11",
+          "u-engineer-6"
+        ],
+        "kbArticle": "kb-1c-access"
+      },
+      "status": "ok",
+      "runId": "c13f70ae-3fae-4623-afd8-cdca613f7476",
+      "observed": {
+        "text": "Добрый день. Не хочу никого подгонять, но, кажется, у всего отдела в корпусе А после обновления не открывается 1С. Пожалуйста, посмотрите, когда будет возможность.",
+        "fields": {
+          "building": {
+            "value": "А",
+            "quoteText": "в корпусе А",
+            "origin": "text"
+          },
+          "object": {
+            "value": "1С",
+            "quoteText": "не открывается 1С",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "у всего отдела после обновления не открывается 1С",
+            "quoteText": "у всего отдела в корпусе А после обновления не открывается 1С",
+            "origin": "text"
+          },
+          "category": {
+            "value": "software",
+            "quoteText": "1С",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-software",
+            "quoteText": "1С",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "group",
+            "quoteText": "у всего отдела",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "у всего отдела в корпусе А после обновления не открывается 1С",
+            "origin": "text"
+          }
+        },
+        "priority": "critical",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-10",
+          "u-engineer-5",
+          "u-engineer-11"
+        ],
+        "articles": [
+          "kb-1c-access"
+        ],
+        "askedField": "cabinet",
+        "tools": [
+          "kb_search",
+          "cmdb_list_locations",
+          "dictionary_lookup",
+          "cmdb_list_locations",
+          "submit"
+        ],
+        "steps": 5
+      },
+      "evaluation": {
+        "id": "case-08",
+        "fields": {
+          "total": 7,
+          "hits": 6,
+          "rate": 0.8571428571428571,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "1С",
+              "actual": "1С",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "А",
+              "actual": "А",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "software",
+              "actual": "software",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-software",
+              "actual": "dep-software",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "group",
+              "actual": "group",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "после обновления не открывается 1С",
+              "actual": "у всего отдела после обновления не открывается 1С",
+              "hit": false
+            }
+          ],
+          "fabricated": []
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-10",
+            "u-engineer-11",
+            "u-engineer-6"
+          ],
+          "actual": [
+            "u-engineer-10",
+            "u-engineer-5",
+            "u-engineer-11"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 16851,
+        "costRub": 0,
+        "steps": 5,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "1С",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "А",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "software",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-software",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "group",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "после обновления не открывается 1С",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.8571428571428571
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "critical",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-10",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-10, u-engineer-11, u-engineer-6",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 1 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 16844 мс",
+        "  extraction.ground — ok, 0 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 4 мс",
+        "  priority.compute — ok, 1 мс",
+        "  routing.recommend — ok, 0 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (5):",
+        "  1. kb_search {\"query\":\"1С не открывается после обновления у всего отдела\",\"category\":\"software\"} → База знаний: 2 статей, первая — «Не удаётся войти в корпоративную почту, учётная запись заблокирована»",
+        "  2. cmdb_list_locations {\"building\":\"А\"} → CMDB: 0 мест(а)",
+        "  3. dictionary_lookup {\"dictionary\":\"building\",\"query\":\"А\"} → Справочник: 2 вариант(ов)",
+        "  4. cmdb_list_locations {} → CMDB: 3 мест(а)",
+        "  5. submit {\"fields\":[{\"key\":\"object\",\"value\":\"1С\",\"quote\":\"не открывается 1С\",\"confidence\":0.92},{\"key\":\"building\",\"value\":\"А\",\"quote\":\"в корпусе А\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"у всего отдела после обновления не открывается 1С\",\"quote\":\"у всего отдела в корпусе А после обновления не открывается 1С\",\"confidence\":0.9},{\"key\":\"category\",\"value\":\"software\",\"quote\":\"1С\",\"confidence\":0.9},{\"key\":\"department\",\"value\":\"dep-software\",\"quote\":\"1С\",\"confidence\":0.65},{\"key\":\"impact\",\"value\":\"group\",\"quote\":\"у всего отдела\",\"confidence\":0.9},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"у всего отдела в корпусе А после обновления не открывается 1С\",\"confidence\":0.65}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":{\"fieldKey\":\"cabinet\",\"question\":\"Уточните, пожалуйста, номер кабинета в корпусе А, где не открывается 1С.\",\"options\":[]},\"summary\":\"В корпусе А у всего отдела после обновления не открывается 1С; заявитель просит посмотреть, когда будет возможность.\",\"articles\":[{\"id\":\"kb-1c-access\",\"title\":\"1С не открывается или выдаёт ошибку 0x80004005\"}]} → результат принят"
+      ]
+    },
+    {
+      "id": "case-09",
+      "file": "09-slang-typos-network",
+      "channel": "chat",
+      "text": "прив, на 3 этаже в Б не пашет сеть, свитч моргает, инет отвалился, каб 314",
+      "expected": {
+        "fields": {
+          "object": "свитч",
+          "building": "Б",
+          "floor": "3",
+          "cabinet": "314",
+          "category": "network",
+          "department": "dep-network",
+          "impact": "group",
+          "urgency": "down",
+          "symptoms": "не пашет сеть, свитч моргает, инет отвалился"
+        },
+        "priority": "critical",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-7",
+          "u-engineer-8",
+          "u-engineer-9"
+        ],
+        "kbArticle": "kb-dhcp-error"
+      },
+      "status": "ok",
+      "runId": "56349905-67f0-4869-8b26-0e8bb73bd74c",
+      "observed": {
+        "text": "прив, на 3 этаже в Б не пашет сеть, свитч моргает, инет отвалился, каб 314",
+        "fields": {
+          "cabinet": {
+            "value": "314",
+            "quoteText": "каб 314",
+            "origin": "text"
+          },
+          "object": {
+            "value": "сеть",
+            "quoteText": "не пашет сеть",
+            "origin": "text"
+          },
+          "building": {
+            "value": "Б",
+            "quoteText": "в Б",
+            "origin": "text"
+          },
+          "floor": {
+            "value": "3",
+            "quoteText": "на 3 этаже",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "свитч",
+            "quoteText": "свитч моргает",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "не пашет сеть, свитч моргает, инет отвалился",
+            "quoteText": "не пашет сеть, свитч моргает, инет отвалился",
+            "origin": "text"
+          },
+          "category": {
+            "value": "network",
+            "quoteText": "не пашет сеть",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "не пашет сеть",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-network",
+            "quoteText": "инет отвалился",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "group",
+            "quoteText": "на 3 этаже в Б не пашет сеть",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "инет отвалился",
+            "origin": "text"
+          }
+        },
+        "priority": "critical",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-7",
+          "u-engineer-9",
+          "u-engineer-8"
+        ],
+        "articles": [
+          "kb-dhcp-error",
+          "kb-network-outage"
+        ],
+        "askedField": "impact",
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "cmdb_find_equipment",
+          "cmdb_list_locations",
+          "cmdb_find_equipment",
+          "cmdb_find_equipment",
+          "submit",
+          "submit"
+        ],
+        "steps": 8
+      },
+      "evaluation": {
+        "id": "case-09",
+        "fields": {
+          "total": 9,
+          "hits": 8,
+          "rate": 0.8888888888888888,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "свитч",
+              "actual": "сеть",
+              "hit": false
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "Б",
+              "actual": "Б",
+              "hit": true
+            },
+            {
+              "key": "floor",
+              "mode": "normalized",
+              "expected": "3",
+              "actual": "3",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "314",
+              "actual": "314",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "network",
+              "actual": "network",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-network",
+              "actual": "dep-network",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "group",
+              "actual": "group",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "не пашет сеть, свитч моргает, инет отвалился",
+              "actual": "не пашет сеть, свитч моргает, инет отвалился",
+              "hit": true
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "equipment",
+              "value": "свитч",
+              "reason": "в эталоне поле пусто"
+            },
+            {
+              "key": "serviceType",
+              "value": "repair",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-7",
+            "u-engineer-8",
+            "u-engineer-9"
+          ],
+          "actual": [
+            "u-engineer-7",
+            "u-engineer-9",
+            "u-engineer-8"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 21674,
+        "costRub": 0,
+        "steps": 8,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 0,
+              "expected": "свитч",
+              "passed": false
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "Б",
+              "passed": true
+            },
+            {
+              "key": "field_floor",
+              "value": 1,
+              "expected": "3",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "314",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "network",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-network",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "group",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 1,
+              "expected": "не пашет сеть, свитч моргает, инет отвалился",
+              "passed": true
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.8888888888888888
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "critical",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-7",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-7, u-engineer-8, u-engineer-9",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 21667 мс",
+        "  extraction.ground — ok, 0 мс",
+        "  profile.prefill — ok, 1 мс",
+        "  emergency.detect — ok, 2 мс",
+        "  priority.compute — ok, 1 мс",
+        "  routing.recommend — ok, 1 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (8):",
+        "  1. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"314\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"не работает сеть, свитч моргает, нет интернета в кабинете\",\"category\":\"network\"} → База знаний: 3 статей, первая — «Компьютер не получает IP-адрес, свитч мигает»",
+        "  3. cmdb_find_equipment {\"building\":\"Б\",\"type\":\"свитч\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  4. cmdb_list_locations {\"building\":\"Б\"} → CMDB: 3 мест(а)",
+        "  5. cmdb_find_equipment {\"cabinet\":\"312\"} → CMDB: найдено 1 единиц(ы) техники",
+        "  6. cmdb_find_equipment {\"building\":\"Б\",\"text\":\"свитч коммутатор\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  7. submit {\"fields\":[{\"key\":\"object\",\"value\":\"сеть\",\"quote\":\"не пашет сеть\",\"confidence\":0.9},{\"key\":\"building\",\"value\":\"Б\",\"quote\":\"в Б\",\"confidence\":0.9},{\"key\":\"floor\",\"value\":\"3\",\"quote\":\"на 3 этаже\",\"confidence\":0.95},{\"key\":\"cabinet\",\"value\":\"314\",\"quote\":\"каб 314\",\"confidence\":0.95},{\"key\":\"equipment\",\"value\":\"свитч\",\"quote\":\"свитч моргает\",\"confidence\":0.6},{\"key\":\"symptoms\",\"value\":\"не пашет сеть, свитч моргает, инет отвалился\",\"quote\":\"не пашет сеть, свитч моргает, инет отвалился\",\"confidence\":0.95},{\"key\":\"category\",\"value\":\"network\",\"quote\":\"не пашет сеть\",\"confidence\":0.95},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"не пашет сеть\",\"confidence\":0.7},{\"key\":\"department\",\"value\":\"dep-network\",\"quote\":\"инет отвалился\",\"confidence\":0.7},{\"key\":\"impact\",\"value\":\"group\",\"quote\":\"на 3 этаже в Б не пашет сеть\",\"confidence\":0.55},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"инет отвалился\",\"confidence\":0.6}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.4},\"clarify\":{\"fieldKey\":\"impact\",\"question\":\"Сеть не работает только у вас в кабинете 314 или у всех сотрудников на 3 этаже корпуса Б?\",\"options\":[\"Только у меня\",\"У всех в кабинете 314\",\"У всех на 3 этаже\",\"Не знаю\"]},\"summary\":\"На 3 этаже корпуса Б в кабинете 314 не работает сеть и пропал интернет, свитч моргает.\",\"articles\":[{\"id\":\"kb-dhcp-error\",\"title\":\"Компьютер не получает IP-адрес, свитч мигает\"},{\"id\":\"kb-network-outage\",\"title\":\"Нет сети и интернета во всём корпусе\"}]} → submit отклонён проверками [ошибка: вариант «Только у меня» не из справочника impact: one, group, building, enterprise; вариант «У всех в кабинете 314» не из справочника impact: one, group, building, enterprise; вариант «У всех на 3 этаже» не из справочника impact: one, group, building, enterprise; вариант «Не знаю» не из справочника impact: one, group, building, enterprise]",
+        "  8. submit {\"articles\":[{\"id\":\"kb-dhcp-error\",\"title\":\"Компьютер не получает IP-адрес, свитч мигает\"},{\"id\":\"kb-network-outage\",\"title\":\"Нет сети и интернета во всём корпусе\"}],\"clarify\":{\"fieldKey\":\"impact\",\"options\":[\"one\",\"group\",\"building\",\"enterprise\"],\"question\":\"Сеть не работает только у вас в кабинете 314 или у всех сотрудников на 3 этаже корпуса Б?\"},\"emergency\":{\"confidence\":0.4,\"signs\":[],\"suspected\":false},\"fields\":[{\"confidence\":0.9,\"key\":\"object\",\"quote\":\"не пашет сеть\",\"value\":\"сеть\"},{\"confidence\":0.9,\"key\":\"building\",\"quote\":\"в Б\",\"value\":\"Б\"},{\"confidence\":0.95,\"key\":\"floor\",\"quote\":\"на 3 этаже\",\"value\":\"3\"},{\"confidence\":0.95,\"key\":\"cabinet\",\"quote\":\"каб 314\",\"value\":\"314\"},{\"confidence\":0.6,\"key\":\"equipment\",\"quote\":\"свитч моргает\",\"value\":\"свитч\"},{\"confidence\":0.95,\"key\":\"symptoms\",\"quote\":\"не пашет сеть, свитч моргает, инет отвалился\",\"value\":\"не пашет сеть, свитч моргает, инет отвалился\"},{\"confidence\":0.95,\"key\":\"category\",\"quote\":\"не пашет сеть\",\"value\":\"network\"},{\"confidence\":0.7,\"key\":\"serviceType\",\"quote\":\"не пашет сеть\",\"value\":\"repair\"},{\"confidence\":0.7,\"key\":\"department\",\"quote\":\"инет отвалился\",\"value\":\"dep-network\"},{\"confidence\":0.55,\"key\":\"impact\",\"quote\":\"на 3 этаже в Б не пашет сеть\",\"value\":\"group\"},{\"confidence\":0.6,\"key\":\"urgency\",\"quote\":\"инет отвалился\",\"value\":\"down\"}],\"summary\":\"На 3 этаже корпуса Б в кабинете 314 не работает сеть и пропал интернет, свитч моргает.\"} → результат принят"
+      ]
+    },
+    {
+      "id": "case-10",
+      "file": "10-phone-mfu-scan",
+      "channel": "phone",
+      "text": "Алло, здравствуйте, это из бухгалтерии, корпус А, кабинет 104. У нас МФУ не сканирует, на панели горит ошибка E-05. Печатает нормально, а сканировать не могу.",
+      "expected": {
+        "fields": {
+          "object": "МФУ",
+          "building": "А",
+          "cabinet": "104",
+          "category": "printer",
+          "serviceType": "repair",
+          "department": "dep-it",
+          "errorCode": "E-05",
+          "impact": "one",
+          "urgency": "workaround",
+          "symptoms": "МФУ не сканирует, на панели горит ошибка E-05"
+        },
+        "priority": "medium",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-1"
+        ],
+        "kbArticle": "kb-mfu-scan"
+      },
+      "status": "ok",
+      "runId": "f556fed2-3a0f-479a-8a59-22f13d62b009",
+      "observed": {
+        "text": "Алло, здравствуйте, это из бухгалтерии, корпус А, кабинет 104. У нас МФУ не сканирует, на панели горит ошибка E-05. Печатает нормально, а сканировать не могу.",
+        "fields": {
+          "building": {
+            "value": "А",
+            "quoteText": "корпус А",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "104",
+            "quoteText": "кабинет 104",
+            "origin": "text"
+          },
+          "object": {
+            "value": "МФУ",
+            "quoteText": "У нас МФУ не сканирует",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "МФУ",
+            "quoteText": "МФУ",
+            "origin": "text"
+          },
+          "errorCode": {
+            "value": "E-05",
+            "quoteText": "ошибка E-05",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "МФУ не сканирует, на панели горит ошибка E-05, печатает нормально",
+            "quoteText": "У нас МФУ не сканирует, на панели горит ошибка E-05.",
+            "origin": "text"
+          },
+          "category": {
+            "value": "printer",
+            "quoteText": "МФУ",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "сканировать не могу",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-it",
+            "quoteText": "МФУ",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "group",
+            "quoteText": "У нас МФУ не сканирует",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "workaround",
+            "quoteText": "Печатает нормально, а сканировать не могу",
+            "origin": "text"
+          }
+        },
+        "priority": "emergency",
+        "emergency": true,
+        "assignees": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-1"
+        ],
+        "articles": [
+          "kb-mfu-scan"
+        ],
+        "askedField": null,
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "cmdb_find_equipment",
+          "cmdb_list_locations",
+          "submit"
+        ],
+        "steps": 5
+      },
+      "evaluation": {
+        "id": "case-10",
+        "fields": {
+          "total": 10,
+          "hits": 8,
+          "rate": 0.8,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "МФУ",
+              "actual": "МФУ",
+              "hit": true
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "А",
+              "actual": "А",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "104",
+              "actual": "104",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "printer",
+              "actual": "printer",
+              "hit": true
+            },
+            {
+              "key": "serviceType",
+              "mode": "exact",
+              "expected": "repair",
+              "actual": "repair",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-it",
+              "actual": "dep-it",
+              "hit": true
+            },
+            {
+              "key": "errorCode",
+              "mode": "exact",
+              "expected": "E-05",
+              "actual": "E-05",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "group",
+              "hit": false
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "workaround",
+              "actual": "workaround",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "МФУ не сканирует, на панели горит ошибка E-05",
+              "actual": "МФУ не сканирует, на панели горит ошибка E-05, печатает нормально",
+              "hit": false
+            }
+          ],
+          "fabricated": [
+            {
+              "key": "equipment",
+              "value": "МФУ",
+              "reason": "в эталоне поле пусто"
+            }
+          ]
+        },
+        "priority": false,
+        "emergency": {
+          "expected": false,
+          "actual": true,
+          "miss": false,
+          "falseAlarm": true
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-1"
+          ],
+          "actual": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-1"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 14053,
+        "costRub": 0,
+        "steps": 5,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 0,
+              "expected": "false",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 1,
+              "expected": "МФУ",
+              "passed": true
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "А",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "104",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "printer",
+              "passed": true
+            },
+            {
+              "key": "field_serviceType",
+              "value": 1,
+              "expected": "repair",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-it",
+              "passed": true
+            },
+            {
+              "key": "field_errorCode",
+              "value": 1,
+              "expected": "E-05",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 0,
+              "expected": "one",
+              "passed": false
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "workaround",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 0,
+              "expected": "МФУ не сканирует, на панели горит ошибка E-05",
+              "passed": false
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.8
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 0,
+              "expected": "medium",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-2",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-2, u-engineer-4, u-engineer-1",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 0 мс",
+        "  agent.intake — ok, 14047 мс",
+        "  extraction.ground — ok, 0 мс",
+        "  profile.prefill — ok, 0 мс",
+        "  emergency.detect — ok, 0 мс",
+        "  priority.compute — ok, 3 мс",
+        "  routing.recommend — ok, 2 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (5):",
+        "  1. cmdb_find_equipment {\"building\":\"А\",\"cabinet\":\"104\",\"type\":\"МФУ\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"МФУ не сканирует ошибка E-05 сканер\",\"category\":\"printer\"} → База знаний: 3 статей, первая — «МФУ не сканирует, ошибка E-05»",
+        "  3. cmdb_find_equipment {\"building\":\"А\",\"cabinet\":\"104\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  4. cmdb_list_locations {\"building\":\"А\"} → CMDB: 0 мест(а)",
+        "  5. submit {\"fields\":[{\"key\":\"object\",\"value\":\"МФУ\",\"quote\":\"У нас МФУ не сканирует\",\"confidence\":0.95},{\"key\":\"building\",\"value\":\"А\",\"quote\":\"корпус А\",\"confidence\":0.95},{\"key\":\"cabinet\",\"value\":\"104\",\"quote\":\"кабинет 104\",\"confidence\":0.97},{\"key\":\"equipment\",\"value\":\"МФУ\",\"quote\":\"МФУ\",\"confidence\":0.9},{\"key\":\"errorCode\",\"value\":\"E-05\",\"quote\":\"ошибка E-05\",\"confidence\":0.95},{\"key\":\"symptoms\",\"value\":\"МФУ не сканирует, на панели горит ошибка E-05, печатает нормально\",\"quote\":\"У нас МФУ не сканирует, на панели горит ошибка E-05.\",\"confidence\":0.95},{\"key\":\"category\",\"value\":\"printer\",\"quote\":\"МФУ\",\"confidence\":0.9},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"сканировать не могу\",\"confidence\":0.7},{\"key\":\"department\",\"value\":\"dep-it\",\"quote\":\"МФУ\",\"confidence\":0.55},{\"key\":\"impact\",\"value\":\"group\",\"quote\":\"У нас МФУ не сканирует\",\"confidence\":0.6},{\"key\":\"urgency\",\"value\":\"workaround\",\"quote\":\"Печатает нормально, а сканировать не могу\",\"confidence\":0.65}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":null,\"summary\":\"Из бухгалтерии, корпус А, кабинет 104: МФУ не сканирует, на панели горит ошибка E-05, печатает нормально.\",\"articles\":[{\"id\":\"kb-mfu-scan\",\"title\":\"МФУ не сканирует, ошибка E-05\"}]} → результат принят"
+      ]
+    }
+  ]
+}
