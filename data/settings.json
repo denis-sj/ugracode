@@ -4,6 +4,7 @@
     "massWindowMinutes": 15,
     "massThreshold": 5,
     "answerTimeoutMinutes": 30,
-    "maxClarifyRounds": 2
+    "maxClarifyRounds": 2,
+    "slaTargetPercent": 90
   }
 }

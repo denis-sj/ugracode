@@ -180,6 +180,8 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-xl: 20px;
+  /* Радиус крупных карточек из макета (обращение, заявка, дашборд): 22 px. */
+  --radius-card: 22px;
   --radius-pill: 999px;
 
   /* Типографика */
@@ -196,6 +198,8 @@
   --text-3xl: 34px;
   --text-page: 40px;
   --text-display: 60px;
+  /* Заголовок стартового экрана обращения (макет: 76 px). */
+  --text-hero: 76px;
   --leading-tight: 1.2;
   --leading-normal: 1.55;
   --weight-regular: 400;

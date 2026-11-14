@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
-import type { PriorityLevel } from '@ugra/contracts';
+import type { DomainEvent, PriorityLevel } from '@ugra/contracts';
 import { defineModule } from '@ugra/core';
 import type { ReferenceData, SeedDeps } from '@ugra/core';
 import {
   generateHistory,
   HISTORY_SEED_THRESHOLD,
+  type GeneratedTicket,
   type HistoryEngineer,
   type HistoryEquipment,
   type HistorySeedInput,
@@ -20,6 +21,24 @@ import {
  */
 
 const DATA_URL = new URL('../../../data/', import.meta.url);
+
+/** Диспетчер демо-данных, от имени которого идут правки в журнале. */
+const DEMO_DISPATCHER_ID = 'u-dispatcher-1';
+
+/**
+ * Демо-правки диспетчера: журнал «ИИ предложил → человек исправил» и метрика
+ * «ИИ оформил без правок» должны быть живыми на защите, а не нулём.
+ * Правим четыре поля у последних заявок истории и пишем событие `ticket.field.corrected` —
+ * ровно так, как это делает `TicketService.setField` на реальной правке.
+ */
+const DEMO_CORRECTIONS: ReadonlyArray<{ fieldKey: string; from: string; to: string }> = [
+  // Значения — коды справочников, как их хранит поле: интерфейс покажет подписи.
+  { fieldKey: 'category', from: 'peripheral', to: 'printer' },
+  { fieldKey: 'cabinet', from: '312', to: '313' },
+  { fieldKey: 'equipment', from: 'HP LaserJet Pro M404dn', to: 'HP LaserJet MFP M428fdn' },
+  { fieldKey: 'building', from: 'Б', to: 'В' },
+];
+
 
 const UsersFile = z.object({
   users: z.array(
@@ -151,6 +170,33 @@ export function buildHistoryInput(data: ReferenceData, now: Date): HistorySeedIn
   };
 }
 
+/** Заявка истории плюс события демо-правок, которые пишутся вместе с ней. */
+type SeedTicket = GeneratedTicket & { corrections?: DomainEvent[] };
+
+/** Правит поле «как диспетчер»: новое значение, происхождение «человек», ИИ-вариант остаётся в `aiValue`. */
+function applyDemoCorrection(
+  item: SeedTicket,
+  rule: { fieldKey: string; from: string; to: string },
+): void {
+  const field = item.fields.find((candidate) => candidate.fieldKey === rule.fieldKey);
+  if (!field) return;
+  field.value = rule.to;
+  field.origin = 'human';
+  field.confidence = 1;
+  field.needsReview = false;
+  field.aiValue = rule.from;
+  const at = new Date(new Date(item.ticket.createdAt).getTime() + 4 * 60_000).toISOString();
+  const event: DomainEvent = {
+    id: `event-demo-corr-${item.ticket.id}-${rule.fieldKey}`,
+    type: 'ticket.field.corrected',
+    at,
+    actor: { kind: 'user', id: DEMO_DISPATCHER_ID },
+    ticketId: item.ticket.id,
+    payload: { fieldKey: rule.fieldKey, value: rule.to, previous: rule.from },
+  };
+  item.corrections = [...(item.corrections ?? []), event];
+}
+
 export default defineModule({
   id: 'history-seed',
   title: 'История заявок за 6 месяцев',
@@ -171,11 +217,22 @@ export default defineModule({
     }
 
     const generated = generateHistory(input);
-    for (const item of generated.tickets) {
+    const tickets: SeedTicket[] = generated.tickets;
+    // Демо-правки: каждая — по одной заявке, чтобы в журнале было четыре разных поля.
+    const pending = [...DEMO_CORRECTIONS];
+    for (const item of tickets) {
+      const correction = pending.find((rule) =>
+        item.fields.some((field) => field.fieldKey === rule.fieldKey && String(field.aiValue) === rule.from),
+      );
+      if (correction) {
+        pending.splice(pending.indexOf(correction), 1);
+        applyDemoCorrection(item, correction);
+      }
       await db.saveAppeal(item.appeal);
       await db.saveTicket(item.ticket);
       await db.saveTicketFields(item.ticket.id, item.fields);
       await db.appendEvent(item.event);
+      for (const event of item.corrections ?? []) await db.appendEvent(event);
     }
 
     console.info(

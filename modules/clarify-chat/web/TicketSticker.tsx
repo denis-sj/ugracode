@@ -38,11 +38,13 @@ export function TicketSticker({
   const values = fieldValues(detail.fields, answers);
   const assignee = ticket.assigneeId ? users.find((user) => user.id === ticket.assigneeId) : undefined;
   const title = ticketTitle({ fields: values, fieldsMeta: meta.fields, dictionaries: meta.dictionaries });
+  const origins = Object.fromEntries(detail.fields.map((field) => [field.fieldKey, field.origin]));
   const rows = stickerRows({
     fields: values,
     fieldsMeta: meta.fields,
     dictionaries: meta.dictionaries,
     answers,
+    origins,
     assigneeName: assignee?.fullName ?? null,
     due: formatDue(ticket.slaDueAt),
   });
@@ -86,6 +88,12 @@ export function TicketSticker({
               value={row.value}
               tone={row.tone === 'wait' ? 'muted' : row.tone === 'accent' ? 'accent' : 'default'}
             />
+            {row.source && (
+              <span className={`chat-sticker__src chat-sticker__src--${row.source.tone}`}>
+                <i aria-hidden="true" />
+                {row.source.text}
+              </span>
+            )}
           </div>
         ))}
 

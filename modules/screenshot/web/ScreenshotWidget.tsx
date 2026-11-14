@@ -13,6 +13,10 @@ export interface ScreenshotWidgetProps {
   onText?: (text: string) => void;
   /** Сообщение об ошибке наверх — в общую строку ошибок экрана. */
   onError?: (message: string) => void;
+  /** Круглая иконка вместо кнопки с подписью — для строки инструментов поля ввода. */
+  icon?: boolean;
+  /** Рисунок иконки: скрепка (как в макете чата) или камера. */
+  glyph?: 'paperclip' | 'camera';
 }
 
 function errorText(error: unknown): string {
@@ -24,7 +28,13 @@ function errorText(error: unknown): string {
  * скриншота ошибки → `POST /api/screenshot` → текст, который можно добавить в обращение.
  * Текст в поле чата кладёт `onText`; без него остаётся копирование.
  */
-export function ScreenshotWidget({ api, onText, onError }: ScreenshotWidgetProps): JSX.Element {
+export function ScreenshotWidget({
+  api,
+  onText,
+  onError,
+  icon = false,
+  glyph = 'camera',
+}: ScreenshotWidgetProps): JSX.Element {
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +84,7 @@ export function ScreenshotWidget({ api, onText, onError }: ScreenshotWidgetProps
   };
 
   return (
-    <div className="shot">
+    <div className={icon ? 'shot shot--icon' : 'shot'}>
       <input
         ref={fileRef}
         type="file"
@@ -89,25 +99,34 @@ export function ScreenshotWidget({ api, onText, onError }: ScreenshotWidgetProps
       <Button
         variant="ghost"
         size="sm"
-        className="shot__pick"
+        className={icon ? 'shot__pick shot__pick--icon' : 'shot__pick'}
         loading={busy}
+        aria-label="Фото или скриншот"
         onClick={() => fileRef.current?.click()}
         title="Приложить скриншот ошибки или фото шильдика"
       >
         <svg
-          width="16"
-          height="16"
+          width={icon ? 20 : 16}
+          height={icon ? 20 : 16}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           aria-hidden="true"
         >
-          <rect x="3" y="6" width="18" height="14" rx="2.5" />
-          <circle cx="12" cy="13" r="3.4" />
-          <path d="M8 6l1.2-2h5.6L16 6" strokeLinejoin="round" />
+          {glyph === 'paperclip' ? (
+            <path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9" />
+          ) : (
+            <>
+              <rect x="3" y="6" width="18" height="14" rx="2.5" />
+              <circle cx="12" cy="13" r="3.4" />
+              <path d="M8 6l1.2-2h5.6L16 6" />
+            </>
+          )}
         </svg>
-        Скриншот
+        {icon ? null : 'Скриншот'}
       </Button>
 
       {text !== '' && (

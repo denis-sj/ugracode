@@ -56,14 +56,12 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const [questionIndex, setQuestionIndex] = useState(0);
   const [ownText, setOwnText] = useState('');
   const [composerText, setComposerText] = useState('');
-  const [attachments, setAttachments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [finalShown, setFinalShown] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisView | null>(null);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const messageId = useRef(0);
   const lastText = useRef('');
   const sendingRef = useRef(false);
@@ -116,6 +114,24 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const safeIndex = clampIndex(questionIndex, questions.length);
   const question = questions[safeIndex] ?? null;
 
+  // Карточка-вопрос может быть выше видимой части ленты — прокручиваем к её низу.
+  // Два прохода: сразу после отрисовки и после раскладки шрифтов/анимации появления.
+  useEffect(() => {
+    if (!question) return undefined;
+    const node = threadRef.current;
+    if (!node) return undefined;
+    const toEnd = (): void => {
+      node.scrollTop = node.scrollHeight;
+    };
+    toEnd();
+    const frame = requestAnimationFrame(toEnd);
+    const timer = setTimeout(toEnd, 140);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [question]);
+
   const refreshTicket = useCallback(
     async (id: string): Promise<TicketResponse | null> => {
       try {
@@ -162,11 +178,20 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           setError('Разбор завершён, но заявка не открылась. Обновите страницу.');
           return;
         }
-        setAnalysis(await loadAnalysis(id));
+        const parsed = await loadAnalysis(id);
+        setAnalysis(parsed);
         const summary = buildAiSummary({
           fields: fieldValues(detail.fields, {}),
           fieldsMeta: meta.fields,
           dictionaries: meta.dictionaries,
+          // Сколько вопросов осталось — из того же правила, что и карточки в ленте.
+          questions: questionsFor({
+            fields: meta.fields,
+            dictionaries: meta.dictionaries,
+            values: fieldValues(detail.fields, {}),
+            answered: new Set<string>(),
+            analysis: parsed,
+          }).length,
         });
         setMessages((previous) => [...previous, { id: nextMessageId(), from: 'ai', text: summary }]);
         trackAction?.('system');
@@ -206,17 +231,15 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
       setAnswers({});
       setQuestionIndex(0);
       setFinalShown(false);
-      const sentAttachments = [...attachments];
       if (echo) {
         setMessages((previous) => [...previous, { id: nextMessageId(), from: 'me', text }]);
         setComposerText('');
-        setAttachments([]);
       }
       try {
         const created = await api.post<CreateAppealResponse>('/api/appeals', {
           text,
           channel: 'chat',
-          attachments: sentAttachments,
+          attachments: [],
           async: true,
         });
         ticketIdRef.current = created.ticketId;
@@ -229,7 +252,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         sendingRef.current = false;
       }
     },
-    [api, attachments, refreshTicket, startRun],
+    [api, refreshTicket, startRun],
   );
 
   const answerQuestion = useCallback(
@@ -318,14 +341,22 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
     if (lastText.current !== '') void sendText(lastText.current, false);
   };
 
-  const composerRows = started ? 1 : 4;
+  const composerRows = started ? 1 : 3;
   const currentStepId =
     runProgress.current === null
       ? null
       : ([...runProgress.steps].reverse().find((step) => step.status !== 'completed')?.stepId ?? null);
 
   return (
-    <div className={started ? 'chat-page' : 'chat-page chat-page--start'}>
+    <div
+      className={
+        started
+          ? ticket
+            ? 'chat-page chat-page--with-ticket'
+            : 'chat-page'
+          : 'chat-page chat-page--start'
+      }
+    >
       <div className="chat-page__grid" aria-hidden="true" />
       <div className="chat-main">
         {!started && (
@@ -414,31 +445,6 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         </div>
 
         <div className="chat-composer-wrap">
-          <ScreenshotWidget
-            api={api}
-            onText={(text) =>
-              setComposerText((previous) => (previous.trim() === '' ? text : `${previous.trim()}\n${text}`))
-            }
-            onError={setError}
-          />
-          {attachments.length > 0 && (
-            <div className="chat-attachments">
-              {attachments.map((name) => (
-                <span className="chat-attachment" key={name}>
-                  <span className="chat-attachment__name">{name}</span>
-                  <button
-                    type="button"
-                    className="chat-attachment__remove"
-                    aria-label={`Убрать ${name}`}
-                    onClick={() => setAttachments((previous) => previous.filter((item) => item !== name))}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
           <form
             className="chat-composer"
             onSubmit={(event) => {
@@ -468,40 +474,15 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
               }
             />
             <div className="chat-composer__row">
-              <input
-                ref={fileRef}
-                type="file"
-                className="chat-visually-hidden"
-                multiple
-                onChange={(event) => {
-                  const names = Array.from(event.target.files ?? []).map((file) => file.name);
-                  if (names.length > 0) setAttachments((previous) => [...previous, ...names]);
-                  event.target.value = '';
-                }}
+              <ScreenshotWidget
+                icon
+                glyph="paperclip"
+                api={api}
+                onText={(text) =>
+                  setComposerText((previous) => (previous.trim() === '' ? text : `${previous.trim()}\n${text}`))
+                }
+                onError={setError}
               />
-              <button
-                type="button"
-                className="chat-composer__icon"
-                aria-label="Прикрепить файл"
-                title="Прикрепить файл"
-                onClick={() => fileRef.current?.click()}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
               <button
                 type="button"
                 className={

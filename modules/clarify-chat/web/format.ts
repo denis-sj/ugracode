@@ -240,7 +240,7 @@ export function ticketTitle(input: SummaryInput): string {
  * Первый ответ ИИ после разбора: обычный текст, ключевое — жирным.
  * Никаких выдуманных номеров и сроков: всё из полей заявки.
  */
-export function buildAiSummary(input: SummaryInput): string {
+export function buildAiSummary(input: SummaryInput & { questions?: number }): string {
   const equipment = equipmentText(input);
   const place = formatPlaceIn(input);
   const symptom = fieldText(input.fields, 'symptoms');
@@ -251,12 +251,21 @@ export function buildAiSummary(input: SummaryInput): string {
   if (place) parts.push(bold(place));
   if (symptom && symptom !== what) parts.push(bold(symptom));
 
+  /** Что осталось: без вопросов — заявка готова, с одним — «один вопрос». */
+  const tail = ((): string => {
+    const count = input.questions;
+    if (count === 0) return 'Заявка собрана — проверьте её справа.';
+    if (count === 1) return 'Один вопрос — и заявка готова.';
+    if (count !== undefined && count > 1) return `Ещё ${count} вопроса — и заявка готова.`;
+    return 'Уточню детали — заявка справа собирается по ходу.';
+  })();
+
   if (parts.length === 0) {
-    return 'Разобрала обращение. Уточню пару деталей — заявка справа собирается по ходу.';
+    return `Разобрала обращение. ${tail}`;
   }
 
   const found = equipment ? ' Оборудование нашла в базе.' : '';
-  return `Поняла: ${parts.join(', ')}.${found} Пара уточнений — заявка справа собирается по ходу.`;
+  return `Поняла: ${parts.join(', ')}.${found} ${tail}`;
 }
 
 export type StickerTone = 'ok' | 'wait' | 'accent';
@@ -266,6 +275,8 @@ export interface StickerRow {
   label: string;
   value: string;
   tone: StickerTone;
+  /** Подпись происхождения значения: «из вашего текста», «оценил ИИ», «ждём ваш ответ». */
+  source?: { text: string; tone: 'accent' | 'info' | 'ok' | 'warn' | 'dim' };
 }
 
 export interface StickerInput extends SummaryInput {
@@ -273,6 +284,8 @@ export interface StickerInput extends SummaryInput {
   due?: string | null;
   /** Ответы в чате: `null` — «не знаю»/пропуск, поле уточнит диспетчер. */
   answers?: AnswerMap;
+  /** Происхождение полей заявки (`TicketField.origin`): подпись под значением. */
+  origins?: Record<string, string>;
 }
 
 /** Поля стикера «Ваше обращение»: заполненные — графитом, ожидающие — серым. */
@@ -289,35 +302,69 @@ export function stickerRows(input: StickerInput): StickerRow[] {
     return unknown(keys) ? 'уточнит диспетчер' : waitText;
   };
 
+  /** Подпись происхождения: поле из заявки → его origin, иначе «ждём ваш ответ»/«оценил ИИ». */
+  const source = (
+    keys: readonly string[],
+    value: string | null,
+    fallback: 'wait' | 'ai',
+  ): StickerRow['source'] => {
+    if (value === null) {
+      return keys.some((key) => answered[key] === null)
+        ? { text: 'ответ заявителя', tone: 'info' }
+        : { text: 'ждём ваш ответ', tone: 'warn' };
+    }
+    const origins = input.origins ?? {};
+    const key = keys.find((candidate) => origins[candidate]);
+    if (key) {
+      const origin = origins[key];
+      if (origin === 'asked') return { text: 'ответ заявителя', tone: 'info' };
+      if (origin === 'cmdb') return { text: 'сверено с базой', tone: 'ok' };
+      if (origin === 'human') return { text: 'исправил диспетчер', tone: 'ok' };
+      if (origin === 'profile') return { text: 'из профиля', tone: 'accent' };
+      return { text: 'из вашего текста', tone: 'accent' };
+    }
+    return fallback === 'ai' ? { text: 'оценил ИИ', tone: 'info' } : { text: 'из вашего текста', tone: 'accent' };
+  };
+
   const rows: StickerRow[] = [
     {
       key: 'equipment',
       label: 'Оборудование',
       value: valueOr(equipment, 'уточняем…', ['equipment', 'model']),
       tone: equipment ? 'ok' : 'wait',
+      source: source(['equipment', 'model'], equipment, 'wait'),
     },
     {
       key: 'place',
       label: 'Место',
       value: valueOr(place, 'уточняем…', ['building', 'cabinet']),
       tone: place ? 'ok' : 'wait',
+      source: source(['building', 'cabinet'], place, 'wait'),
     },
     {
       key: 'symptom',
       label: 'Признак',
       value: valueOr(symptom, 'уточняем…', ['symptoms', 'object']),
       tone: symptom ? 'ok' : 'wait',
+      source: source(['symptoms', 'object'], symptom, 'wait'),
     },
     {
       key: 'urgency',
       label: 'Срочность',
       value: valueOr(urgency, 'уточняем…', ['urgency']),
       tone: urgency ? 'ok' : 'wait',
+      source: source(['urgency'], urgency, 'ai'),
     },
   ];
   if (input.assigneeName) {
     const due = input.due ? `, ${input.due}` : '';
-    rows.push({ key: 'assignee', label: 'Инженер', value: `${input.assigneeName}${due}`, tone: 'accent' });
+    rows.push({
+      key: 'assignee',
+      label: 'Инженер',
+      value: `${input.assigneeName}${due}`,
+      tone: 'accent',
+      source: { text: 'предложил ИИ', tone: 'info' },
+    });
   }
   return rows;
 }
@@ -452,14 +499,28 @@ export interface QuestionsInput {
   analysis?: AnalysisView | null;
 }
 
-function missingToQuestion(item: MissingQuestion, fields: readonly FieldDef[]): ChatQuestion {
+function missingToQuestion(
+  item: MissingQuestion,
+  fields: readonly FieldDef[],
+  dictionaries: readonly DictionaryItem[],
+): ChatQuestion {
   const def = fields.find((field) => field.key === item.key);
   const placeholder = def?.type === 'text' ? 'Свой вариант, например: шумит и мигает' : 'Свой вариант';
+  // Варианты модели важнее; если их меньше двух, добираем значениями справочника —
+  // карточка без выбора («Не знаю» и «Свой вариант») бесполезна на защите.
+  const fromDictionary = dictionaryOptions(dictionaries, def?.ask?.optionsFrom);
+  const seen = new Set(item.options.map((option) => option.value));
+  const options = [...item.options];
+  for (const option of fromDictionary) {
+    if (options.length >= 3) break;
+    if (seen.has(option.value)) continue;
+    options.push(option);
+  }
   return {
     key: item.key,
     label: item.label,
     question: item.question,
-    options: item.options.slice(0, 3),
+    options: options.slice(0, 3),
     placeholder,
   };
 }
@@ -474,7 +535,7 @@ export function questionsFor(input: QuestionsInput): ChatQuestion[] {
   if (input.analysis && input.analysis.missing.length > 0) {
     return input.analysis.missing
       .filter((item) => !answered.has(item.key))
-      .map((item) => missingToQuestion(item, input.fields));
+      .map((item) => missingToQuestion(item, input.fields, input.dictionaries));
   }
   return buildQuestions(input.fields, input.dictionaries, input.values, answered);
 }

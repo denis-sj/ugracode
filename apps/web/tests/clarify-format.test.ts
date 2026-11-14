@@ -9,6 +9,7 @@ import {
   fieldValues,
   ownAnswer,
   parseEmphasis,
+  questionsFor,
   questionCounter,
   stickerRows,
   ticketTitle,
@@ -165,6 +166,58 @@ describe('buildQuestions', () => {
   });
 });
 
+describe('questionsFor', () => {
+  const fieldsMeta: FieldDef[] = [
+    field({ key: 'impact', label: 'Влияние', type: 'dictionary', dictionary: 'impact', ask: {
+      question: 'Сколько сотрудников затронуто?',
+      widget: 'buttons',
+      optionsFrom: 'impact',
+    } }),
+  ];
+  const impacts = [
+    dictionaryItem('impact', 'one', 'Один сотрудник'),
+    dictionaryItem('impact', 'group', 'Группа сотрудников'),
+    dictionaryItem('impact', 'building', 'Корпус'),
+  ];
+
+  it('варианты модели идут первыми, справочник добирает до трёх', () => {
+    const [question] = questionsFor({
+      fields: fieldsMeta,
+      dictionaries: impacts,
+      values: {},
+      analysis: {
+        emergency: null,
+        missing: [
+          {
+            key: 'impact',
+            label: 'Влияние',
+            question: 'Сколько сотрудников затронуто?',
+            options: [{ value: 'one', label: 'Один сотрудник' }],
+          },
+        ],
+      },
+    });
+    expect(question?.options.map((option) => option.label)).toEqual([
+      'Один сотрудник',
+      'Группа сотрудников',
+      'Корпус',
+    ]);
+  });
+
+  it('карточка без вариантов не остаётся: справочник заполняет её целиком', () => {
+    const [question] = questionsFor({
+      fields: fieldsMeta,
+      dictionaries: impacts,
+      values: {},
+      analysis: {
+        emergency: null,
+        missing: [{ key: 'impact', label: 'Влияние', question: 'Сколько?', options: [] }],
+      },
+    });
+    expect(question?.options).toHaveLength(3);
+  });
+});
+
 describe('ownAnswer', () => {
   it('обрезает пробелы, пустое — не ответ', () => {
     expect(ownAnswer('  корпус Г  ')).toBe('корпус Г');
@@ -208,6 +261,13 @@ describe('buildAiSummary', () => {
 
   it('без данных — честный текст без выдуманных номеров', () => {
     expect(buildAiSummary({ fields: {}, fieldsMeta, dictionaries: buildings })).toContain('заявка справа');
+  });
+
+  it('хвост фразы зависит от числа оставшихся вопросов', () => {
+    const base = { fields: { cabinet: { value: '312' } }, fieldsMeta, dictionaries: buildings };
+    expect(buildAiSummary({ ...base, questions: 0 })).toContain('Заявка собрана');
+    expect(buildAiSummary({ ...base, questions: 1 })).toContain('Один вопрос');
+    expect(buildAiSummary({ ...base, questions: 3 })).toContain('Ещё 3 вопроса');
   });
 });
 
@@ -261,6 +321,33 @@ describe('stickerRows', () => {
     expect(rows[1]?.value).toBe('кабинет 312, корпус Б');
     expect(rows[3]?.value).toBe('Работа остановлена');
     expect(rows[4]?.value).toBe('Петров С. В., сегодня до 14:30');
+  });
+
+  it('подписывает происхождение значения под строкой', () => {
+    const values: FieldValues = {
+      model: { value: 'HP M428' },
+      building: { value: 'Б' },
+      cabinet: { value: '312' },
+      symptoms: { value: 'горит лампочка' },
+      urgency: { value: 'stop' },
+    };
+    const rows = stickerRows({
+      fields: values,
+      fieldsMeta,
+      dictionaries: [...buildings, dictionaryItem('urgency', 'stop', 'Работа остановлена')],
+      origins: { model: 'text', cabinet: 'profile', urgency: 'text' },
+    });
+    expect(rows.find((row) => row.key === 'equipment')?.source).toEqual({
+      text: 'из вашего текста',
+      tone: 'accent',
+    });
+    expect(rows.find((row) => row.key === 'place')?.source).toEqual({ text: 'из профиля', tone: 'accent' });
+    expect(rows.find((row) => row.key === 'assignee')?.source).toBeUndefined();
+  });
+
+  it('ожидающие поля просят ответ, а не молчат', () => {
+    const rows = stickerRows({ fields: {}, fieldsMeta, dictionaries: buildings });
+    expect(rows.find((row) => row.key === 'place')?.source).toEqual({ text: 'ждём ваш ответ', tone: 'warn' });
   });
 
   it('пустые поля ждут, «не знаю» — уточнит диспетчер', () => {

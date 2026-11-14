@@ -24,8 +24,27 @@
   color: var(--color-text-muted);
 }
 
+/* Иконка в строке инструментов чата: та же круглая кнопка 40×40, что у вложения и голоса. */
+.shot--icon {
+  display: contents;
+}
+
+.shot__pick--icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+
+.shot__pick--icon:hover:not(:disabled) {
+  background-color: var(--color-graphite-soft);
+  color: var(--color-text);
+}
+
 .shot__panel {
   flex: 1 1 100%;
+  z-index: var(--z-sticky);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -63,6 +82,14 @@
   margin: var(--space-2) 0 0;
   font-size: var(--text-xs);
   color: var(--color-text-dim);
+}
+
+.shot--icon .shot__panel,
+.shot--icon .shot__error {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
 }
 
 .shot__error {
