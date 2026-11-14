@@ -21,6 +21,8 @@
     "check:polza": "tsx scripts/check-polza.ts",
     "eval": "tsx scripts/eval.ts",
     "demo:check": "tsx scripts/demo-check.ts",
+    "demo:tunnel": "tsx scripts/demo-tunnel.ts",
+    "voice:sim": "tsx scripts/voice-sim.ts",
     "demo:reset": "tsx packages/db/src/seed/index.ts --reset"
   },
   "dependencies": {
