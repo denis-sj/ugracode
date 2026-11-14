@@ -94,4 +94,5 @@
 - `FEATURES_OFF=voice-call` — `/api/m/voice-call/turn` → 404, звонок не создаётся, остальной продукт работает.
 - `pnpm voice:sim` — весь путь без телефона по `testset/calls/*.json`, код выхода ≠ 0 без заявки.
 - `pnpm vitest run modules/voice-call apps/api/tests/voice-call.test.ts`.
+- SonarQube по ветке: 0 Blocker/Critical/Major, Quality Gate OK.
 - В браузере: `http://localhost:5173/call` (микрофон на localhost разрешён) и `http://localhost:5173/#/calls`.
