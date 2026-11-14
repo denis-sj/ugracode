@@ -2,11 +2,13 @@ import type {
   Appeal,
   DomainEvent,
   PipelineRun,
+  SettingRecord,
   StepRun,
   Ticket,
   TicketField,
   TicketStatus,
   User,
+  UserNotification,
 } from '@ugra/contracts';
 
 export interface TicketFilter {
@@ -46,6 +48,13 @@ export interface KernelStore {
 
   appendEvent(event: DomainEvent): Promise<void>;
   listEvents(filter?: EventFilter): Promise<DomainEvent[]>;
+
+  saveNotification(notification: UserNotification): Promise<void>;
+  listNotifications(userId?: string): Promise<UserNotification[]>;
+  markNotificationRead(id: string, userId: string): Promise<UserNotification | null>;
+
+  listSettings(): Promise<SettingRecord[]>;
+  setSetting(key: string, value: unknown, updatedBy: string | null): Promise<SettingRecord>;
 }
 
 /** Хранилище в памяти: тесты, тест-контракт и демо без базы. */
@@ -57,6 +66,8 @@ export class MemoryStore implements KernelStore {
   private readonly runs = new Map<string, PipelineRun>();
   private readonly steps: StepRun[] = [];
   private readonly events: DomainEvent[] = [];
+  private readonly notifications = new Map<string, UserNotification>();
+  private readonly settings = new Map<string, SettingRecord>();
 
   async listUsers(): Promise<User[]> {
     return [...this.users.values()];
@@ -150,5 +161,31 @@ export class MemoryStore implements KernelStore {
     if (filter.ticketId) result = result.filter((e) => e.ticketId === filter.ticketId);
     if (filter.type) result = result.filter((e) => e.type === filter.type);
     return filter.limit ? result.slice(-filter.limit) : result;
+  }
+
+  async saveNotification(notification: UserNotification): Promise<void> {
+    this.notifications.set(notification.id, notification);
+  }
+
+  async listNotifications(userId?: string): Promise<UserNotification[]> {
+    return [...this.notifications.values()].filter((item) => !userId || item.toUserId === userId);
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<UserNotification | null> {
+    const current = this.notifications.get(id);
+    if (!current || current.toUserId !== userId) return null;
+    const next = { ...current, readAt: new Date().toISOString() };
+    this.notifications.set(id, next);
+    return next;
+  }
+
+  async listSettings(): Promise<SettingRecord[]> {
+    return [...this.settings.values()];
+  }
+
+  async setSetting(key: string, value: unknown, updatedBy: string | null): Promise<SettingRecord> {
+    const record: SettingRecord = { key, value, updatedBy, updatedAt: new Date().toISOString() };
+    this.settings.set(key, record);
+    return record;
   }
 }

@@ -40,6 +40,9 @@ Fastify, zod, PostgreSQL + pgvector, Drizzle, React + Vite, Tailwind, Framer Mot
 `https://api.polza.ai/api/v1/models`): `openai/gpt-6-luna` (разбор), `deepseek/deepseek-v4-flash` (дешёвые задачи),
 `baai/bge-m3` (эмбеддинги), `ai-sage/gigaam-v3` (речь) — таблица и цены в
 [спецификации](../specs/case9-core.md#54-модели-polza). Адрес API — `https://api.polza.ai/api/v1`.
+**Решение владельца (позже в тот же день):** одна модель `deepseek/deepseek-v4.1-flash` для разбора и отчётов;
+эмбеддинги не используются (агент с инструментами вместо RAG) — [спецификация харнесса](../specs/case9-agent-harness.md#6-модель).
+Имена моделей в `.env` — **с префиксом провайдера** (`deepseek/…`, `ai-sage/gigaam-v3`).
 ❓ Вживую с ключом не проверено.
 
 Секреты (ключи LLM): ключ есть у владельца, в репозиторий не кладётся — только `.env` (в `.gitignore`) и `.env.example` с пустым значением.

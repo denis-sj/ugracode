@@ -73,7 +73,9 @@ export function testPorts(): Ports {
   };
 }
 
-export async function seedUsers(store: MemoryStore): Promise<{ applicant: User; dispatcher: User }> {
+export async function seedUsers(
+  store: MemoryStore,
+): Promise<{ applicant: User; dispatcher: User; engineer: User; manager: User }> {
   const applicant: User = {
     id: 'u-applicant-1',
     fullName: 'Денис Соколов',
@@ -88,9 +90,25 @@ export async function seedUsers(store: MemoryStore): Promise<{ applicant: User; 
     departmentId: 'dep-dispatch',
     position: 'Диспетчер',
   };
+  const engineer: User = {
+    id: 'u-engineer-1',
+    fullName: 'Игорь Лебедев',
+    role: 'engineer',
+    departmentId: 'dep-it',
+    position: 'Инженер поддержки',
+  };
+  const manager: User = {
+    id: 'u-manager-1',
+    fullName: 'Ольга Ветрова',
+    role: 'manager',
+    departmentId: 'dep-it',
+    position: 'Руководитель ИТ-службы',
+  };
   await store.saveUser(applicant);
   await store.saveUser(dispatcher);
-  return { applicant, dispatcher };
+  await store.saveUser(engineer);
+  await store.saveUser(manager);
+  return { applicant, dispatcher, engineer, manager };
 }
 
 export const PRINTER_TEXT =

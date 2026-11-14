@@ -24,3 +24,9 @@ PR: —
 ## Блокеры
 
 Задача 013. Только после всех MUST и SHOULD.
+
+## Агентный харнесс (2026-11-14) — важнее всего, что выше
+
+Источник: [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md).
+
+- г6 «вопрос базе знаний» — агент `engineer-assistant` с инструментами `kb_search`, `kb_get_article`, `tickets_find_similar`, `equipment_history`; в ответе обязательны ссылки на источники из результатов инструментов.
