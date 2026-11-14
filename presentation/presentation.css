@@ -497,3 +497,365 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 .is-print .progress, .is-print .pager, .is-print .blackout { display: none; }
 .is-print .slide { background: var(--paper); }
 .is-print .s-bridge { background: var(--graphite); }
+
+/* ---------- 2. Боль ---------- */
+
+.pain-time {
+  position: absolute;
+  left: 96px;
+  top: 330px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--mute);
+}
+.bubble {
+  position: absolute;
+  left: 96px;
+  top: 380px;
+  width: 1040px;
+  height: 460px;
+}
+.bubble-svg {
+  left: 0;
+  top: 0;
+  width: 1040px;
+  height: 460px;
+}
+.bubble-svg path {
+  stroke-width: 4px;
+  vector-effect: none;
+}
+.bubble-text {
+  position: absolute;
+  left: 140px;
+  top: 150px;
+  width: 760px;
+  margin: 0;
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+.tasks {
+  position: absolute;
+  left: 1240px;
+  top: 380px;
+  width: 584px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.tasks li {
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.tasks .tasks-alarm { color: var(--alarm); }
+
+/* ---------- 3. Просил → сделали ---------- */
+
+.ktable {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 300px;
+  border-bottom: 1px solid var(--line);
+}
+.krow {
+  display: grid;
+  grid-template-columns: 110px 660px 1fr 80px;
+  align-items: center;
+  min-height: 118px;
+  border-top: 1px solid var(--line);
+}
+.kid { font-size: 28px; font-weight: 700; }
+.kreq { font-size: 28px; color: var(--mute); padding-right: 32px; }
+.kdone { font-size: 32px; font-weight: 500; letter-spacing: -0.01em; }
+.kcheck {
+  position: relative;
+  width: 60px;
+  height: 50px;
+  justify-self: end;
+}
+.kcheck path {
+  stroke-width: 5px;
+  vector-effect: none;
+}
+.pill {
+  display: inline-block;
+  padding: 6px 18px;
+  border: 1.5px solid var(--dim);
+  border-radius: 999px;
+  font-size: 24px;
+  color: var(--mute);
+}
+
+/* ---------- 4. Как работает ---------- */
+
+.chain {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 470px;
+  height: 0;
+}
+.chain .tl-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+.pt {
+  position: absolute;
+  top: -11px;
+  left: calc(var(--i) * 20%);
+  transform: translateX(-50%);
+  text-align: center;
+}
+.pt i {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.pt b {
+  display: block;
+  margin-top: 44px;
+  font-size: 36px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+.pt-start {
+  transform: none;
+  margin-left: -11px;
+  text-align: left;
+}
+.pt-start i { margin-left: 0; }
+.pt-end {
+  transform: translateX(-100%);
+  margin-right: -11px;
+  text-align: right;
+}
+.pt-end i { margin-right: 0; }
+.pt-human i { background: var(--accent); }
+.how-note {
+  position: absolute;
+  left: 96px;
+  bottom: 150px;
+  margin: 0;
+  font-size: 28px;
+  color: var(--mute);
+}
+
+/* ---------- 7. Действия ---------- */
+
+.act-main {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+}
+.act-pair {
+  display: flex;
+  align-items: flex-start;
+  gap: 56px;
+}
+.act-pair .act-arrow { align-self: center; margin-top: 0; }
+.act-col { position: relative; }
+.act-arrow {
+  font-size: 120px;
+  font-weight: 300;
+  color: var(--dim);
+  line-height: 0.8;
+}
+.act-arrow-sm { font-size: 48px; padding-top: 0; }
+.act-col .cap { margin-top: 40px; }
+.strike {
+  left: -3%;
+  top: 40%;
+  width: 106%;
+  height: 0.9em;
+}
+.act-time {
+  margin-top: 40px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.tt-num {
+  font-size: 96px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.tt-num.is-q { font-size: 40px; }
+.act-time .cap { width: 100%; margin: 14px 0 0; }
+.manual-box {
+  position: absolute;
+  left: 1180px;
+  top: 330px;
+  width: 644px;
+}
+.manual-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--line);
+  border-radius: 6px;
+}
+.video-cap {
+  margin: 14px 0 0;
+  font-size: 18px;
+  color: var(--mute);
+}
+.act-note {
+  position: absolute;
+  left: 96px;
+  bottom: 96px;
+  margin: 0;
+  font-size: 28px;
+  color: var(--mute);
+}
+.act-note .is-q { font-size: 1em; }
+
+/* ---------- 8. Экономия ---------- */
+
+.save-main {
+  position: absolute;
+  left: 96px;
+  top: 280px;
+}
+.save-main .cap { margin-top: 44px; }
+.save-table {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 668px;
+  border-bottom: 1px solid var(--line);
+}
+.st-row {
+  display: grid;
+  grid-template-columns: 420px 1fr 1fr 1fr;
+  align-items: baseline;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.st-head {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0;
+}
+.st-label {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0;
+}
+.st-row .is-q { font-size: 0.6em; }
+.formula {
+  position: absolute;
+  left: 96px;
+  bottom: 132px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--mute);
+}
+.caveat {
+  position: absolute;
+  left: 96px;
+  bottom: 98px;
+  margin: 0;
+  font-size: 18px;
+  color: var(--dim);
+}
+
+/* ---------- 9. Надёжность ---------- */
+
+.rel-stat { position: absolute; top: 300px; }
+.rel-stat-a { left: 96px; }
+.rel-stat-b { left: 1000px; }
+.rel-stat .cap { margin-top: 44px; }
+.rel-tests {
+  position: absolute;
+  left: 96px;
+  top: 680px;
+  margin: 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+.rel-tests span { font-weight: 700; color: var(--ink); }
+.scheme {
+  position: absolute;
+  left: 96px;
+  top: 760px;
+  margin: 0;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.rel-note {
+  position: absolute;
+  left: 96px;
+  top: 820px;
+  margin: 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+
+/* ---------- 10. Команда и внедрение ---------- */
+
+.team-col {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+  width: 760px;
+}
+.person {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.person b {
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.person span {
+  font-size: 26px;
+  color: var(--mute);
+}
+.stages-col {
+  position: absolute;
+  left: 1180px;
+  top: 300px;
+  width: 644px;
+}
+.stg {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.stg b { font-size: 34px; font-weight: 600; }
+.stg span { font-size: 26px; color: var(--mute); white-space: nowrap; }
+.limits {
+  position: absolute;
+  left: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--dim);
+}

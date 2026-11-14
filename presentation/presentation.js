@@ -24,11 +24,11 @@ const DATA = {
   emergencyManual: { value: null, source: 'reports/measure.md, раздел 5' },
 
   // Слайд 7 «Действия» (ещё не на слайде) — reports/measure.md, раздел 4
-  actionsManual: { value: null, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
-  actionsAi: { value: null, source: 'reports/measure.md, раздел 4' },
-  timeManual: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
-  timeAi: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
-  aiParseTypical: { value: 24.7, digits: 1, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
+  actionsManual: { value: null, source: 'reports/measure.md, раздел 4 (медиана 3)' },
+  actionsAi: { value: null, source: 'reports/measure.md, раздел 4 (медиана 3)' },
+  timeManual: { value: null, source: 'reports/measure.md, раздел 4 (медиана 3)' }, // секунды
+  timeAi: { value: null, source: 'reports/measure.md, раздел 4 (медиана 3)' }, // секунды
+  aiParseTypical: { value: 24.7, digits: 1, source: 'reports/measure.md, раздел 4а (медиана 3)' },
   aiParseMissing: { value: 6.6, digits: 1, source: 'reports/measure.md, раздел 4а' },
   aiParseEmergency: { value: 18.0, digits: 1, source: 'reports/measure.md, раздел 4а' },
 
@@ -119,6 +119,17 @@ const SHOW = {
       });
       el.textContent = srcs.join(' · ');
     });
+    document.querySelectorAll('[data-if]').forEach((el) => {
+      const it = DATA[el.dataset.if];
+      if (!it || it.value === null) el.remove();
+    });
+    // блок ручного режима без видео не выводим вовсе (SHOW.manualVideo = null)
+    document.querySelectorAll('[data-video]').forEach((el) => {
+      if (!SHOW.manualVideo) el.remove();
+    });
+    document.querySelectorAll('[data-rate]').forEach((el) => {
+      el.textContent = String(SHOW.manualVideoRate);
+    });
     document.querySelectorAll('[data-demo-host]').forEach((el) => {
       el.textContent = SHOW.demoUrl.replace(/^https?:\/\//, '');
     });
@@ -193,10 +204,12 @@ const SHOW = {
     const paths = Array.from(el.querySelectorAll('.sketch:not(.wipe) path'));
     const wipes = Array.from(el.querySelectorAll('.sketch.wipe'));
     const fills = Array.from(el.querySelectorAll('.tl-fill'));
+    const pts = Array.from(el.querySelectorAll('.pt'));
     if (!animate || reduced) {
       if (paths.length) gsap.set(paths, { strokeDashoffset: 0 });
       if (wipes.length) gsap.set(wipes, { scaleX: 1 });
       if (fills.length) gsap.set(fills, { scaleX: 1 });
+      if (pts.length) gsap.set(pts, { autoAlpha: 1, y: 0 });
       finishCounts(el);
       return;
     }
@@ -211,6 +224,11 @@ const SHOW = {
     }
     if (fills.length) {
       gsap.fromTo(fills, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: 'power2.inOut', delay: delay + 0.25 });
+    }
+    if (pts.length) {
+      gsap.fromTo(pts, { autoAlpha: 0, y: 10 }, {
+        autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out', stagger: 0.22, delay: delay + 0.5,
+      });
     }
     countUp(el);
   }
@@ -264,6 +282,7 @@ const SHOW = {
     if (changed) {
       closeDemoVideo();
       manualVideo(prev, false);
+      manualVideo(next, true);
     }
     body.classList.toggle('is-dark', next.classList.contains('s-bridge'));
     updateChrome();
@@ -306,9 +325,11 @@ const SHOW = {
 
     gsap.fromTo(next, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35, ease: 'power1.out' });
     maskIn(next, true);
-    gsap.fromTo(blocks, { autoAlpha: 0, y: 28 }, {
-      autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: casc(blocks.length), delay: 0.12,
-    });
+    if (blocks.length) {
+      gsap.fromTo(blocks, { autoAlpha: 0, y: 28 }, {
+        autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: casc(blocks.length), delay: 0.12,
+      });
+    }
     blocks.forEach((b, n) => enter(b, 0.12 + n * casc(blocks.length), true));
     if (shown.length) gsap.set(shown, { autoAlpha: 1, y: 0 });
     shown.forEach((el) => enter(el, 0, false));
