@@ -20,6 +20,7 @@ import reportSla from './report-sla/server';
 import reportWorkload from './report-workload/server';
 import reportsDashboard from './reports-dashboard/server';
 import routing from './routing/server';
+import screenshot from './screenshot/server';
 
 /** Манифест серверных частей модулей: одна строка на модуль, порядок алфавитный. */
 export const serverModules: ServerModule[] = [
@@ -44,6 +45,7 @@ export const serverModules: ServerModule[] = [
   reportWorkload,
   reportsDashboard,
   routing,
+  screenshot,
 ];
 
 export {
@@ -68,4 +70,5 @@ export {
   reportWorkload,
   reportsDashboard,
   routing,
+  screenshot,
 };

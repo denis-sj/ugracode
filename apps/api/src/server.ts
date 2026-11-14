@@ -14,6 +14,8 @@ import {
   ReanalyzeResponse,
   ResolutionInput,
   Role,
+  ScreenshotInput,
+  ScreenshotResponse,
   SessionInput,
   SessionResponse,
   SettingsResponse,
@@ -121,6 +123,22 @@ function requireUser(user: User | null): User {
 
 /** Шаг, который пишет след ответа в поле: видно, откуда значение. */
 const ANSWER_STEP = 'clarify-chat.answer';
+
+/** Промпт распознавания картинки: тот же файл, что у агента `vision`. */
+const SCREENSHOT_PROMPT_ID = 'modules/screenshot/prompts/read.v1.md';
+
+/** `data:image/png;base64,AAAA` → `AAAA`; обычный base64 возвращается как есть. */
+function stripImagePrefix(image: string): string {
+  const comma = image.indexOf(',');
+  return image.startsWith('data:') && comma >= 0 ? image.slice(comma + 1) : image;
+}
+
+/** Base64 картинки: пустая строка, мусорные символы и нулевая длина — 400. */
+function isBase64Image(image: string): boolean {
+  const compact = image.replace(/\s+/g, '');
+  if (compact === '' || !/^[A-Za-z0-9+/]+={0,2}$/.test(compact)) return false;
+  return Buffer.from(compact, 'base64').length > 0;
+}
 
 async function requireAppeal(store: KernelStore, id: string | undefined): Promise<Appeal> {
   const appeal = await store.getAppeal(id ?? '');
@@ -384,6 +402,32 @@ function registerCoreRoutes(
       } catch {
         throw httpError('Не удалось распознать речь', 502);
       }
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/screenshot',
+    access: 'appeal.create',
+    body: ScreenshotInput,
+    response: ScreenshotResponse,
+    handler: async ({ body, user }) => {
+      requireUser(user);
+      const input = body as { image: string; mimeType: string };
+      const data = stripImagePrefix(input.image.trim());
+      if (!isBase64Image(data)) throw httpError('Битая картинка: нужен base64', 400);
+      let described;
+      try {
+        described = await ports.vision.describe(
+          { kind: 'image', data, mimeType: input.mimeType },
+          SCREENSHOT_PROMPT_ID,
+        );
+      } catch {
+        throw httpError('Не удалось распознать изображение', 502);
+      }
+      const text = described.text.trim();
+      if (text === '') throw httpError('На изображении нечего распознать', 502);
+      return { text, confidence: described.confidence };
     },
   });
 

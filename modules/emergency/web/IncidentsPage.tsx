@@ -24,7 +24,7 @@ import {
   useElapsed,
   useListMotion,
 } from '@ugra/ui';
-import type { WebPageProps } from '@ugra/ui';
+import type { ToastTone, WebPageProps } from '@ugra/ui';
 import type { Place } from './format';
 import {
   MASS_THRESHOLD,
@@ -34,21 +34,28 @@ import {
   emergencyReason,
   eventTime,
   formatTimer,
-  incidentNumber,
+  incidentCards,
   incidentTimer,
+  incidentWindowMinutes,
+  massDeclareRights,
   massTimeline,
   placeFromFields,
   placeLabel,
   quoteSegments,
   readEmergencyVerdict,
+  readIncidentDetail,
   similarTickets,
   sortByRecent,
   timelineItems,
+  type IncidentCard,
+  type IncidentDetailView,
 } from './format';
 import { useNow } from './useNow';
 
 const EMPTY_PLACE: Place = { building: null, cabinet: null, floor: null };
 const EMPTY_EVENTS: readonly unknown[] = [];
+const EMPTY_INCIDENTS: readonly IncidentCard[] = [];
+const INCIDENTS_URL = '/api/m/mass-incident/incidents';
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -68,8 +75,67 @@ function CheckIcon(): JSX.Element {
   );
 }
 
+interface IncidentListProps {
+  incidents: readonly IncidentCard[];
+  activeId: string | null;
+  loading: boolean;
+  error: string | null;
+  onSelect: (id: string) => void;
+}
+
+/** Список инцидентов из API: номер, размер, корпус, категория, статус, время. */
+function IncidentList({ incidents, activeId, loading, error, onSelect }: IncidentListProps): JSX.Element {
+  return (
+    <div className="er-mass__list">
+      <div className="er-card__head">
+        <h3 className="er-card__title">Массовые сбои</h3>
+        <span className="er-card__counter">{loading ? 'загружаем…' : incidents.length}</span>
+      </div>
+
+      {error !== null && (
+        <p className="er-note" role="alert">
+          Список инцидентов недоступен: {error}
+        </p>
+      )}
+      {error === null && !loading && incidents.length === 0 && <p className="er-note">Массовых сбоев нет</p>}
+
+      {incidents.map((item) => {
+        const active = item.id === activeId;
+        return (
+          <button
+            type="button"
+            key={item.id}
+            className={active ? 'er-incident-row er-incident-row--on' : 'er-incident-row'}
+            aria-pressed={active}
+            onClick={() => onSelect(item.id)}
+          >
+            <span className="er-incident-row__top">
+              <span className="er-incident-row__num">№ {item.number}</span>
+              <Badge tone={item.status === 'open' ? 'danger' : 'neutral'}>{item.statusLabel}</Badge>
+            </span>
+            <span className="er-incident-row__meta">
+              <span>{item.size} заявок</span>
+              <span aria-hidden="true">·</span>
+              <span>{item.place}</span>
+              <span aria-hidden="true">·</span>
+              <span>{item.categoryLabel}</span>
+              <span aria-hidden="true">·</span>
+              <span>{item.openedAt}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+interface DemoIncidentResponse {
+  created?: number;
+  incidentId?: string;
+}
+
 /** Экран «Авария и массовость» (дизайн 4.5): авария — точка и текст, не красный фон. */
-export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Element {
+export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): JSX.Element {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -88,16 +154,22 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
   const [eventsBlocked, setEventsBlocked] = useState(false);
 
   const [checks, setChecks] = useState<readonly boolean[]>([]);
-  const [incident, setIncident] = useState<{ number: string; size: number } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+
+  /* Массовость: список и карточка инцидента — с сервера, без локальной имитации. */
+  const [incidents, setIncidents] = useState<readonly IncidentCard[]>(EMPTY_INCIDENTS);
+  const [incidentsLoading, setIncidentsLoading] = useState(true);
+  const [incidentsError, setIncidentsError] = useState<string | null>(null);
+  const [pinnedIncidentId, setPinnedIncidentId] = useState<string | null>(null);
+  const [incidentDetail, setIncidentDetail] = useState<IncidentDetailView | null>(null);
+  const [incidentError, setIncidentError] = useState<string | null>(null);
+  const [declaring, setDeclaring] = useState(false);
+  const [toast, setToast] = useState<{ text: string; tone: ToastTone } | null>(null);
 
   const rowsRef = useRef<HTMLDivElement | null>(null);
   const incidentRef = useRef<HTMLDivElement | null>(null);
+  /** Сколько заявок создал демо-всплеск: тост показываем, когда карточка инцидента уже загружена. */
+  const demoCreatedRef = useRef<number | null>(null);
   useListMotion(rowsRef, tickets.length > 0);
-
-  useEffect(() => {
-    if (incident !== null) pulse(incidentRef.current);
-  }, [incident]);
 
   const now = useNow(30_000);
   const selectedTicket = useMemo(
@@ -108,6 +180,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
   const checklist = useMemo(() => verdict?.checklist ?? [], [verdict]);
   const checklistSignature = checklist.join('|');
   const elapsed = useElapsed(detail?.appeal.createdAt ?? selectedTicket?.createdAt ?? null);
+  const rights = useMemo(() => massDeclareRights(user.role), [user.role]);
 
   /* ---------- Список аварийных заявок ---------- */
 
@@ -141,6 +214,31 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       alive = false;
     };
   }, [api, refreshToken]);
+
+  /* ---------- Инциденты: список с сервера ---------- */
+
+  useEffect(() => {
+    let alive = true;
+    setIncidentsLoading(true);
+    void api
+      .get<unknown>(INCIDENTS_URL)
+      .then((response) => {
+        if (!alive) return;
+        setIncidents(incidentCards(response, { categoryLabel: (code) => categoryLabel(meta, code) }));
+        setIncidentsError(null);
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setIncidents(EMPTY_INCIDENTS);
+        setIncidentsError(errorText(cause));
+      })
+      .finally(() => {
+        if (alive) setIncidentsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [api, meta, refreshToken]);
 
   /* ---------- Место заявок списка (корпус и кабинет — в полях) ---------- */
 
@@ -210,7 +308,6 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       setAnalysisMissing(false);
       setEvents(EMPTY_EVENTS);
       setEventsBlocked(false);
-      setIncident(null);
       return undefined;
     }
 
@@ -222,7 +319,6 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
     setAnalysisLoading(true);
     setEvents(EMPTY_EVENTS);
     setEventsBlocked(false);
-    setIncident(null);
 
     void api
       .get<TicketResponse>(`/api/tickets/${selectedId}`)
@@ -265,11 +361,59 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
     };
   }, [api, selectedId, refreshToken]);
 
+  /* ---------- Выбранная заявка: активный инцидент и его карточка ---------- */
+
+  useEffect(() => {
+    // Другая заявка — снимаем ручной выбор инцидента, показываем привязанный к ней.
+    setPinnedIncidentId(null);
+  }, [selectedId]);
+
+  const activeIncidentId = pinnedIncidentId ?? selectedTicket?.incidentId ?? null;
+
+  useEffect(() => {
+    if (activeIncidentId === null) {
+      setIncidentDetail(null);
+      setIncidentError(null);
+      return undefined;
+    }
+
+    let alive = true;
+    setIncidentDetail(null);
+    setIncidentError(null);
+    void api
+      .get<unknown>(`${INCIDENTS_URL}/${encodeURIComponent(activeIncidentId)}`)
+      .then((response) => {
+        if (!alive) return;
+        const view = readIncidentDetail(response, {
+          categoryLabel: (code) => categoryLabel(meta, code),
+        });
+        setIncidentDetail(view);
+        const created = demoCreatedRef.current;
+        if (view !== null && created !== null) {
+          demoCreatedRef.current = null;
+          setToast({
+            text: `Инцидент ${view.incident.number}: ${created} новых обращений, всего ${view.incident.size}, статус «${view.incident.statusLabel}».`,
+            tone: 'ok',
+          });
+        }
+      })
+      .catch((cause: unknown) => {
+        if (alive) setIncidentError(errorText(cause));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [api, activeIncidentId, meta, refreshToken]);
+
+  useEffect(() => {
+    if (incidentDetail !== null) pulse(incidentRef.current);
+  }, [incidentDetail]);
+
   useEffect(() => {
     setChecks(checklist.map(() => false));
   }, [checklistSignature]);
 
-  /* ---------- Массовость: категория + корпус за окно ---------- */
+  /* ---------- Массовость: заявки инцидента или окно по всем заявкам ---------- */
 
   const selectedPlace = selectedId === null ? null : (places[selectedId] ?? null);
   const similar = useMemo(() => {
@@ -280,10 +424,32 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       includeTarget: true,
     });
   }, [allTickets, tickets, selectedTicket, places, now]);
-  const mass = useMemo(
-    () => massTimeline(similar, now, { windowMinutes: MASS_WINDOW_MINUTES, threshold: MASS_THRESHOLD }),
-    [similar, now],
+
+  const massWindow = useMemo(
+    () =>
+      incidentDetail === null
+        ? MASS_WINDOW_MINUTES
+        : incidentWindowMinutes(incidentDetail.incident.openedAtIso, now),
+    [incidentDetail, now],
   );
+  const mass = useMemo(
+    () =>
+      massTimeline(incidentDetail?.tickets ?? similar, now, {
+        windowMinutes: massWindow,
+        threshold: MASS_THRESHOLD,
+      }),
+    [incidentDetail, similar, now, massWindow],
+  );
+  const massTotal = incidentDetail === null ? mass.total : Math.max(incidentDetail.incident.size, mass.total);
+  const massBadge =
+    incidentDetail !== null
+      ? {
+          tone: incidentDetail.incident.status === 'open' ? ('danger' as const) : ('neutral' as const),
+          label: incidentDetail.incident.status === 'open' ? 'Инцидент объявлен' : 'Инцидент закрыт',
+        }
+      : mass.thresholdMet
+        ? { tone: 'danger' as const, label: 'Порог пройден' }
+        : { tone: 'neutral' as const, label: 'Порог не достигнут' };
 
   const userName = useCallback(
     (id: string): string | null => users.find((item) => item.id === id)?.fullName ?? null,
@@ -308,13 +474,49 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
     trackAction?.('select');
   };
 
-  const declareIncident = (): void => {
-    if (selectedTicket === null) return;
-    const number = incidentNumber(selectedTicket.number);
-    setIncident({ number, size: similar.length });
-    setToast(`Инцидент ${number}: сообщение отправлено всем заявителям (${similar.length}).`);
-    trackAction?.('click');
+  const selectIncident = (id: string): void => {
+    setPinnedIncidentId(id);
+    trackAction?.('select');
   };
+
+  /**
+   * Демо-всплеск: сервер создаёт 6 похожих заявок и сразу склеивает их в инцидент.
+   * Без конфетти и «ура» — авария не праздник. Право `admin` проверяет и сервер.
+   */
+  const declareIncident = useCallback(async (): Promise<void> => {
+    if (!rights.allowed || declaring) return;
+    setDeclaring(true);
+    setToast(null);
+    trackAction?.('click');
+    try {
+      const created = await api.post<DemoIncidentResponse>('/api/m/mass-incident/demo');
+      const count = typeof created.created === 'number' ? created.created : 0;
+      if (created.incidentId !== undefined && created.incidentId !== '') {
+        demoCreatedRef.current = count;
+        setPinnedIncidentId(created.incidentId);
+      } else {
+        setToast({
+          text: `Заявки созданы (${count}), но порог массовости не пройден — инцидента нет.`,
+          tone: 'warn',
+        });
+      }
+      setRefreshToken((value) => value + 1);
+      trackAction?.('system');
+    } catch (cause) {
+      setToast({ text: `Не удалось объявить инцидент: ${errorText(cause)}`, tone: 'danger' });
+    } finally {
+      setDeclaring(false);
+    }
+  }, [api, declaring, rights.allowed, trackAction]);
+
+  const showMassBlock = incidentDetail !== null || hasPlace;
+  const subjectCategory =
+    incidentDetail !== null
+      ? incidentDetail.incident.categoryLabel
+      : selectedTicket !== null
+        ? categoryLabel(meta, selectedTicket.category)
+        : 'Без категории';
+  const subjectPlace = incidentDetail !== null ? incidentDetail.incident.place : placeLabel(selectedPlace);
 
   return (
     <div className="er-page">
@@ -358,11 +560,22 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       )}
 
       {!loading && error === null && tickets.length === 0 && (
-        <EmptyState
-          title="Аварий нет — это хорошо"
-          hint="Аварийных заявок сейчас нет. Экран обновится сам, когда ИИ найдёт признаки аварии в новом обращении."
-          icon="✓"
-        />
+        <>
+          <EmptyState
+            title="Аварий нет — это хорошо"
+            hint="Аварийных заявок сейчас нет. Экран обновится сам, когда ИИ найдёт признаки аварии в новом обращении."
+            icon="✓"
+          />
+          <Card className="er-card er-mass">
+            <IncidentList
+              incidents={incidents}
+              activeId={activeIncidentId}
+              loading={incidentsLoading}
+              error={incidentsError}
+              onSelect={selectIncident}
+            />
+          </Card>
+        </>
       )}
 
       {tickets.length > 0 && (
@@ -547,27 +760,27 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                   <Card className="er-card er-mass">
                     <div className="er-card__head">
                       <h2 className="er-card__title">Похоже на массовый сбой</h2>
-                      <Badge tone={mass.thresholdMet ? 'danger' : 'neutral'}>
-                        {mass.thresholdMet ? 'Порог пройден' : 'Порог не достигнут'}
-                      </Badge>
+                      <Badge tone={massBadge.tone}>{massBadge.label}</Badge>
                     </div>
                     <div className="er-mass__subject">
-                      {categoryLabel(meta, selectedTicket.category)} · {placeLabel(selectedPlace)}
+                      {subjectCategory} · {subjectPlace}
                     </div>
 
-                    {hasPlace ? (
+                    {showMassBlock ? (
                       <>
                         <div className="er-mass__count">
-                          <span className="er-mass__num">{mass.total}</span>
+                          <span className="er-mass__num">{massTotal}</span>
                           <span className="er-mass__caption">
-                            похожих обращений за {MASS_WINDOW_MINUTES} мин, включая эту заявку
+                            {incidentDetail !== null
+                              ? `заявок в инциденте, окно ${massWindow} мин`
+                              : `похожих обращений за ${MASS_WINDOW_MINUTES} мин, включая эту заявку`}
                           </span>
                         </div>
 
                         <div
                           className="er-bars"
                           role="img"
-                          aria-label={`Похожие обращения по минутам: ${mass.total} за ${MASS_WINDOW_MINUTES} минут, порог ${MASS_THRESHOLD}`}
+                          aria-label={`Похожие обращения по минутам: ${massTotal} за ${massWindow} минут, порог ${MASS_THRESHOLD}`}
                         >
                           <span
                             className="er-bars__threshold"
@@ -594,7 +807,8 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                           <span>сейчас</span>
                         </div>
                         <p className="er-note">
-                          Порог — {MASS_THRESHOLD} похожих за {MASS_WINDOW_MINUTES} минут в одном корпусе.
+                          Порог — {MASS_THRESHOLD} похожих за {MASS_WINDOW_MINUTES} минут в одном корпусе (настройка
+                          массовости).
                         </p>
                       </>
                     ) : (
@@ -603,21 +817,57 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                       </p>
                     )}
 
-                    {incident === null ? (
-                      <>
-                        <Button variant="primary" block onClick={declareIncident} disabled={!hasPlace}>
-                          Объявить массовым инцидентом
-                        </Button>
-                      </>
-                    ) : (
+                    {incidentError !== null && (
+                      <p className="er-note" role="alert">
+                        Не удалось открыть инцидент: {incidentError}
+                      </p>
+                    )}
+
+                    {incidentDetail !== null && (
                       <div className="er-incident" ref={incidentRef}>
-                        <div className="er-incident__title">Инцидент № {incident.number}</div>
+                        <div className="er-incident__head">
+                          <span className="er-incident__title">Инцидент № {incidentDetail.incident.number}</span>
+                          <Badge
+                            tone={incidentDetail.incident.status === 'open' ? 'danger' : 'neutral'}
+                            dot={incidentDetail.incident.status === 'open'}
+                          >
+                            {incidentDetail.incident.statusLabel}
+                          </Badge>
+                        </div>
                         <p className="er-incident__text">
-                          {incident.size} заявителей получили одно сообщение. Новые похожие обращения прикрепляются
-                          сами.
+                          {Math.max(incidentDetail.incident.size, incidentDetail.tickets.length)} заявок ·{' '}
+                          {incidentDetail.incident.place} · открыт в {incidentDetail.incident.openedAt}
+                        </p>
+                        {incidentDetail.tickets.length > 0 && (
+                          <p className="er-incident__tickets">
+                            {incidentDetail.tickets.map((ticket) => `№ ${ticket.number}`).join(', ')}
+                          </p>
+                        )}
+                        <p className="er-note">
+                          Одно сообщение всем заявителям уходит после подтверждения диспетчера.
                         </p>
                       </div>
                     )}
+
+                    <IncidentList
+                      incidents={incidents}
+                      activeId={activeIncidentId}
+                      loading={incidentsLoading}
+                      error={incidentsError}
+                      onSelect={selectIncident}
+                    />
+
+                    <Button
+                      variant="primary"
+                      block
+                      loading={declaring}
+                      disabled={!rights.allowed || declaring}
+                      onClick={() => void declareIncident()}
+                      title={rights.hint ?? 'Создать демо-всплеск: 6 похожих обращений и инцидент'}
+                    >
+                      Объявить массовым инцидентом
+                    </Button>
+                    {!rights.allowed && <p className="er-note">{rights.hint}</p>}
                   </Card>
                 </div>
               </>
@@ -626,7 +876,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
         </div>
       )}
 
-      <Toast message={toast} tone="ok" onClose={() => setToast(null)} />
+      <Toast message={toast?.text ?? null} tone={toast?.tone ?? 'ok'} onClose={() => setToast(null)} />
     </div>
   );
 }

@@ -1,15 +1,25 @@
-import type { Channel, EmergencyVerdict, Ticket, TicketField, TicketStatus } from '@ugra/contracts';
+import { hasPermission } from '@ugra/contracts';
+import type {
+  Channel,
+  EmergencyVerdict,
+  PriorityLevel,
+  Role,
+  Ticket,
+  TicketField,
+  TicketStatus,
+} from '@ugra/contracts';
 
 /**
  * Чистые функции экрана «Авария и массовость» (дизайн 4.5).
  *
  * Здесь всё, что можно посчитать без React и без DOM: место из полей заявки, «почему авария»
  * из разбора, таймер с момента обращения, выбор похожих заявок (категория + корпус за окно),
- * столбики по минутам с порогом и хронология из событий. Цвета и раскладку задаёт модуль CSS.
+ * столбики по минутам с порогом, хронология из событий и терпимое чтение инцидентов из API
+ * массовости. Цвета и раскладку задаёт модуль CSS.
  */
 
-/** Порог массовости: столько похожих обращений за окно — уже массовый сбой. */
-export const MASS_THRESHOLD = 3;
+/** Порог массовости: столько похожих обращений за окно — уже массовый сбой (настройка `massThreshold`). */
+export const MASS_THRESHOLD = 5;
 /** Окно массовости, минуты. */
 export const MASS_WINDOW_MINUTES = 15;
 
@@ -332,6 +342,179 @@ export function massTimeline(
   };
 }
 
+/* ---------- Инциденты массовости из API ---------- */
+
+export interface IncidentCard {
+  id: string;
+  number: string;
+  status: 'open' | 'closed';
+  /** «открыт» / «закрыт». */
+  statusLabel: string;
+  category: string | null;
+  /** Подпись категории из справочника или код, если подписи нет. */
+  categoryLabel: string;
+  building: string | null;
+  system: string | null;
+  /** Сколько заявок привязано: `ticketCount` списка, иначе `size` инцидента. */
+  size: number;
+  priority: PriorityLevel | null;
+  /** «Корпус Б» — из `building`; без корпуса прочерк. */
+  place: string;
+  /** Время открытия «10:15» для списка. */
+  openedAt: string;
+  /** Исходное ISO — для окна столбиков. */
+  openedAtIso: string;
+  closedAt: string | null;
+}
+
+const PRIORITIES: readonly PriorityLevel[] = ['emergency', 'critical', 'high', 'medium', 'low'];
+
+function asPriority(value: unknown): PriorityLevel | null {
+  return typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value)
+    ? (value as PriorityLevel)
+    : null;
+}
+
+function asCount(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : null;
+}
+
+function asIncident(raw: unknown, categoryOf: (code: string | null) => string): IncidentCard | null {
+  const item = asRecord(raw);
+  if (!item) return null;
+  const id = asString(item.id);
+  const number = asString(item.number);
+  if (id === null || number === null) return null;
+
+  const status: IncidentCard['status'] = item.status === 'closed' ? 'closed' : 'open';
+  const building = asString(item.building);
+  const category = asString(item.category);
+  const openedAtIso = asString(item.openedAt) ?? '';
+
+  return {
+    id,
+    number,
+    status,
+    statusLabel: status === 'closed' ? 'закрыт' : 'открыт',
+    category,
+    categoryLabel: category === null ? 'Без категории' : categoryOf(category),
+    building,
+    system: asString(item.system),
+    size: asCount(item.ticketCount) ?? asCount(item.size) ?? 0,
+    priority: asPriority(item.priority),
+    place: placeLabel({ building, cabinet: null, floor: null }),
+    openedAt: eventTime(openedAtIso) ?? '—',
+    openedAtIso,
+    closedAt: asString(item.closedAt),
+  };
+}
+
+/**
+ * Список инцидентов из `GET /api/m/mass-incident/incidents` → карточки для блока массовости.
+ * Битые строки пропускаются, свежие сверху; ответ принимается и голым массивом.
+ */
+export function incidentCards(
+  raw: unknown,
+  options: { categoryLabel?: (code: string | null) => string } = {},
+): IncidentCard[] {
+  const categoryOf = options.categoryLabel ?? ((code: string | null) => code ?? 'Без категории');
+  const record = asRecord(raw);
+  const list: unknown[] = Array.isArray(raw) ? raw : Array.isArray(record?.incidents) ? record.incidents : [];
+
+  return list
+    .flatMap((item) => {
+      const card = asIncident(item, categoryOf);
+      return card === null ? [] : [card];
+    })
+    .sort((left, right) => {
+      const leftAt = parseTime(left.openedAtIso) ?? 0;
+      const rightAt = parseTime(right.openedAtIso) ?? 0;
+      return rightAt - leftAt || left.number.localeCompare(right.number);
+    });
+}
+
+/** Заявка инцидента: только то, что нужно счётчику и подписи. */
+export interface IncidentTicketRef {
+  id: string;
+  number: string;
+  createdAt: string;
+  status: TicketStatus;
+}
+
+export interface IncidentDetailView {
+  incident: IncidentCard;
+  /** Заявки по времени создания — из них считаются столбики и подпись «N заявок». */
+  tickets: IncidentTicketRef[];
+}
+
+function asIncidentTicket(raw: unknown): IncidentTicketRef | null {
+  const item = asRecord(raw);
+  if (!item) return null;
+  const id = asString(item.id);
+  if (id === null) return null;
+  const status = asString(item.status);
+  return {
+    id,
+    number: asString(item.number) ?? id,
+    createdAt: asString(item.createdAt) ?? '',
+    status: status !== null && status in STATUS_LABELS ? (status as TicketStatus) : 'in_review',
+  };
+}
+
+/** Карточка `GET /api/m/mass-incident/incidents/:id` → инцидент и его заявки. Битый ответ — `null`. */
+export function readIncidentDetail(
+  raw: unknown,
+  options: { categoryLabel?: (code: string | null) => string } = {},
+): IncidentDetailView | null {
+  const record = asRecord(raw);
+  const incident = asIncident(record?.incident, options.categoryLabel ?? ((code) => code ?? 'Без категории'));
+  if (incident === null) return null;
+
+  const tickets = Array.isArray(record?.tickets)
+    ? record.tickets
+        .flatMap((item) => {
+          const ticket = asIncidentTicket(item);
+          return ticket === null ? [] : [ticket];
+        })
+        .sort((left, right) => {
+          const leftAt = parseTime(left.createdAt) ?? Number.POSITIVE_INFINITY;
+          const rightAt = parseTime(right.createdAt) ?? Number.POSITIVE_INFINITY;
+          return leftAt - rightAt || left.number.localeCompare(right.number);
+        })
+    : [];
+
+  return { incident, tickets };
+}
+
+/**
+ * Окно столбиков для инцидента: не меньше базового (15 мин) и накрывает всё время жизни
+ * инцидента, но не больше суток — иначе шкала из минут превращается в точки без смысла.
+ */
+export function incidentWindowMinutes(
+  openedAt: string | null | undefined,
+  now: number = Date.now(),
+  base: number = MASS_WINDOW_MINUTES,
+): number {
+  const safeBase = Math.max(1, Math.round(Number.isFinite(base) ? base : MASS_WINDOW_MINUTES));
+  const opened = parseTime(openedAt);
+  if (opened === null || !Number.isFinite(now)) return safeBase;
+  const minutes = Math.ceil(Math.max(0, now - opened) / 60_000) + 1;
+  return Math.min(24 * 60, Math.max(safeBase, minutes));
+}
+
+export interface MassDeclareRights {
+  /** Можно ли звать демо-всплеск (сервер требует право `admin`). */
+  allowed: boolean;
+  /** Подсказка под кнопкой, когда права нет. `null` — можно. */
+  hint: string | null;
+}
+
+/** Права на кнопку «Объявить массовым инцидентом»: демо-маршрут — только администратору. */
+export function massDeclareRights(role: Role): MassDeclareRights {
+  if (hasPermission(role, 'admin')) return { allowed: true, hint: null };
+  return { allowed: false, hint: 'Демо-всплеск доступен администратору' };
+}
+
 /* ---------- Цитата с признаками ---------- */
 
 export interface QuoteSegment {
@@ -548,11 +731,4 @@ export function channelLabel(channel: Channel | null | undefined): string {
     default:
       return 'канал не указан';
   }
-}
-
-/** Номер инцидента для локальной имитации: «И-0415» из номера заявки. */
-export function incidentNumber(ticketNumber: string): string {
-  const digits = ticketNumber.replace(/\D/g, '');
-  if (digits === '') return 'И-0001';
-  return `И-${digits.slice(-4).padStart(4, '0')}`;
 }

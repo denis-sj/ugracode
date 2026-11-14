@@ -127,6 +127,19 @@ export const TranscribeResponse = z.object({
 });
 export type TranscribeResponse = z.infer<typeof TranscribeResponse>;
 
+/** Скриншот ошибки или фото шильдика: картинка в base64 и её тип. */
+export const ScreenshotInput = z.object({
+  image: z.string().min(1),
+  mimeType: z.string().regex(/^image\//, 'нужен mimeType картинки: image/*'),
+});
+export type ScreenshotInput = z.infer<typeof ScreenshotInput>;
+
+export const ScreenshotResponse = z.object({
+  text: z.string(),
+  confidence: z.number().min(0).max(1).optional(),
+});
+export type ScreenshotResponse = z.infer<typeof ScreenshotResponse>;
+
 export const DeadlineInput = z.object({
   slaDueAt: z.string().min(1),
   reason: z.string().min(1),

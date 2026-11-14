@@ -1136,3 +1136,14 @@
     grid-template-columns: 68px minmax(0, 1fr);
   }
 }
+
+/* ---------- Слоты карточки заявки (`ticket.banner`, `ticket.footer`) ---------- */
+
+/* `Slot` из @ugra/ui — flex-контейнер для плашек; на проверке виджет занимает всю ширину. */
+.review-page .ugra-slot {
+  display: block;
+}
+
+.review-page .ugra-slot > * {
+  width: 100%;
+}

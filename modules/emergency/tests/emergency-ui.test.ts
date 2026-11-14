@@ -8,13 +8,16 @@ import {
   emergencyReason,
   formatAge,
   formatTimer,
-  incidentNumber,
+  incidentCards,
   incidentTimer,
+  incidentWindowMinutes,
+  massDeclareRights,
   massTimeline,
   placeFromFields,
   placeLabel,
   quoteSegments,
   readEmergencyVerdict,
+  readIncidentDetail,
   signLabel,
   similarTickets,
   sortByRecent,
@@ -291,6 +294,11 @@ describe('emergency UI: похожие заявки', () => {
 describe('emergency UI: столбики по минутам и порог', () => {
   const at = (minutesAgo: number): string => new Date(NOW - minutesAgo * MINUTE).toISOString();
 
+  it('порог и окно совпадают с настройками массовости', () => {
+    expect(MASS_THRESHOLD).toBe(5);
+    expect(MASS_WINDOW_MINUTES).toBe(15);
+  });
+
   it('считает накопительно по минутам и ловит порог', () => {
     const mass = massTimeline(
       [
@@ -299,11 +307,12 @@ describe('emergency UI: столбики по минутам и порог', () 
         ticket({ id: 'c', createdAt: at(2) }),
       ],
       NOW,
+      { threshold: 3 },
     );
 
     expect(mass.points).toHaveLength(MASS_WINDOW_MINUTES);
     expect(mass.total).toBe(3);
-    expect(mass.threshold).toBe(MASS_THRESHOLD);
+    expect(mass.threshold).toBe(3);
     expect(mass.thresholdMet).toBe(true);
     expect(mass.max).toBe(3);
     expect(mass.points.at(-1)?.count).toBe(3);
@@ -408,7 +417,7 @@ describe('emergency UI: хронология', () => {
   });
 });
 
-describe('emergency UI: канал и номер инцидента', () => {
+describe('emergency UI: канал обращения', () => {
   it('переводит канал обращения', () => {
     expect(channelLabel('phone')).toBe('звонок');
     expect(channelLabel('chat')).toBe('чат');
@@ -416,10 +425,110 @@ describe('emergency UI: канал и номер инцидента', () => {
     expect(channelLabel('email')).toBe('почта');
     expect(channelLabel(null)).toBe('канал не указан');
   });
+});
 
-  it('делает номер инцидента из номера заявки', () => {
-    expect(incidentNumber('2026-0415')).toBe('И-0415');
-    expect(incidentNumber('З-7')).toBe('И-0007');
-    expect(incidentNumber('без цифр')).toBe('И-0001');
+describe('emergency UI: инциденты из API массовости', () => {
+  const raw = {
+    incidents: [
+      {
+        id: 'inc-1',
+        number: 'И-20261114-0001',
+        status: 'open',
+        category: 'printer',
+        building: 'Б',
+        system: 'office',
+        size: 6,
+        priority: 'emergency',
+        openedAt: '2026-11-14T09:55:00.000Z',
+        closedAt: null,
+        ticketCount: 6,
+      },
+      {
+        id: 'inc-2',
+        number: 'И-20261114-0002',
+        status: 'closed',
+        category: 'network',
+        building: 'А',
+        system: 'network',
+        size: 4,
+        priority: 'emergency',
+        openedAt: '2026-11-14T09:40:00.000Z',
+        closedAt: '2026-11-14T09:50:00.000Z',
+      },
+    ],
+  };
+
+  it('превращает ответ API в карточки: размер, корпус, категория, статус, время', () => {
+    const cards = incidentCards(raw, {
+      categoryLabel: (code) => (code === 'printer' ? 'Печать' : 'Сеть'),
+    });
+
+    expect(cards.map((card) => card.id)).toEqual(['inc-1', 'inc-2']);
+    expect(cards[0]).toMatchObject({
+      number: 'И-20261114-0001',
+      status: 'open',
+      statusLabel: 'открыт',
+      size: 6,
+      place: 'Корпус Б',
+      categoryLabel: 'Печать',
+      priority: 'emergency',
+    });
+    expect(cards[0]?.openedAt).toMatch(/^\d{2}:\d{2}$/);
+    expect(cards[1]).toMatchObject({ status: 'closed', statusLabel: 'закрыт', size: 4, place: 'Корпус А' });
+  });
+
+  it('терпит пустой и битый ответ, берёт size без ticketCount', () => {
+    expect(incidentCards(null)).toEqual([]);
+    expect(incidentCards({ incidents: 'нет' })).toEqual([]);
+    expect(incidentCards({ incidents: [null, { id: 'x' }, 'мусор'] })).toEqual([]);
+
+    const [card] = incidentCards([
+      { id: 'i', number: 'И-1', status: 'unknown', size: 2, openedAt: 'не дата', priority: 'нет' },
+    ]);
+    expect(card).toMatchObject({
+      status: 'open',
+      size: 2,
+      place: '—',
+      categoryLabel: 'Без категории',
+      openedAt: '—',
+      priority: null,
+    });
+  });
+
+  it('читает карточку инцидента с заявками по времени', () => {
+    const detail = readIncidentDetail({
+      incident: raw.incidents[0],
+      tickets: [
+        { id: 't-2', number: 'З-2', status: 'in_review', createdAt: '2026-11-14T09:56:00.000Z' },
+        { id: 't-1', number: 'З-1', status: 'in_review', createdAt: '2026-11-14T09:55:00.000Z' },
+        { id: 't-broken', status: 'мусор', createdAt: 'битая дата' },
+        'мусор',
+      ],
+    });
+
+    expect(detail?.incident.number).toBe('И-20261114-0001');
+    expect(detail?.tickets.map((ticket) => ticket.number)).toEqual(['З-1', 'З-2', 't-broken']);
+    expect(detail?.tickets[2]).toMatchObject({ status: 'in_review' });
+    expect(readIncidentDetail(null)).toBeNull();
+    expect(readIncidentDetail({ tickets: [] })).toBeNull();
+  });
+
+  it('окно столбиков накрывает время жизни инцидента, но не больше суток', () => {
+    const opened = new Date(NOW - 2 * MINUTE).toISOString();
+    expect(incidentWindowMinutes(opened, NOW)).toBe(MASS_WINDOW_MINUTES);
+    expect(incidentWindowMinutes(new Date(NOW - 40 * MINUTE).toISOString(), NOW)).toBe(41);
+    expect(incidentWindowMinutes(new Date(NOW - 30 * 3_600_000).toISOString(), NOW)).toBe(1440);
+    expect(incidentWindowMinutes('не дата', NOW)).toBe(MASS_WINDOW_MINUTES);
+    expect(incidentWindowMinutes(null, NOW, 5)).toBe(5);
+  });
+
+  it('демо-всплеск разрешён только администратору', () => {
+    expect(massDeclareRights('admin')).toEqual({ allowed: true, hint: null });
+    for (const role of ['dispatcher', 'manager', 'engineer', 'applicant'] as const) {
+      expect(massDeclareRights(role)).toEqual({
+        allowed: false,
+        hint: 'Демо-всплеск доступен администратору',
+      });
+    }
   });
 });

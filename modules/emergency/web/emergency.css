@@ -466,6 +466,79 @@
   font-weight: var(--weight-bold);
 }
 
+.er-incident__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.er-incident__tickets {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Список инцидентов из API ---------- */
+
+.er-mass__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.er-incident-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.er-incident-row:hover {
+  background: var(--color-surface-2);
+}
+
+.er-incident-row--on {
+  background: var(--color-accent-soft);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.er-incident-row__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.er-incident-row__num {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.er-incident-row__meta {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+}
+
 .er-incident__text {
   margin: 0;
   color: var(--color-text-muted);
@@ -570,7 +643,9 @@
     animation: none;
   }
 
-  .er-progress__fill {
+  .er-progress__fill,
+  .er-row,
+  .er-incident-row {
     transition: none;
   }
 }

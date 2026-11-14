@@ -23,6 +23,9 @@ import {
 } from './format';
 import { useRunStream } from './useRunStream';
 import { useVoiceInput } from './useVoiceInput';
+// Виджет модуля `screenshot`: слот `applicant.chat.footer` пока не рисуется оболочкой,
+// поэтому кнопка «Скриншот» подключается в чат напрямую (см. docs/map/features/screenshot.md).
+import { ScreenshotWidget } from '../../screenshot/web/ScreenshotWidget';
 
 interface ChatMessage {
   id: string;
@@ -401,6 +404,15 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         </div>
 
         <div className="chat-composer-wrap">
+          <ScreenshotWidget
+            api={api}
+            onText={(text) =>
+              setComposerText((previous) =>
+                previous.trim() === '' ? text : `${previous.trim()}\n${text}`,
+              )
+            }
+            onError={setError}
+          />
           {attachments.length > 0 && (
             <div className="chat-attachments">
               {attachments.map((name) => (

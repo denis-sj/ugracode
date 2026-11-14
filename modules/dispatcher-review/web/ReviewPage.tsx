@@ -44,6 +44,8 @@ import {
 } from './format';
 import { DeadlineChips, Kbd } from './parts';
 import { ReviewFields } from './ReviewFields';
+import { hasTicketWidget } from './ticket-slots';
+import { TicketSlot, useTicketWidgets } from './TicketSlot';
 import { useNow } from './useNow';
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -88,6 +90,15 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
 
   const canEdit = hasPermission(user.role, 'tickets.edit');
   const canConfirm = hasPermission(user.role, 'tickets.confirm');
+
+  /* Слоты карточки заявки: виджеты модулей из реестра, страница работает и без них. */
+  const widgets = useTicketWidgets();
+  const hasBanner = hasTicketWidget(widgets, 'ticket.banner', user.role);
+  const hasFooter = hasTicketWidget(widgets, 'ticket.footer', user.role);
+  const slotContext = useMemo(
+    () => ({ ticketId: ticketId ?? '', api, user, trackAction }),
+    [api, ticketId, trackAction, user],
+  );
 
   const readTicket = useCallback(async (): Promise<void> => {
     if (!ticketId) return;
@@ -343,19 +354,23 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
         <div className="review-head__place">{place}</div>
       </header>
 
-      {emergency && (
-        <div className="review-emergency" role="alert">
-          <span className="review-emergency__dot" aria-hidden="true" />
-          <div>
-            <b>
-              {emergency.level === 'confirmed' ? 'Авария подтверждена' : 'Возможна авария'} ·{' '}
-              {Math.round(emergency.confidence * 100)}%
-            </b>
-            {emergency.signs.length > 0 && (
-              <span className="review-emergency__signs">Признаки: {emergency.signs.map((sign) => `«${sign}»`).join(', ')}</span>
-            )}
+      {hasBanner ? (
+        <TicketSlot name="ticket.banner" widgets={widgets} context={slotContext} />
+      ) : (
+        emergency && (
+          <div className="review-emergency" role="alert">
+            <span className="review-emergency__dot" aria-hidden="true" />
+            <div>
+              <b>
+                {emergency.level === 'confirmed' ? 'Авария подтверждена' : 'Возможна авария'} ·{' '}
+                {Math.round(emergency.confidence * 100)}%
+              </b>
+              {emergency.signs.length > 0 && (
+                <span className="review-emergency__signs">Признаки: {emergency.signs.map((sign) => `«${sign}»`).join(', ')}</span>
+              )}
+            </div>
           </div>
-        </div>
+        )
       )}
 
       <div className="review-layout">
@@ -563,19 +578,23 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
               </>
             }
           >
-            <label className="review-reply">
-              <span className="review-reply__caption">Черновик ответа — можно поправить</span>
-              <textarea
-                className="review-reply__input"
-                rows={4}
-                value={reply}
-                onChange={(event) => {
-                  setReply(event.target.value);
-                  setReplyTouched(true);
-                  trackAction?.('input');
-                }}
-              />
-            </label>
+            {hasFooter ? (
+              <TicketSlot name="ticket.footer" widgets={widgets} context={slotContext} />
+            ) : (
+              <label className="review-reply">
+                <span className="review-reply__caption">Черновик ответа — можно поправить</span>
+                <textarea
+                  className="review-reply__input"
+                  rows={4}
+                  value={reply}
+                  onChange={(event) => {
+                    setReply(event.target.value);
+                    setReplyTouched(true);
+                    trackAction?.('input');
+                  }}
+                />
+              </label>
+            )}
           </StepBlock>
         </div>
 

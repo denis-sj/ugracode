@@ -7,6 +7,7 @@ import emergencyWeb from './emergency/web';
 import engineerDeskWeb from './engineer-desk/web';
 import exampleWeb from './_example/web';
 import reportsDashboardWeb from './reports-dashboard/web';
+import screenshotWeb from './screenshot/web';
 
 /** Манифест веб-частей модулей: одна строка на модуль, порядок алфавитный. */
 export const webModules: WebModule[] = [
@@ -18,6 +19,7 @@ export const webModules: WebModule[] = [
   engineerDeskWeb,
   exampleWeb,
   reportsDashboardWeb,
+  screenshotWeb,
 ];
 
 export {
@@ -29,4 +31,5 @@ export {
   engineerDeskWeb,
   exampleWeb,
   reportsDashboardWeb,
+  screenshotWeb,
 };
