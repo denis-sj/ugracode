@@ -38,6 +38,18 @@ export interface EndReply {
 
 /** Гостевой заявитель звонка: создаётся сидом модуля и лежит в `data/users.json`. */
 export const GUEST_USER_ID = 'u-call-guest';
+/** Запасной вход: общий демо-гость. Нужен, если база создана старым сидом без `u-call-guest`. */
+export const FALLBACK_GUEST_ID = 'guest';
+
+/** Кем входить странице звонка: сначала свой гость, затем общий — чтобы демо не падало на старой базе. */
+export function sessionUserIds(): readonly string[] {
+  return [GUEST_USER_ID, FALLBACK_GUEST_ID];
+}
+
+/** 404 от `POST /api/session`: такого пользователя в базе нет, пробуем следующего. */
+export function isMissingUser(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { status?: unknown }).status === 404;
+}
 
 export const GREETING = 'Здравствуйте, это ИИ-диспетчер. Разговор обрабатывает ИИ. Опишите, пожалуйста, проблему.';
 export const GREETING_REPEAT = 'Здравствуйте! Опишите, что случилось и в каком вы кабинете.';

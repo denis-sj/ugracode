@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  FALLBACK_GUEST_ID,
   GREETING,
+  GUEST_USER_ID,
   LINE_SILENCE,
   MAX_CALL_SECONDS,
   MIC_DENIED_NOTE,
@@ -9,9 +11,11 @@ import {
   appendLine,
   detectDevice,
   isCallPath,
+  isMissingUser,
   modeNote,
   phaseLabel,
   pickRussianVoice,
+  sessionUserIds,
   shouldAutoFinish,
   ticketLabel,
   timerText,
@@ -82,5 +86,13 @@ describe('страница звонка: подписи и арифметика'
     expect(ticketLabel('З-20261114-0001')).toBe('З-20261114-0001');
     expect(ticketLabel(null)).toBe('без номера');
     expect(GREETING).toContain('ИИ');
+  });
+
+  it('входит своим гостем, а на старой базе — общим', () => {
+    expect(sessionUserIds()).toEqual([GUEST_USER_ID, FALLBACK_GUEST_ID]);
+    expect(isMissingUser({ status: 404 })).toBe(true);
+    expect(isMissingUser({ status: 401 })).toBe(false);
+    expect(isMissingUser(new Error('нет связи'))).toBe(false);
+    expect(isMissingUser(null)).toBe(false);
   });
 });

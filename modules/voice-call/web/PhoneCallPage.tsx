@@ -5,16 +5,17 @@ import { Button, cx, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
   GREETING,
-  GUEST_USER_ID,
   LINE_SILENCE,
   MAX_CALL_SECONDS,
   SILENCE_TIMEOUT_MS,
   THINKING_SAY,
   appendLine,
   detectDevice,
+  isMissingUser,
   modeNote,
   phaseLabel,
   pickRussianVoice,
+  sessionUserIds,
   shouldAutoFinish,
   ticketLabel,
   timerText,
@@ -396,11 +397,21 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
 
-    try {
-      await api.post('/api/session', { userId: GUEST_USER_ID });
-    } catch (reason) {
+    let sessionError: unknown = null;
+    for (const userId of sessionUserIds()) {
+      try {
+        await api.post('/api/session', { userId });
+        sessionError = null;
+        break;
+      } catch (reason) {
+        sessionError = reason;
+        // Нет такого пользователя (старая база без сида модуля) — пробуем общего гостя.
+        if (!isMissingUser(reason)) break;
+      }
+    }
+    if (sessionError) {
       activeRef.current = false;
-      setError(errorText(reason));
+      setError(`Не удалось войти гостем: ${errorText(sessionError)}. На сервере нужен pnpm seed.`);
       go('failed');
       setBusy(false);
       return;
