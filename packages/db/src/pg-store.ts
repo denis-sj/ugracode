@@ -15,6 +15,8 @@ import type {
 import type { EventFilter, KernelStore, TicketFilter } from '@ugra/core';
 import type { AgentStepRecord } from '@ugra/core';
 import type {
+  ApplicantEquipment,
+  ApplicantProfile,
   KnowledgeArticle,
   KnowledgeSearchQuery,
   KnowledgeSimilarTicket,
@@ -24,6 +26,8 @@ import { DEFAULT_KNOWLEDGE_LIMIT } from '@ugra/core';
 import {
   mapAgentStepRow,
   mapAppealRow,
+  mapApplicantEquipmentRow,
+  mapApplicantProfileRow,
   mapEventLogRow,
   mapKbArticleRow,
   mapPipelineStepRow,
@@ -35,6 +39,8 @@ import {
 } from './mappers';
 import {
   agentStepTable,
+  applicantEquipmentTable,
+  applicantProfileTable,
   appealTable,
   eventLogTable,
   kbArticleTable,
@@ -206,6 +212,41 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
           position: user.position,
         },
       });
+  }
+
+  async getApplicantProfile(userId: string): Promise<ApplicantProfile | null> {
+    const rows = await this.db
+      .select()
+      .from(applicantProfileTable)
+      .where(eq(applicantProfileTable.userId, userId))
+      .limit(1);
+    const row = rows[0];
+    return row ? mapApplicantProfileRow(row) : null;
+  }
+
+  async saveApplicantProfile(profile: ApplicantProfile): Promise<void> {
+    const row = {
+      userId: profile.userId,
+      building: profile.building,
+      floor: profile.floor,
+      cabinet: profile.cabinet,
+      equipmentId: profile.equipmentId,
+      updatedAt: profile.updatedAt ?? new Date().toISOString(),
+    };
+    const { userId: _userId, ...rest } = row;
+    await this.db
+      .insert(applicantProfileTable)
+      .values(row)
+      .onConflictDoUpdate({ target: applicantProfileTable.userId, set: rest });
+  }
+
+  async listApplicantEquipment(userId: string): Promise<ApplicantEquipment[]> {
+    const rows = await this.db
+      .select()
+      .from(applicantEquipmentTable)
+      .where(eq(applicantEquipmentTable.userId, userId))
+      .orderBy(asc(applicantEquipmentTable.id));
+    return rows.map(mapApplicantEquipmentRow);
   }
 
   async saveAppeal(appeal: Appeal): Promise<void> {

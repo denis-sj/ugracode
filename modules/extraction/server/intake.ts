@@ -94,7 +94,13 @@ export function checkIntake(result: IntakeResultType, ctx: AgentContext): string
 export const intakeAgent: AgentProfile<IntakeResultType> = {
   id: 'intake',
   promptId: INTAKE_PROMPT_ID,
-  tools: ['dictionary_lookup', 'cmdb_find_equipment', 'cmdb_list_locations'],
+  tools: [
+    'dictionary_lookup',
+    'cmdb_find_equipment',
+    'cmdb_list_locations',
+    'kb_search',
+    'kb_get_article',
+  ],
   submit: IntakeResult,
   maxSteps: 6,
   async state(ctx) {

@@ -32,11 +32,40 @@ export interface EventFilter {
   limit?: number;
 }
 
+/**
+ * Профиль заявителя: место работы и основная техника для предзаполнения полей.
+ * Живёт в таблице `applicant_profile` (модуль `applicant-profile`).
+ */
+export interface ApplicantProfile {
+  userId: string;
+  building: string | null;
+  floor: string | null;
+  cabinet: string | null;
+  equipmentId: string | null;
+  /** Время последнего сохранения; при записи можно не указывать — хранилище поставит своё. */
+  updatedAt?: string;
+}
+
+/** Техника, закреплённая за заявителем (таблица `applicant_equipment`). */
+export interface ApplicantEquipment {
+  id: string;
+  userId: string;
+  equipmentId: string;
+  note: string | null;
+}
+
 /** Хранилище ядра. Реализации: память (тесты) и PostgreSQL (`@ugra/db`). */
 export interface KernelStore {
   listUsers(): Promise<User[]>;
   getUser(id: string): Promise<User | null>;
   saveUser(user: User): Promise<void>;
+
+  /** Профиль заявителя по id пользователя; нет профиля (гость) — `null`. */
+  getApplicantProfile(userId: string): Promise<ApplicantProfile | null>;
+  /** Сохраняет профиль заявителя (повторная запись обновляет его). */
+  saveApplicantProfile(profile: ApplicantProfile): Promise<void>;
+  /** Техника, закреплённая за заявителем (`applicant_equipment`). */
+  listApplicantEquipment(userId: string): Promise<ApplicantEquipment[]>;
 
   saveAppeal(appeal: Appeal): Promise<void>;
   getAppeal(id: string): Promise<Appeal | null>;
@@ -91,6 +120,8 @@ export class MemoryStore implements KernelStore {
   private readonly notifications = new Map<string, UserNotification>();
   private readonly settings = new Map<string, SettingRecord>();
   private readonly knowledge = new Map<string, KnowledgeArticle>();
+  private readonly applicantProfiles = new Map<string, ApplicantProfile>();
+  private readonly applicantEquipment = new Map<string, ApplicantEquipment>();
 
   async listUsers(): Promise<User[]> {
     return [...this.users.values()];
@@ -221,6 +252,30 @@ export class MemoryStore implements KernelStore {
     const record: SettingRecord = { key, value, updatedBy, updatedAt: new Date().toISOString() };
     this.settings.set(key, record);
     return record;
+  }
+
+  async getApplicantProfile(userId: string): Promise<ApplicantProfile | null> {
+    const profile = this.applicantProfiles.get(userId);
+    return profile ? { ...profile } : null;
+  }
+
+  async saveApplicantProfile(profile: ApplicantProfile): Promise<void> {
+    this.applicantProfiles.set(profile.userId, {
+      ...profile,
+      updatedAt: profile.updatedAt ?? new Date().toISOString(),
+    });
+  }
+
+  async listApplicantEquipment(userId: string): Promise<ApplicantEquipment[]> {
+    return [...this.applicantEquipment.values()]
+      .filter((item) => item.userId === userId)
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((item) => ({ ...item }));
+  }
+
+  /** Наполнение техники в памяти: сид и тесты, в интерфейсе `KernelStore` только чтение. */
+  async saveApplicantEquipment(item: ApplicantEquipment): Promise<void> {
+    this.applicantEquipment.set(item.id, { ...item });
   }
 
   async saveKnowledgeArticle(article: KnowledgeArticle): Promise<void> {

@@ -83,6 +83,7 @@ export function computePriority(input: PriorityInput): PriorityVerdict {
   const base = chooseBase(input);
   const reasons = [base.reason];
   let level = base.level;
+  let rule = base.rule;
 
   if (input.criticality === 'critical') {
     const raised = raise(input.matrix, level);
@@ -97,11 +98,13 @@ export function computePriority(input: PriorityInput): PriorityVerdict {
   if (input.incident) {
     if (level !== 'emergency') reasons.push('массовость: обращение связано с инцидентом');
     level = 'emergency';
+    rule = 'массовость → emergency';
   }
 
   if (input.emergencyLevel !== 'none') {
     reasons.push(`авария (${input.emergencyLevel}): приоритет «Авария»`);
     level = 'emergency';
+    rule = `авария (${input.emergencyLevel}) → emergency`;
   }
 
   const def = input.matrix.levels[level];
@@ -111,7 +114,7 @@ export function computePriority(input: PriorityInput): PriorityVerdict {
     value: level,
     reactDueAt: dueAt(input.now, def.reactMinutes),
     slaDueAt: dueAt(input.now, def.slaMinutes),
-    rule: base.rule,
+    rule,
     reasons,
   };
 }

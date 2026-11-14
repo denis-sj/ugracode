@@ -209,6 +209,28 @@ export const cmdbEquipmentTable = pgTable('cmdb_equipment', {
   criticality: text('criticality').notNull(),
 });
 
+/** Профиль заявителя: место работы для предзаполнения полей (модуль `applicant-profile`). */
+export const applicantProfileTable = pgTable('applicant_profile', {
+  userId: text('user_id').primaryKey(),
+  building: text('building'),
+  floor: text('floor'),
+  cabinet: text('cabinet'),
+  equipmentId: text('equipment_id'),
+  updatedAt: tstz('updated_at').notNull().defaultNow(),
+});
+
+/** Техника, закреплённая за заявителем; `note` — чем именно занята единица. */
+export const applicantEquipmentTable = pgTable(
+  'applicant_equipment',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    equipmentId: text('equipment_id').notNull(),
+    note: text('note'),
+  },
+  (table) => [index('applicant_equipment_user_id_idx').on(table.userId)],
+);
+
 /** Профиль инженера для маршрутизации. */
 export const engineerProfileTable = pgTable('engineer_profile', {
   userId: text('user_id').primaryKey(),
@@ -278,6 +300,8 @@ export const schema = {
   settingTable,
   cmdbLocationTable,
   cmdbEquipmentTable,
+  applicantProfileTable,
+  applicantEquipmentTable,
   engineerProfileTable,
   engineerSkillTable,
   dutyShiftTable,
@@ -294,3 +318,5 @@ export type PipelineStepRow = typeof pipelineStepTable.$inferSelect;
 export type AgentStepRow = typeof agentStepTable.$inferSelect;
 export type EventLogRow = typeof eventLogTable.$inferSelect;
 export type KbArticleRow = typeof kbArticleTable.$inferSelect;
+export type ApplicantProfileRow = typeof applicantProfileTable.$inferSelect;
+export type ApplicantEquipmentRow = typeof applicantEquipmentTable.$inferSelect;

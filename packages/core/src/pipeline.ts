@@ -5,6 +5,7 @@ import type { ReferenceData } from './data';
 import type { Ports } from './ports';
 import type { KernelStore } from './storage';
 import type { DraftPatch, PipelineStep, RunOptions, RunResult, StepProgress, StepResultLike } from './types';
+import type { ToolDef } from './agent';
 
 export interface PipelineDeps {
   bus: EventBus;
@@ -13,6 +14,8 @@ export interface PipelineDeps {
   steps: readonly PipelineStep[];
   store?: KernelStore;
   mode?: string;
+  /** Инструменты ядра и модулей: агенты шагов видят их через `StepContext.tools`. */
+  tools?: ReadonlyMap<string, ToolDef>;
   onProgress?: (progress: StepProgress & { runId: string; appealId: string }) => void;
 }
 
@@ -170,6 +173,7 @@ export class PipelineEngine {
       user: author,
       db: this.deps.store,
       bus: this.deps.bus,
+      tools: this.deps.tools,
       draft: draft as Readonly<AnalysisDraft>,
       ports: this.deps.ports,
       data: this.deps.data,

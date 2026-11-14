@@ -45,6 +45,7 @@ import {
 } from '@ugra/core';
 import { serverModules } from '../../../modules/registry.server';
 import { resolveRequestUser, sessionCookieHeader } from './auth';
+import { canSeeEvent } from './event-access';
 import { ProgressHub } from './hub';
 
 export interface BuildServerOptions {
@@ -138,6 +139,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     steps: [...coreSteps(), ...registries.steps],
     store: options.store,
     mode: env.AI_MODE ?? 'stub',
+    tools: registries.tools,
     onProgress: (progress) => hub.publish(progress),
   });
 

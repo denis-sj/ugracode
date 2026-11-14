@@ -1,6 +1,7 @@
 import type { AnalysisDraft, Appeal, DraftKey, Metric, Stage, TraceEntry, User } from '@ugra/contracts';
 import type { EventBus } from '@ugra/contracts';
 import type { KernelStore } from './storage';
+import type { ToolDef } from './agent';
 import type { ReferenceData } from './data';
 import type { Ports } from './ports';
 
@@ -26,6 +27,8 @@ export interface StepContext {
   db?: KernelStore;
   /** Шина событий — шаги модулей публикуют свои события. */
   bus?: EventBus;
+  /** Общий реестр инструментов (ядро + модули) для агентов. */
+  tools?: ReadonlyMap<string, ToolDef>;
   draft: Readonly<AnalysisDraft>;
   ports: Ports;
   data: ReferenceData;

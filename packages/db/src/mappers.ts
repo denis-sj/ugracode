@@ -14,9 +14,11 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
-import type { AgentStepRecord, KnowledgeArticle } from '@ugra/core';
+import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, KnowledgeArticle } from '@ugra/core';
 import type {
   AppealRow,
+  ApplicantEquipmentRow,
+  ApplicantProfileRow,
   EventLogRow,
   AgentStepRow,
   KbArticleRow,
@@ -166,6 +168,28 @@ export function mapKbArticleRow(row: KbArticleRow): KnowledgeArticle {
     steps: row.steps ?? [],
     solution: row.solution,
     category: row.category,
+  };
+}
+
+/** Строка БД → профиль заявителя. */
+export function mapApplicantProfileRow(row: ApplicantProfileRow): ApplicantProfile {
+  return {
+    userId: row.userId,
+    building: row.building,
+    floor: row.floor,
+    cabinet: row.cabinet,
+    equipmentId: row.equipmentId,
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+/** Строка БД → техника заявителя. */
+export function mapApplicantEquipmentRow(row: ApplicantEquipmentRow): ApplicantEquipment {
+  return {
+    id: row.id,
+    userId: row.userId,
+    equipmentId: row.equipmentId,
+    note: row.note,
   };
 }
 

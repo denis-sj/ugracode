@@ -34,6 +34,8 @@ export const IntakeResult = z.object({
   emergency: IntakeEmergency,
   clarify: IntakeClarify.nullable(),
   summary: z.string().max(300),
+  /** Статьи базы знаний, которые агент выбрал инструментом `kb_search`. */
+  articles: z.array(z.object({ id: z.string().min(1), title: z.string().optional() })).max(5).optional(),
 });
 export type IntakeResult = z.infer<typeof IntakeResult>;
 

@@ -16,8 +16,8 @@ export const EngineerProfile = z.object({
   id: z.string().min(1),
   fullName: z.string().min(1),
   departmentId: z.string().default(''),
-  /** Разряд/грейд инженера; в оценке не участвует, нужен карточке специалиста. */
-  level: z.number().int().min(0).default(1),
+  /** Грейд инженера (`first_line`/`second_line`/`lead` или число); в оценке не участвует. */
+  level: z.union([z.number().int().min(0), z.enum(['first_line', 'second_line', 'lead'])]).default(1),
   skills: z.array(EngineerSkill).default([]),
   buildings: z.array(z.string()).default([]),
   onShift: z.boolean().default(false),

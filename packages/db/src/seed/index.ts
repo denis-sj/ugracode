@@ -12,6 +12,8 @@ import {
 import { runMigrations } from '../migrate';
 import { createPgStore, DEFAULT_DATABASE_URL } from '../pg-store';
 import {
+  applicantEquipmentTable,
+  applicantProfileTable,
   cmdbEquipmentTable,
   cmdbLocationTable,
   dictionaryItemTable,
@@ -36,6 +38,8 @@ const RESET_TABLES = [
   'pipeline_run',
   'notification',
   'ai_cache',
+  'applicant_equipment',
+  'applicant_profile',
   'engineer_skill',
   'engineer_profile',
   'duty_shift',
@@ -79,6 +83,12 @@ async function loadEnabledModules(): Promise<ServerModule[]> {
       FEATURES_OFF: process.env.FEATURES_OFF,
       FEATURES_ON: process.env.FEATURES_ON,
     });
+    // История заявок — демо-данные, а не фича: сид наполняет её всегда, даже когда модуль
+    // выключен флагом (маршрутов и шагов у `history-seed` нет).
+    const history = modules.find((module) => module.id === 'history-seed');
+    if (history && !enabled.some((module) => module.id === history.id)) {
+      enabled.push(history);
+    }
     return enabled;
   } catch (error) {
     console.warn('Не удалось загрузить реестр модулей:', error);
@@ -113,6 +123,50 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
           position: user.position,
         })
         .onConflictDoNothing({ target: userTable.id });
+    }
+
+    // Профиль заявителя (модуль `applicant-profile`): место работы и закреплённая техника.
+    // Гость и служебные роли профиля не имеют — им всё задаётся вопросами в чате.
+    for (const user of data.users) {
+      const profile = user.profile;
+      if (!profile) continue;
+      const nowIso = new Date().toISOString();
+      const equipmentId = profile.equipmentId ?? null;
+      await db
+        .insert(applicantProfileTable)
+        .values({
+          userId: user.id,
+          building: profile.building,
+          floor: profile.floor,
+          cabinet: profile.cabinet,
+          equipmentId,
+          updatedAt: nowIso,
+        })
+        .onConflictDoUpdate({
+          target: applicantProfileTable.userId,
+          set: {
+            building: profile.building,
+            floor: profile.floor,
+            cabinet: profile.cabinet,
+            equipmentId,
+            updatedAt: nowIso,
+          },
+        });
+
+      if (!equipmentId) continue;
+      const row = {
+        id: `aeq-${user.id}-${equipmentId}`,
+        userId: user.id,
+        equipmentId,
+        note: 'Основное рабочее место',
+      };
+      await db
+        .insert(applicantEquipmentTable)
+        .values(row)
+        .onConflictDoUpdate({
+          target: applicantEquipmentTable.id,
+          set: { userId: row.userId, equipmentId: row.equipmentId, note: row.note },
+        });
     }
 
     for (const field of data.fields) {

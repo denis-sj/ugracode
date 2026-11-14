@@ -86,7 +86,7 @@ const intakeStep: PipelineStep = {
       { text, context: agentContextOf(ctx, text) },
       {
         llm: ctx.ports.llm,
-        tools: intakeTools(),
+        tools: ctx.tools ?? intakeTools(),
         runId: ctx.runId,
         store: runtime.db,
         onStep: (step) => reportStep(ctx, step.tool, step.resultSummary),
@@ -101,6 +101,12 @@ const intakeStep: PipelineStep = {
     reportFields(ctx, fields);
     return {
       fields,
+      knowledge: (run.result.articles ?? []).map((article, index) => ({
+        kind: 'article' as const,
+        id: article.id,
+        title: article.title ?? article.id,
+        score: 1 - index * 0.1,
+      })),
       ext: {
         ...ctx.draft.ext,
         extraction: {

@@ -49,6 +49,8 @@ export interface ModuleContractOptions {
   promptRoot?: string;
   /** Обращение для проверок, которым нужен текст заявителя. */
   sampleAppeal?: Appeal;
+  /** Модули-поставщики инструментов (например, `knowledge` для `kb_search`). */
+  providers?: ServerModule[];
 }
 
 export interface RunModuleContractOptions {
@@ -158,7 +160,7 @@ function assertEvents(module: ServerModule): void {
 const VALID_PERMISSIONS = new Set<string>(Object.values(ROLE_PERMISSIONS).flat());
 
 /** Инструменты и агенты: описание, схема, право, ссылки на существующие инструменты. */
-function assertToolsAndAgents(module: ServerModule): void {
+function assertToolsAndAgents(module: ServerModule, providers: ServerModule[] = []): void {
   const names = new Set<string>();
   for (const tool of module.tools) {
     ensure(module.id, tool.name.trim() !== '', 'инструмент без имени');
@@ -179,7 +181,7 @@ function assertToolsAndAgents(module: ServerModule): void {
 
   let registryTools: ReadonlySet<string>;
   try {
-    registryTools = new Set(buildRegistries([module]).tools.keys());
+    registryTools = new Set(buildRegistries([...providers, module]).tools.keys());
   } catch (error) {
     fail(module.id, `реестр инструментов не собрался: ${errorMessage(error)}`);
   }
@@ -281,7 +283,7 @@ export async function assertModuleContract(
 
   assertSteps(module);
   assertEvents(module);
-  assertToolsAndAgents(module);
+  assertToolsAndAgents(module, opts.providers);
   assertRoutes(module);
   assertReadme(module, opts.readmePath);
   assertPrompts(module, opts.promptRoot);
@@ -319,8 +321,21 @@ export async function runModuleContract(
 
   const draft = await runOnce(opts.modules, appeal, data, ports, store, noExclusions);
 
+  const ownerByTool = new Map<string, string>();
+  for (const module of opts.modules) {
+    for (const tool of module.tools) ownerByTool.set(tool.name, module.id);
+  }
+
   for (const module of opts.modules) {
     const rest = opts.modules.filter((item) => item.id !== module.id);
+    // Модуль-поставщик инструментов не выключаем отдельно: его агенты-потребители
+    // (например, `intake` и `kb_search`) тогда ссылаются на несуществующий инструмент.
+    const requiredByOthers = rest.some((item) =>
+      item.agents.some((agent) =>
+        agent.tools.some((name) => ownerByTool.get(name) === module.id),
+      ),
+    );
+    if (requiredByOthers) continue;
     const moduleSteps: ReadonlySet<string> = new Set(module.steps.map((step) => step.id));
     await runOnce(rest, appeal, data, ports, store, moduleSteps);
   }
