@@ -314,6 +314,26 @@ export const TicketField = z.object({
 });
 export type TicketField = z.infer<typeof TicketField>;
 
+export const UserNotification = z.object({
+  id: z.string(),
+  toUserId: z.string(),
+  channel: z.enum(['email', 'telegram', 'inapp']),
+  title: z.string(),
+  body: z.string(),
+  ticketId: z.string().nullable(),
+  readAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type UserNotification = z.infer<typeof UserNotification>;
+
+export const SettingRecord = z.object({
+  key: z.string(),
+  value: z.unknown(),
+  updatedBy: z.string().nullable(),
+  updatedAt: z.string(),
+});
+export type SettingRecord = z.infer<typeof SettingRecord>;
+
 export const TicketDetail = z.object({
   ticket: Ticket,
   appeal: Appeal,

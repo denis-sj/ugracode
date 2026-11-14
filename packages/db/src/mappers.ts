@@ -30,7 +30,13 @@ import type {
  */
 export function toIso(value: unknown): string {
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'string') return value;
+  if (typeof value === 'string') {
+    // PostgreSQL отдаёт `2026-11-14 10:55:44.399+00`; приводим к ISO-виду.
+    let normalized = value.trim().replace(' ', 'T');
+    if (/[+-]\d{2}$/.test(normalized)) normalized += ':00';
+    const parsed = new Date(normalized);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+  }
   throw new Error(`Ожидалась дата, получено: ${String(value)}`);
 }
 

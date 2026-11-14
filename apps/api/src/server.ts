@@ -2,14 +2,22 @@ import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { z } from 'zod';
 import {
+  ConfirmTicketInput,
   CreateAppealInput,
   HealthResponse,
+  NotificationsResponse,
   PriorityLevel,
+  ReanalyzeResponse,
   Role,
   SessionInput,
   SessionResponse,
+  SettingsResponse,
+  TicketField,
   TicketListQuery,
   TicketResponse,
+  TransitionInput,
+  UpdateFieldInput,
+  UpdateSettingInput,
   type Appeal,
   type DictionaryItem,
   type Permission,
@@ -83,6 +91,15 @@ function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
+function httpError(message: string, statusCode: number): Error {
+  return Object.assign(new Error(message), { statusCode });
+}
+
+function requireUser(user: User | null): User {
+  if (!user) throw httpError('Нужен вход', 401);
+  return user;
+}
+
 export async function buildServer(options: BuildServerOptions): Promise<AppContext> {
   const env = options.env ?? process.env;
   const clock = options.ports.clock;
@@ -106,6 +123,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     clock,
   };
   subscribeModules(enabled, bus, deps);
+  subscribeNotifications(bus, options.store, options.ports, clock);
   const engine = new PipelineEngine({
     bus,
     ports: options.ports,
@@ -321,6 +339,136 @@ function registerCoreRoutes(
       };
     },
   });
+
+  addRoute({
+    method: 'PATCH',
+    url: '/api/tickets/:id/fields/:key',
+    access: 'tickets.edit',
+    body: UpdateFieldInput,
+    response: TicketField,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { value: string | number | null };
+      try {
+        return await tickets.setField(params.id ?? '', params.key ?? '', input.value, {
+          kind: 'user',
+          id: actor.id,
+        });
+      } catch (error) {
+        throw httpError(error instanceof Error ? error.message : 'Не удалось изменить поле', 404);
+      }
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/confirm',
+    access: 'tickets.confirm',
+    body: ConfirmTicketInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { assigneeId: string };
+      const assignee = await store.getUser(input.assigneeId);
+      if (!assignee || assignee.role !== 'engineer') throw httpError('Исполнитель не найден', 400);
+      return tickets.confirm(params.id ?? '', input.assigneeId, { kind: 'user', id: actor.id }, actor.role);
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/transition',
+    access: 'tickets.transition',
+    body: TransitionInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { to: Parameters<typeof tickets.transition>[1] };
+      try {
+        return await tickets.transition(params.id ?? '', input.to, { kind: 'user', id: actor.id }, actor.role);
+      } catch (error) {
+        throw httpError(error instanceof Error ? error.message : 'Переход запрещён', 403);
+      }
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/reanalyze',
+    access: 'tickets.edit',
+    response: ReanalyzeResponse,
+    handler: async ({ params, user }) => {
+      const actor = requireUser(user);
+      const ticket = await store.getTicket(params.id ?? '');
+      if (!ticket) throw httpError('Заявка не найдена', 404);
+      const appeal = await store.getAppeal(ticket.appealId);
+      if (!appeal) throw httpError('Обращение не найдено', 404);
+      const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'user', id: actor.id } });
+      await tickets.applyAnalysis(ticket.id, run.draft, { kind: 'user', id: actor.id });
+      return { runId: run.runId, ticketId: ticket.id };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/tickets/:id/events',
+    access: 'tickets.events',
+    handler: async ({ params }) => ({
+      events: await store.listEvents({ ticketId: params.id ?? '', limit: 500 }),
+    }),
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/notifications',
+    access: 'any',
+    response: NotificationsResponse,
+    handler: async ({ user }) => {
+      const actor = requireUser(user);
+      return { notifications: await store.listNotifications(actor.id) };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/notifications/:id/read',
+    access: 'any',
+    handler: async ({ params, user }) => {
+      const actor = requireUser(user);
+      const updated = await store.markNotificationRead(params.id ?? '', actor.id);
+      if (!updated) throw httpError('Уведомление не найдено', 404);
+      return updated;
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/settings',
+    access: 'settings',
+    response: SettingsResponse,
+    handler: async () => ({ settings: await store.listSettings() }),
+  });
+
+  addRoute({
+    method: 'PUT',
+    url: '/api/settings/:key',
+    access: 'settings',
+    body: UpdateSettingInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const key = params.key ?? '';
+      if (actor.role === 'manager' && key !== 'confidenceThreshold') {
+        throw httpError('Руководитель может менять только порог уверенности', 403);
+      }
+      const input = body as { value: unknown };
+      const record = await store.setSetting(key, input.value, actor.id);
+      data.settings[key] = input.value;
+      await ctx.bus.publish({
+        type: 'setting.changed',
+        actor: { kind: 'user', id: actor.id },
+        payload: { key, value: input.value },
+      });
+      return record;
+    },
+  });
 }
 
 function registerStreamRoute(ctx: AppContext, store: KernelStore): void {
@@ -376,3 +524,42 @@ function registerStreamRoute(ctx: AppContext, store: KernelStore): void {
 
 }
 
+
+/** Уведомление исполнителю при назначении заявки: в журнал, в интерфейс и через порт. */
+function subscribeNotifications(
+  bus: KernelEventBus,
+  store: KernelStore,
+  ports: Ports,
+  clock: { now(): Date },
+): void {
+  bus.subscribe('ticket.assigned', async (event) => {
+    const payload = asRecord(event.payload);
+    const assigneeId = typeof payload.assigneeId === 'string' ? payload.assigneeId : null;
+    if (!assigneeId || !event.ticketId) return;
+    const assignee = await store.getUser(assigneeId);
+    const ticket = await store.getTicket(event.ticketId);
+    if (!assignee || !ticket) return;
+    const notification = {
+      id: randomUUID(),
+      toUserId: assignee.id,
+      channel: 'inapp' as const,
+      title: 'Назначена заявка',
+      body: `Заявка ${ticket.number}: ${ticket.category ?? 'без категории'}`,
+      ticketId: ticket.id,
+      readAt: null,
+      createdAt: clock.now().toISOString(),
+    };
+    await store.saveNotification(notification);
+    try {
+      await ports.notifications.send({
+        toUserId: assignee.id,
+        channel: 'inapp',
+        title: notification.title,
+        body: notification.body,
+        ticketId: ticket.id,
+      });
+    } catch {
+      // канал уведомлений — заглушка; ошибка не должна ломать назначение
+    }
+  });
+}

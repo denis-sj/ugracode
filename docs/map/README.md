@@ -34,6 +34,8 @@ apps (api, web) → modules → adapters, db → core → contracts
 |---|---|
 | Сервер | `apps/api/src/index.ts` → `buildServer()` в `apps/api/src/server.ts` |
 | Сквозной срез | `POST /api/appeals` → `PipelineEngine.run()` → `TicketService.applyAnalysis()` |
+| Проверка диспетчером | `apps/api/src/server.ts`: `PATCH /api/tickets/:id/fields/:key`, `POST /confirm`, `POST /transition`, `POST /reanalyze`, `GET /tickets/:id/events` |
+| Уведомления и настройки | подписчик `ticket.assigned` → таблица `notification`; `GET/PUT /api/settings` |
 | Пайплайн | `packages/core/src/pipeline.ts` (стадии, `order`, таймаут, `fallback`, `rerun`) |
 | Шина событий | `packages/core/src/bus.ts` (запись в `event_log`, затем подписчики) |
 | Реестры | `packages/core/src/registry.ts` (`buildRegistries`, `collectRoutes`, `subscribeModules`) |

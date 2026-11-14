@@ -4,12 +4,14 @@ import {
   Channel,
   PriorityLevel,
   Role,
+  SettingRecord,
   StepRun,
   Ticket,
   TicketDetail,
   TicketField,
   TicketStatus,
   User,
+  UserNotification,
 } from './domain';
 import { DictionaryItem, FieldDef } from './fields';
 
@@ -60,6 +62,27 @@ export const TicketResponse = z.object({
 export type TicketResponse = z.infer<typeof TicketResponse>;
 
 export type { TicketDetail };
+
+export const NotificationsResponse = z.object({ notifications: z.array(UserNotification) });
+export type NotificationsResponse = z.infer<typeof NotificationsResponse>;
+
+export const SettingsResponse = z.object({ settings: z.array(SettingRecord) });
+export type SettingsResponse = z.infer<typeof SettingsResponse>;
+
+export const UpdateFieldInput = z.object({ value: z.union([z.string(), z.number()]).nullable() });
+export type UpdateFieldInput = z.infer<typeof UpdateFieldInput>;
+
+export const ConfirmTicketInput = z.object({ assigneeId: z.string().min(1) });
+export type ConfirmTicketInput = z.infer<typeof ConfirmTicketInput>;
+
+export const TransitionInput = z.object({ to: TicketStatus });
+export type TransitionInput = z.infer<typeof TransitionInput>;
+
+export const ReanalyzeResponse = z.object({ runId: z.string(), ticketId: z.string() });
+export type ReanalyzeResponse = z.infer<typeof ReanalyzeResponse>;
+
+export const UpdateSettingInput = z.object({ value: z.unknown() });
+export type UpdateSettingInput = z.infer<typeof UpdateSettingInput>;
 
 export const MetaResponse = z.object({
   modules: z.array(z.object({ id: z.string(), title: z.string() })),

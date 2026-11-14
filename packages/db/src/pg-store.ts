@@ -1,7 +1,17 @@
 import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import type { DomainEvent, PipelineRun, StepRun, Ticket, TicketField, User, Appeal } from '@ugra/contracts';
+import type {
+  Appeal,
+  DomainEvent,
+  PipelineRun,
+  SettingRecord,
+  StepRun,
+  Ticket,
+  TicketField,
+  User,
+  UserNotification,
+} from '@ugra/contracts';
 import type { EventFilter, KernelStore, TicketFilter } from '@ugra/core';
 import {
   mapAppealRow,
@@ -10,10 +20,14 @@ import {
   mapTicketFieldRow,
   mapTicketRow,
   mapUserRow,
+  toIso,
+  toIsoOrNull,
 } from './mappers';
 import {
   appealTable,
   eventLogTable,
+  notificationTable,
+  settingTable,
   pipelineRunTable,
   pipelineStepTable,
   schema,
@@ -306,6 +320,89 @@ export class PgStore implements KernelStore {
       .limit(filter.limit ?? 1000);
     const mapped = rows.map(mapEventLogRow);
     return mapped.reverse();
+  }
+
+  async saveNotification(notification: UserNotification): Promise<void> {
+    await this.db
+      .insert(notificationTable)
+      .values({
+        id: notification.id,
+        toUserId: notification.toUserId,
+        channel: notification.channel,
+        title: notification.title,
+        body: notification.body,
+        ticketId: notification.ticketId,
+        readAt: notification.readAt,
+        createdAt: notification.createdAt,
+      })
+      .onConflictDoNothing({ target: notificationTable.id });
+  }
+
+  async listNotifications(userId?: string): Promise<UserNotification[]> {
+    const rows = await this.db
+      .select()
+      .from(notificationTable)
+      .where(userId ? eq(notificationTable.toUserId, userId) : undefined)
+      .orderBy(desc(notificationTable.createdAt));
+    return rows.map((row) => ({
+      id: row.id,
+      toUserId: row.toUserId,
+      channel: row.channel as UserNotification['channel'],
+      title: row.title,
+      body: row.body,
+      ticketId: row.ticketId,
+      readAt: toIsoOrNull(row.readAt),
+      createdAt: toIso(row.createdAt),
+    }));
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<UserNotification | null> {
+    const rows = await this.db
+      .update(notificationTable)
+      .set({ readAt: new Date().toISOString() })
+      .where(and(eq(notificationTable.id, id), eq(notificationTable.toUserId, userId)))
+      .returning();
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      id: row.id,
+      toUserId: row.toUserId,
+      channel: row.channel as UserNotification['channel'],
+      title: row.title,
+      body: row.body,
+      ticketId: row.ticketId,
+      readAt: toIsoOrNull(row.readAt),
+      createdAt: toIso(row.createdAt),
+    };
+  }
+
+  async listSettings(): Promise<SettingRecord[]> {
+    const rows = await this.db.select().from(settingTable).orderBy(asc(settingTable.key));
+    return rows.map((row) => ({
+      key: row.key,
+      value: row.value,
+      updatedBy: row.updatedBy,
+      updatedAt: toIso(row.updatedAt),
+    }));
+  }
+
+  async setSetting(key: string, value: unknown, updatedBy: string | null): Promise<SettingRecord> {
+    const rows = await this.db
+      .insert(settingTable)
+      .values({ key, value, updatedBy, updatedAt: new Date().toISOString() })
+      .onConflictDoUpdate({
+        target: settingTable.key,
+        set: { value, updatedBy, updatedAt: new Date().toISOString() },
+      })
+      .returning();
+    const row = rows[0];
+    if (!row) throw new Error(`Не удалось сохранить настройку ${key}`);
+    return {
+      key: row.key,
+      value: row.value,
+      updatedBy: row.updatedBy,
+      updatedAt: toIso(row.updatedAt),
+    };
   }
 }
 
