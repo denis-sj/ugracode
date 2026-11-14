@@ -25,10 +25,20 @@ function errorText(error: unknown): string {
 }
 
 /** Звонки с опросом раз в секунду; ошибка сети не стирает то, что уже на экране. */
-function useCalls(api: WebPageProps['api']): { calls: CallView[]; error: string | null; loaded: boolean } {
+interface CallsState {
+  calls: CallView[];
+  error: string | null;
+  forbidden: boolean;
+  loaded: boolean;
+  updatedAt: number | null;
+}
+
+function useCalls(api: WebPageProps['api']): CallsState {
   const [calls, setCalls] = useState<CallView[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
     const load = (): void => {
@@ -38,10 +48,14 @@ function useCalls(api: WebPageProps['api']): { calls: CallView[]; error: string 
           if (!alive) return;
           setCalls(response.calls);
           setError(null);
+          setForbidden(false);
           setLoaded(true);
+          setUpdatedAt(Date.now());
         })
         .catch((reason: unknown) => {
           if (!alive) return;
+          const status = (reason as { status?: number }).status;
+          setForbidden(status === 401 || status === 403);
           setError(errorText(reason));
           setLoaded(true);
         });
@@ -53,7 +67,7 @@ function useCalls(api: WebPageProps['api']): { calls: CallView[]; error: string 
       clearInterval(timer);
     };
   }, [api]);
-  return { calls, error, loaded };
+  return { calls, error, forbidden, loaded, updatedAt };
 }
 
 /** Публичный адрес страницы звонка: туннель меняет его при каждом запуске — спрашиваем раз в 15 с. */
@@ -309,7 +323,7 @@ function IncomingBanner({ call, onOpen, onClose }: { call: CallView; onOpen: () 
 
 /** Экран «Входящий звонок»: QR для жюри, реплики ИИ вживую, после звонка — ссылка на заявку. */
 export function CallsPage({ api, navigate, trackAction }: WebPageProps): JSX.Element {
-  const { calls, error, loaded } = useCalls(api);
+  const { calls, error, forbidden, loaded, updatedAt } = useCalls(api);
   const publicUrl = usePublicUrl(api);
   const ring = useRinger();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -351,12 +365,32 @@ export function CallsPage({ api, navigate, trackAction }: WebPageProps): JSX.Ele
             заявка уже в очереди.
           </p>
         </div>
-        {error && <Badge tone="warn">Нет связи с сервером: {error}</Badge>}
+        {forbidden ? (
+          <Badge tone="warn">Нет доступа к звонкам: войдите диспетчером</Badge>
+        ) : error ? (
+          <Badge tone="warn">Нет связи с сервером: {error}</Badge>
+        ) : (
+          loaded && (
+            <span className="voice-live" title="Экран опрашивает звонки раз в секунду">
+              <i className="voice-live__dot" aria-hidden="true" />
+              обновляется вживую
+              {updatedAt !== null && (
+                <span className="voice-live__time">{new Date(updatedAt).toLocaleTimeString('ru-RU')}</span>
+              )}
+            </span>
+          )
+        )}
       </header>
 
       <div className="voice-layout voice-layout--calls">
         <div className="voice-layout__main">
-          {!loaded ? (
+          {forbidden ? (
+            <EmptyState
+              icon="☎"
+              title="Нужен вход диспетчером"
+              hint="Звонки видит только диспетчер: выберите Анну Миронову на экране входа и откройте вкладку «Звонок» снова."
+            />
+          ) : !loaded ? (
             <p className="voice-call__hint">Загружаем звонки…</p>
           ) : current ? (
             <div className="voice-stack">

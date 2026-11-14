@@ -950,3 +950,26 @@
     animation: none;
   }
 }
+
+/* Индикатор живого экрана: видно, что опрос идёт и во сколько было последнее обновление. */
+.voice-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.voice-live__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ok);
+}
+
+.voice-live__time {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-dim);
+}
