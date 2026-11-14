@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { duration, formatPhone, pickCall, sourceLabel, statusText, type CallView } from '../web/format';
+import {
+  activeCall,
+  callUrlOf,
+  callerLabel,
+  duration,
+  findNewCall,
+  pickCall,
+  sourceLabel,
+  statusText,
+  type CallView,
+} from '../web/format';
 
 function call(patch: Partial<CallView>): CallView {
   return {
@@ -32,12 +42,27 @@ describe('формат экрана звонков', () => {
     expect(duration(call({ endedAt: null }), Date.parse('2026-11-14T10:00:09.500Z'))).toBe('0:09');
   });
 
-  it('форматирует номер', () => {
-    expect(formatPhone('+79120001122')).toBe('+7 912 000-11-22');
-    expect(formatPhone('89120001122')).toBe('+7 912 000-11-22');
-    expect(formatPhone('anonymous')).toBe('номер скрыт');
-    expect(formatPhone('')).toBe('номер скрыт');
-    expect(formatPhone('112')).toBe('112');
+  it('подписывает звонящего устройством, а не номером', () => {
+    expect(callerLabel('iPhone')).toBe('iPhone');
+    expect(callerLabel('  Android ')).toBe('Android');
+    expect(callerLabel('')).toBe('устройство не определено');
+    expect(callerLabel('anonymous')).toBe('устройство не определено');
+  });
+
+  it('находит новый входящий звонок для всплывающей плашки', () => {
+    const ended = call({ id: 'old' });
+    const active = call({ id: 'live', status: 'active', endedAt: null });
+    expect(activeCall([ended, active])?.id).toBe('live');
+    expect(activeCall([ended])).toBeNull();
+    expect(findNewCall([ended], [ended, active])?.id).toBe('live');
+    expect(findNewCall([active], [active])).toBeNull();
+    expect(findNewCall([], [ended])).toBeNull();
+  });
+
+  it('берёт адрес звонка для QR и молчит без туннеля', () => {
+    expect(callUrlOf({ callUrl: 'https://demo.trycloudflare.com/call' })).toBe('https://demo.trycloudflare.com/call');
+    expect(callUrlOf({ callUrl: '  ' })).toBeNull();
+    expect(callUrlOf(null)).toBeNull();
   });
 
   it('подписывает источник реплики ИИ', () => {

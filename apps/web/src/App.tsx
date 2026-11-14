@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, SessionResponse, User, UsersResponse } from '@ugra/contracts';
 import { ThemeToggle, useBlockMotion } from '@ugra/ui';
+import { PhoneCallPage } from '../../../modules/voice-call/web/PhoneCallPage';
+import { isCallPath } from '../../../modules/voice-call/web/call-flow';
 import { ApiError, api } from './api';
 import { LoginScreen } from './LoginScreen';
 import { useHashRoute } from './router';
@@ -27,6 +29,11 @@ export function App(): JSX.Element {
   const route = useHashRoute();
   const contentRef = useRef<HTMLDivElement | null>(null);
   useBlockMotion(contentRef);
+  // QR жюри ведёт на `/call`: публичная страница звонка без входа и без оболочки диспетчерской.
+  const callPage = isCallPath(
+    typeof window === 'undefined' ? '' : window.location.pathname,
+    typeof window === 'undefined' ? '' : window.location.hash,
+  );
 
   const bootLoad = useCallback(async (): Promise<void> => {
     setBoot({ status: 'loading' });
@@ -52,8 +59,9 @@ export function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    if (callPage) return;
     void bootLoad();
-  }, [bootLoad]);
+  }, [bootLoad, callPage]);
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -75,6 +83,16 @@ export function App(): JSX.Element {
       setBusyUserId(null);
     }
   }, []);
+
+  if (callPage) {
+    return (
+      <div className="app app--call">
+        <div className="app__content">
+          <PhoneCallPage api={api} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">

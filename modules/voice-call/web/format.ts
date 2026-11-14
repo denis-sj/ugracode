@@ -19,9 +19,19 @@ export interface CallView {
   lines: CallLineView[];
 }
 
+/** `GET /api/m/voice-call/public-url` (схема — `server/view.ts`). */
+export interface PublicUrlView {
+  url: string | null;
+  callUrl: string | null;
+  source: 'env' | 'tunnel' | null;
+}
+
 export const CALLS_URL = '/api/m/voice-call/calls';
+export const PUBLIC_URL_URL = '/api/m/voice-call/public-url';
 /** Опрос раз в секунду: реплики появляются почти вживую без отдельного потока. */
 export const POLL_MS = 1000;
+/** Адрес туннеля меняется — спрашиваем не чаще раза в 15 с. */
+export const PUBLIC_URL_POLL_MS = 15_000;
 
 /** Звонок для главной карточки: идущий сейчас, иначе последний. */
 export function pickCall(calls: readonly CallView[], selectedId: string | null): CallView | null {
@@ -39,13 +49,33 @@ export function duration(call: Pick<CallView, 'startedAt' | 'endedAt'>, now: num
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-/** «+79120001122» → «+7 912 000-11-22»; прочее — как есть, пустое и скрытое — «номер скрыт». */
-export function formatPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (raw.trim() === '' || raw.toLowerCase() === 'anonymous') return 'номер скрыт';
-  const local = digits.length === 11 && /^[78]/.test(digits) ? digits.slice(1) : digits.length === 10 ? digits : null;
-  if (!local) return raw.trim();
-  return `+7 ${local.slice(0, 3)} ${local.slice(3, 6)}-${local.slice(6, 8)}-${local.slice(8)}`;
+/** Подпись звонящего: QR открыли с телефона или ноутбука — номер у нас не спрашивают. */
+export function callerLabel(raw: string): string {
+  const value = raw.trim();
+  if (value === '' || value.toLowerCase() === 'anonymous') return 'устройство не определено';
+  return value;
+}
+
+/** Кто звонит сейчас: карточка «входящий» показывает активный звонок. */
+export function activeCall(calls: readonly CallView[]): CallView | null {
+  return calls.find((call) => call.status === 'active') ?? null;
+}
+
+/**
+ * Новый входящий звонок: активный, которого не было в прошлом опросе.
+ * По нему диспетчеру показываем всплывающую плашку и короткий звук.
+ */
+export function findNewCall(previous: readonly CallView[], current: readonly CallView[]): CallView | null {
+  const active = activeCall(current);
+  if (!active) return null;
+  const known = previous.some((call) => call.id === active.id && call.status === 'active');
+  return known ? null : active;
+}
+
+/** Адрес страницы звонка из `GET /api/m/voice-call/public-url`; null — туннель не запущен. */
+export function callUrlOf(publicUrl: { callUrl: string | null } | null): string | null {
+  const url = publicUrl?.callUrl?.trim() ?? '';
+  return url === '' ? null : url;
 }
 
 /** Подпись под репликой ИИ: откуда фраза и сколько думала модель. */
