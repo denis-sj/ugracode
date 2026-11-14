@@ -160,7 +160,7 @@ sequenceDiagram
 | г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |
 | г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../history/2026-11.md) |
 | г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../history/2026-11.md) |
-| г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |
+| г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../history/2026-11.md) |
 | д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../history/2026-11.md) |
 | д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../history/2026-11.md) |
 | д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../history/2026-11.md) |

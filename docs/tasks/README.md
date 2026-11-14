@@ -68,7 +68,6 @@ PR: —
 **После брейншторма** (что и почему — [../specs/case9-features.md](../specs/case9-features.md); в задачах 006–023 в конце добавлен раздел «Изменения после брейншторма»):
 
  — **MUST, идёт первой и одна:** правка ядра и контрактов
-- [029-knowledge-extras.md](029-knowledge-extras.md) — COULD: чек-лист шагов, вопрос базе знаний
 
 **Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
 
