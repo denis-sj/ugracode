@@ -13,6 +13,7 @@ import qualityWeb from './quality/web';
 import reportsDashboardWeb from './reports-dashboard/web';
 import reportsHubWeb from './reports-hub/web';
 import screenshotWeb from './screenshot/web';
+import voiceCallWeb from './voice-call/web';
 
 /** Манифест веб-частей модулей: одна строка на модуль, порядок алфавитный. */
 export const webModules: WebModule[] = [
@@ -30,6 +31,7 @@ export const webModules: WebModule[] = [
   reportsDashboardWeb,
   reportsHubWeb,
   screenshotWeb,
+  voiceCallWeb,
 ];
 
 export {
@@ -47,4 +49,5 @@ export {
   reportsDashboardWeb,
   reportsHubWeb,
   screenshotWeb,
+  voiceCallWeb,
 };

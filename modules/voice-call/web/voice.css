@@ -1,0 +1,265 @@
+/*
+ * Стили веб-части `voice-call`. Только переменные из `@ugra/ui` (tokens.css).
+ * Бесконечная анимация одна — точки «ИИ думает» (разрешено правилами анимаций).
+ */
+
+.voice-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 1376px;
+  margin: 0 auto;
+}
+
+.voice-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.voice-lead {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  max-width: 720px;
+}
+
+.voice-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .voice-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Карточка звонка ---------- */
+
+.voice-call {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.voice-call__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.voice-call__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  background: var(--color-graphite-soft);
+  color: var(--color-text-muted);
+  font-size: var(--text-xl);
+}
+
+.voice-call__icon--live {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.voice-call__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.voice-call__phone {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-call__status,
+.voice-call__hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.voice-call__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.voice-call__timer {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-call__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---------- Реплики ---------- */
+
+.voice-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: min(560px, 85%);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.voice-line--caller {
+  align-self: flex-start;
+  border-bottom-left-radius: var(--radius-xs);
+}
+
+.voice-line--ai {
+  align-self: flex-end;
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-ring);
+  border-bottom-right-radius: var(--radius-xs);
+}
+
+.voice-line--fallback {
+  background: var(--color-surface);
+  border-style: dashed;
+}
+
+.voice-line__who {
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.voice-line__text {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+.voice-line__meta {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.voice-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: var(--space-1) 0;
+}
+
+.voice-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-strong);
+  animation: voice-think var(--dur-loop) var(--ease-out) infinite;
+}
+
+.voice-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.voice-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes voice-think {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------- Звонки за смену ---------- */
+
+.voice-recent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.voice-recent__title {
+  font-size: var(--text-md);
+  margin: 0;
+}
+
+.voice-recent__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-recent__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.voice-recent__item:hover,
+.voice-recent__item--current {
+  background: var(--color-bg-soft);
+  border-color: var(--color-border);
+}
+
+.voice-recent__phone {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.voice-recent__meta {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-dots i {
+    animation: none;
+    opacity: 0.6;
+  }
+}

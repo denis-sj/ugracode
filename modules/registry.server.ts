@@ -21,6 +21,7 @@ import reportWorkload from './report-workload/server';
 import reportsDashboard from './reports-dashboard/server';
 import routing from './routing/server';
 import screenshot from './screenshot/server';
+import voiceCall from './voice-call/server';
 
 /** Манифест серверных частей модулей: одна строка на модуль, порядок алфавитный. */
 export const serverModules: ServerModule[] = [
@@ -46,6 +47,7 @@ export const serverModules: ServerModule[] = [
   reportsDashboard,
   routing,
   screenshot,
+  voiceCall,
 ];
 
 export {
@@ -71,4 +73,5 @@ export {
   reportsDashboard,
   routing,
   screenshot,
+  voiceCall,
 };
