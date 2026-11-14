@@ -4,36 +4,35 @@
 /* =====================================================================
    DATA — ВСЕ цифры слайдов. Обновить цифру = поправить ТОЛЬКО здесь.
    value: число или null. null → на слайде «❓ замер».
-   Значения — строго из реестра цифр (раздел 8 спецификации).
-   Демо-цифры страницы /measure?demo=1 сюда НЕ брать.
+   Значения — строго из отчётов. Демо-цифры страницы /measure?demo=1 сюда НЕ брать.
    ===================================================================== */
 const DATA = {
-  // Слайд 5 — reports/quality.md (последний прогон pnpm eval)
-  missedEmergencies: { value: 0, source: 'reports/quality.md · 10 тестовых обращений' },
-  emergencyCases: { value: 10, source: 'reports/quality.md · 10 тестовых обращений' },
+  // Слайд 5 — reports/quality.md (последний прогон pnpm eval) и testset/cases
+  testCases: { value: 10, source: 'testset/cases' },
+  missedEmergencies: { value: 0, source: 'reports/quality.md' },
+  emergencyCases: { value: 2, source: 'testset/cases (аварии: 04, 05)' },
+  falseAlarms: { value: 1, source: 'reports/quality.md' },
   assigneeTop3: { value: 100, unit: '%', source: 'reports/quality.md' },
   fieldsByAi: { value: 84, unit: '%', source: 'reports/quality.md' },
   inventedFields: { value: 9, source: 'reports/quality.md' },
-  model: { value: 'deepseek-v4.1-flash', source: 'модель deepseek-v4.1-flash' },
+  model: { value: 'deepseek-v4.1-flash', source: 'reports/quality.md · deepseek/deepseek-v4.1-flash-1017' },
 
-  // Слайд 6, блок 1 — reports/measure.md, раздел 4, случай 1 (медиана из 3)
+  // Слайд 6 — reports/measure.md, раздел 5 (случай 3, авария), секунды, медиана 3 прогонов
+  // С ИИ авария распознана и дежурные уведомлены в один момент.
+  emergencyNotified: { value: 16.1, digits: 1, source: 'reports/measure.md, раздел 5 (медиана 3)' },
+  dutyNotified: { value: 3, source: 'reports/measure.md, раздел 5 (медиана 3)' },
+  emergencyManual: { value: null, source: 'reports/measure.md, раздел 5' },
+
+  // Слайд 7 «Действия» (ещё не на слайде) — reports/measure.md, раздел 4
   actionsManual: { value: null, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
   actionsAi: { value: null, source: 'reports/measure.md, раздел 4' },
   timeManual: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
   timeAi: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
-
-  // Слайд 6, блок 1 — разбор ИИ (время машины), reports/measure.md, раздел 4а, медиана из 3, секунды
   aiParseTypical: { value: 24.7, digits: 1, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
   aiParseMissing: { value: 6.6, digits: 1, source: 'reports/measure.md, раздел 4а' },
   aiParseEmergency: { value: 18.0, digits: 1, source: 'reports/measure.md, раздел 4а' },
 
-  // Слайд 6, блок 2 — reports/measure.md, раздел 5 (случай 3, авария), секунды.
-  // С ИИ авария распознана и дежурные уведомлены в один момент (реестр: «16 с, 3 дежурных»).
-  emergencyNotified: { value: 16, source: 'reports/measure.md, раздел 5 · медиана 3 прогонов' },
-  dutyNotified: { value: 3, source: 'reports/measure.md, раздел 5' },
-  emergencyManual: { value: null, source: 'reports/measure.md, раздел 5' },
-
-  // Слайд 6, блок 3 — reports/measure.md, раздел 6 (расчёт)
+  // Слайд 8 «Экономия» (ещё не на слайде) — reports/measure.md, раздел 6
   hours30: { value: null, source: 'reports/measure.md, раздел 6' },
   shifts30: { value: null, source: 'reports/measure.md, раздел 6' },
   hours50: { value: null, source: 'reports/measure.md, раздел 6' },
@@ -41,21 +40,20 @@ const DATA = {
   hours100: { value: null, source: 'reports/measure.md, раздел 6' },
   shifts100: { value: null, source: 'reports/measure.md, раздел 6' },
 
-  // Слайд 7 — reports/sonarqube-summary.md
+  // Слайд 9 «Надёжность» (ещё не на слайде) — reports/sonarqube-summary.md
   sonarBugs: { value: 0, source: 'reports/sonarqube-summary.md' },
   sonarVulns: { value: 0, source: 'reports/sonarqube-summary.md' },
   sonarIssues: { value: 0, source: 'reports/sonarqube-summary.md' },
   coverage: { value: 83, unit: '%', source: 'reports/sonarqube-summary.md' },
-  // Число тестов — только из вывода свежего `pnpm check`. Пока null — плашка на слайде скрыта.
+  // Число тестов — только из вывода свежего `pnpm check`. Пока null — на слайд не ставим.
   tests: { value: null, source: 'вывод pnpm check' },
 };
 
 /* Настройки показа (не цифры). */
 const SHOW = {
-  demoUrl: 'http://localhost:5173', // «›» на слайде 10
-  demoVideo: 'media/demo.mp4', // V на слайде 10
-  // Видео ручного режима для слайда 6. Пока файла нет — null (иначе ошибка 404 в консоли).
-  // Записали presentation/media/manual.mp4 → поставить 'media/manual.mp4'.
+  demoUrl: 'http://localhost:5173', // «›» на последнем слайде
+  demoVideo: 'media/demo.mp4', // V на последнем слайде
+  // Видео ручного режима (слайд «Действия»). Пока файла нет — null (иначе ошибка 404 в консоли).
   manualVideo: null,
   manualVideoRate: 4, // ускорение видео ручного режима
   cursorHideMs: 2000,
@@ -114,19 +112,12 @@ const SHOW = {
       }
     });
     document.querySelectorAll('[data-src]').forEach((el) => {
-      const keys = el.dataset.src.split(',').map((k) => k.trim());
       const srcs = [];
-      keys.forEach((k) => {
+      el.dataset.src.split(',').map((k) => k.trim()).forEach((k) => {
         const it = DATA[k];
-        if (!it) return;
-        if (k === 'tests' && it.value === null) return;
-        if (!srcs.includes(it.source)) srcs.push(it.source);
+        if (it && !srcs.includes(it.source)) srcs.push(it.source);
       });
       el.textContent = srcs.join(' · ');
-    });
-    document.querySelectorAll('[data-if]').forEach((el) => {
-      const it = DATA[el.dataset.if];
-      if (!it || it.value === null) el.remove();
     });
     document.querySelectorAll('[data-demo-host]').forEach((el) => {
       el.textContent = SHOW.demoUrl.replace(/^https?:\/\//, '');
@@ -135,6 +126,7 @@ const SHOW = {
 
   const countTweens = new Map();
 
+  // Цифра набегает от нуля (power3.out, ~1 с).
   function countUp(scope) {
     scope.querySelectorAll('[data-target]').forEach((el) => {
       const item = DATA[el.dataset.num];
@@ -150,8 +142,8 @@ const SHOW = {
       el.textContent = fmt(item, 0, el.dataset.suffix);
       countTweens.set(el, gsap.to(o, {
         v: target,
-        duration: 0.9,
-        ease: 'power2.out',
+        duration: 1.1,
+        ease: 'power3.out',
         onUpdate: () => {
           const v = decimals ? Math.round(o.v * 10) / 10 : Math.round(o.v);
           el.textContent = fmt(item, v, el.dataset.suffix);
@@ -174,15 +166,19 @@ const SHOW = {
   function fit() {
     if (PRINT) return;
     const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+    const x = (window.innerWidth - 1920 * s) / 2;
+    const y = (window.innerHeight - 1080 * s) / 2;
+    stage.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
   }
 
-  /* ---------- состояние ---------- */
+  /* ---------- состояние и выборки ---------- */
 
   const state = { i: 0, step: 0 };
   const stepsOf = (i) => Number(slides[i].dataset.steps || 0);
   const stepEls = (slide, k) => Array.from(slide.querySelectorAll(`[data-step="${k}"]`));
   const allStepEls = (slide) => Array.from(slide.querySelectorAll('[data-step]'));
+  const blocksOf = (slide) => Array.from(slide.querySelectorAll('[data-a]'));
+  const masksOf = (slide) => Array.from(slide.querySelectorAll('.mask-in'));
   const casc = (n) => (n > 1 ? Math.min(0.08, 0.6 / (n - 1)) : 0);
 
   function killSlide(slide) {
@@ -191,99 +187,69 @@ const SHOW = {
     gsap.killTweensOf(slide);
   }
 
-  /* Финальное состояние «блоков» слайда без анимации. */
-  function settle(slide, step) {
-    if (!hasGsap) return;
-    killSlide(slide);
-    gsap.set(slide.querySelectorAll('[data-a]'), { autoAlpha: 1, y: 0, clearProps: 'transform' });
-    allStepEls(slide).forEach((el) => {
-      const k = Number(el.dataset.step);
-      gsap.set(el, k <= step ? { autoAlpha: 1, y: 0 } : { autoAlpha: 0, y: 24 });
-    });
-    slideFx(slide, step, false);
-    finishCounts(slide);
-  }
-
-  /* Особые эффекты слайдов (линии, точки, загорание шагов). */
-  function slideFx(slide, step, animate) {
-    if (slide.classList.contains('s-how')) {
-      const fill = slide.querySelector('.chain-fill');
-      const dot = slide.querySelector('.chain-dot');
-      const track = slide.querySelector('.chain-track');
-      const lits = slide.querySelectorAll('.lit');
-      const w = track.offsetWidth;
-      if (!animate || reduced) {
-        gsap.set(fill, { scaleX: 1 });
-        gsap.set(dot, { x: w });
-        gsap.set(lits, { autoAlpha: 1 });
-        return;
-      }
-      const tl = gsap.timeline({ delay: 0.15 });
-      tl.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: 'none' }, 0)
-        .fromTo(dot, { x: 0 }, { x: w, duration: 0.9, ease: 'none' }, 0)
-        .fromTo(lits, { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, duration: 0.3, stagger: 0.12, ease: 'back.out(2)' }, 0);
+  /* Появление блока/шага: рукописные линии дорисовываются, полоска таймлайна растёт,
+     цифры досчитываются. animate=false — сразу финальное состояние. */
+  function enter(el, delay, animate) {
+    const paths = Array.from(el.querySelectorAll('.sketch:not(.wipe) path'));
+    const wipes = Array.from(el.querySelectorAll('.sketch.wipe'));
+    const fills = Array.from(el.querySelectorAll('.tl-fill'));
+    if (!animate || reduced) {
+      if (paths.length) gsap.set(paths, { strokeDashoffset: 0 });
+      if (wipes.length) gsap.set(wipes, { scaleX: 1 });
+      if (fills.length) gsap.set(fills, { scaleX: 1 });
+      finishCounts(el);
+      return;
     }
-    if (slide.classList.contains('s-k')) {
-      // галочки — внутри шага, показываются вместе со строкой
-      slide.querySelectorAll('.k-row').forEach((row) => {
-        const k = Number(row.dataset.step);
-        if (!animate) gsap.set(row.querySelector('.k-check'), { autoAlpha: k <= step ? 1 : 0, scale: 1 });
+    if (paths.length) {
+      gsap.fromTo(paths, { strokeDashoffset: 1 }, {
+        strokeDashoffset: 0, duration: 0.8, ease: 'power1.inOut', delay: delay + 0.25, stagger: 0.12,
       });
     }
-    if (slide.classList.contains('s-gain')) {
-      const fill = slide.querySelector('.tl-fill');
-      const pts = slide.querySelectorAll('.tl-pt');
-      if (!animate) {
-        gsap.set(fill, { scaleX: step >= 2 ? 1 : 0 });
-        gsap.set(pts, { autoAlpha: step >= 2 ? 1 : 0 });
-      }
-      manualVideo(slide, step >= 1);
+    if (wipes.length) {
+      // подчёркивание «пишется» слева направо
+      gsap.fromTo(wipes, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power2.out', delay: delay + 0.35 });
     }
+    if (fills.length) {
+      gsap.fromTo(fills, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: 'power2.inOut', delay: delay + 0.25 });
+    }
+    countUp(el);
   }
+
+  /* Заголовок выезжает из маски снизу вверх. */
+  function maskIn(slide, animate) {
+    const ms = masksOf(slide);
+    if (!ms.length) return;
+    if (!animate || reduced) {
+      gsap.set(ms, { yPercent: 0 });
+      return;
+    }
+    gsap.fromTo(ms, { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'power3.out' });
+  }
+
+  /* Особые эффекты, которые зависят от шага: ничего лишнего, всё через enter(). */
 
   /* Анимация появления шага k (вперёд). */
   function playStep(slide, k) {
     const els = stepEls(slide, k);
     if (reduced) {
       gsap.set(els, { autoAlpha: 1, y: 0 });
-      slideFx(slide, k, false);
-      els.forEach(finishCounts);
+      els.forEach((el) => enter(el, 0, false));
       return;
     }
     gsap.killTweensOf(els);
     gsap.fromTo(els, { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: casc(els.length) });
-    if (slide.classList.contains('s-k')) {
-      const check = els[0] && els[0].querySelector('.k-check');
-      if (check) gsap.fromTo(check, { autoAlpha: 0, scale: 0.3 }, { autoAlpha: 1, scale: 1, duration: 0.4, delay: 0.25, ease: 'back.out(2.5)' });
-    }
-    if (slide.classList.contains('s-gain')) {
-      if (k === 1) manualVideo(slide, true);
-      if (k === 2) {
-        const fill = slide.querySelector('.tl-fill');
-        const pts = slide.querySelectorAll('.tl-pt');
-        gsap.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: 'power1.inOut', delay: 0.1 });
-        gsap.fromTo(pts, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.3, delay: 0.1 });
-      }
-    }
-    els.forEach((el) => countUp(el));
+    els.forEach((el, n) => enter(el, n * 0.08, true));
   }
 
-  /* Откат шага k (назад) — без рывка, коротко. */
+  /* Откат шага k (назад) — коротко, без рывка. */
   function rewindStep(slide, k) {
     const els = stepEls(slide, k);
-    els.forEach(finishCounts);
-    if (slide.classList.contains('s-gain') && k === 1) manualVideo(slide, false);
     if (reduced) {
       gsap.set(els, { autoAlpha: 0 });
-      slideFx(slide, k - 1, false);
       return;
     }
     gsap.killTweensOf(els);
     gsap.to(els, { autoAlpha: 0, y: 20, duration: 0.25, ease: 'power2.in' });
-    if (slide.classList.contains('s-gain') && k === 2) {
-      gsap.to(slide.querySelector('.tl-fill'), { scaleX: 0, duration: 0.25 });
-      gsap.to(slide.querySelectorAll('.tl-pt'), { autoAlpha: 0, duration: 0.2 });
-    }
   }
 
   /* Показ слайда i на шаге step. animate=false — мгновенно (перезагрузка, Home/End). */
@@ -297,7 +263,7 @@ const SHOW = {
 
     if (changed) {
       closeDemoVideo();
-      if (prev.classList.contains('s-gain')) manualVideo(prev, false);
+      manualVideo(prev, false);
     }
     body.classList.toggle('is-dark', next.classList.contains('s-bridge'));
     updateChrome();
@@ -312,37 +278,40 @@ const SHOW = {
     if (changed) {
       killSlide(prev);
       if (animate) {
-        gsap.to(prev, { autoAlpha: 0, duration: 0.3, ease: 'power1.out' });
+        gsap.to(prev, { autoAlpha: 0, duration: 0.35, ease: 'power1.out' });
       } else {
         gsap.set(prev, { autoAlpha: 0 });
       }
+      gsap.set(prev, { zIndex: 1 });
       slides.forEach((s) => { if (s !== next && s !== prev) gsap.set(s, { autoAlpha: 0 }); });
     }
-
-    settle(next, step);
     gsap.set(next, { zIndex: 2 });
-    if (changed) gsap.set(prev, { zIndex: 1 });
+    killSlide(next);
+
+    const blocks = blocksOf(next);
+    const steps = allStepEls(next);
+    const shown = steps.filter((el) => Number(el.dataset.step) <= step);
+    const hidden = steps.filter((el) => Number(el.dataset.step) > step);
+    if (hidden.length) gsap.set(hidden, { autoAlpha: 0, y: 0 });
 
     if (!animate) {
       gsap.set(next, { autoAlpha: 1 });
+      if (blocks.length) gsap.set(blocks, { autoAlpha: 1, y: 0 });
+      if (shown.length) gsap.set(shown, { autoAlpha: 1, y: 0 });
+      maskIn(next, false);
+      blocks.forEach((b) => enter(b, 0, false));
+      shown.forEach((el) => enter(el, 0, false));
       return;
     }
 
     gsap.fromTo(next, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35, ease: 'power1.out' });
-
-    // Каскад блоков слайда (без шагов)
-    const blocks = Array.from(next.querySelectorAll('[data-a]'));
-    gsap.fromTo(blocks, { autoAlpha: 0, y: 32 }, {
-      autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: casc(blocks.length), delay: 0.05,
-      clearProps: 'transform',
+    maskIn(next, true);
+    gsap.fromTo(blocks, { autoAlpha: 0, y: 28 }, {
+      autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: casc(blocks.length), delay: 0.12,
     });
-    blocks.forEach((b) => countUp(b));
-    slideFx(next, step, true);
-
-    // Шаги, уже открытые при входе (возврат назад) — показать сразу
-    for (let k = 1; k <= step; k += 1) gsap.set(stepEls(next, k), { autoAlpha: 1, y: 0 });
-
-    if (i === 0) driftBlobs();
+    blocks.forEach((b, n) => enter(b, 0.12 + n * casc(blocks.length), true));
+    if (shown.length) gsap.set(shown, { autoAlpha: 1, y: 0 });
+    shown.forEach((el) => enter(el, 0, false));
   }
 
   function updateChrome() {
@@ -428,30 +397,12 @@ const SHOW = {
 
   /* ---------- видео ---------- */
 
+  // Видео ручного режима (слайд «Действия»). Без файла (SHOW.manualVideo = null) — ничего не делает.
   function manualVideo(slide, on) {
-    const box = slide.querySelector('.gain-video');
-    const v = slide.querySelector('.manual-video');
-    const timer = slide.querySelector('[data-timer]');
-    if (!box || !v) return;
-    if (!SHOW.manualVideo) {
-      if (timer) timer.textContent = '0:00';
-      return;
-    }
+    const v = slide && slide.querySelector('.manual-video');
+    if (!v || !SHOW.manualVideo) return;
     if (on) {
-      if (!v.getAttribute('src')) {
-        v.addEventListener('error', () => {
-          box.classList.remove('has-video');
-          const note = slide.querySelector('[data-video-note]');
-          if (note) note.textContent = 'видео не найдено: ' + SHOW.manualVideo;
-        }, { once: true });
-        v.addEventListener('loadeddata', () => box.classList.add('has-video'), { once: true });
-        v.addEventListener('timeupdate', () => {
-          // таймер — реальное время ручного режима (видео ускорено)
-          const t = Math.floor(v.currentTime);
-          timer.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
-        });
-        v.src = SHOW.manualVideo;
-      }
+      if (!v.getAttribute('src')) v.src = SHOW.manualVideo;
       v.currentTime = 0;
       v.playbackRate = SHOW.manualVideoRate;
       const p = v.play();
@@ -486,17 +437,6 @@ const SHOW = {
   }
 
   const demoOpen = () => demoLayer && !demoLayer.hidden;
-
-  /* ---------- фон титула: пятна смещаются один раз ---------- */
-
-  let drifted = false;
-  function driftBlobs() {
-    if (drifted || reduced || !hasGsap) return;
-    drifted = true;
-    gsap.fromTo('.blob-violet', { x: -80, y: -40 }, { x: 0, y: 0, duration: 7, ease: 'sine.out' });
-    gsap.fromTo('.blob-blue', { x: 90, y: -30 }, { x: 0, y: 0, duration: 7, ease: 'sine.out' });
-    gsap.fromTo('.blob-sky', { x: -60, y: 60 }, { x: 0, y: 0, duration: 7, ease: 'sine.out' });
-  }
 
   /* ---------- клавиши (кликер Logitech R400 = клавиатура) ---------- */
 
@@ -570,14 +510,9 @@ const SHOW = {
   renderData();
 
   if (PRINT) {
+    // ?print: все слайды стоят по одному на страницу, шаги и цифры в финальном виде (CSS).
     root.classList.add('is-print');
     body.classList.add('is-print');
-    slides.forEach((s) => {
-      s.querySelectorAll('[data-a], [data-step], .lit, .k-check, .tl-pt').forEach((el) => {
-        el.style.opacity = '1';
-        el.style.visibility = 'visible';
-      });
-    });
     return;
   }
 
