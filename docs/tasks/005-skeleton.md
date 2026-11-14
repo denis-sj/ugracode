@@ -1,9 +1,9 @@
 # 005. Каркас: монорепо, контракты, ядро, сквозной срез
 
-Статус: todo (**блокирует 006–008; срок — 35 минут**)
+Статус: in progress
 Дата: 2026-11-14
 Роль: Семён
-Исполнитель: —
+Исполнитель: Семён (агент-кодер)
 Ветка: feature/skeleton
 PR: —
 Связано: [../specs/case9-core.md](../specs/case9-core.md), [../plans/case9-core.md](../plans/case9-core.md), [README.md](README.md#скиллы-superpowers-для-семёна)
