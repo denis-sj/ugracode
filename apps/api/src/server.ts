@@ -563,6 +563,40 @@ function registerCoreRoutes(
 }
 
 function registerStreamRoute(ctx: AppContext, store: KernelStore): void {
+  /** Живой поток доменных событий для экранов: фильтр по роли и заявке. */
+  ctx.app.get('/api/events/stream', async (request, reply) => {
+    const user = await resolveRequestUser(request, store);
+    if (!user) return reply.code(401).send({ error: 'unauthorized', message: 'Нужен вход' });
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    reply.hijack();
+    let closed = false;
+    const send = (event: unknown): void => {
+      if (!closed) reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+    };
+    const heartbeat = setInterval(() => {
+      if (!closed) reply.raw.write(': ping\n\n');
+    }, 25000);
+    const unsubscribe = ctx.bus.subscribe('*', async (event) => {
+      const ticket = event.ticketId ? await store.getTicket(event.ticketId) : null;
+      const appeal = ticket ? await store.getAppeal(ticket.appealId) : null;
+      const info = ticket
+        ? { ticketId: ticket.id, assignedTo: ticket.assigneeId, authorId: appeal?.authorId ?? null }
+        : null;
+      if (canSeeEvent(user, event, info)) send(event);
+    });
+    request.raw.on('close', () => {
+      closed = true;
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+    return reply;
+  });
+
   ctx.app.get('/api/appeals/:id/stream', async (request, reply) => {
     const user = await resolveRequestUser(request, store);
     if (!user) return reply.code(401).send({ error: 'unauthorized', message: 'Нужен вход' });

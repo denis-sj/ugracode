@@ -56,7 +56,7 @@ export type Permission =
 
 /** Права по ролям (раздел 4.2 спецификации). */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
-  applicant: ['any', 'appeal.create', 'appeal.readOwn', 'appeal.answer', 'tickets.read'],
+  applicant: ['any', 'appeal.create', 'appeal.readOwn', 'appeal.answer', 'tickets.read', 'tickets.transition'],
   dispatcher: [
     'any',
     'appeal.create',
