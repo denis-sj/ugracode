@@ -99,9 +99,27 @@ const intakeStep: PipelineStep = {
     const at = ctx.ports.clock.now().toISOString();
     const fields = fieldsFromIntake(run.result, ctx.draft.sources, ctx.data, at, ctx.appeal.id);
     reportFields(ctx, fields);
+    // Модель не всегда зовёт kb_search сама — подстрахуем кодом: статья нужна инженеру и оценщику.
+    let articles = run.result.articles ?? [];
+    if (articles.length === 0) {
+      const kb = ctx.tools?.get('kb_search');
+      const query = [fields.symptoms?.value, fields.model?.value, fields.object?.value]
+        .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
+        .join(' ');
+      if (kb && query !== '') {
+        try {
+          const found = (await kb.execute({ query, limit: 3 }, agentContextOf(ctx, text))) as {
+            articles: { id: string; title: string }[];
+          };
+          articles = found.articles.map((article) => ({ id: article.id, title: article.title }));
+        } catch {
+          // база знаний недоступна — разбор всё равно сдаём
+        }
+      }
+    }
     return {
       fields,
-      knowledge: (run.result.articles ?? []).map((article, index) => ({
+      knowledge: articles.map((article, index) => ({
         kind: 'article' as const,
         id: article.id,
         title: article.title ?? article.id,
