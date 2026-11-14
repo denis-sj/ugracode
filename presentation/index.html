@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Диспетчерская с ИИ — защита</title>
+  <link rel="stylesheet" href="presentation.css">
+</head>
+<body>
+  <div class="viewport">
+    <div class="stage" id="stage">
+      <div class="atmos" aria-hidden="true">
+        <span class="blob blob-violet"></span>
+        <span class="blob blob-blue"></span>
+        <span class="blob blob-sky"></span>
+      </div>
+
+      <!-- 1. Титул -->
+      <section class="slide s-title" data-title="Титул">
+        <div class="title-left">
+          <p class="eyebrow" data-a>Кейс 9 · ООО «Газпром трансгаз Сургут»</p>
+          <h1 class="h-hero" data-a>Диспетчерская<br>с&nbsp;ИИ</h1>
+          <p class="lead" data-a>Обращение → готовая заявка.<br><strong>Последнее слово — за&nbsp;человеком.</strong></p>
+          <div class="chips" data-a>
+            <span class="chip">команда «1+∞»</span>
+            <span class="chip">номинация Pro</span>
+          </div>
+        </div>
+        <div class="title-right" data-a>
+          <div class="sticker">
+            <div class="sticker-head">
+              <span class="sticker-label">Заявка готова</span>
+              <span class="dot dot-ok"></span>
+            </div>
+            <dl class="fields">
+              <div><dt>Оборудование</dt><dd>Принтер HP</dd><span class="prov">из текста: «принтер HP»</span></div>
+              <div><dt>Место</dt><dd>Корпус Б, каб.&nbsp;312</dd><span class="prov prov-ok">сверено с базой оборудования</span></div>
+              <div><dt>Симптом</dt><dd>Не печатает, мигает красный</dd><span class="prov">из текста</span></div>
+              <div><dt>Исполнитель</dt><dd>Инженер по оргтехнике</dd><span class="prov prov-ok">по навыкам и загрузке</span></div>
+            </dl>
+            <div class="sticker-foot"><span class="kbd">Enter</span> диспетчер подтверждает</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Боль -->
+      <section class="slide s-pain" data-title="Боль">
+        <p class="night" data-a><span class="moon" aria-hidden="true"></span>03:12 · ночная смена · диспетчер один</p>
+        <h2 class="h-slide" data-a>Каждое обращение диспетчер разбирает <strong>вручную</strong></h2>
+        <div class="pain-grid">
+          <div class="bubble" data-a>
+            <span class="bubble-meta">звонок · 03:12</span>
+            <p>«У меня опять ничего не работает»</p>
+          </div>
+          <div class="pain-chips">
+            <span class="chip chip-lg" data-a>перезвонить</span>
+            <span class="chip chip-lg" data-a>найти кабинет</span>
+            <span class="chip chip-lg" data-a>найти инженера</span>
+            <span class="chip chip-lg chip-alarm" data-a><span class="dot dot-alarm"></span>не пропустить аварию</span>
+          </div>
+        </div>
+        <p class="caption persona" data-a>Сквозной пример заказчика — <strong>принтер HP, корпус Б, каб.&nbsp;312</strong>: он&nbsp;же в&nbsp;демо и&nbsp;в&nbsp;отчёте.</p>
+      </section>
+
+      <!-- 3. К1–К5 -->
+      <section class="slide s-k" data-title="Что сделали" data-steps="5">
+        <h2 class="h-slide" data-a>Что просил заказчик → что сделали</h2>
+        <div class="k-table">
+          <div class="k-row" data-step="1">
+            <span class="k-badge">К1</span>
+            <span class="k-req">5–10 тестовых обращений</span>
+            <span class="k-arrow">→</span>
+            <span class="k-done">10 обращений с эталоном: типовые, аварии, нехватка данных, сленг, звонок</span>
+            <span class="k-check" aria-hidden="true"></span>
+          </div>
+          <div class="k-row" data-step="2">
+            <span class="k-badge">К2</span>
+            <span class="k-req">ИИ верно заполняет поля и исполнителя</span>
+            <span class="k-arrow">→</span>
+            <span class="k-done"><code>pnpm eval</code>: таблица «эталон / ИИ» по каждому полю</span>
+            <span class="k-check" aria-hidden="true"></span>
+          </div>
+          <div class="k-row" data-step="3">
+            <span class="k-badge">К3</span>
+            <span class="k-req">Диспетчер исправляет и подтверждает</span>
+            <span class="k-arrow">→</span>
+            <span class="k-done">Сомнительные поля подсвечены, правка, Enter, журнал «ИИ → человек»</span>
+            <span class="k-check" aria-hidden="true"></span>
+          </div>
+          <div class="k-row" data-step="4">
+            <span class="k-badge">К4</span>
+            <span class="k-req">Ручные действия с ИИ и без</span>
+            <span class="k-arrow">→</span>
+            <span class="k-done">Страница замера, реальный замер — слайд&nbsp;6</span>
+            <span class="k-check" aria-hidden="true"></span>
+          </div>
+          <div class="k-row" data-step="5">
+            <span class="k-badge">К5</span>
+            <span class="k-req">Стабильность и архитектура</span>
+            <span class="k-arrow">→</span>
+            <span class="k-done">Ядро + модули, порты, флаги фич, SonarQube без замечаний — слайд&nbsp;7</span>
+            <span class="k-check" aria-hidden="true"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Как работает -->
+      <section class="slide s-how" data-title="Как работает">
+        <h2 class="h-slide" data-a>Как работает</h2>
+        <div class="chain">
+          <div class="chain-track" aria-hidden="true"><span class="chain-fill"></span><span class="chain-dot"></span></div>
+          <div class="chain-node"><span class="lit">1</span><span class="n">1</span><b>Текст</b><span>обращение, звонок</span></div>
+          <div class="chain-node"><span class="lit">2</span><span class="n">2</span><b>Поля с цитатами</b><span>что, где, симптом</span></div>
+          <div class="chain-node"><span class="lit">3</span><span class="n">3</span><b>Приоритет</b><span>по матрице</span></div>
+          <div class="chain-node"><span class="lit">4</span><span class="n">4</span><b>Исполнитель</b><span>топ-3 с причиной</span></div>
+          <div class="chain-node"><span class="lit">5</span><span class="n">5</span><b>База знаний</b><span>шаги решения</span></div>
+          <div class="chain-node chain-human"><span class="lit">6</span><span class="n">6</span><b>Человек подтверждает</b><span>Enter</span></div>
+        </div>
+        <ul class="how-notes">
+          <li data-a>у каждого поля — <strong>цитата из текста и уверенность</strong></li>
+          <li data-a>приоритет — по регламенту <strong>«влияние × срочность»</strong>, а&nbsp;не&nbsp;по&nbsp;эмоциям</li>
+          <li data-a>не хватает данных → <strong>ИИ спрашивает заявителя</strong> карточкой → нет ответа → поле диспетчеру</li>
+        </ul>
+      </section>
+
+      <!-- 5. Точность -->
+      <section class="slide s-acc" data-title="Точность">
+        <h2 class="h-slide" data-a>Точность на&nbsp;10 тестовых обращениях</h2>
+        <div class="acc-grid">
+          <div class="acc-main card" data-a>
+            <div class="big-num"><span data-num="missedEmergencies">0</span></div>
+            <p class="big-label">пропущенных аварий <span class="muted">из&nbsp;<span data-num="emergencyCases">10</span></span></p>
+          </div>
+          <div class="acc-side">
+            <div class="card stat" data-a>
+              <div class="mid-num" data-num="assigneeTop3">100 %</div>
+              <p class="stat-label">исполнитель в&nbsp;топ-3</p>
+            </div>
+            <div class="card stat" data-a>
+              <div class="mid-num" data-num="fieldsByAi">84 %</div>
+              <p class="stat-label">полей заполнил ИИ</p>
+            </div>
+          </div>
+        </div>
+        <p class="acc-note" data-a>Где ИИ ошибается — <strong><span data-num="inventedFields">9</span> выдуманных полей</strong>; каждое подсвечено, без&nbsp;диспетчера заявка не&nbsp;уходит.</p>
+        <p class="source" data-a data-src="missedEmergencies,model">источник</p>
+      </section>
+
+      <!-- 6. Польза в цифрах -->
+      <section class="slide s-gain" data-title="Польза в цифрах" data-steps="3">
+        <h2 class="h-slide" data-a>Польза в&nbsp;цифрах</h2>
+        <div class="gain-a card" data-step="1">
+          <div class="gain-video">
+            <video class="manual-video" muted playsinline loop preload="none" aria-label="Ручной режим, ускоренно"></video>
+            <div class="video-ph">
+              <span class="ph-title">Ручной режим</span>
+              <span class="ph-sub" data-video-note>видео: media/manual.mp4 — ❓ запишет владелец</span>
+            </div>
+            <div class="video-timer"><span class="rec"></span><span data-timer>0:00</span></div>
+          </div>
+          <div class="gain-pairs">
+            <p class="pair-cap">Без ИИ → с ИИ · одна заявка</p>
+            <div class="pair"><span class="pair-from" data-num="actionsManual">—</span><span class="pair-arrow">→</span><span class="pair-to" data-num="actionsAi">—</span><span class="pair-unit">действий</span></div>
+            <div class="pair"><span class="pair-from" data-num="timeManual" data-suffix=" с">—</span><span class="pair-arrow">→</span><span class="pair-to" data-num="timeAi" data-suffix=" с">—</span><span class="pair-unit">на заявку</span></div>
+            <p class="source" data-src="actionsManual">источник</p>
+          </div>
+        </div>
+        <div class="gain-row">
+          <div class="gain-b card" data-step="2">
+            <p class="block-cap"><span class="dot dot-alarm"></span>Цена промедления при&nbsp;аварии</p>
+            <div class="tl">
+              <div class="tl-line" aria-hidden="true"><span class="tl-fill"></span></div>
+              <div class="tl-pt" style="--x:0%"><b>0 с</b><span>сообщение</span></div>
+              <div class="tl-pt" style="--x:50%"><b data-num="emergencyDetected" data-suffix=" с">—</b><span>авария распознана</span></div>
+              <div class="tl-pt" style="--x:100%"><b data-num="emergencyNotified" data-suffix=" с">—</b><span>дежурный уведомлён</span></div>
+            </div>
+            <p class="tl-manual">вручную — <strong data-num="emergencyManual" data-suffix=" с">—</strong> до&nbsp;уведомления</p>
+          </div>
+          <div class="gain-c card" data-step="3">
+            <p class="block-cap">Сэкономлено за&nbsp;месяц</p>
+            <div class="save-cards">
+              <div class="save"><span class="save-day">30 заявок/день</span><b data-num="hours30" data-suffix=" ч">—</b><span class="save-sh"><span data-num="shifts30">—</span> смен</span></div>
+              <div class="save"><span class="save-day">50 заявок/день</span><b data-num="hours50" data-suffix=" ч">—</b><span class="save-sh"><span data-num="shifts50">—</span> смен</span></div>
+              <div class="save"><span class="save-day">100 заявок/день</span><b data-num="hours100" data-suffix=" ч">—</b><span class="save-sh"><span data-num="shifts100">—</span> смен</span></div>
+            </div>
+            <p class="formula">экономия на&nbsp;заявку × заявок в&nbsp;день × 22 рабочих дня · смена 8&nbsp;ч</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Архитектура -->
+      <section class="slide s-arch" data-title="Архитектура">
+        <h2 class="h-slide" data-a>Архитектура и&nbsp;надёжность</h2>
+        <div class="arch">
+          <div class="arch-col" data-a><p class="arch-cap">Интерфейс</p><div class="arch-box">Веб</div></div>
+          <span class="arch-arrow" data-a>→</span>
+          <div class="arch-col" data-a><p class="arch-cap">Сервер</p><div class="arch-box">API</div></div>
+          <span class="arch-arrow" data-a>→</span>
+          <div class="arch-col arch-core" data-a>
+            <p class="arch-cap">Ядро</p>
+            <div class="arch-box arch-accent"><span>пайплайн</span><span>шина событий</span><span>реестры</span></div>
+          </div>
+          <span class="arch-arrow" data-a>→</span>
+          <div class="arch-col" data-a>
+            <p class="arch-cap">Модули</p>
+            <div class="arch-list"><span>разбор</span><span>приоритет</span><span>исполнитель</span><span>авария</span><span>база знаний</span><span>отчёты</span></div>
+          </div>
+          <span class="arch-arrow" data-a>→</span>
+          <div class="arch-col" data-a>
+            <p class="arch-cap">Порты</p>
+            <div class="arch-list arch-ports"><span>модель ИИ</span><span>речь</span><span>CMDB</span><span>история</span><span>уведомления</span></div>
+            <p class="arch-note">облако сейчас → локальные модели в&nbsp;контуре заказчика — <strong>замена адаптера</strong></p>
+          </div>
+        </div>
+        <div class="rel">
+          <div class="rel-item card" data-a><b>SonarQube</b><span><span data-num="sonarBugs">0</span> багов · <span data-num="sonarVulns">0</span> уязвимостей · <span data-num="sonarIssues">0</span> замечаний</span></div>
+          <div class="rel-item card" data-a><b>покрытие тестами <span data-num="coverage">83 %</span></b><span>серверная логика</span></div>
+          <div class="rel-item card" data-a><b>флаги фич</b><span>любой модуль выключается одной переменной</span></div>
+          <div class="rel-item card" data-a data-if="tests"><b><span data-num="tests">—</span> тестов</b><span>pnpm check</span></div>
+        </div>
+        <p class="source" data-a data-src="sonarBugs,tests">источник</p>
+      </section>
+
+      <!-- 8. Команда и внедрение -->
+      <section class="slide s-team" data-title="Команда и внедрение">
+        <h2 class="h-slide" data-a>Команда и&nbsp;внедрение</h2>
+        <div class="team-grid">
+          <div class="team-left">
+            <p class="block-cap" data-a>«1+∞»: человек + агенты</p>
+            <div class="person card" data-a><span class="ava">Д</span><div><b>Денис</b><span>капитан и&nbsp;продукт</span></div></div>
+            <div class="person card" data-a><span class="ava ava-2">Да</span><div><b>Данкония</b><span>архитектор: спецификации, задачи</span></div></div>
+            <div class="person card" data-a><span class="ava ava-3">С</span><div><b>Семён</b><span>кодер: код, тесты, PR</span></div></div>
+            <p class="process" data-a>задача → спецификация → PR → проверка</p>
+          </div>
+          <div class="team-right">
+            <p class="block-cap" data-a>Внедрение</p>
+            <ol class="stages">
+              <li data-a><span class="st-n">1</span><div><b>Пилот на&nbsp;одной линии</b><span>4 недели</span></div></li>
+              <li data-a><span class="st-n">2</span><div><b>Расширение и&nbsp;интеграции</b><span>2–3 месяца</span></div></li>
+              <li data-a><span class="st-n">3</span><div><b>Эксплуатация в&nbsp;контуре заказчика</b><span>локальные модели, свои данные</span></div></li>
+            </ol>
+          </div>
+        </div>
+        <p class="deliver" data-a><b>Что получит заказчик:</b> прототип · код · инструкция запуска · тестовый набор · отчёт о&nbsp;качестве и&nbsp;ограничениях · план внедрения</p>
+      </section>
+
+      <!-- 9. Ограничения -->
+      <section class="slide s-lim" data-title="Ограничения">
+        <h2 class="h-slide" data-a>Честно об&nbsp;ограничениях</h2>
+        <ul class="lim">
+          <li data-a><span class="dot dot-warn"></span>данные синтетические: история 600 заявок, CMDB, специалисты</li>
+          <li data-a><span class="dot dot-warn"></span>одна модель ИИ в&nbsp;облаке; локальный контур — архитектура, не&nbsp;сборка</li>
+          <li data-a><span class="dot dot-warn"></span>распознавание речи пока не&nbsp;подключено</li>
+          <li data-a><span class="dot dot-warn"></span>тестовый набор маленький — цифры проверим на&nbsp;30–40 реальных обращениях в&nbsp;пилоте</li>
+        </ul>
+      </section>
+
+      <!-- 10. Мост в демо -->
+      <section class="slide s-bridge" data-title="Демо">
+        <h2 class="h-bridge" data-a>Смотрим вживую</h2>
+        <p class="bridge-sub" data-a>следующее нажатие → <span data-demo-host>localhost:5173</span></p>
+        <p class="bridge-hint" data-a><span class="kbd kbd-dark">V</span> запасное видео демо</p>
+        <div class="video-layer" hidden>
+          <video class="demo-video" controls playsinline preload="none"></video>
+          <p class="video-missing" hidden>видео не найдено: presentation/media/demo.mp4</p>
+        </div>
+      </section>
+
+      <div class="progress" aria-hidden="true"><span class="progress-fill"></span></div>
+      <div class="pager" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="blackout" aria-hidden="true"></div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="presentation.js"></script>
+</body>
+</html>
