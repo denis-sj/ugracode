@@ -6,7 +6,7 @@
 Исполнитель: —
 Ветка: feature/agent-harness
 PR: —
-Связано: [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../specs/case9-core.md](../specs/case9-core.md), [024-core-contract-update.md](024-core-contract-update.md), [README.md](README.md#скиллы-superpowers-для-семёна)
+Связано: [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../specs/case9-core.md](../specs/case9-core.md), [../history/2026-11.md](../history/2026-11.md), [README.md](README.md#скиллы-superpowers-для-семёна)
 
 Приоритет: **MUST**. Папки: `packages/core/`, `packages/contracts/`, `packages/adapters/src/llm/`, `packages/db/`,
 `packages/testkit/`, `modules/_example/`. Общие файлы — маленький PR, быстро. Можно делать одним PR с 024.

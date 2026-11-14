@@ -28,8 +28,8 @@ services:
       FEATURES_ON: ${FEATURES_ON:-}
       POLZA_API_KEY: ${POLZA_API_KEY:-}
       POLZA_BASE_URL: ${POLZA_BASE_URL:-https://api.polza.ai/api/v1}
-      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-deepseek/deepseek-v4.1-flash}
-      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek/deepseek-v4.1-flash}
+      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-deepseek/deepseek-v4.1-flash-1017}
+      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek/deepseek-v4.1-flash-1017}
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-}
       EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-}
       SPEECH_MODEL: ${SPEECH_MODEL:-ai-sage/gigaam-v3}
@@ -51,5 +51,18 @@ services:
     ports:
       - "5173:5173"
 
+  sonar:
+    image: sonarqube:lts-community
+    profiles: ["sonar"]
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar-data:/opt/sonarqube/data
+      - sonar-extensions:/opt/sonarqube/extensions
+
 volumes:
   db-data:
+  sonar-data:
+  sonar-extensions:

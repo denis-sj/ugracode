@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../tasks/024-core-contract-update.md](../../tasks/024-core-contract-update.md)
+Связано: [../README.md](../README.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Добавляющие изменения контрактов, ядра, API, адаптеров и базы. Существующее не переименовано, чтобы не ломать задачи 006–008.
 

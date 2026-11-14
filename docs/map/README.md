@@ -39,6 +39,9 @@ apps (api, web) → modules → adapters, db → core → contracts
 | Пайплайн | `packages/core/src/pipeline.ts` (стадии, `order`, таймаут, `fallback`, `rerun`) |
 | Шина событий | `packages/core/src/bus.ts` (запись в `event_log`, затем подписчики) |
 | Реестры | `packages/core/src/registry.ts` (`buildRegistries`, `collectRoutes`, `subscribeModules`) |
+| Агентный харнесс | `packages/core/src/agent.ts` (`runAgent`, `assembleSystemPrompt`) — цикл инструментов, шлюз, `submit`; карта фичи [features/agent-harness.md](features/agent-harness.md) |
+| Инструменты ядра | `packages/core/src/tools.ts` (`coreTools`: `dictionary_lookup`, `cmdb_*`) |
+| След агента | таблица `agent_step` (`KernelStore.saveAgentStep`/`listAgentSteps`), событие `agent.step` |
 | Флаги фич | `packages/core/src/features.ts` (`FEATURES_OFF` / `FEATURES_ON`) |
 | Модуль-образец | `modules/_example/` (шаг, подписчик, маршрут, виджет, тест-контракт) |
 | Веб | `apps/web/src/App.tsx`, манифест `modules/registry.web.ts` |
@@ -62,6 +65,7 @@ pnpm dev:api          # API на http://localhost:3001
 pnpm dev:web          # веб на http://localhost:5173
 pnpm check:polza      # проверка API Polza (нужен POLZA_API_KEY)
 docker compose up --build   # db + api + web одной командой
+docker compose --profile sonar up -d sonar   # SonarQube, http://localhost:9000
 python3 -m unittest discover -s tests   # проверка ссылок документации
 ```
 
