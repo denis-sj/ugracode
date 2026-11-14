@@ -198,6 +198,17 @@ describe('runAgent', () => {
     expect(saved[1]?.tool).toBe('submit');
   });
 
+  it('передаёт модели инструмент submit, даже если у профиля нет своих инструментов', async () => {
+    const llm = makeLlm([submitTurn({ answer: 'готово' })]);
+    const result = await runAgent(
+      makeProfile({ tools: [] }),
+      { text: 'сдай итог', context: makeContext() },
+      makeDeps(llm, []),
+    );
+    expect(result.status).toBe('ok');
+    expect(llm.requests[0]?.tools.map((tool) => tool.name)).toContain('submit');
+  });
+
   it('выполняет параллельные вызовы одного хода и сохраняет порядок', async () => {
     const llm = makeLlm([
       toolTurn(

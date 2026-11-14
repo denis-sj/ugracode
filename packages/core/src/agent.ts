@@ -144,6 +144,15 @@ function parseArguments(raw: string): { ok: true; value: unknown } | { ok: false
   }
 }
 
+/** Модель должна видеть `submit` среди инструментов, иначе она не может сдать итог. */
+function submitToolSpec<S>(profile: AgentProfile<S>): LlmToolSpec {
+  return {
+    name: SUBMIT_TOOL,
+    description: 'Сдать итог работы агента. Аргументы проверяются схемой и проверками кода.',
+    parameters: toJsonSchema(profile.submit),
+  };
+}
+
 function toToolSpec(tool: ToolDef): LlmToolSpec {
   return {
     name: tool.name,
@@ -171,7 +180,14 @@ export function assembleSystemPrompt<S>(
       '```',
     ].join('\n'),
   );
-  const toolsSection = toolBlocks.length > 0 ? toolBlocks.join('\n\n') : 'Инструментов нет: сразу вызывай submit.';
+  const submitBlock = [
+    `### ${SUBMIT_TOOL}`,
+    'Сдать итог. Аргументы (JSON Schema):',
+    '```json',
+    JSON.stringify(toJsonSchema(profile.submit)),
+    '```',
+  ].join('\n');
+  const toolsSection = [...toolBlocks, submitBlock].join('\n\n');
 
   return [
     loadPromptText(profile.promptId),
@@ -438,7 +454,11 @@ export async function runAgent<S>(
   for (let turn = 1; turn <= maxSteps; turn += 1) {
     let response;
     try {
-      response = await deps.llm.chat({ messages, tools: allowedTools.map(toToolSpec), temperature: 0 });
+      response = await deps.llm.chat({
+        messages,
+        tools: [...allowedTools.map(toToolSpec), submitToolSpec(profile)],
+        temperature: 0,
+      });
     } catch (error) {
       return finish({ status: 'failed', error: `модель недоступна: ${describeError(error)}` });
     }

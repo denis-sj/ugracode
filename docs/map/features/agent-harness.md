@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../tasks/031-agent-harness.md](../../tasks/031-agent-harness.md)
+Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Цикл вызова инструментов вместо RAG: модель просит инструмент, код проверяет право и аргументы,
 результат возвращается модели, итог принимается только через `submit`. Каждый шаг пишется в след

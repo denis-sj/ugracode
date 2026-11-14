@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/012-routing.md](../../tasks/012-routing.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Серверная часть задачи 012: топ-3 исполнителя с объяснением. Виджет на карточке заявки и страница
 «Специалисты» — отдельная работа в `modules/routing/web` и `apps/web`.

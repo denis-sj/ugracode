@@ -66,12 +66,10 @@ PR: —
 
 - [006-extraction-priority.md](006-extraction-priority.md) — поток А: извлечение полей и приоритет
 - [007-ui-shell-chat-card.md](007-ui-shell-chat-card.md) — поток Б: дизайн-система, чат заявителя, карточка заявки
-- [008-data-testset.md](008-data-testset.md) — поток В: данные и тестовый набор
 
 **После брейншторма** (что и почему — [../specs/case9-features.md](../specs/case9-features.md); в задачах 006–023 в конце добавлен раздел «Изменения после брейншторма»):
 
  — **MUST, идёт первой и одна:** правка ядра и контрактов
-- [031-agent-harness.md](031-agent-harness.md) — **MUST, сразу после 024:** агентный харнесс в ядре (цикл инструментов вместо RAG). В задачах 006, 008, 009, 013–016, 018, 021, 024, 026, 029, 030 добавлен раздел «Агентный харнесс»
 - [025-applicant-profile-guest.md](025-applicant-profile-guest.md) — MUST: профиль заявителя и гость
 - [026-screenshot.md](026-screenshot.md) — SHOULD: скриншот и фото шильдика
 - [027-reports-sla-workload.md](027-reports-sla-workload.md) — SHOULD: отчёты О3 и О4
@@ -84,7 +82,6 @@ PR: —
 - [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
 - [010-dispatcher-review.md](010-dispatcher-review.md) — поток Б: проверка диспетчером: очередь, правка, подтверждение, журнал
 - [011-emergency.md](011-emergency.md) — поток А: авария: правила + модель, уведомление дежурному, красный режим
-- [012-routing.md](012-routing.md) — поток В: исполнитель: топ-3 с объяснением
 - [013-knowledge.md](013-knowledge.md) — поток В: база знаний: поиск по смыслу, статьи и похожие заявки
 - [014-quality.md](014-quality.md) — поток В: оценщик и экран «Качество»
 - [015-history-dashboard.md](015-history-dashboard.md) — поток Г: история заявок за 6 месяцев и дашборд О0
