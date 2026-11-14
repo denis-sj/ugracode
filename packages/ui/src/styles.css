@@ -20,6 +20,7 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--text-md);
+  font-weight: var(--weight-regular);
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -30,9 +31,9 @@ h2,
 h3,
 h4 {
   margin: 0;
-  font-weight: 650;
+  font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 p {
@@ -109,7 +110,7 @@ kbd {
 }
 
 .ugra-rise {
-  animation: ugra-rise var(--dur-slow) var(--ease-out) both;
+  animation: ugra-rise var(--dur-rise) var(--ease-out) both;
 }
 
 .ugra-fade {
@@ -120,14 +121,93 @@ kbd {
   animation: ugra-pulse var(--dur-slow) var(--ease-out);
 }
 
+/* Новая строка очереди: въезжает сверху со вспышкой. */
+.ugra-row-flash {
+  animation: ugra-row-flash var(--dur-slow) var(--ease-out) both;
+}
+
+/* Заголовок страницы: 34–40 px, 700, графит → фиолетовый. */
+.ugra-page-title {
+  font-size: var(--text-page);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.045em;
+  background: var(--gradient-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Атмосфера: пятна и сетка ---------- */
+
+.ugra-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ugra-ambient__blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ugra-ambient__blob--violet {
+  width: 820px;
+  height: 820px;
+  left: -240px;
+  top: -360px;
+  background: radial-gradient(closest-side, var(--blob-violet), transparent);
+  animation: ugra-float var(--dur-ambient) var(--ease-out) infinite;
+}
+
+.ugra-ambient__blob--blue {
+  width: 860px;
+  height: 860px;
+  right: -260px;
+  top: -320px;
+  background: radial-gradient(closest-side, var(--blob-blue), transparent);
+  animation: ugra-drift calc(var(--dur-ambient) * 1.2) var(--ease-out) infinite;
+}
+
+.ugra-ambient__blob--ice {
+  width: 1000px;
+  height: 640px;
+  left: 50%;
+  bottom: -400px;
+  margin-left: -500px;
+  background: radial-gradient(closest-side, var(--blob-ice), transparent);
+}
+
+.ugra-ambient__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  -webkit-mask-image: radial-gradient(ellipse 55% 55% at 50% 40%, #000 15%, transparent 75%);
+  mask-image: radial-gradient(ellipse 55% 55% at 50% 40%, #000 15%, transparent 75%);
+}
+
+/* «Жидкое стекло» шапки: капсула меню и круглые кнопки. */
+.ugra-liquid {
+  position: relative;
+  -webkit-backdrop-filter: var(--glass-blur-liquid);
+  backdrop-filter: var(--glass-blur-liquid);
+  background: var(--glass-liquid);
+  box-shadow: var(--glass-inset-liquid), var(--shadow-liquid);
+}
+
 /* ---------- Card ---------- */
 
 .ugra-card {
   position: relative;
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-2);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
 }
 
 .ugra-card--padded {
@@ -135,42 +215,58 @@ kbd {
 }
 
 .ugra-card--glass {
-  background: color-mix(in srgb, var(--color-surface) 74%, transparent);
-  backdrop-filter: blur(16px);
+  background: var(--glass-card);
 }
 
 .ugra-card--hero {
-  background: var(--gradient-card);
+  background: var(--glass-card);
+}
+
+.ugra-card--sticker {
+  border-radius: var(--radius-xl);
+  background: var(--glass-sticker);
+  box-shadow:
+    inset 0 0 0 1px var(--color-surface),
+    var(--shadow-sticker);
 }
 
 .ugra-card--accent {
-  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
-  box-shadow: var(--shadow-2), var(--shadow-glow);
+  box-shadow:
+    var(--glass-inset),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
+    0 18px 50px color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 
 .ugra-card--ok {
-  border-color: color-mix(in srgb, var(--color-ok) 44%, var(--color-border));
+  box-shadow:
+    inset 0 0 0 1px var(--color-surface),
+    0 0 0 1px color-mix(in srgb, var(--color-ok) 24%, transparent),
+    var(--shadow-card);
 }
 
 .ugra-card--warn {
-  border-color: color-mix(in srgb, var(--color-warn) 46%, var(--color-border));
+  box-shadow:
+    inset 0 0 0 1px var(--color-surface),
+    0 0 0 1px color-mix(in srgb, var(--color-warn) 24%, transparent),
+    var(--shadow-card);
 }
 
 .ugra-card--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 48%, var(--color-border));
+  box-shadow:
+    inset 0 0 0 1px var(--color-surface),
+    0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
+    var(--shadow-card);
 }
 
 .ugra-card--interactive {
   transition:
     transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 }
 
 .ugra-card--interactive:hover {
   transform: translateY(-2px);
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-3);
+  box-shadow: var(--glass-inset), var(--shadow-pop);
 }
 
 /* ---------- Badge ---------- */
@@ -182,72 +278,63 @@ kbd {
   padding: 2px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-surface-2) 80%, transparent);
+  background: transparent;
   color: var(--color-text-muted);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
 .ugra-badge--accent {
-  border-color: color-mix(in srgb, var(--color-accent) 46%, transparent);
-  background: var(--color-accent-soft);
+  border-color: var(--color-accent-ring);
   color: var(--color-accent);
 }
 
 .ugra-badge--ok {
-  border-color: color-mix(in srgb, var(--color-ok) 44%, transparent);
-  background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-ok) 30%, transparent);
   color: var(--color-ok);
 }
 
 .ugra-badge--warn {
-  border-color: color-mix(in srgb, var(--color-warn) 46%, transparent);
-  background: color-mix(in srgb, var(--color-warn) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-warn) 32%, transparent);
   color: var(--color-warn);
 }
 
 .ugra-badge--danger,
 .ugra-badge--emergency {
-  border-color: color-mix(in srgb, var(--color-danger) 48%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
   color: var(--color-danger);
 }
 
 .ugra-badge--critical {
-  border-color: color-mix(in srgb, var(--color-priority-critical) 46%, transparent);
-  background: color-mix(in srgb, var(--color-priority-critical) 12%, transparent);
-  color: var(--color-priority-critical);
+  border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  color: var(--color-danger);
 }
 
 .ugra-badge--high {
-  border-color: color-mix(in srgb, var(--color-priority-high) 46%, transparent);
-  background: color-mix(in srgb, var(--color-priority-high) 12%, transparent);
-  color: var(--color-priority-high);
+  border-color: color-mix(in srgb, var(--color-warn-bright) 36%, transparent);
+  color: var(--color-warn-bright);
 }
 
 .ugra-badge--medium {
-  border-color: color-mix(in srgb, var(--color-priority-medium) 44%, transparent);
-  background: color-mix(in srgb, var(--color-priority-medium) 12%, transparent);
-  color: var(--color-priority-medium);
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+  color: var(--color-info);
 }
 
 .ugra-badge--low {
-  border-color: color-mix(in srgb, var(--color-priority-low) 44%, transparent);
-  background: color-mix(in srgb, var(--color-priority-low) 12%, transparent);
-  color: var(--color-priority-low);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-dim);
 }
 
 .ugra-badge--info {
-  border-color: color-mix(in srgb, var(--color-info) 44%, transparent);
-  background: color-mix(in srgb, var(--color-info) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
   color: var(--color-info);
 }
 
 .ugra-badge--muted {
+  border-color: transparent;
   color: var(--color-text-dim);
-  background: transparent;
 }
 
 .ugra-badge__dot {
@@ -266,70 +353,77 @@ kbd {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  padding: 9px 18px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semi);
   cursor: pointer;
   transition:
-    transform var(--dur-fast) var(--ease-out),
     background var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
-}
-
-.ugra-btn:hover {
-  transform: translateY(-1px);
-}
-
-.ugra-btn:active {
-  transform: translateY(0) scale(0.99);
 }
 
 .ugra-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-  transform: none;
 }
 
 .ugra-btn--primary {
-  background: var(--gradient-accent);
-  color: var(--color-accent-contrast);
-  box-shadow: var(--shadow-glow);
+  background: var(--color-graphite);
+  color: var(--color-graphite-contrast);
+  box-shadow: var(--shadow-button);
+  font-weight: var(--weight-bold);
+}
+
+.ugra-btn--primary:hover:not(:disabled) {
+  background: var(--color-graphite-hover);
 }
 
 .ugra-btn--secondary {
-  border-color: var(--color-border-strong);
-  background: var(--color-surface-2);
+  background: transparent;
   color: var(--color-text);
+  box-shadow: var(--ring-inset);
+}
+
+.ugra-btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface);
 }
 
 .ugra-btn--ghost {
   color: var(--color-text-muted);
 }
 
-.ugra-btn--ghost:hover {
-  background: var(--color-surface-2);
+.ugra-btn--ghost:hover:not(:disabled) {
+  background: var(--color-graphite-soft);
   color: var(--color-text);
 }
 
 .ugra-btn--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 44%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  background: transparent;
   color: var(--color-danger);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-danger) 32%, transparent);
+}
+
+.ugra-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
 }
 
 .ugra-btn--sm {
-  padding: 5px 12px;
-  font-size: var(--text-xs);
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
 }
 
 .ugra-btn--lg {
-  padding: 12px 24px;
-  font-size: var(--text-md);
+  min-height: 48px;
+  padding: 0 22px;
+  font-size: var(--text-lg);
 }
 
 .ugra-btn--block {
@@ -360,31 +454,32 @@ kbd {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  font-size: var(--text-xs);
   color: var(--color-text-dim);
+  font-size: var(--text-xs);
 }
 
 .ugra-confidence__value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
   color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
 }
 
 .ugra-confidence__track {
   height: 5px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-text-dim) 22%, transparent);
+  background: var(--color-graphite-soft);
   overflow: hidden;
 }
 
 .ugra-confidence__fill {
   height: 100%;
   border-radius: inherit;
+  background: var(--color-graphite);
   transition: width var(--dur-slow) var(--ease-out);
 }
 
 .ugra-confidence--ok .ugra-confidence__fill {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-ok) 60%, transparent), var(--color-ok));
+  background: var(--color-ok);
 }
 
 .ugra-confidence--ok .ugra-confidence__value {
@@ -392,7 +487,7 @@ kbd {
 }
 
 .ugra-confidence--warn .ugra-confidence__fill {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-warn) 60%, transparent), var(--color-warn));
+  background: var(--color-warn-bright);
 }
 
 .ugra-confidence--warn .ugra-confidence__value {
@@ -400,7 +495,7 @@ kbd {
 }
 
 .ugra-confidence--danger .ugra-confidence__fill {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-danger) 60%, transparent), var(--color-danger));
+  background: var(--color-danger);
 }
 
 .ugra-confidence--danger .ugra-confidence__value {
@@ -418,11 +513,11 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px 8px;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-pill);
+  padding: 1px 2px;
+  border: none;
+  border-bottom: 1px dashed var(--color-accent-ring);
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-accent);
   font-size: var(--text-xs);
   cursor: help;
   max-width: 100%;
@@ -430,13 +525,12 @@ kbd {
 
 .ugra-quote:hover,
 .ugra-quote:focus-visible {
-  border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
-  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
   outline: none;
 }
 
 .ugra-quote__text {
-  max-width: 160px;
+  max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -450,10 +544,13 @@ kbd {
   width: max-content;
   max-width: 320px;
   padding: var(--space-3);
-  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  background: var(--color-surface-3);
-  box-shadow: var(--shadow-3);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 0 0 1px var(--color-surface),
+    var(--shadow-pop);
   color: var(--color-text);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
@@ -500,16 +597,16 @@ kbd {
 }
 
 .ugra-field:hover {
-  background: color-mix(in srgb, var(--color-surface-2) 72%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
 }
 
 .ugra-field--needs-review {
-  border-left-color: var(--color-warn);
-  background: color-mix(in srgb, var(--color-warn) 8%, transparent);
+  border-left-color: var(--color-warn-bright);
+  background: color-mix(in srgb, var(--color-warn-bright) 7%, transparent);
 }
 
 .ugra-field--needs-review:hover {
-  background: color-mix(in srgb, var(--color-warn) 12%, transparent);
+  background: color-mix(in srgb, var(--color-warn-bright) 11%, transparent);
 }
 
 .ugra-field--empty {
@@ -530,7 +627,7 @@ kbd {
 .ugra-field__label {
   color: var(--color-text-dim);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -538,13 +635,13 @@ kbd {
 .ugra-field__value {
   color: var(--color-text);
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
   overflow-wrap: anywhere;
 }
 
 .ugra-field__value--empty {
   color: var(--color-text-dim);
-  font-weight: 500;
+  font-weight: var(--weight-regular);
 }
 
 .ugra-field__meta {
@@ -569,31 +666,25 @@ kbd {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--gradient-card);
-  overflow: hidden;
-}
-
-.ugra-stat::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(80% 120% at 100% 0%, var(--color-accent-soft), transparent 70%);
-  pointer-events: none;
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
 }
 
 .ugra-stat__label {
   color: var(--color-text-dim);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .ugra-stat__value {
+  color: var(--color-text);
   font-size: var(--text-2xl);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
@@ -631,12 +722,12 @@ kbd {
 
 .ugra-timeline {
   position: relative;
-  margin: 0;
-  padding: 0;
-  list-style: none;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .ugra-timeline__item {
@@ -652,7 +743,7 @@ kbd {
   top: 16px;
   bottom: calc(-1 * var(--space-4));
   width: 1px;
-  background: var(--color-border);
+  background: var(--color-border-strong);
 }
 
 .ugra-timeline__item:last-child::before {
@@ -666,8 +757,8 @@ kbd {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--color-surface-3);
   border: 2px solid var(--color-border-strong);
+  background: var(--color-surface);
 }
 
 .ugra-timeline__item--accent .ugra-timeline__dot {
@@ -682,8 +773,8 @@ kbd {
 }
 
 .ugra-timeline__item--warn .ugra-timeline__dot {
-  border-color: var(--color-warn);
-  background: var(--color-warn);
+  border-color: var(--color-warn-bright);
+  background: var(--color-warn-bright);
 }
 
 .ugra-timeline__item--danger .ugra-timeline__dot {
@@ -697,7 +788,7 @@ kbd {
 
 .ugra-timeline__title {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
 }
 
 .ugra-timeline__desc {
@@ -719,12 +810,11 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 1px 8px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
+  padding: 1px 0;
+  border: none;
   color: var(--color-text-dim);
   font-size: var(--text-xs);
-  white-space: nowrap;
+  max-width: 100%;
 }
 
 .ugra-origin__glyph {
@@ -733,26 +823,74 @@ kbd {
 }
 
 .ugra-origin--text,
-.ugra-origin--cmdb,
 .ugra-origin--rule,
 .ugra-origin--profile {
-  border-color: color-mix(in srgb, var(--color-accent) 32%, transparent);
   color: var(--color-accent);
 }
 
-.ugra-origin--asked {
-  border-color: color-mix(in srgb, var(--color-info) 36%, transparent);
-  color: var(--color-info);
-}
-
+.ugra-origin--cmdb,
 .ugra-origin--human {
-  border-color: color-mix(in srgb, var(--color-ok) 40%, transparent);
   color: var(--color-ok);
 }
 
+.ugra-origin--asked {
+  color: var(--color-info);
+}
+
 .ugra-origin--none {
-  border-color: color-mix(in srgb, var(--color-warn) 40%, transparent);
   color: var(--color-warn);
+}
+
+/* ---------- PriorityBars (3.4) ---------- */
+
+.ugra-priority-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ugra-priority__label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+}
+
+.ugra-priority {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 15px;
+}
+
+.ugra-priority__bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--color-graphite-soft);
+}
+
+.ugra-priority__bar:nth-child(1) {
+  height: 7px;
+}
+
+.ugra-priority__bar:nth-child(2) {
+  height: 9px;
+}
+
+.ugra-priority__bar:nth-child(3) {
+  height: 12px;
+}
+
+.ugra-priority__bar:nth-child(4) {
+  height: 15px;
+}
+
+.ugra-priority__bar--on {
+  background: var(--color-graphite);
+}
+
+.ugra-priority--critical .ugra-priority__bar--on,
+.ugra-priority--emergency .ugra-priority__bar--on {
+  background: var(--color-danger);
 }
 
 /* ---------- MicButton ---------- */
@@ -762,23 +900,22 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 50%;
-  background: var(--color-surface-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
   transition:
     color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
     background var(--dur-base) var(--ease-out);
 }
 
-.ugra-mic:hover {
+.ugra-mic:hover:not(:disabled) {
+  background: var(--color-graphite-soft);
   color: var(--color-text);
-  border-color: var(--color-accent);
 }
 
 .ugra-mic:disabled {
@@ -788,8 +925,6 @@ kbd {
 
 .ugra-mic--recording {
   color: var(--color-danger);
-  border-color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
 }
 
 .ugra-mic--recording::before,
@@ -820,11 +955,11 @@ kbd {
 @keyframes ugra-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -837,9 +972,42 @@ kbd {
   }
 }
 
+@keyframes ugra-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ugra-drawer {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ugra-sticker {
+  from {
+    opacity: 0;
+    transform: translateX(30px) rotate(2deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0.6deg);
+  }
+}
+
 @keyframes ugra-pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+    box-shadow: 0 0 0 0 var(--color-accent-ring);
   }
   100% {
     box-shadow: 0 0 0 14px transparent;
@@ -848,14 +1016,27 @@ kbd {
 
 @keyframes ugra-field-flash {
   0% {
-    background: color-mix(in srgb, var(--color-accent) 42%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
     transform: translateY(6px);
   }
   60% {
-    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
-    transform: translateY(0);
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    transform: none;
   }
   100% {
+    background: transparent;
+  }
+}
+
+@keyframes ugra-row-flash {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
     background: transparent;
   }
 }
@@ -893,7 +1074,7 @@ kbd {
     transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(3%, -4%, 0) scale(1.06);
+    transform: translate3d(70px, 40px, 0) scale(1.04);
   }
 }
 
@@ -903,16 +1084,16 @@ kbd {
     transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translate3d(-4%, 5%, 0);
+    transform: translate3d(-60px, 50px, 0);
   }
 }
 
 @keyframes ugra-shimmer {
   0% {
-    background-position: -240% 0;
+    background-position: 200% 0;
   }
   100% {
-    background-position: 240% 0;
+    background-position: -200% 0;
   }
 }
 
@@ -923,15 +1104,15 @@ kbd {
   margin: 0;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
-  background: var(--gradient-accent);
-  color: var(--color-accent-contrast);
+  border: 1px solid var(--color-accent-ring);
+  background: var(--color-graphite);
+  color: var(--color-graphite-contrast);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-semi);
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--shadow-pop);
   transform-origin: left center;
 }
 
@@ -942,5 +1123,6 @@ kbd {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
   }
 }

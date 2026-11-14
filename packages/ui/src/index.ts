@@ -5,6 +5,7 @@
 
 export * from './types';
 export * from './format';
+export * from './ticket-format';
 export * from './animations';
 export * from './useActionCounter';
 export { cx } from './cx';
@@ -26,6 +27,8 @@ export { Timeline } from './components/Timeline';
 export type { TimelineItem, TimelineProps } from './components/Timeline';
 export { OriginBadge, ORIGIN_META } from './components/OriginBadge';
 export type { OriginBadgeProps } from './components/OriginBadge';
+export { PriorityBars } from './components/PriorityBars';
+export type { PriorityBarsProps } from './components/PriorityBars';
 export { MicButton } from './components/MicButton';
 export type { MicButtonProps } from './components/MicButton';
 export { Slot } from './components/Slot';
