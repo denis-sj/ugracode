@@ -82,7 +82,9 @@
   клиент при `end` присылает расшифровку, поэтому итог не теряется.
 - **QR и туннель.** `pnpm demo:tunnel` поднимает `cloudflared tunnel --url http://localhost:5173`, вынимает адрес
   из вывода, печатает QR и пишет `.demo/public-url`; API отдаёт его только роли с `tickets.queue`.
-  `PUBLIC_WEB_URL` в `.env` важнее. В Vite добавлен `server.allowedHosts: ['.trycloudflare.com']`.
+  `PUBLIC_WEB_URL` в `.env` важнее. В Vite добавлен `server.allowedHosts: ['.trycloudflare.com']` (проверено и на
+  `vite preview`, который запускается в docker). На docker-стенде `.demo` примонтирована в API только для чтения,
+  поэтому адрес не нужно вписывать в `.env` руками.
 - **Вкладка в шапке.** У диспетчера и админа появилась вкладка «Звонок» (`/calls`, иконка `phone`):
   строка в `apps/web/src/shell/lib.ts` и контур в `TabIcon.tsx`. Экран зарегистрирован веб-модулем,
   а вкладка показывает его на проекторе без ручного ввода адреса.
