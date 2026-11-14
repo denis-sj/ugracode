@@ -162,7 +162,8 @@
             <p class="pair-cap">Без ИИ → с ИИ · одна заявка</p>
             <div class="pair"><span class="pair-from" data-num="actionsManual">—</span><span class="pair-arrow">→</span><span class="pair-to" data-num="actionsAi">—</span><span class="pair-unit">действий</span></div>
             <div class="pair"><span class="pair-from" data-num="timeManual" data-suffix=" с">—</span><span class="pair-arrow">→</span><span class="pair-to" data-num="timeAi" data-suffix=" с">—</span><span class="pair-unit">на заявку</span></div>
-            <p class="source" data-src="actionsManual">источник</p>
+            <p class="ai-parse">разбор ИИ: <b data-num="aiParseTypical" data-suffix=" с">—</b> типовое · <b data-num="aiParseMissing" data-suffix=" с">—</b> нехватка данных · <b data-num="aiParseEmergency" data-suffix=" с">—</b> авария <span class="muted">— работает машина, диспетчер свободен</span></p>
+            <p class="source" data-src="actionsManual,aiParseTypical">источник</p>
           </div>
         </div>
         <div class="gain-row">
@@ -170,11 +171,11 @@
             <p class="block-cap"><span class="dot dot-alarm"></span>Цена промедления при&nbsp;аварии</p>
             <div class="tl">
               <div class="tl-line" aria-hidden="true"><span class="tl-fill"></span></div>
-              <div class="tl-pt" style="--x:0%"><b>0 с</b><span>сообщение</span></div>
-              <div class="tl-pt" style="--x:50%"><b data-num="emergencyDetected" data-suffix=" с">—</b><span>авария распознана</span></div>
-              <div class="tl-pt" style="--x:100%"><b data-num="emergencyNotified" data-suffix=" с">—</b><span>дежурный уведомлён</span></div>
+              <div class="tl-pt tl-start" style="--x:0%"><b>0 с</b><span>сообщение</span></div>
+              <div class="tl-pt tl-end" style="--x:100%"><b data-num="emergencyNotified" data-suffix=" с">—</b><span>авария распознана и&nbsp;<span data-num="dutyNotified">3</span> дежурных уведомлены</span></div>
             </div>
-            <p class="tl-manual">вручную — <strong data-num="emergencyManual" data-suffix=" с">—</strong> до&nbsp;уведомления</p>
+            <p class="tl-manual">раньше, чем диспетчер открыл заявку · вручную — <strong data-num="emergencyManual" data-suffix=" с">—</strong></p>
+            <p class="source" data-src="emergencyNotified">источник</p>
           </div>
           <div class="gain-c card" data-step="3">
             <p class="block-cap">Сэкономлено за&nbsp;месяц</p>

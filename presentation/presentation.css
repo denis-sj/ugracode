@@ -366,7 +366,7 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.9em;
 .gain-pairs .source { position: static; margin-top: 8px; }
 .gain-row { display: grid; grid-template-columns: 1.15fr 1fr; gap: 32px; margin-top: 32px; }
 .gain-b, .gain-c { padding: 28px 36px 28px; }
-.tl { position: relative; height: 150px; margin: 0 40px; }
+.tl { position: relative; height: 128px; margin: 0 40px; }
 .tl-line { position: absolute; left: 0; right: 0; top: 18px; height: 6px; border-radius: 3px; background: rgba(212, 56, 13, 0.15); }
 .tl-fill { position: absolute; inset: 0; border-radius: 3px; background: var(--alarm); transform-origin: 0 50%; }
 .tl-pt {
@@ -376,11 +376,16 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.9em;
   width: 220px;
 }
 .tl-pt::before { content: ''; width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 8px var(--alarm); margin-bottom: 12px; }
-.tl-pt:first-of-type { align-items: flex-start; text-align: left; transform: translateX(-20px); }
-.tl-pt:last-of-type { align-items: flex-end; text-align: right; transform: translateX(calc(-100% + 20px)); }
+.tl-start { align-items: flex-start; text-align: left; transform: translateX(-20px); }
+.tl-end { align-items: flex-end; text-align: right; transform: translateX(calc(-100% + 20px)); width: 420px; }
+.tl-end > span { white-space: normal; }
+.tl-end span span { font-size: inherit; color: inherit; }
 .tl-pt b { font-size: 44px; font-weight: 800; line-height: 1.1; color: var(--alarm); font-variant-numeric: tabular-nums; }
 .tl-pt span { font-size: 22px; color: var(--text-2); font-weight: 600; white-space: nowrap; }
-.tl-manual { margin: 8px 0 0; font-size: 26px; color: var(--text-2); }
+.gain-b .source { position: static; margin-top: 6px; }
+.ai-parse { margin: 6px 0 0; font-size: 24px; color: var(--text-2); }
+.ai-parse b { color: var(--text); font-variant-numeric: tabular-nums; }
+.tl-manual { margin: 8px 0 0; font-size: 24px; white-space: nowrap; color: var(--text-2); }
 .tl-manual strong { color: var(--text); }
 .save-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .save {

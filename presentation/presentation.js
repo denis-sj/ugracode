@@ -17,14 +17,20 @@ const DATA = {
   model: { value: 'deepseek-v4.1-flash', source: 'модель deepseek-v4.1-flash' },
 
   // Слайд 6, блок 1 — reports/measure.md, раздел 4, случай 1 (медиана из 3)
-  actionsManual: { value: null, source: 'reports/measure.md · замер на одном человеке, медиана из 3' },
+  actionsManual: { value: null, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
   actionsAi: { value: null, source: 'reports/measure.md, раздел 4' },
   timeManual: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
   timeAi: { value: null, source: 'reports/measure.md, раздел 4' }, // секунды
 
-  // Слайд 6, блок 2 — reports/measure.md, раздел 5 (случай 3, авария), секунды
-  emergencyDetected: { value: null, source: 'reports/measure.md, раздел 5' },
-  emergencyNotified: { value: null, source: 'reports/measure.md, раздел 5' },
+  // Слайд 6, блок 1 — разбор ИИ (время машины), reports/measure.md, раздел 4а, медиана из 3, секунды
+  aiParseTypical: { value: 24.7, digits: 1, source: 'reports/measure.md, разделы 4 и 4а · медиана 3 прогонов' },
+  aiParseMissing: { value: 6.6, digits: 1, source: 'reports/measure.md, раздел 4а' },
+  aiParseEmergency: { value: 18.0, digits: 1, source: 'reports/measure.md, раздел 4а' },
+
+  // Слайд 6, блок 2 — reports/measure.md, раздел 5 (случай 3, авария), секунды.
+  // С ИИ авария распознана и дежурные уведомлены в один момент (реестр: «16 с, 3 дежурных»).
+  emergencyNotified: { value: 16, source: 'reports/measure.md, раздел 5 · медиана 3 прогонов' },
+  dutyNotified: { value: 3, source: 'reports/measure.md, раздел 5' },
   emergencyManual: { value: null, source: 'reports/measure.md, раздел 5' },
 
   // Слайд 6, блок 3 — reports/measure.md, раздел 6 (расчёт)
@@ -81,7 +87,9 @@ const SHOW = {
   /* ---------- цифры ---------- */
 
   function fmt(item, v, suffix) {
-    let s = nf.format(v);
+    let s = item.digits
+      ? new Intl.NumberFormat('ru-RU', { minimumFractionDigits: item.digits, maximumFractionDigits: item.digits }).format(v)
+      : nf.format(v);
     if (item.unit === '%') s += NBSP + '%';
     if (suffix) s += suffix.replace(' ', NBSP);
     return s;
@@ -138,7 +146,7 @@ const SHOW = {
         return;
       }
       const o = { v: 0 };
-      const decimals = Number.isInteger(target) ? 0 : 1;
+      const decimals = item.digits || (Number.isInteger(target) ? 0 : 1);
       el.textContent = fmt(item, 0, el.dataset.suffix);
       countTweens.set(el, gsap.to(o, {
         v: target,
