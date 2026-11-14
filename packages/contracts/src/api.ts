@@ -80,7 +80,7 @@ export type UpdateFieldInput = z.infer<typeof UpdateFieldInput>;
 export const ConfirmTicketInput = z.object({ assigneeId: z.string().min(1) });
 export type ConfirmTicketInput = z.infer<typeof ConfirmTicketInput>;
 
-export const TransitionInput = z.object({ to: TicketStatus });
+export const TransitionInput = z.object({ to: TicketStatus, reason: z.string().min(1).max(300).optional() });
 export type TransitionInput = z.infer<typeof TransitionInput>;
 
 export const ReanalyzeResponse = z.object({ runId: z.string(), ticketId: z.string() });

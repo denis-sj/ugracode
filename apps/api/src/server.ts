@@ -416,9 +416,15 @@ function registerCoreRoutes(
     body: TransitionInput,
     handler: async ({ params, body, user }) => {
       const actor = requireUser(user);
-      const input = body as { to: Parameters<typeof tickets.transition>[1] };
+      const input = body as { to: Parameters<typeof tickets.transition>[1]; reason?: string };
       try {
-        return await tickets.transition(params.id ?? '', input.to, { kind: 'user', id: actor.id }, actor.role);
+        return await tickets.transition(
+          params.id ?? '',
+          input.to,
+          { kind: 'user', id: actor.id },
+          actor.role,
+          input.reason,
+        );
       } catch (error) {
         throw httpError(error instanceof Error ? error.message : 'Переход запрещён', 403);
       }
@@ -470,7 +476,8 @@ function registerCoreRoutes(
   addRoute({
     method: 'POST',
     url: '/api/tickets/:id/deadline',
-    access: 'tickets.edit',
+    // Срок продлевает и диспетчер, и инженер по своей заявке.
+    access: 'tickets.transition',
     body: DeadlineInput,
     handler: async ({ params, body, user }) => {
       const actor = requireUser(user);

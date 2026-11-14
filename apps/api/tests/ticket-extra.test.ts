@@ -101,6 +101,18 @@ describe('сроки и результат инженера', () => {
     expect(JSON.stringify(events.json())).toContain('ticket.deadline.extended');
   });
 
+  it('инженер продлевает срок своей заявки', async () => {
+    const { ctx, ticketId, engineer } = await setup();
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/tickets/${ticketId}/deadline`,
+      headers: { cookie: engineer },
+      payload: { slaDueAt: '2026-11-17T12:00:00.000Z', reason: 'нужна деталь' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect((response.json() as { slaDueAt: string }).slaDueAt).toBe('2026-11-17T12:00:00.000Z');
+  });
+
   it('инженер записывает результат и закрывает заявку', async () => {
     const { ctx, ticketId, dispatcher, engineer } = await setup();
     await ctx.app.inject({
@@ -151,6 +163,29 @@ describe('возврат заявителю и фильтр аварий', () =>
     });
     expect(response.statusCode).toBe(200);
     expect((response.json() as { status: string }).status).toBe('waiting_applicant');
+  });
+
+  it('возврат диспетчеру сохраняет причину в событии', async () => {
+    const { ctx, ticketId, dispatcher, engineer } = await setup();
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/tickets/${ticketId}/confirm`,
+      headers: { cookie: dispatcher },
+      payload: { assigneeId: 'u-engineer-1' },
+    });
+    const returned = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/tickets/${ticketId}/transition`,
+      headers: { cookie: engineer },
+      payload: { to: 'in_review', reason: 'нужен доступ в серверную' },
+    });
+    expect(returned.statusCode).toBe(200);
+    const events = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/tickets/${ticketId}/events`,
+      headers: { cookie: dispatcher },
+    });
+    expect(JSON.stringify(events.json())).toContain('нужен доступ в серверную');
   });
 
   it('фильтр isEmergency=false не превращается в true', async () => {
