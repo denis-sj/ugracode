@@ -47,11 +47,12 @@ export default defineModule({
   title: 'Звонок ИИ-оператору',
   enabledByDefault: true,
   routes(router, deps) {
-    // Страница звонка открывается по QR без входа, поэтому `turn` и `end` — право `any`
-    // с лимитом частоты по адресу; читать звонки может только диспетчер.
+    // Страница звонка открывается по QR без входа, поэтому при «Ответить» она входит гостем
+    // (u-call-guest) и получает право `appeal.create`: звонящий создаёт обращение.
+    // Сверх права — лимит частоты по адресу: жюри звонит по разу, бот — сотнями.
     router.post(
       '/turn',
-      'any',
+      'appeal.create',
       async ({ body, headers }) => {
         const runtime = voiceRuntime(deps);
         const input = body as TurnInput;
@@ -63,7 +64,7 @@ export default defineModule({
       },
       { body: TurnInput, response: TurnResponse },
     );
-    router.post('/end', 'any', async ({ body }) => voiceRuntime(deps).service.end(body as EndInput), {
+    router.post('/end', 'appeal.create', async ({ body }) => voiceRuntime(deps).service.end(body as EndInput), {
       body: EndInput,
       response: EndResponse,
     });
