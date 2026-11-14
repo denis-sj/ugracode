@@ -1,4 +1,5 @@
 import type { WebModule } from '@ugra/core';
+import aiVsManualWeb from './ai-vs-manual/web';
 import applicantFeedbackWeb from './applicant-feedback/web';
 import clarifyChatWeb from './clarify-chat/web';
 import dispatcherReviewWeb from './dispatcher-review/web';
@@ -9,6 +10,7 @@ import reportsDashboardWeb from './reports-dashboard/web';
 
 /** Манифест веб-частей модулей: одна строка на модуль, порядок алфавитный. */
 export const webModules: WebModule[] = [
+  aiVsManualWeb,
   applicantFeedbackWeb,
   clarifyChatWeb,
   dispatcherReviewWeb,
@@ -19,6 +21,7 @@ export const webModules: WebModule[] = [
 ];
 
 export {
+  aiVsManualWeb,
   applicantFeedbackWeb,
   clarifyChatWeb,
   dispatcherReviewWeb,
