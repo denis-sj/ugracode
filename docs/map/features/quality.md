@@ -7,20 +7,24 @@
 `pnpm eval` гоняет контрольный набор через тот же `PipelineEngine`, что и демо, и считает оценщики
 раздела 5 харнесса. Результат — таблица «эталон / ИИ» в `reports/quality.md` (её владелец переносит
 на слайд), полные траектории в `reports/eval-<дата-время>.json` и строка в `reports/quality-history.md`
-(дата, модель, версия промпта, 11 оценщиков — слайд «как росла точность»). Экрана «Качество» и таблицы
-`eval_run` нет: по решению брейншторма это COULD.
+(дата, модель, версия промпта, 11 оценщиков — слайд «как росла точность»). Экран 14 «Качество ИИ»
+(К2) читает последний отчёт и умеет прогнать набор заново в режиме заглушки: страница `/quality`
+для руководителя и админа, маршруты `GET /api/m/quality/report` и `POST /api/m/quality/run`.
 
 ## Файлы
 
-| Файл | Что там |
-|---|---|
-| `modules/quality/server/metrics.ts` | чистые оценщики: сравнение полей по `evalMode`, выдуманные поля, авария, приоритет, исполнитель, статья, вопрос, траектория, медианы, сводка с порогами |
-| `modules/quality/server/run.ts` | прогон набора: загрузка `data/*.json` и `testset/cases`, заглушка `StubLlm` из `testset/stubs/NN.json`, `MemoryStore` + `KernelEventBus`, сбор наблюдений и метрик шагов, `evalReportJson()` |
-| `modules/quality/server/report.ts` | отчёт: таблица «эталон / ИИ», таблица по обращениям, провалы по оценщикам, оговорки; консольная версия |
-| `modules/quality/server/history.ts` | история настройки: `historyRow()` (прогон → строка), `renderHistory()`, `parseHistory()`, `appendHistory()` без дублей, `promptVersion()` — sha256 файла промпта |
-| `modules/quality/server/index.ts` | `defineModule`: у модуля нет шагов, инструментов и агентов — он не участвует в разборе |
-| `modules/quality/tests/` | режимы сравнения, выдуманные поля, пропуски, все оценщики, агрегаты и пороги, мини-прогон на фикстурах, история (round-trip, дубли, битые строки), тест-контракт |
-| `scripts/eval.ts` | CLI `pnpm eval [--model <id>] [--cloud] [--case NN]`: консоль, `reports/quality.md`, `reports/eval-<дата>.json`, строка в `reports/quality-history.md` |
+| Файл                                    | Что там                                                                                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `modules/quality/server/metrics.ts`     | чистые оценщики: сравнение полей по `evalMode`, выдуманные поля, авария, приоритет, исполнитель, статья, вопрос, траектория, медианы, сводка с порогами                                                                        |
+| `modules/quality/server/run.ts`         | прогон набора: загрузка `data/*.json` и `testset/cases`, заглушка `StubLlm` из `testset/stubs/NN.json`, `MemoryStore` + `KernelEventBus`, сбор наблюдений и метрик шагов, `evalReportJson()`                                   |
+| `modules/quality/server/report.ts`      | отчёт: таблица «эталон / ИИ», таблица по обращениям, провалы по оценщикам, оговорки; консольная версия                                                                                                                         |
+| `modules/quality/server/history.ts`     | история настройки: `historyRow()` (прогон → строка), `renderHistory()`, `parseHistory()`, `appendHistory()` без дублей, `promptVersion()` — sha256 файла промпта                                                               |
+| `modules/quality/server/report-data.ts` | структура для экрана: `parseQualityReport()` разбирает `reports/quality.md`, `reportFromRun()` собирает свежий прогон, `emptyReport()` — пустая страница                                                                       |
+| `modules/quality/server/index.ts`       | `defineModule`: шагов, инструментов и агентов нет; маршруты `GET /report` и `POST /run` (право `reports`), один прогон за раз, таймаут 60 с                                                                                    |
+| `modules/quality/contracts.ts`          | zod-схемы экрана: `QualityReport`, `QualityCase`, `QualityMetric`, `QualityRunRequest`, лимит 10 кейсов                                                                                                                        |
+| `modules/quality/web/`                  | страница `/quality`: `QualityPage.tsx`, клиент маршрутов `api.ts`, чистые функции таблицы и сводки `format.ts`, стили `quality.css`, регистрация `index.ts`                                                                    |
+| `modules/quality/tests/`                | режимы сравнения, выдуманные поля, пропуски, все оценщики, агрегаты и пороги, мини-прогон на фикстурах, история (round-trip, дубли, битые строки), разбор отчёта и экран (успех / пусто / битые данные / порог), тест-контракт |
+| `scripts/eval.ts`                       | CLI `pnpm eval [--model <id>] [--cloud] [--case NN]`: консоль, `reports/quality.md`, `reports/eval-<дата>.json`, строка в `reports/quality-history.md`                                                                         |
 
 ## Как работает
 
@@ -53,14 +57,14 @@
 Раздел 5.4 харнесса: видно, как росла точность от прогона к прогону. `reports/quality.md` остаётся
 последним прогоном, а `reports/quality-history.md` копит строки — по одной на `pnpm eval`.
 
-| Колонка | Откуда |
-|---|---|
-| Дата | `run.startedAt` (ISO), по ней же история сортируется: новые сверху |
-| Модель | `run.model`: `stub` или id модели из `--model`/`--cloud` |
-| Промпт | `promptVersion(readFileSync('modules/extraction/prompts/intake.v1.md'))` — первые 8 символов sha256; файла нет — «—» |
-| Набор | имя папки набора и число обращений: `cases (10)`; `--case 01` даёт `cases (1)` |
+| Колонка      | Откуда                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Дата         | `run.startedAt` (ISO), по ней же история сортируется: новые сверху                                                                                                  |
+| Модель       | `run.model`: `stub` или id модели из `--model`/`--cloud`                                                                                                            |
+| Промпт       | `promptVersion(readFileSync('modules/extraction/prompts/intake.v1.md'))` — первые 8 символов sha256; файла нет — «—»                                                |
+| Набор        | имя папки набора и число обращений: `cases (10)`; `--case 01` даёт `cases (1)`                                                                                      |
 | 11 оценщиков | `summary.evaluators` (`display`) в порядке `HISTORY_METRICS`: поля, выдуманные, авария, приоритет, топ-1, топ-3, статья, вопрос, траектория, медианы времени и цены |
-| Порогов | `summary.met` из `summary.withThreshold`: строка «7 из 11» |
+| Порогов      | `summary.met` из `summary.withThreshold`: строка «7 из 11»                                                                                                          |
 
 - Запись: `appendHistory(existing, historyRow(run, { prompt }))` — читает файл (или пустую строку),
   разбирает таблицу, ставит новую строку первой и рендерит заново. Дубль — совпадение
@@ -72,17 +76,37 @@
 - Промпт версионируется содержимым файла: правка `intake.v1.md` меняет хэш и даёт новую строку
   даже при той же модели — это и есть «одна правка → прогон» из цикла настройки.
 
+## Экран «Качество ИИ» (14)
+
+Страница `/quality` (роли `manager`, `admin`) — утверждённый макет `Quality.dc.html`:
+«Прогнать набор», таблица 10 обращений × 7 колонок (поля, выдуманные, приоритет, авария,
+исполнитель, статья, вопрос) и сводка оценщиков с порогами.
+
+| Что         | Как                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Загрузка    | `GET /api/m/quality/report` → `readQualityReport()`: файла нет — `{empty: true}`, битый файл — пустая страница с пометкой в `notes`           |
+| Прогон      | `POST /api/m/quality/run` → `runEval({ limit: 10 })` в режиме `stub` (записанные ответы `testset/stubs`, без сети), ответ — `reportFromRun()` |
+| Ограничения | не больше 10 кейсов, таймаут 60 с, повторный запуск поверх идущего — ошибка «Прогон уже идёт»                                                 |
+| Таблица     | `cellState()`: ✓ верно, ✕ ошибка, ? нет эталона; клик по строке раскрывает эталон/ответ ИИ, выдуманные поля, статью и шаги                    |
+| Сводка      | `metricRows()` и `thresholdState()`: порог выполнен / не выполнен / нет эталона; оговорка «10 обращений, синтетика» всегда на экране          |
+| Анимации    | `data-reveal` на заголовке, `useListMotion` на строках таблицы; тёмная тема — токены `@ugra/ui`                                               |
+
+Право `reports` (а не отдельное `quality`) выбрано намеренно: экран открывает руководитель,
+у которого нет прав диспетчера, а прогон — такое же чтение отчёта, как остальные отчёты О-серии.
+
 ## Точки входа
 
-| Что | Где |
-|---|---|
-| `pnpm eval` | `package.json` (`tsx scripts/eval.ts`) |
-| Один кейс с трассировкой | `pnpm eval --case 04` → `runEval({ caseId })`, печать `run.cases[0].trace` |
-| Оценщики как функции | `metrics.ts`: `evaluateFields`, `evaluatePriority`, `evaluateEmergency`, `evaluateAssignee`, `evaluateArticle`, `evaluateQuestion`, `evaluateTrajectory`, `summarize` |
-| Прогон без CLI (тесты, отчёты) | `runEval({ dirs, model, cloud, caseId })` |
-| Отчёт | `renderQualityReport(run)` / `renderConsole(run)`, `evalReportJson(run)` |
-| История настройки | `historyRow(run, { prompt })`, `appendHistory(existing, row)`, `parseHistory(markdown)`, `promptVersion(content)` |
-| Регистрация модуля | `modules/registry.server.ts` — одна строка `quality` |
+| Что                            | Где                                                                                                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm eval`                    | `package.json` (`tsx scripts/eval.ts`)                                                                                                                                |
+| Один кейс с трассировкой       | `pnpm eval --case 04` → `runEval({ caseId })`, печать `run.cases[0].trace`                                                                                            |
+| Оценщики как функции           | `metrics.ts`: `evaluateFields`, `evaluatePriority`, `evaluateEmergency`, `evaluateAssignee`, `evaluateArticle`, `evaluateQuestion`, `evaluateTrajectory`, `summarize` |
+| Прогон без CLI (тесты, отчёты) | `runEval({ dirs, model, cloud, caseId })`                                                                                                                             |
+| Отчёт                          | `renderQualityReport(run)` / `renderConsole(run)`, `evalReportJson(run)`                                                                                              |
+| Экран                          | `QualityPage` (`modules/quality/web/QualityPage.tsx`), чистые функции — `modules/quality/web/format.ts`                                                               |
+| API экрана                     | `GET /api/m/quality/report`, `POST /api/m/quality/run` — `modules/quality/server/index.ts`                                                                            |
+| История настройки              | `historyRow(run, { prompt })`, `appendHistory(existing, row)`, `parseHistory(markdown)`, `promptVersion(content)`                                                     |
+| Регистрация модуля             | `modules/registry.server.ts` — одна строка `quality`; веб-часть — `modules/registry.web.ts`, строка `qualityWeb`                                                      |
 
 ## Проверки
 
@@ -97,6 +121,8 @@ npx tsx scripts/eval.ts            # создаёт reports/quality.md, reports/
 - агрегаты: все пороги выполнены / не выполнены, «—» без эталона и это не провал;
 - мини-прогон на двух кейсах во временной папке: успешный кейс, мусорный эталон, битый файл в `skipped`;
 - история: round-trip «рендер → разбор», дубли по дате+модели+версии, битые строки, пустая история;
+- экран: разбор реального `reports/quality.md` (шапка, 11 оценщиков, кейсы, подробности, оговорки),
+  пустой и битый markdown, свежий прогон с лимитом 10, клетки ✓/✕/? и состояния порогов;
 - тест-контракт модуля и сквозной прогон с выключенным модулем.
 
 ## Особенности

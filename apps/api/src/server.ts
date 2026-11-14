@@ -8,7 +8,6 @@ import {
   DeadlineInput,
   EngineerInfo,
   EngineersResponse,
-  EventsResponse,
   HealthResponse,
   NotificationsResponse,
   PostAppealMessageInput,

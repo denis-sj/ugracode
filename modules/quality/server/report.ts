@@ -62,7 +62,7 @@ function caseRow(item: CaseRun): string {
   ].join('');
 }
 
-function failureLines(item: CaseRun): string[] {
+export function failureLines(item: CaseRun): string[] {
   const evaluation = item.evaluation;
   const lines: string[] = [];
   for (const outcome of evaluation.fields.outcomes) {

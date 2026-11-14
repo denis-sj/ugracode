@@ -116,6 +116,8 @@ export interface EvalOptions {
   cloud?: boolean;
   /** Один кейс: `04`, `04-network-…` или `case-04` (`--case`). */
   caseId?: string;
+  /** Верхняя граница набора: экран «Качество» гоняет не больше 10 обращений. */
+  limit?: number;
 }
 
 export interface CaseRun {
@@ -533,7 +535,9 @@ export async function runEval(options: EvalOptions = {}): Promise<EvalRun> {
   const steps = [...coreSteps(), ...registries.steps];
   const loaded = loadCases(dirs.casesDir);
   const selected = options.caseId ? selectCase(loaded.cases, options.caseId) : loaded.cases;
-  if (selected.length === 0) throw new Error(`в наборе ${dirs.casesDir} нет ни одного обращения`);
+  const limited =
+    options.limit !== undefined && options.limit > 0 ? selected.slice(0, options.limit) : selected;
+  if (limited.length === 0) throw new Error(`в наборе ${dirs.casesDir} нет ни одного обращения`);
 
   const warnings: string[] = [];
   const env: CaseEnvironment = {
@@ -552,7 +556,7 @@ export async function runEval(options: EvalOptions = {}): Promise<EvalRun> {
 
   const startedAt = new Date().toISOString();
   const cases: CaseRun[] = [];
-  for (const evalCase of selected) {
+  for (const evalCase of limited) {
     cases.push(await runCase(env, evalCase));
   }
   const finishedAt = new Date().toISOString();
