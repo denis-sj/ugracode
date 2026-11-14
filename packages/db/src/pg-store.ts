@@ -18,6 +18,7 @@ import type { AgentStepRecord } from '@ugra/core';
 import type {
   ApplicantEquipment,
   ApplicantProfile,
+  ArticleStepState,
   Incident,
   IncidentFilter,
   KnowledgeArticle,
@@ -36,6 +37,7 @@ import {
   mapIncidentRow,
   mapKbArticleRow,
   mapPipelineStepRow,
+  mapTicketArticleStepRow,
   mapTicketFieldRow,
   mapTicketRow,
   mapUserRow,
@@ -56,6 +58,7 @@ import {
   pipelineRunTable,
   pipelineStepTable,
   schema,
+  ticketArticleStepTable,
   ticketFieldTable,
   ticketTable,
   userTable,
@@ -789,6 +792,42 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
       title: row.title,
       score: toScore(row.score),
     }));
+  }
+
+  async listArticleSteps(ticketId: string): Promise<ArticleStepState[]> {
+    const rows = await this.db
+      .select()
+      .from(ticketArticleStepTable)
+      .where(eq(ticketArticleStepTable.ticketId, ticketId))
+      .orderBy(asc(ticketArticleStepTable.articleId), asc(ticketArticleStepTable.stepIndex));
+    return rows.map(mapTicketArticleStepRow);
+  }
+
+  async toggleArticleStep(
+    ticketId: string,
+    articleId: string,
+    stepIndex: number,
+    done: boolean,
+  ): Promise<ArticleStepState> {
+    const rows = await this.db
+      .insert(ticketArticleStepTable)
+      .values({ ticketId, articleId, stepIndex, done, updatedAt: new Date().toISOString() })
+      .onConflictDoUpdate({
+        target: [
+          ticketArticleStepTable.ticketId,
+          ticketArticleStepTable.articleId,
+          ticketArticleStepTable.stepIndex,
+        ],
+        // Повтор с тем же значением не двигает время: отметка идемпотентна.
+        set: {
+          done,
+          updatedAt: sql`CASE WHEN ${ticketArticleStepTable.done} = ${done} THEN ${ticketArticleStepTable.updatedAt} ELSE now() END`,
+        },
+      })
+      .returning();
+    const row = rows[0];
+    if (!row) throw new Error(`Не удалось сохранить шаг ${articleId}:${stepIndex}`);
+    return mapTicketArticleStepRow(row);
   }
 }
 

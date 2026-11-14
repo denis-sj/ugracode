@@ -15,7 +15,7 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
-import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, Incident, KnowledgeArticle } from '@ugra/core';
+import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, ArticleStepState, Incident, KnowledgeArticle } from '@ugra/core';
 import type {
   AppealMessageRow,
   AppealRow,
@@ -27,6 +27,7 @@ import type {
   KbArticleRow,
   PipelineRunRow,
   PipelineStepRow,
+  TicketArticleStepRow,
   TicketFieldRow,
   TicketRow,
   UserRow,
@@ -187,6 +188,17 @@ export function mapKbArticleRow(row: KbArticleRow): KnowledgeArticle {
     steps: row.steps ?? [],
     solution: row.solution,
     category: row.category,
+  };
+}
+
+/** Строка БД → отметка шага статьи у заявки. */
+export function mapTicketArticleStepRow(row: TicketArticleStepRow): ArticleStepState {
+  return {
+    ticketId: row.ticketId,
+    articleId: row.articleId,
+    stepIndex: row.stepIndex,
+    done: row.done,
+    updatedAt: toIso(row.updatedAt),
   };
 }
 

@@ -35,13 +35,22 @@ import {
   recurringEquipmentCount,
   sortMyTasks,
   statusActions,
+  stepCounterLabel,
+  stepKey,
   stepProgress,
+  stepsToChecked,
   taskEquipment,
   taskPlace,
   taskTitle,
   tasksCountLabel,
 } from './format';
-import type { KnowledgeArticle, KnowledgeResponse } from './format';
+import type {
+  ArticleStepsResponse,
+  AskResponse,
+  AskSource,
+  KnowledgeArticle,
+  KnowledgeResponse,
+} from './format';
 
 type Tab = 'tasks' | 'kb';
 type MessageTone = 'ok' | 'error';
@@ -106,25 +115,25 @@ function StatusBadge({ status }: { status: TicketStatus }): JSX.Element {
 interface StepChecklistProps {
   article: KnowledgeArticle;
   checked: Readonly<Record<string, boolean>>;
-  onToggle: (key: string) => void;
+  onToggle: (articleId: string, stepIndex: number) => void;
   /** Подпись над шагами: на задаче «Диагностика», в статье — «Шаги статьи». */
   caption?: string;
 }
 
-/** Шаги статьи чек-листом: отметки живут только в интерфейсе и не уходят в API. */
+/** Шаги статьи чек-листом: на задаче отметки уходят в API, в статье живут в интерфейсе. */
 function StepChecklist({ article, checked, onToggle, caption = 'Диагностика' }: StepChecklistProps): JSX.Element {
   const set = new Set(
-    article.steps.map((_step, index) => index).filter((index) => checked[`${article.id}:${index}`]),
+    article.steps.map((_step, index) => index).filter((index) => checked[stepKey(article.id, index)]),
   );
   const progress = stepProgress(article.steps, set);
   return (
     <div className="ed-steps">
       <p className="ed-steps__caption">
-        {caption} · {progress.done} из {progress.total}
+        {caption} · {stepCounterLabel(progress.done, progress.total)}
       </p>
       <ul className="ed-steps__list">
         {article.steps.map((step, index) => {
-          const key = `${article.id}:${index}`;
+          const key = stepKey(article.id, index);
           const on = Boolean(checked[key]);
           return (
             <li key={key}>
@@ -132,7 +141,7 @@ function StepChecklist({ article, checked, onToggle, caption = 'Диагност
                 type="button"
                 className={on ? 'ed-step ed-step--done' : 'ed-step'}
                 aria-pressed={on}
-                onClick={() => onToggle(key)}
+                onClick={() => onToggle(article.id, index)}
               >
                 <span className={on ? 'ed-step__box ed-step__box--on' : 'ed-step__box'} aria-hidden="true">
                   {on && (
@@ -155,7 +164,7 @@ function StepChecklist({ article, checked, onToggle, caption = 'Диагност
 interface ArticleCardProps {
   article: KnowledgeArticle;
   checked: Readonly<Record<string, boolean>>;
-  onToggle: (key: string) => void;
+  onToggle: (articleId: string, stepIndex: number) => void;
 }
 
 /** Статья целиком: симптомы, что обычно помогает, шаги. */
@@ -201,6 +210,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
 
   const [diagnostics, setDiagnostics] = useState<Loadable<KnowledgeResponse>>(EMPTY_LOAD);
   const [checkedSteps, setCheckedSteps] = useState<Record<string, boolean>>({});
+  const [kbCheckedSteps, setKbCheckedSteps] = useState<Record<string, boolean>>({});
 
   const [resultText, setResultText] = useState('');
   const [message, setMessage] = useState<Message | null>(null);
@@ -217,6 +227,12 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
   const [kbState, setKbState] = useState<Loadable<KnowledgeResponse>>(EMPTY_LOAD);
   const [kbArticleId, setKbArticleId] = useState<string | null>(null);
   const [kbTick, setKbTick] = useState(0);
+
+  const [askQuestion, setAskQuestion] = useState('');
+  const [askState, setAskState] = useState<Loadable<AskResponse>>(EMPTY_LOAD);
+  const [askBusy, setAskBusy] = useState(false);
+  const [openedArticle, setOpenedArticle] = useState<KnowledgeArticle | null>(null);
+  const [openedError, setOpenedError] = useState<string | null>(null);
 
   const now = useNow(30_000);
 
@@ -282,6 +298,27 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
     setResultText('');
     setCheckedSteps({});
   }, [selectedId]);
+
+  // Отметки шагов статьи у заявки живут на сервере: чек-лист переживает перезагрузку.
+  useEffect(() => {
+    if (!selectedId) {
+      setCheckedSteps({});
+      return undefined;
+    }
+    let alive = true;
+    api
+      .get<ArticleStepsResponse>(`/api/m/knowledge/tickets/${encodeURIComponent(selectedId)}/steps`)
+      .then((response) => {
+        if (alive) setCheckedSteps(stepsToChecked(response.steps));
+      })
+      .catch(() => {
+        // Без API чек-лист остаётся рабочим локально; сохранение покажет ошибку.
+        if (alive) setCheckedSteps({});
+      });
+    return () => {
+      alive = false;
+    };
+  }, [api, selectedId, detailTick]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -505,14 +542,78 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
     );
   }
 
-  function toggleStep(key: string): void {
+  function toggleTaskStep(articleId: string, stepIndex: number): void {
+    const ticketId = selectedId;
+    if (!ticketId) return;
     trackAction?.('select');
-    setCheckedSteps((previous) => ({ ...previous, [key]: !previous[key] }));
+    const key = stepKey(articleId, stepIndex);
+    const previous = checkedSteps;
+    const next = !previous[key];
+    setCheckedSteps({ ...previous, [key]: next });
+    api
+      .post<{ step: { done: boolean } }>(
+        `/api/m/knowledge/tickets/${encodeURIComponent(ticketId)}/steps`,
+        { articleId, stepIndex, done: next },
+      )
+      .then((response) => {
+        setCheckedSteps((current) => ({ ...current, [key]: response.step.done }));
+      })
+      .catch((cause: unknown) => {
+        setCheckedSteps(previous);
+        setMessage({ text: errorText(cause), tone: 'error' });
+      });
+  }
+
+  function toggleKbStep(articleId: string, stepIndex: number): void {
+    trackAction?.('select');
+    const key = stepKey(articleId, stepIndex);
+    setKbCheckedSteps((previous) => ({ ...previous, [key]: !previous[key] }));
+  }
+
+  function askKnowledgeBase(): void {
+    const question = askQuestion.trim();
+    if (question.length < 3) {
+      setAskState({ loading: false, error: 'Опишите вопрос хотя бы тремя символами', data: null });
+      return;
+    }
+    trackAction?.('click');
+    setAskBusy(true);
+    setAskState({ loading: true, error: null, data: null });
+    setOpenedArticle(null);
+    setOpenedError(null);
+    api
+      .post<AskResponse>('/api/m/knowledge/ask', { question })
+      .then((response) => setAskState({ loading: false, error: null, data: response }))
+      .catch((cause: unknown) => setAskState({ loading: false, error: errorText(cause), data: null }))
+      .finally(() => setAskBusy(false));
+  }
+
+  function openSource(source: AskSource): void {
+    trackAction?.('navigate');
+    setOpenedError(null);
+    api
+      .get<{ article: KnowledgeArticle | null }>(
+        `/api/m/knowledge/articles/${encodeURIComponent(source.id)}`,
+      )
+      .then((response) => {
+        if (response.article) {
+          setOpenedArticle(response.article);
+          return;
+        }
+        setOpenedArticle(null);
+        setOpenedError(`Статья «${source.title}» не найдена`);
+      })
+      .catch((cause: unknown) => {
+        setOpenedArticle(null);
+        setOpenedError(errorText(cause));
+      });
   }
 
   function openArticleInKb(query: string): void {
     trackAction?.('navigate');
     setTab('kb');
+    setOpenedArticle(null);
+    setOpenedError(null);
     setKbQuery(query);
   }
 
@@ -533,7 +634,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
           <p className="ed-head__lead">
             {tab === 'tasks'
               ? 'Диагностика из базы знаний, запись результата и сроки по регламенту — на одном экране.'
-              : 'Поиск своими словами: симптомы, модель устройства или код ошибки.'}
+              : 'Спросите базу знаний своими словами или найдите статью поиском: симптомы, модель, код ошибки.'}
           </p>
         </div>
         <div className="ed-head__right">
@@ -783,7 +884,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
                       <StepChecklist
                         article={diagnosticArticle}
                         checked={checkedSteps}
-                        onToggle={toggleStep}
+                        onToggle={toggleTaskStep}
                       />
                     )}
 
@@ -964,8 +1065,107 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
         </div>
       ) : (
         <div className="ed-kb">
+          <Card className="ed-ask">
+            <h2 className="ed-card-title">Спросить базу знаний</h2>
+            <label className="ed-field">
+              <span className="ed-label">Вопрос инженера</span>
+              <textarea
+                className="ed-textarea"
+                rows={3}
+                value={askQuestion}
+                placeholder="Например: принтер HP мигает красным, что проверить сначала?"
+                onChange={(event) => {
+                  setAskQuestion(event.target.value);
+                  trackAction?.('input');
+                }}
+              />
+            </label>
+            <div className="ed-ask__actions">
+              <Button
+                variant="primary"
+                loading={askBusy}
+                disabled={askQuestion.trim().length < 3}
+                onClick={askKnowledgeBase}
+              >
+                Спросить
+              </Button>
+              <span className="ed-hint">
+                Агент ищет статьи инструментами и ссылается только на найденное — без выдуманных источников.
+              </span>
+            </div>
+          </Card>
+
+          {askState.loading && (
+            <Card className="ed-skeleton-card" aria-label="Ищем ответ в базе знаний">
+              <span className="ed-skeleton__line" />
+              <span className="ed-skeleton__line ed-skeleton__line--short" />
+            </Card>
+          )}
+
+          {!askState.loading && askState.error && (
+            <Card tone="danger">
+              <h2 className="ed-error__title">Ответ не получен</h2>
+              <p className="ugra-muted">{askState.error}</p>
+              <Button variant="secondary" size="sm" onClick={askKnowledgeBase}>
+                Повторить
+              </Button>
+            </Card>
+          )}
+
+          {!askState.loading && askState.data && (
+            <Card className="ed-answer">
+              <div className="ed-answer__head">
+                <h2 className="ed-card-title">Ответ базы знаний</h2>
+                <Badge tone={askState.data.mode === 'agent' ? 'accent' : 'muted'}>
+                  {askState.data.mode === 'agent' ? 'Агент с инструментами' : 'Шаблон по статьям'}
+                </Badge>
+              </div>
+              <p className="ed-answer__text">{askState.data.answer}</p>
+              {askState.data.steps && askState.data.steps.length > 0 && (
+                <ol className="ed-answer__steps">
+                  {askState.data.steps.map((step, index) => (
+                    <li key={`${index}-${step}`}>{step}</li>
+                  ))}
+                </ol>
+              )}
+              {askState.data.sources.length > 0 && (
+                <div className="ed-answer__sources">
+                  <span className="ed-label">Источники</span>
+                  <div className="ed-answer__links">
+                    {askState.data.sources.map((source) => (
+                      <button
+                        type="button"
+                        key={source.id}
+                        className="ed-source"
+                        onClick={() => openSource(source)}
+                      >
+                        <span className="ed-source__title">Открыть статью «{source.title}»</span>
+                        <span className="ed-source__id">{source.id}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {openedError && (
+            <Card tone="danger">
+              <h2 className="ed-error__title">Статья не открылась</h2>
+              <p className="ugra-muted">{openedError}</p>
+            </Card>
+          )}
+
+          {openedArticle && (
+            <ArticleCard
+              article={openedArticle}
+              checked={kbCheckedSteps}
+              onToggle={toggleKbStep}
+            />
+          )}
+
           <Card className="ed-kb__search">
-            <h2 className="ed-card-title">База знаний</h2>
+            <h2 className="ed-card-title">Поиск по статьям</h2>
             <SearchField
               value={kbQuery}
               onChange={(value) => {
@@ -974,7 +1174,6 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
               }}
               placeholder="Опишите симптом своими словами: «принтер не печатает»"
               label="Поиск по базе знаний"
-              autoFocus
             />
           </Card>
 
@@ -1044,7 +1243,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
               </Card>
 
               {kbArticle && (
-                <ArticleCard article={kbArticle} checked={checkedSteps} onToggle={toggleStep} />
+                <ArticleCard article={kbArticle} checked={kbCheckedSteps} onToggle={toggleKbStep} />
               )}
             </div>
           )}

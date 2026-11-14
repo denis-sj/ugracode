@@ -82,6 +82,19 @@ export interface ApplicantEquipment {
   note: string | null;
 }
 
+/**
+ * Отметка шага статьи базы знаний на карточке инженера (таблица `ticket_article_step`).
+ * Состояние живёт у заявки: повторных статей с тем же индексом шага не бывает.
+ */
+export interface ArticleStepState {
+  ticketId: string;
+  articleId: string;
+  /** Порядковый номер шага в статье, начиная с нуля. */
+  stepIndex: number;
+  done: boolean;
+  updatedAt: string;
+}
+
 /** Хранилище ядра. Реализации: память (тесты) и PostgreSQL (`@ugra/db`). */
 export interface KernelStore {
   listUsers(): Promise<User[]>;
@@ -144,6 +157,16 @@ export interface KernelStore {
   findSimilarTickets(query: SimilarTicketQuery): Promise<SimilarTicket[]>;
   /** Наполнение базы знаний в памяти: тесты и демо без базы. */
   saveKnowledgeArticle(article: KnowledgeArticle): Promise<void>;
+
+  /** Отметки шагов статей у заявки; нет отметок — пустой список. */
+  listArticleSteps(ticketId: string): Promise<ArticleStepState[]>;
+  /** Поставить или снять галочку шага статьи; повтор с тем же `done` ничего не меняет. */
+  toggleArticleStep(
+    ticketId: string,
+    articleId: string,
+    stepIndex: number,
+    done: boolean,
+  ): Promise<ArticleStepState>;
 }
 
 /** Хранилище в памяти: тесты, тест-контракт и демо без базы. */
@@ -161,6 +184,7 @@ export class MemoryStore implements KernelStore {
   private readonly notifications = new Map<string, UserNotification>();
   private readonly settings = new Map<string, SettingRecord>();
   private readonly knowledge = new Map<string, KnowledgeArticle>();
+  private readonly articleSteps = new Map<string, ArticleStepState>();
   private readonly applicantProfiles = new Map<string, ApplicantProfile>();
   private readonly applicantEquipment = new Map<string, ApplicantEquipment>();
 
@@ -427,6 +451,39 @@ export class MemoryStore implements KernelStore {
       .sort((a, b) => b.score - a.score || a.number.localeCompare(b.number))
       .slice(0, limit);
   }
+
+  async listArticleSteps(ticketId: string): Promise<ArticleStepState[]> {
+    return [...this.articleSteps.values()]
+      .filter((step) => step.ticketId === ticketId)
+      .sort((a, b) => a.articleId.localeCompare(b.articleId) || a.stepIndex - b.stepIndex)
+      .map((step) => ({ ...step }));
+  }
+
+  async toggleArticleStep(
+    ticketId: string,
+    articleId: string,
+    stepIndex: number,
+    done: boolean,
+  ): Promise<ArticleStepState> {
+    const key = articleStepKey(ticketId, articleId, stepIndex);
+    const current = this.articleSteps.get(key);
+    // Повтор с тем же значением — не новое действие: время не двигаем.
+    if (current && current.done === done) return { ...current };
+    const next: ArticleStepState = {
+      ticketId,
+      articleId,
+      stepIndex,
+      done,
+      updatedAt: new Date().toISOString(),
+    };
+    this.articleSteps.set(key, next);
+    return { ...next };
+  }
+}
+
+/** Ключ отметки шага в памяти: части разделены `\u0000`, чтобы id не склеивались. */
+function articleStepKey(ticketId: string, articleId: string, stepIndex: number): string {
+  return [ticketId, articleId, String(stepIndex)].join('\u0000');
 }
 
 /** Категории сравниваем без регистра и пробелов по краям. */

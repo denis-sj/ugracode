@@ -281,6 +281,22 @@ export const kbArticleTable = pgTable('kb_article', {
   embedding: vector('embedding', { dimensions: 768 }),
 });
 
+/** Отметки шагов статьи базы знаний у заявки (чек-лист инженера, модуль `knowledge`). */
+export const ticketArticleStepTable = pgTable(
+  'ticket_article_step',
+  {
+    ticketId: text('ticket_id').notNull(),
+    articleId: text('article_id').notNull(),
+    stepIndex: integer('step_index').notNull(),
+    done: boolean('done').notNull().default(false),
+    updatedAt: tstz('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.ticketId, table.articleId, table.stepIndex] }),
+    index('ticket_article_step_ticket_idx').on(table.ticketId),
+  ],
+);
+
 /** Уведомления пользователям. */
 export const notificationTable = pgTable('notification', {
   id: text('id').primaryKey(),
@@ -333,6 +349,7 @@ export const schema = {
   engineerSkillTable,
   dutyShiftTable,
   kbArticleTable,
+  ticketArticleStepTable,
   notificationTable,
   incidentTable,
 };
@@ -347,6 +364,7 @@ export type PipelineStepRow = typeof pipelineStepTable.$inferSelect;
 export type AgentStepRow = typeof agentStepTable.$inferSelect;
 export type EventLogRow = typeof eventLogTable.$inferSelect;
 export type KbArticleRow = typeof kbArticleTable.$inferSelect;
+export type TicketArticleStepRow = typeof ticketArticleStepTable.$inferSelect;
 export type ApplicantProfileRow = typeof applicantProfileTable.$inferSelect;
 export type ApplicantEquipmentRow = typeof applicantEquipmentTable.$inferSelect;
 export type IncidentRow = typeof incidentTable.$inferSelect;

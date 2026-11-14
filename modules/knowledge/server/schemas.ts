@@ -75,3 +75,73 @@ export const KnowledgeSearchResponse = z.object({
   tickets: z.array(SimilarTicketSchema),
 });
 export type KnowledgeSearchResult = z.infer<typeof KnowledgeSearchResponse>;
+
+/** Статья по id: `GET /api/m/knowledge/articles/:id` (кнопка «Открыть статью»). */
+export const ArticleResponse = z.object({
+  article: KnowledgeArticleSchema.nullable(),
+});
+export type ArticleResult = z.infer<typeof ArticleResponse>;
+
+/** Отметка шага статьи у заявки — одна галочка чек-листа. */
+export const ArticleStepSchema = z.object({
+  ticketId: z.string(),
+  articleId: z.string(),
+  stepIndex: z.number().int().min(0),
+  done: z.boolean(),
+  updatedAt: z.string(),
+});
+
+/** Ответ `GET /api/m/knowledge/tickets/:ticketId/steps`. */
+export const ArticleStepsResponse = z.object({
+  ticketId: z.string(),
+  steps: z.array(ArticleStepSchema),
+});
+export type ArticleStepsResult = z.infer<typeof ArticleStepsResponse>;
+
+/** Тело `POST /api/m/knowledge/tickets/:ticketId/steps`: поставить или снять галочку. */
+export const ToggleArticleStepInput = z.object({
+  articleId: z.string().min(1).describe('Идентификатор статьи из базы знаний.'),
+  stepIndex: z.number().int().min(0).describe('Номер шага в статье, начиная с нуля.'),
+  done: z.boolean().describe('true — шаг выполнен, false — галочка снята.'),
+});
+export type ToggleArticleStepArgs = z.infer<typeof ToggleArticleStepInput>;
+
+export const ToggleArticleStepResponse = z.object({
+  step: ArticleStepSchema,
+});
+export type ToggleArticleStepResult = z.infer<typeof ToggleArticleStepResponse>;
+
+/** Ссылка на статью в ответе агента: id и заголовок из результатов инструментов. */
+export const AskSourceSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+});
+
+/** Итог агента `engineer-assistant`: ответ только по найденным статьям. */
+export const EngineerAnswer = z.object({
+  answer: z.string().min(1),
+  sources: z.array(AskSourceSchema),
+  steps: z.array(z.string()).optional(),
+});
+export type EngineerAnswerResult = z.infer<typeof EngineerAnswer>;
+
+/** Тело `POST /api/m/knowledge/ask`: вопрос базе знаний. */
+export const AskQuestionInput = z.object({
+  question: z
+    .string()
+    .trim()
+    .min(3)
+    .max(500)
+    .describe('Вопрос инженера своими словами: симптом, модель устройства, код ошибки.'),
+});
+export type AskQuestionArgs = z.infer<typeof AskQuestionInput>;
+
+/** Ответ `POST /api/m/knowledge/ask`. */
+export const AskResponse = z.object({
+  answer: z.string(),
+  sources: z.array(AskSourceSchema),
+  steps: z.array(z.string()).optional(),
+  /** `agent` — ответ модели, `template` — шаблон по найденным статьям без модели. */
+  mode: z.enum(['agent', 'template']),
+});
+export type AskResult = z.infer<typeof AskResponse>;

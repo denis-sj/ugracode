@@ -20,13 +20,16 @@ import {
   recurringEquipmentCount,
   sortMyTasks,
   statusActions,
+  stepCounterLabel,
+  stepKey,
   stepProgress,
+  stepsToChecked,
   taskEquipment,
   taskPlace,
   taskTitle,
   tasksCountLabel,
 } from '../web/format';
-import type { KnowledgeArticle, SimilarTicket } from '../web/format';
+import type { ArticleStep, KnowledgeArticle, SimilarTicket } from '../web/format';
 
 const NOW = Date.parse('2026-11-14T10:00:00.000Z');
 
@@ -339,6 +342,43 @@ describe('результат работы', () => {
   it('прогресс чек-листа считает отмеченные шаги', () => {
     expect(stepProgress(['a', 'b', 'c'], new Set([0, 2]))).toEqual({ done: 2, total: 3 });
     expect(stepProgress([], new Set())).toEqual({ done: 0, total: 0 });
+  });
+
+  it('отметки с сервера раскладываются в карту чек-листа', () => {
+    const steps: ArticleStep[] = [
+      {
+        ticketId: 't-1',
+        articleId: 'kb-print-jam',
+        stepIndex: 0,
+        done: true,
+        updatedAt: '2026-11-14T10:00:00.000Z',
+      },
+      {
+        ticketId: 't-1',
+        articleId: 'kb-print-jam',
+        stepIndex: 1,
+        done: false,
+        updatedAt: '2026-11-14T10:00:00.000Z',
+      },
+      {
+        ticketId: 't-1',
+        articleId: 'kb-print-red-indicator',
+        stepIndex: 2,
+        done: true,
+        updatedAt: '2026-11-14T10:00:00.000Z',
+      },
+    ];
+    const checked = stepsToChecked(steps);
+    expect(checked[stepKey('kb-print-jam', 0)]).toBe(true);
+    expect(checked[stepKey('kb-print-jam', 1)]).toBeUndefined();
+    expect(checked[stepKey('kb-print-red-indicator', 2)]).toBe(true);
+    expect(stepsToChecked([])).toEqual({});
+  });
+
+  it('счётчик чек-листа: «выполнено N из M»', () => {
+    expect(stepCounterLabel(2, 5)).toBe('выполнено 2 из 5');
+    expect(stepCounterLabel(0, 0)).toBe('выполнено 0 из 0');
+    expect(stepKey('kb-print-jam', 3)).toBe('kb-print-jam:3');
   });
 
   it('подпись списка склоняет «задача» по числу', () => {

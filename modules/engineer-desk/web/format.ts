@@ -33,6 +33,34 @@ export interface KnowledgeResponse {
   tickets: SimilarTicket[];
 }
 
+/** Отметка шага статьи у заявки: `GET /api/m/knowledge/tickets/:id/steps`. */
+export interface ArticleStep {
+  ticketId: string;
+  articleId: string;
+  stepIndex: number;
+  done: boolean;
+  updatedAt: string;
+}
+
+export interface ArticleStepsResponse {
+  ticketId: string;
+  steps: ArticleStep[];
+}
+
+/** Ссылка на статью в ответе агента `engineer-assistant`. */
+export interface AskSource {
+  id: string;
+  title: string;
+}
+
+/** Ответ `POST /api/m/knowledge/ask`: только по найденным статьям. */
+export interface AskResponse {
+  answer: string;
+  sources: AskSource[];
+  steps?: string[];
+  mode: 'agent' | 'template';
+}
+
 /* ---------- Статусы и действия ---------- */
 
 /** Действие инженера на карточке задачи. */
@@ -452,6 +480,25 @@ export function stepProgress(steps: readonly string[], checked: ReadonlySet<numb
     if (checked.has(index)) done += 1;
   }
   return { done, total };
+}
+
+/** Ключ отметки шага в состоянии экрана: статья + номер шага. */
+export function stepKey(articleId: string, stepIndex: number): string {
+  return `${articleId}:${stepIndex}`;
+}
+
+/** Отметки с сервера → плоская карта `article:step`: так их читает чек-лист. */
+export function stepsToChecked(steps: readonly ArticleStep[]): Record<string, boolean> {
+  const checked: Record<string, boolean> = {};
+  for (const step of steps) {
+    if (step.done) checked[stepKey(step.articleId, step.stepIndex)] = true;
+  }
+  return checked;
+}
+
+/** Подпись счётчика чек-листа: «выполнено 2 из 5». */
+export function stepCounterLabel(done: number, total: number): string {
+  return `выполнено ${done} из ${total}`;
 }
 
 /** Русское склонение по числу: 1 задача, 2 задачи, 5 задач. */

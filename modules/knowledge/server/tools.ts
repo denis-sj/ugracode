@@ -7,6 +7,7 @@ import {
   type KbSearchArgs,
   type TicketsFindSimilarArgs,
 } from './schemas';
+import { rememberArticles } from './sources';
 
 /**
  * Инструменты базы знаний для агента `intake` (и будущего `engineer-assistant`).
@@ -37,6 +38,7 @@ export const kbSearchTool: ToolDef<KbSearchArgs, KbSearchResult> = {
       category: args.category,
       limit: args.limit,
     });
+    rememberArticles(ctx, articles);
     return { articles };
   },
   summarize(result) {
@@ -54,7 +56,9 @@ export const kbGetArticleTool: ToolDef<KbGetArticleArgs, KbGetArticleResult> = {
   input: KbGetArticleInput,
   capability: 'tickets.read',
   async execute(args, ctx) {
-    return { article: await ctx.db.getKnowledgeArticle(args.id) };
+    const article = await ctx.db.getKnowledgeArticle(args.id);
+    if (article) rememberArticles(ctx, [article]);
+    return { article };
   },
   summarize(result) {
     return result.article
