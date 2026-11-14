@@ -87,31 +87,8 @@ body.cursor-off { cursor: none; }
   inset: 0;
   visibility: hidden;
   opacity: 0;
-  background: transparent;
+  background: var(--paper);
   color: var(--ink);
-}
-
-/* ---------- атмосфера главного сайта: три размытых пятна (как --blob-* на сайте) ---------- */
-
-.atmos {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-.blob { position: absolute; border-radius: 50%; }
-.blob-violet {
-  width: 820px; height: 820px; left: -240px; top: -360px;
-  background: radial-gradient(closest-side, rgba(123, 77, 255, 0.24), transparent);
-}
-.blob-blue {
-  width: 860px; height: 860px; right: -260px; top: -320px;
-  background: radial-gradient(closest-side, rgba(2, 125, 234, 0.2), transparent);
-}
-.blob-ice {
-  width: 1000px; height: 640px; left: 50%; bottom: -400px; margin-left: -500px;
-  background: radial-gradient(closest-side, rgba(182, 217, 252, 0.5), transparent);
 }
 
 /* ---------- рамка: мелко сверху ---------- */
@@ -517,6 +494,6 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-.is-print .progress, .is-print .pager, .is-print .blackout, .is-print .atmos { display: none; }
+.is-print .progress, .is-print .pager, .is-print .blackout { display: none; }
 .is-print .slide { background: var(--paper); }
 .is-print .s-bridge { background: var(--graphite); }
