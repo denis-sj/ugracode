@@ -1,0 +1,101 @@
+{
+  "locations": [
+    { "id": "bld-a", "kind": "building", "name": "Корпус А", "parentId": null },
+    { "id": "bld-b", "kind": "building", "name": "Корпус Б", "parentId": null },
+    { "id": "bld-v", "kind": "building", "name": "Корпус В", "parentId": null },
+    { "id": "bld-prom", "kind": "building", "name": "Промплощадка", "parentId": null },
+    { "id": "floor-b-3", "kind": "floor", "name": "Этаж 3", "parentId": "bld-b" },
+    { "id": "cab-b-312", "kind": "cabinet", "name": "Каб. 312", "parentId": "floor-b-3" },
+    { "id": "cab-b-311", "kind": "cabinet", "name": "Каб. 311", "parentId": "floor-b-3" }
+  ],
+  "equipment": [
+    {
+      "id": "eq-printer-b312",
+      "type": "printer",
+      "model": "HP LaserJet Pro M404dn",
+      "serial": "VNC3K12345",
+      "inventoryNo": "INV-000312",
+      "ip": "10.10.3.12",
+      "building": "Б",
+      "cabinet": "312",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-pc-b311",
+      "type": "pc",
+      "model": "Dell OptiPlex 7010",
+      "serial": "DLOP7010-311",
+      "inventoryNo": "INV-000311",
+      "ip": "10.10.3.11",
+      "building": "Б",
+      "cabinet": "311",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-switch-b3",
+      "type": "network",
+      "model": "Cisco Catalyst 2960",
+      "serial": "FOC1234X5YZ",
+      "inventoryNo": "INV-000313",
+      "ip": "10.10.3.2",
+      "building": "Б",
+      "cabinet": "312",
+      "criticality": "high"
+    },
+    {
+      "id": "eq-server-prom",
+      "type": "server",
+      "model": "Dell PowerEdge R650",
+      "serial": "SRV-R650-01",
+      "inventoryNo": "INV-000401",
+      "ip": "10.10.4.10",
+      "building": "ПРОМ",
+      "cabinet": "1",
+      "criticality": "critical"
+    },
+    {
+      "id": "eq-printer-a101",
+      "type": "printer",
+      "model": "Kyocera ECOSYS P2040dn",
+      "serial": "KYO2040-A101",
+      "inventoryNo": "INV-000101",
+      "ip": "10.10.1.21",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-pc-v205",
+      "type": "pc",
+      "model": "HP ProDesk 400 G9",
+      "serial": "HPPD400-V205",
+      "inventoryNo": "INV-000205",
+      "ip": "10.10.5.15",
+      "building": "В",
+      "cabinet": "205",
+      "criticality": "low"
+    },
+    {
+      "id": "eq-router-v205",
+      "type": "network",
+      "model": "MikroTik hEX S",
+      "serial": "MTHEXS-V205",
+      "inventoryNo": "INV-000206",
+      "ip": "10.10.5.1",
+      "building": "В",
+      "cabinet": "205",
+      "criticality": "medium"
+    },
+    {
+      "id": "eq-scanner-a101",
+      "type": "scanner",
+      "model": "Epson DS-530 II",
+      "serial": "EPSDS530-A1",
+      "inventoryNo": "INV-000102",
+      "ip": "10.10.1.22",
+      "building": "А",
+      "cabinet": "101",
+      "criticality": "low"
+    }
+  ]
+}

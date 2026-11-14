@@ -1,0 +1,7 @@
+{
+  "settings": {
+    "confidenceThreshold": 0.75,
+    "massWindowMinutes": 15,
+    "massThreshold": 5
+  }
+}

@@ -1,0 +1,55 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ugra
+      POSTGRES_PASSWORD: ugra
+      POSTGRES_DB: ugra
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ugra -d ugra"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://ugra:ugra@db:5432/ugra
+      PORT: "3001"
+      SESSION_SECRET: ${SESSION_SECRET:-demo-secret}
+      AI_MODE: ${AI_MODE:-stub}
+      FEATURES_OFF: ${FEATURES_OFF:-}
+      FEATURES_ON: ${FEATURES_ON:-}
+      POLZA_API_KEY: ${POLZA_API_KEY:-}
+      POLZA_BASE_URL: ${POLZA_BASE_URL:-https://api.polza.ai/api/v1}
+      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-claude-haiku-5.5}
+      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek-v4.1-flash}
+      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-bge-multilingual-gemma2}
+      EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-768}
+      SPEECH_MODEL: ${SPEECH_MODEL:-gigaam-v3}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    command: ["sh", "-c", "pnpm migrate && pnpm seed && pnpm exec tsx apps/api/src/index.ts"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      VITE_API_URL: http://localhost:3001
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+
+volumes:
+  db-data:

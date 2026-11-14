@@ -1,0 +1,53 @@
+{
+  "name": "ugracode",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "dev:api": "tsx watch apps/api/src/index.ts",
+    "dev:web": "vite --config apps/web/vite.config.ts",
+    "build:web": "vite build --config apps/web/vite.config.ts",
+    "migrate": "tsx packages/db/src/migrate.ts",
+    "seed": "tsx packages/db/src/seed/index.ts",
+    "check:polza": "tsx scripts/check-polza.ts",
+    "demo:reset": "tsx packages/db/src/seed/index.ts --reset"
+  },
+  "dependencies": {
+    "@ugra/adapters": "workspace:*",
+    "@ugra/contracts": "workspace:*",
+    "@ugra/core": "workspace:*",
+    "@ugra/db": "workspace:*",
+    "@ugra/testkit": "workspace:*",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.12.8",
+    "openai": "^7.57.0",
+    "pg": "^8.16.3",
+    "tsx": "^4.20.6",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "drizzle-kit": "^0.31.11",
+    "drizzle-orm": "^0.45.4",
+    "eslint": "^9.39.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}
