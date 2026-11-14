@@ -36,12 +36,18 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Палитра главного сайта (packages/ui/src/tokens.css, светлая тема). */
 :root {
-  --paper: #FAFAF7;
-  --ink: #141414;
-  --mute: #8A8A85;
-  --line: #E4E3DE;
-  --accent: #E8432E;
+  --paper: #F5F6FB;
+  --ink: #0F1222;
+  --mute: #5B6178;
+  --dim: #8A90A6;
+  --line: rgba(15, 18, 34, 0.12);
+  --accent: #5A49E0;
+  --alarm: #D4380D;
+  --graphite: #14172B;
+  --on-dark: #F5F6FB;
+  --accent-dark: #A99BFF;
 }
 
 * { box-sizing: border-box; }
@@ -60,7 +66,7 @@ body {
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.4s;
 }
-body.is-dark { background: var(--ink); }
+body.is-dark { background: var(--graphite); }
 body.cursor-off { cursor: none; }
 
 .viewport { position: fixed; inset: 0; overflow: hidden; }
@@ -81,8 +87,31 @@ body.cursor-off { cursor: none; }
   inset: 0;
   visibility: hidden;
   opacity: 0;
-  background: var(--paper);
+  background: transparent;
   color: var(--ink);
+}
+
+/* ---------- атмосфера главного сайта: три размытых пятна (как --blob-* на сайте) ---------- */
+
+.atmos {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.blob { position: absolute; border-radius: 50%; }
+.blob-violet {
+  width: 820px; height: 820px; left: -240px; top: -360px;
+  background: radial-gradient(closest-side, rgba(123, 77, 255, 0.24), transparent);
+}
+.blob-blue {
+  width: 860px; height: 860px; right: -260px; top: -320px;
+  background: radial-gradient(closest-side, rgba(2, 125, 234, 0.2), transparent);
+}
+.blob-ice {
+  width: 1000px; height: 640px; left: 50%; bottom: -400px; margin-left: -500px;
+  background: radial-gradient(closest-side, rgba(182, 217, 252, 0.5), transparent);
 }
 
 /* ---------- рамка: мелко сверху ---------- */
@@ -99,7 +128,7 @@ body.cursor-off { cursor: none; }
   line-height: 1;
 }
 .brand { font-weight: 700; letter-spacing: -0.01em; }
-.section { color: var(--mute); font-weight: 500; }
+.section { color: var(--dim); font-weight: 500; }
 .dot { color: var(--accent); }
 
 /* ---------- маска заголовка: выезжает снизу вверх ---------- */
@@ -147,7 +176,7 @@ body.cursor-off { cursor: none; }
 /* «❓ замер»: тот же блок, пунктирная рамка, серый */
 .is-q {
   color: var(--mute);
-  border: 2px dashed #C9C8C2;
+  border: 2px dashed rgba(15, 18, 34, 0.28);
   border-radius: 14px;
   padding: 0.08em 0.3em;
   font-weight: 600;
@@ -220,7 +249,7 @@ body.cursor-off { cursor: none; }
   bottom: 88px;
   margin: 0;
   font-size: 18px;
-  color: var(--mute);
+  color: var(--dim);
 }
 
 /* ---------- 5. Точность ---------- */
@@ -280,10 +309,12 @@ body.cursor-off { cursor: none; }
   bottom: 48px;
   margin: 0;
   font-size: 14px;
-  color: var(--mute);
+  color: var(--dim);
 }
 
 /* ---------- 6. Авария ---------- */
+
+.s-alarm { --accent: var(--alarm); }
 
 .nb { position: absolute; top: 330px; }
 .nb-main { left: 96px; }
@@ -366,15 +397,17 @@ body.cursor-off { cursor: none; }
 
 /* ---------- 11. Смотрим вживую (тёмный) ---------- */
 
-.s-bridge { background: var(--ink); color: var(--paper); }
-.s-bridge .section { color: #8A8A85; }
-.s-bridge .sketch path { stroke: var(--accent); }
+.s-bridge { background: var(--graphite); color: var(--on-dark); }
+.s-bridge .section { color: var(--dim); }
+.s-bridge .sketch path { stroke: var(--accent-dark); }
 .bridge {
   position: absolute;
   left: 96px;
   top: 300px;
 }
-.bridge .mask { padding-bottom: 0.26em; margin-bottom: -0.26em; }
+.bridge .mask { padding-bottom: 80px; margin-bottom: -80px; }
+.s-bridge .dot { color: var(--accent-dark); }
+.s-bridge .hand > .sketch { bottom: -0.3em; }
 .bridge-h {
   margin: 0;
   font-size: 240px;
@@ -385,7 +418,7 @@ body.cursor-off { cursor: none; }
 .bridge-sub {
   margin: 56px 0 0;
   font-size: 32px;
-  color: #8A8A85;
+  color: var(--dim);
 }
 .bridge-hint {
   position: absolute;
@@ -393,7 +426,7 @@ body.cursor-off { cursor: none; }
   bottom: 88px;
   margin: 0;
   font-size: 18px;
-  color: #8A8A85;
+  color: var(--dim);
 }
 .kbd {
   display: inline-block;
@@ -419,7 +452,7 @@ body.cursor-off { cursor: none; }
   background: #000;
 }
 .demo-video { width: 1600px; max-height: 900px; background: #000; }
-.video-missing { margin: 0; font-size: 22px; color: #8A8A85; }
+.video-missing { margin: 0; font-size: 22px; color: var(--dim); }
 
 /* ---------- хром: номер, прогресс, чёрный экран ---------- */
 
@@ -428,7 +461,7 @@ body.cursor-off { cursor: none; }
   right: 96px;
   bottom: 48px;
   font-size: 14px;
-  color: var(--mute);
+  color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
 .progress {
@@ -442,7 +475,7 @@ body.cursor-off { cursor: none; }
 .progress-fill {
   position: absolute;
   inset: 0;
-  background: var(--ink);
+  background: var(--accent);
   transform-origin: 0 50%;
   transform: scaleX(0);
 }
@@ -484,4 +517,6 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-.is-print .progress, .is-print .pager, .is-print .blackout { display: none; }
+.is-print .progress, .is-print .pager, .is-print .blackout, .is-print .atmos { display: none; }
+.is-print .slide { background: var(--paper); }
+.is-print .s-bridge { background: var(--graphite); }
