@@ -3,7 +3,7 @@
 Статус: active
 Дата: 2026-11-14
 Роль: Семён
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#34-порты-и-адаптеры), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../tasks/026-screenshot.md](../../tasks/026-screenshot.md), [extraction.md](extraction.md), [clarify-chat-ui.md](clarify-chat-ui.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#34-порты-и-адаптеры), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../history/2026-11.md](../../history/2026-11.md), [extraction.md](extraction.md), [clarify-chat-ui.md](clarify-chat-ui.md)
 
 Картинка (скриншот ошибки или фото шильдика) → текст (порт зрения) → поля заявки.
 Заявитель прикладывает картинку в чате, получает текст распознавания и добавляет его в обращение;

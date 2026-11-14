@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/016-mass-incident.md](../../tasks/016-mass-incident.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Серверная часть задачи 016: шаг разбора склеивает похожие обращения в инцидент, демо-маршрут создаёт
 всплеск, маршруты отдают список и карточку инцидента. Экран «Авария и массовость» переведён на эти

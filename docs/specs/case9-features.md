@@ -149,12 +149,12 @@ sequenceDiagram
 | Профиль и гость | MUST | `applicant-profile` | шаг, таблицы, сид | [025](../history/2026-11.md) |
 | а4 Голос | MUST | `voice-call` + общий `MicButton` | шаг `enrich`, страница «Входящий звонок» | [019](../tasks/019-voice-call.md) |
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |
-| а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../tasks/026-screenshot.md) |
+| а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../history/2026-11.md) |
 | а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../history/2026-11.md) |
 | б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../history/2026-11.md) |
 | б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../history/2026-11.md), [008](../history/2026-11.md) |
 | б4, в6 Авария | MUST | `emergency` | аспект, шаг, подписчик, виджеты | [011](../history/2026-11.md) |
-| б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../tasks/016-mass-incident.md) |
+| б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../history/2026-11.md) |
 | в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../history/2026-11.md) |
 | в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../history/2026-11.md) |
 | г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |

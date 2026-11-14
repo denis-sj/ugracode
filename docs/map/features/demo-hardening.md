@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../tasks/022-demo-hardening.md](../../tasks/022-demo-hardening.md), [../../hackathon/demo-script.md](../../hackathon/demo-script.md), [../../knowledge/environments.md](../../knowledge/environments.md), [../../specs/case9-core.md](../../specs/case9-core.md#7-стабильное-демо)
+Связано: [../README.md](../README.md), [../../history/2026-11.md](../../history/2026-11.md), [../../hackathon/demo-script.md](../../hackathon/demo-script.md), [../../knowledge/environments.md](../../knowledge/environments.md), [../../specs/case9-core.md](../../specs/case9-core.md#7-стабильное-демо)
 
 Смоук демо-сценария: перед защитой одна команда проходит весь путь по HTTP и говорит,
 жив ли стенд. Кэша ответов модели и офлайн-режима нет (решение владельца 2026-11-14).
