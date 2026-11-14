@@ -859,3 +859,6 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
   font-size: 22px;
   color: var(--dim);
 }
+
+/* ---------- 7. Время на заявку: одна строка без выхода за край ---------- */
+.s-act .big-wrap-md { font-size: 230px; }
