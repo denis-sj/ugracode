@@ -163,8 +163,8 @@ sequenceDiagram
 | г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |
 | д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../history/2026-11.md) |
 | д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../history/2026-11.md) |
-| д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../tasks/027-reports-sla-workload.md) |
-| д8, д10 О6 пробелы базы, О7 хронология аварии | COULD | `report-kb-gaps`, `report-emergency` | подписчик, отчёты | [028](../tasks/028-reports-kb-gaps-emergency.md) |
+| д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../history/2026-11.md) |
+| д8, д10 О6 пробелы базы, О7 хронология аварии | COULD | `report-kb-gaps`, `report-emergency` | подписчик, отчёты | [028](../history/2026-11.md) |
 | е1 Тестовый набор | MUST | — (`testset/`) | данные | [008](../history/2026-11.md) |
 | е2, е4 Проверка точности, отчёт о качестве | MUST | `quality` (только скрипт) | `evaluate()` шагов | [014](../history/2026-11.md) |
 | е3 Замер «с ИИ / без ИИ» | MUST | `ai-vs-manual` (ручная форма + счётчик) | страница | [017](../history/2026-11.md) |
