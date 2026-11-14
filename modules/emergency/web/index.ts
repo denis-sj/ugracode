@@ -1,19 +1,30 @@
 import { defineWebModule } from '@ugra/core/web';
+import { EmergencyBanner } from './EmergencyBanner';
+import { IncidentsPage } from './IncidentsPage';
 
 /**
- * Виджет `ticket.banner`: красный режим на карточке заявки (диспетчер, руководитель, админ).
- * Данные готовит `emergencyBanner()` из `web/banner.ts`; рендер карточки — в `apps/web`,
- * там слот `ticket.banner` ещё не подключён (см. `docs/map/features/emergency.md`).
+ * Веб-часть модуля `emergency`: экран «Авария и массовость» (дизайн 4.5) и плашка
+ * `ticket.banner` для карточки заявки.
  */
 export default defineWebModule({
   id: 'emergency',
+  pages: [
+    {
+      path: '/incidents',
+      title: 'Аварии и массовость',
+      icon: '⚠',
+      roles: ['dispatcher', 'admin', 'manager'],
+      component: IncidentsPage,
+      nav: { section: 'Работа', order: 30 },
+    },
+  ],
   widgets: [
     {
       slot: 'ticket.banner',
       id: 'emergency.banner',
       order: 10,
       roles: ['dispatcher', 'admin', 'manager'],
-      component: null,
+      component: EmergencyBanner,
     },
   ],
 });
