@@ -10,6 +10,7 @@ import type {
   User,
   UserNotification,
 } from '@ugra/contracts';
+import type { AgentStepRecord } from './agent';
 
 export interface TicketFilter {
   status?: TicketStatus;
@@ -46,6 +47,10 @@ export interface KernelStore {
   savePipelineStep(step: StepRun): Promise<void>;
   listPipelineSteps(filter: { runId?: string; ticketId?: string }): Promise<StepRun[]>;
 
+  /** След агента: шаги одного прогона (таблица `agent_step`). */
+  saveAgentStep(step: AgentStepRecord): Promise<void>;
+  listAgentSteps(filter: { runId: string; limit?: number }): Promise<AgentStepRecord[]>;
+
   appendEvent(event: DomainEvent): Promise<void>;
   listEvents(filter?: EventFilter): Promise<DomainEvent[]>;
 
@@ -65,6 +70,7 @@ export class MemoryStore implements KernelStore {
   private readonly fields = new Map<string, TicketField[]>();
   private readonly runs = new Map<string, PipelineRun>();
   private readonly steps: StepRun[] = [];
+  private readonly agentSteps: AgentStepRecord[] = [];
   private readonly events: DomainEvent[] = [];
   private readonly notifications = new Map<string, UserNotification>();
   private readonly settings = new Map<string, SettingRecord>();
@@ -150,6 +156,17 @@ export class MemoryStore implements KernelStore {
         (!filter.runId || step.runId === filter.runId) &&
         (!filter.ticketId || step.ticketId === filter.ticketId),
     );
+  }
+
+  async saveAgentStep(step: AgentStepRecord): Promise<void> {
+    this.agentSteps.push(step);
+  }
+
+  async listAgentSteps(filter: { runId: string; limit?: number }): Promise<AgentStepRecord[]> {
+    const steps = this.agentSteps
+      .filter((step) => step.runId === filter.runId)
+      .sort((a, b) => a.n - b.n);
+    return filter.limit === undefined ? steps : steps.slice(0, filter.limit);
   }
 
   async appendEvent(event: DomainEvent): Promise<void> {

@@ -23,7 +23,7 @@ services:
       DATABASE_URL: postgres://ugra:ugra@db:5432/ugra
       PORT: "3001"
       SESSION_SECRET: ${SESSION_SECRET:-demo-secret}
-      AI_MODE: ${AI_MODE:-stub}
+      AI_MODE: ${AI_MODE:-cloud}
       FEATURES_OFF: ${FEATURES_OFF:-}
       FEATURES_ON: ${FEATURES_ON:-}
       POLZA_API_KEY: ${POLZA_API_KEY:-}

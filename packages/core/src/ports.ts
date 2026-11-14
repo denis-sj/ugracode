@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { LlmChatRequest, LlmChatResponse } from '@ugra/contracts';
 
 export interface ImageInput {
   kind: 'image';
@@ -40,6 +41,11 @@ export interface LlmRequest<T> {
 
 export interface LlmPort {
   structured<T>(req: LlmRequest<T>): Promise<LlmResult<T>>;
+  /**
+   * Диалог с инструментами (формат OpenAI Chat Completions).
+   * Без кэша и повторов: ошибку провайдера пробрасываем наверх (задача 031).
+   */
+  chat(req: LlmChatRequest): Promise<LlmChatResponse>;
 }
 
 export interface EmbeddingsPort {

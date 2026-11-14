@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import type { FieldValue } from '@ugra/contracts';
 import { defineModule } from '@ugra/core';
+import type { AgentProfile, ToolDef } from '@ugra/core';
 
 interface ExampleExtras {
   matched: string[];
@@ -61,12 +63,42 @@ const extractStep = {
   },
 };
 
+/** Образец инструмента агента: принимает текст, возвращает эхо. */
+const EchoInput = z.object({ text: z.string().min(1) });
+
+const echoTool: ToolDef<z.infer<typeof EchoInput>, { echo: string }> = {
+  name: 'example_echo',
+  description: 'Повторяет переданный текст. Показывает, как агент вызывает инструмент модуля.',
+  input: EchoInput,
+  capability: 'tickets.read',
+  async execute(args) {
+    return { echo: args.text };
+  },
+  summarize(result) {
+    return `эхо: ${result.echo.slice(0, 40)}`;
+  },
+};
+
+/** Образец агента: один инструмент, результат — `{ answer }`. */
+const exampleAgent: AgentProfile<{ answer: string }> = {
+  id: 'example',
+  promptId: 'modules/_example/prompts/example.v1.md',
+  tools: ['example_echo'],
+  submit: z.object({ answer: z.string().min(1) }),
+  maxSteps: 4,
+  async state() {
+    return { module: 'example', hint: 'Сдай ответ через submit' };
+  },
+};
+
 export default defineModule({
   id: 'example',
   title: 'Пример модуля',
   enabledByDefault: true,
   fields: [],
   steps: [extractStep],
+  tools: [echoTool],
+  agents: [exampleAgent],
   events: [{ type: 'example.matched', description: 'Модуль-образец отреагировал на подтверждение заявки' }],
   subscribers: [
     {

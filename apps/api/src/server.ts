@@ -93,6 +93,11 @@ function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
+function effectiveAiMode(env: Record<string, string | undefined>): 'stub' | 'cloud' {
+  if (env.AI_MODE === 'stub') return 'stub';
+  return env.POLZA_API_KEY ? 'cloud' : 'stub';
+}
+
 function httpError(message: string, statusCode: number): Error {
   return Object.assign(new Error(message), { statusCode });
 }
@@ -230,7 +235,7 @@ function registerCoreRoutes(
       modules: ctx.modules.map((module) => ({ id: module.id, title: module.title })),
       fields: data.fields,
       dictionaries: data.dictionaries as DictionaryItem[],
-      aiMode: (env.AI_MODE === 'cloud' ? 'cloud' : 'stub') as 'stub' | 'cloud',
+      aiMode: effectiveAiMode(env),
       roles: [...Role.options],
       priorities: [...PriorityLevel.options],
     }),

@@ -17,7 +17,7 @@ describe('createPorts', () => {
   it('в cloud без ключа откатывается на заглушки', async () => {
     const ports = createPorts({ AI_MODE: 'cloud' });
 
-    expect(ports.aiMode).toBe('cloud');
+    expect(ports.aiMode).toBe('stub');
     const result = await ports.llm.structured({
       promptId: 'x',
       vars: {},
@@ -26,5 +26,13 @@ describe('createPorts', () => {
     expect(result.model).toBe('stub');
   });
 
+  it('без AI_MODE включает облако, если ключ задан', () => {
+    const ports = createPorts({ POLZA_API_KEY: 'test-key' });
+    expect(ports.aiMode).toBe('cloud');
+  });
 
+  it('явный stub сильнее ключа', () => {
+    const ports = createPorts({ AI_MODE: 'stub', POLZA_API_KEY: 'test-key' });
+    expect(ports.aiMode).toBe('stub');
+  });
 });

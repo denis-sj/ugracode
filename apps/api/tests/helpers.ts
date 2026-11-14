@@ -62,7 +62,7 @@ export function testPorts(overrides: Partial<Ports> = {}): Ports {
     throw new Error(`порт не настроен: ${name}`);
   };
   return {
-    llm: { structured: notConfigured('llm') },
+    llm: { structured: notConfigured('llm'), chat: notConfigured('llm') },
     embeddings: { embed: notConfigured('embeddings') },
     speech: { transcribe: notConfigured('speech') },
     vision: { describe: notConfigured('vision') },

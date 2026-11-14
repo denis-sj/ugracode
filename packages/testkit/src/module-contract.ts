@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AnalysisDraft, Appeal, DraftKey, FieldDef } from '@ugra/contracts';
-import { STAGES } from '@ugra/contracts';
+import { ROLE_PERMISSIONS, STAGES } from '@ugra/contracts';
 import {
   buildRegistries,
   collectRoutes,
@@ -155,6 +155,52 @@ function assertEvents(module: ServerModule): void {
   }
 }
 
+const VALID_PERMISSIONS = new Set<string>(Object.values(ROLE_PERMISSIONS).flat());
+
+/** Инструменты и агенты: описание, схема, право, ссылки на существующие инструменты. */
+function assertToolsAndAgents(module: ServerModule): void {
+  const names = new Set<string>();
+  for (const tool of module.tools) {
+    ensure(module.id, tool.name.trim() !== '', 'инструмент без имени');
+    ensure(module.id, !names.has(tool.name), `инструмент «${tool.name}» объявлен дважды`);
+    names.add(tool.name);
+    ensure(
+      module.id,
+      Boolean(tool.description?.trim()),
+      `инструмент «${tool.name}»: пустое описание для модели`,
+    );
+    ensure(module.id, isZodSchema(tool.input), `инструмент «${tool.name}»: input не является Zod-схемой`);
+    ensure(
+      module.id,
+      VALID_PERMISSIONS.has(tool.capability),
+      `инструмент «${tool.name}»: неизвестное право «${String(tool.capability)}»`,
+    );
+  }
+
+  let registryTools: ReadonlySet<string>;
+  try {
+    registryTools = new Set(buildRegistries([module]).tools.keys());
+  } catch (error) {
+    fail(module.id, `реестр инструментов не собрался: ${errorMessage(error)}`);
+  }
+
+  const agentIds = new Set<string>();
+  for (const agent of module.agents) {
+    ensure(module.id, agent.id.trim() !== '', 'агент без id');
+    ensure(module.id, !agentIds.has(agent.id), `агент «${agent.id}» объявлен дважды`);
+    agentIds.add(agent.id);
+    ensure(module.id, agent.promptId.trim() !== '', `агент «${agent.id}»: пустой promptId`);
+    ensure(module.id, isZodSchema(agent.submit), `агент «${agent.id}»: submit не является Zod-схемой`);
+    for (const name of agent.tools) {
+      ensure(
+        module.id,
+        registryTools.has(name),
+        `агент «${agent.id}» ссылается на несуществующий инструмент «${name}»`,
+      );
+    }
+  }
+}
+
 function assertRoutes(module: ServerModule): void {
   const deps = fakeDeps(makeReferenceData(), new MemoryStore(), makePorts());
 
@@ -235,6 +281,7 @@ export async function assertModuleContract(
 
   assertSteps(module);
   assertEvents(module);
+  assertToolsAndAgents(module);
   assertRoutes(module);
   assertReadme(module, opts.readmePath);
   assertPrompts(module, opts.promptRoot);

@@ -13,7 +13,7 @@ if (!apiKey) {
 }
 
 const baseURL = process.env.POLZA_BASE_URL ?? DEFAULT_BASE_URL;
-const modelMain = process.env.LLM_MODEL_MAIN ?? 'gpt-4o-mini';
+const modelMain = process.env.LLM_MODEL_MAIN ?? 'deepseek/deepseek-v4.1-flash-1017';
 const embeddingsModel = process.env.EMBEDDINGS_MODEL ?? 'text-embedding-3-small';
 const speechModel = process.env.SPEECH_MODEL ?? 'whisper-1';
 

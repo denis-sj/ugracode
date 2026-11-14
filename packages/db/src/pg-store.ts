@@ -13,7 +13,9 @@ import type {
   UserNotification,
 } from '@ugra/contracts';
 import type { EventFilter, KernelStore, TicketFilter } from '@ugra/core';
+import type { AgentStepRecord } from '@ugra/core';
 import {
+  mapAgentStepRow,
   mapAppealRow,
   mapEventLogRow,
   mapPipelineStepRow,
@@ -24,6 +26,7 @@ import {
   toIsoOrNull,
 } from './mappers';
 import {
+  agentStepTable,
   appealTable,
   eventLogTable,
   notificationTable,
@@ -297,6 +300,48 @@ export class PgStore implements KernelStore {
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(asc(pipelineStepTable.createdAt));
     return rows.map(mapPipelineStepRow);
+  }
+
+  async saveAgentStep(step: AgentStepRecord): Promise<void> {
+    const values = {
+      runId: step.runId,
+      n: step.n,
+      tool: step.tool,
+      args: step.args ?? null,
+      resultSummary: step.resultSummary,
+      blocked: step.blocked,
+      error: step.error ?? null,
+      durationMs: Math.round(step.durationMs),
+      tokensIn: step.tokensIn ?? null,
+      tokensOut: step.tokensOut ?? null,
+      createdAt: step.createdAt,
+    };
+    await this.db
+      .insert(agentStepTable)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [agentStepTable.runId, agentStepTable.n],
+        set: {
+          tool: values.tool,
+          args: values.args,
+          resultSummary: values.resultSummary,
+          blocked: values.blocked,
+          error: values.error,
+          durationMs: values.durationMs,
+          tokensIn: values.tokensIn,
+          tokensOut: values.tokensOut,
+        },
+      });
+  }
+
+  async listAgentSteps(filter: { runId: string; limit?: number }): Promise<AgentStepRecord[]> {
+    const rows = await this.db
+      .select()
+      .from(agentStepTable)
+      .where(eq(agentStepTable.runId, filter.runId))
+      .orderBy(asc(agentStepTable.n))
+      .limit(filter.limit ?? 200);
+    return rows.map(mapAgentStepRow);
   }
 
   async appendEvent(event: DomainEvent): Promise<void> {

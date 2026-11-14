@@ -81,6 +81,7 @@ export function makePorts(): Ports {
   return {
     llm: {
       structured: async (): Promise<never> => notConfigured('llm'),
+      chat: async (): Promise<never> => notConfigured('llm'),
     },
     embeddings: {
       async embed(): Promise<never> {

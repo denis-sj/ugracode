@@ -11,3 +11,5 @@ export * from './router';
 export * from './reports';
 export * from './tickets';
 export * from './core-steps';
+export * from './agent';
+export * from './tools';

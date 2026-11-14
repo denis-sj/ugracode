@@ -138,6 +138,28 @@ export const eventLogTable = pgTable(
   (table) => [index('event_log_ticket_at_idx').on(table.ticketId, table.at)],
 );
 
+/** След агента: один вызов инструмента (или `submit`) внутри прогона. */
+export const agentStepTable = pgTable(
+  'agent_step',
+  {
+    runId: text('run_id').notNull(),
+    n: integer('n').notNull(),
+    tool: text('tool').notNull(),
+    args: jsonb('args'),
+    resultSummary: text('result_summary').notNull(),
+    blocked: boolean('blocked').notNull().default(false),
+    error: text('error'),
+    durationMs: integer('duration_ms').notNull(),
+    tokensIn: integer('tokens_in'),
+    tokensOut: integer('tokens_out'),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.runId, table.n] }),
+    index('agent_step_run_id_idx').on(table.runId),
+  ],
+);
+
 /** Справочники: здания, категории, важность, срочность, каналы. */
 export const dictionaryItemTable = pgTable(
   'dictionary_item',
@@ -249,6 +271,7 @@ export const schema = {
   ticketFieldTable,
   pipelineRunTable,
   pipelineStepTable,
+  agentStepTable,
   eventLogTable,
   dictionaryItemTable,
   fieldDefTable,
@@ -268,4 +291,5 @@ export type TicketRow = typeof ticketTable.$inferSelect;
 export type TicketFieldRow = typeof ticketFieldTable.$inferSelect;
 export type PipelineRunRow = typeof pipelineRunTable.$inferSelect;
 export type PipelineStepRow = typeof pipelineStepTable.$inferSelect;
+export type AgentStepRow = typeof agentStepTable.$inferSelect;
 export type EventLogRow = typeof eventLogTable.$inferSelect;

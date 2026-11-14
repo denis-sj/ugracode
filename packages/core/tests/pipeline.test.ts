@@ -15,7 +15,10 @@ const appeal: Appeal = {
 };
 
 const ports: Ports = {
-  llm: { structured: async () => Promise.reject(new Error('нет')) },
+  llm: {
+    structured: async () => Promise.reject(new Error('нет')),
+    chat: async () => Promise.reject(new Error('нет')),
+  },
   embeddings: { embed: async () => [] },
   speech: { transcribe: async () => ({ text: '' }) },
   vision: { describe: async () => ({ text: '' }) },

@@ -4,6 +4,8 @@ import type { ModuleDeps, ServerModule } from './module';
 import type { PipelineStep } from './types';
 import type { ReportDef } from './reports';
 import type { ModuleRouteInput } from './router';
+import type { AgentProfile, ToolDef } from './agent';
+import { coreTools } from './tools';
 
 export interface Registries {
   modules: ServerModule[];
@@ -12,20 +14,33 @@ export interface Registries {
   aspects: Record<string, z.ZodType>;
   reports: ReportDef[];
   events: EventDef[];
+  /** Общий реестр инструментов: имя → инструмент. */
+  tools: Map<string, ToolDef>;
+  /** Все агенты модулей. */
+  agents: AgentProfile[];
 }
 
 /**
  * Собирает реестры из манифеста модулей. Дубликаты — ошибка запуска, а не тихая перезапись.
+ * Агент, ссылающийся на несуществующий инструмент, тоже валит запуск: иначе модель
+ * получит описание инструмента, которого нет.
  */
 export function buildRegistries(modules: readonly ServerModule[], baseFields: readonly FieldDef[] = []): Registries {
   const ids = new Set<string>();
   const fieldKeys = new Set<string>();
   const stepIds = new Set<string>();
+  const agentIds = new Set<string>();
   const fields: FieldDef[] = [];
   const steps: PipelineStep[] = [];
   const reports: ReportDef[] = [];
   const events: EventDef[] = [];
   const aspects: Record<string, z.ZodType> = {};
+  const tools = new Map<string, ToolDef>();
+  const agents: AgentProfile[] = [];
+
+  for (const tool of coreTools()) {
+    tools.set(tool.name, tool);
+  }
 
   const addField = (field: FieldDef): void => {
     if (fieldKeys.has(field.key)) throw new Error(`Поле ${field.key} объявлено дважды`);
@@ -48,6 +63,15 @@ export function buildRegistries(modules: readonly ServerModule[], baseFields: re
       aspects[key] = schema;
     }
     reports.push(...module.reports);
+    for (const tool of module.tools) {
+      if (tools.has(tool.name)) throw new Error(`Инструмент ${tool.name} объявлен дважды`);
+      tools.set(tool.name, tool);
+    }
+    for (const agent of module.agents) {
+      if (agentIds.has(agent.id)) throw new Error(`Агент ${agent.id} зарегистрирован дважды`);
+      agentIds.add(agent.id);
+      agents.push(agent);
+    }
     for (const event of module.events) {
       if (!event.type.startsWith(`${module.id}.`)) {
         throw new Error(`Событие ${event.type} должно начинаться с префикса ${module.id}.`);
@@ -55,7 +79,14 @@ export function buildRegistries(modules: readonly ServerModule[], baseFields: re
       events.push(event);
     }
   }
-  return { modules: [...modules], fields, steps, aspects, reports, events };
+  for (const agent of agents) {
+    for (const name of agent.tools) {
+      if (!tools.has(name)) {
+        throw new Error(`Агент ${agent.id} ссылается на несуществующий инструмент ${name}`);
+      }
+    }
+  }
+  return { modules: [...modules], fields, steps, aspects, reports, events, tools, agents };
 }
 
 export interface MountedRoutes {

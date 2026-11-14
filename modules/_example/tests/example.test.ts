@@ -15,7 +15,10 @@ const appeal = {
 const data = createReferenceData();
 
 const ports = {
-  llm: { structured: async () => Promise.reject(new Error('не нужен')) },
+  llm: {
+    structured: async () => Promise.reject(new Error('не нужен')),
+    chat: async () => Promise.reject(new Error('не нужен')),
+  },
   embeddings: { embed: async () => [] },
   speech: { transcribe: async () => ({ text: '' }) },
   vision: { describe: async () => ({ text: '' }) },

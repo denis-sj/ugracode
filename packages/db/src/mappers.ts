@@ -14,9 +14,11 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
+import type { AgentStepRecord } from '@ugra/core';
 import type {
   AppealRow,
   EventLogRow,
+  AgentStepRow,
   PipelineRunRow,
   PipelineStepRow,
   TicketFieldRow,
@@ -134,6 +136,23 @@ export function mapPipelineStepRow(row: PipelineStepRow): StepRun {
     error: row.error ?? undefined,
     model: row.model,
     promptVersion: row.promptVersion,
+  };
+}
+
+/** Строка БД → шаг агента. */
+export function mapAgentStepRow(row: AgentStepRow): AgentStepRecord {
+  return {
+    runId: row.runId,
+    n: row.n,
+    tool: row.tool,
+    args: row.args ?? null,
+    resultSummary: row.resultSummary,
+    blocked: row.blocked,
+    durationMs: row.durationMs,
+    createdAt: toIso(row.createdAt),
+    error: row.error ?? undefined,
+    tokensIn: row.tokensIn ?? undefined,
+    tokensOut: row.tokensOut ?? undefined,
   };
 }
 

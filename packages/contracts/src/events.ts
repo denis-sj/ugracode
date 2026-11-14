@@ -6,6 +6,8 @@ export const CoreEventType = z.enum([
   'analysis.started',
   'analysis.step.completed',
   'analysis.completed',
+  // Шаг агента: инструмент, краткий итог, время (задача 031).
+  'agent.step',
   'ticket.field.set',
   'ticket.field.corrected',
   'ticket.confirmed',

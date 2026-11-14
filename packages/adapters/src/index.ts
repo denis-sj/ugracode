@@ -33,9 +33,11 @@ export interface CreatePortsResult extends Ports {
   aiMode: AiMode;
 }
 
+/** `AI_MODE` не задан — работаем через Polza, если есть ключ; иначе заглушка. */
 function aiModeFrom(env: NodeJS.ProcessEnv): AiMode {
   const raw = env.AI_MODE;
-  return raw === 'cloud' ? raw : 'stub';
+  if (raw === 'stub' || raw === 'cloud') return raw;
+  return env.POLZA_API_KEY ? 'cloud' : 'stub';
 }
 
 function loadEquipment(env: NodeJS.ProcessEnv) {
@@ -73,6 +75,7 @@ export function createPorts(env: NodeJS.ProcessEnv = process.env): CreatePortsRe
   const requested = aiModeFrom(env);
   const useCloud = requested === 'cloud' && Boolean(env.POLZA_API_KEY);
   const cloud = useCloud ? buildCloudPorts(env) : undefined;
+  const effective: AiMode = useCloud ? 'cloud' : 'stub';
 
   const llm = cloud?.llm ?? new StubLlm();
 
@@ -80,7 +83,7 @@ export function createPorts(env: NodeJS.ProcessEnv = process.env): CreatePortsRe
   const speech: SpeechPort = cloud?.speech ?? new StubSpeech();
 
   return {
-    aiMode: requested,
+    aiMode: effective,
     llm,
     embeddings,
     speech,
