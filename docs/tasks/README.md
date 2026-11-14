@@ -72,7 +72,6 @@ PR: —
 - [027-reports-sla-workload.md](027-reports-sla-workload.md) — SHOULD: отчёты О3 и О4
 - [028-reports-kb-gaps-emergency.md](028-reports-kb-gaps-emergency.md) — COULD: отчёты О6 и О7
 - [029-knowledge-extras.md](029-knowledge-extras.md) — COULD: чек-лист шагов, вопрос базе знаний
-- [030-tuning-history.md](030-tuning-history.md) — COULD: история настройки
 
 **Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
 
