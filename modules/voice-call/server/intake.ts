@@ -3,40 +3,44 @@ import type { Appeal, AppealMessage, User } from '@ugra/contracts';
 import type { ModuleDeps } from '@ugra/core';
 import type { CallAppeal, CallIntake } from './service';
 
-/** Заявитель по умолчанию для звонков: номер телефона в профиле пользователя пока не хранится. */
-export const PHONE_CALLER: User = {
-  id: 'u-phone-caller',
-  fullName: 'Звонок на номер поддержки',
+/** Заявитель для звонков по QR: звонящий не входит в систему, контакт уточняет диспетчер. */
+export const CALL_APPLICANT: User = {
+  id: 'u-call-guest',
+  fullName: 'Звонок ИИ-оператору',
   role: 'applicant',
   departmentId: null,
-  position: 'Заявитель по телефону',
+  position: 'Заявитель по звонку',
 };
 
-/** Запуск разбора обращения: тот же пайплайн, что у чата. Даёт сервер приложения. */
-export type AnalyzeAppeal = (appeal: Appeal, ticketId: string) => Promise<void>;
-
-export async function ensurePhoneCaller(db: ModuleDeps['db']): Promise<User> {
-  const existing = await db.getUser(PHONE_CALLER.id);
+export async function ensureCallApplicant(db: ModuleDeps['db']): Promise<User> {
+  const existing = await db.getUser(CALL_APPLICANT.id);
   if (existing) return existing;
-  await db.saveUser(PHONE_CALLER);
-  return PHONE_CALLER;
+  await db.saveUser(CALL_APPLICANT);
+  return CALL_APPLICANT;
 }
 
-function message(appealId: string, direction: AppealMessage['direction'], kind: AppealMessage['kind'], body: string, createdAt: string): AppealMessage {
+function message(
+  appealId: string,
+  direction: AppealMessage['direction'],
+  kind: AppealMessage['kind'],
+  body: string,
+  createdAt: string,
+): AppealMessage {
   return { id: randomUUID(), appealId, direction, kind, body, fieldKey: null, createdAt };
 }
 
 /**
- * Итог звонка → обращение `channel: 'phone'` и черновик заявки.
+ * Итог звонка → обращение `channel: 'phone'` через `ModuleDeps.appeals` — тот же путь, что у чата.
  *
- * Разговор пишется в чат обращения (номер звонящего — системной строкой), поэтому диспетчер
- * видит в карточке, что спросил ИИ и что ответил человек. Разбор запускается без ожидания:
- * звонящий слышит номер заявки сразу, а поля появляются у диспетчера через 15–30 с.
+ * Разбор идёт в фоне (`wait: false`): звонящий сразу слышит номер заявки, а поля появляются у
+ * диспетчера через 15–30 с. Разговор пишется в чат обращения: в карточке видно, что спросил ИИ
+ * и что ответил человек.
  */
-export function createCallIntake(deps: ModuleDeps, analyze: AnalyzeAppeal | null): CallIntake {
+export function createCallIntake(deps: ModuleDeps): CallIntake {
   return {
     async submit(call: CallAppeal) {
-      const author = await ensurePhoneCaller(deps.db);
+      if (!deps.appeals) throw new Error('Сервер не дал приём обращений (ModuleDeps.appeals)');
+      const author = await ensureCallApplicant(deps.db);
       const createdAt = deps.clock.now().toISOString();
       const appeal: Appeal = {
         id: randomUUID(),
@@ -46,10 +50,10 @@ export function createCallIntake(deps: ModuleDeps, analyze: AnalyzeAppeal | null
         attachments: [],
         createdAt,
       };
-      await deps.db.saveAppeal(appeal);
-      const contact = call.from && call.from.toLowerCase() !== 'anonymous' ? call.from : 'скрыт';
+      const result = await deps.appeals.submit(appeal, { actor: { kind: 'ai' }, wait: false });
+      const device = call.from.trim() === '' ? '' : ` Устройство: ${call.from}.`;
       await deps.db.saveAppealMessage(
-        message(appeal.id, 'in', 'system', `Звонок на номер поддержки. Номер звонящего: ${contact}. Разговор вёл ИИ-оператор.`, createdAt),
+        message(appeal.id, 'in', 'system', `Звонок ИИ-оператору по QR-коду.${device} Разговор вёл ИИ-оператор.`, createdAt),
       );
       for (const line of call.lines) {
         if (line.text.trim() === '') continue;
@@ -57,18 +61,7 @@ export function createCallIntake(deps: ModuleDeps, analyze: AnalyzeAppeal | null
           message(appeal.id, line.speaker === 'caller' ? 'in' : 'out', 'text', line.text, line.at),
         );
       }
-      await deps.bus.publish({
-        type: 'appeal.created',
-        actor: { kind: 'ai' },
-        payload: { appealId: appeal.id, channel: appeal.channel, callId: call.callId, emergency: call.emergency },
-      });
-      const ticket = await deps.tickets.createDraft(appeal);
-      await deps.tickets.transition(ticket.id, 'ai_draft', { kind: 'system' });
-      if (analyze) {
-        // Не ждём: звонящему нужен номер заявки сейчас. Ошибка разбора видна в журнале пайплайна.
-        void analyze(appeal, ticket.id).catch(() => undefined);
-      }
-      return { appealId: appeal.id, ticketId: ticket.id, ticketNumber: ticket.number };
+      return { appealId: result.appealId, ticketId: result.ticketId, ticketNumber: result.ticketNumber };
     },
   };
 }

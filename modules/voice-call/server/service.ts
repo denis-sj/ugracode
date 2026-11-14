@@ -3,16 +3,16 @@ import type { LlmPort } from '@ugra/core';
 import type { CallLine, CallRecord, CallStore } from './calls';
 import { dialogTurn } from './dialog';
 
-/** Номер звонящего: цифры, плюс, скобки, пробелы и дефисы; `anonymous` — скрытый номер. */
-const Phone = z
+/** Кто звонит: подпись устройства со страницы звонка («iPhone», «Android», «Компьютер»). Только для экрана диспетчера. */
+const Caller = z
   .string()
   .trim()
-  .max(32)
-  .regex(/^(\+?[\d\s()-]{0,30}|anonymous)$/i, 'номер телефона');
+  .max(60)
+  .transform((value) => value.replace(/[^\p{L}\p{N} .,()+-]/gu, ''));
 
 export const TurnInput = z.object({
   callId: z.string().trim().min(1).max(128),
-  from: Phone.default(''),
+  from: Caller.default(''),
   /** Распознанная фраза заявителя; пустая — тишина или ASR не разобрал. */
   text: z.string().max(2000).default(''),
 });
@@ -29,8 +29,8 @@ export type TurnResponse = z.infer<typeof TurnResponse>;
 
 export const EndInput = z.object({
   callId: z.string().trim().min(1).max(128),
-  from: Phone.default(''),
-  /** Расшифровка со стороны VoxEngine — запасной источник, если сервер перезапускался во время звонка. */
+  from: Caller.default(''),
+  /** Расшифровка со страницы звонка — запасной источник, если сервер перезапускался во время звонка. */
   transcript: z
     .array(z.object({ speaker: z.enum(['caller', 'ai']), text: z.string().max(2000) }))
     .max(20)
@@ -129,7 +129,7 @@ export function createVoiceService(deps: VoiceServiceDeps): VoiceService {
       if (call.status === 'ended') {
         return { ticketId: call.ticketId, ticketNumber: call.ticketNumber, say: call.farewell ?? NO_TEXT_FAREWELL };
       }
-      // Сервер мог перезапуститься посреди звонка: тогда берём расшифровку VoxEngine.
+      // Сервер мог перезапуститься посреди звонка: тогда берём расшифровку со страницы звонка.
       if (call.lines.length === 0 && input.transcript.length > 0) {
         for (const line of input.transcript) call.lines.push({ ...line, at: at() });
       }

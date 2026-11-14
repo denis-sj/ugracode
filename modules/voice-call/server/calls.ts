@@ -44,7 +44,7 @@ export class CallStore {
     return this.calls.get(id) ?? null;
   }
 
-  /** Звонок по id или новый: VoxEngine не делает отдельного запроса на начало звонка. */
+  /** Звонок по id или новый: страница звонка не делает отдельного запроса на начало звонка. */
   open(id: string, from: string): CallRecord {
     const existing = this.get(id);
     if (existing) return existing;

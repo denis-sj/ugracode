@@ -39,3 +39,11 @@ export function toView(call: CallRecord): CallView {
     lines: call.lines.map((line) => ({ ...line })),
   };
 }
+
+export const ActiveCallResponse = z.object({ call: CallView.nullable() });
+
+export const PublicUrlResponse = z.object({
+  url: z.string().nullable(),
+  callUrl: z.string().nullable(),
+  source: z.enum(['env', 'tunnel']).nullable(),
+});

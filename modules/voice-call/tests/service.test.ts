@@ -12,7 +12,6 @@ import {
   type CallAppeal,
   type CallIntake,
 } from '../server/service';
-import { voiceSecretOk } from '../server/secret';
 
 function clock(start = '2026-11-14T10:00:00.000Z') {
   let now = Date.parse(start);
@@ -57,7 +56,7 @@ const thanks = '{"say":"Спасибо, записала.","done":true,"emergenc
 describe('сервис звонка', () => {
   it('полный путь: реплики → итог → заявка с каналом звонка', async () => {
     const { service, calls, intake } = setup([ask, thanks]);
-    const first = await service.turn(TurnInput.parse({ callId: 'c-1', from: '+7 912 000-00-00', text: 'не печатает принтер' }));
+    const first = await service.turn(TurnInput.parse({ callId: 'c-1', from: 'iPhone', text: 'не печатает принтер' }));
     expect(first).toEqual({ say: 'В каком кабинете?', done: false, emergency: false, turn: 1 });
     const second = await service.turn(TurnInput.parse({ callId: 'c-1', text: '312, корпус Б' }));
     expect(second.done).toBe(true);
@@ -65,7 +64,7 @@ describe('сервис звонка', () => {
     const end = await service.end(EndInput.parse({ callId: 'c-1' }));
     expect(end.ticketNumber).toBe('З-20261114-0001');
     expect(end.say).toContain('З-20261114-0001');
-    expect(intake.submitted[0]).toMatchObject({ from: '+7 912 000-00-00', text: 'не печатает принтер\n312, корпус Б', emergency: false });
+    expect(intake.submitted[0]).toMatchObject({ from: 'iPhone', text: 'не печатает принтер\n312, корпус Б', emergency: false });
     expect(intake.submitted[0]?.lines).toHaveLength(4);
     expect(calls.get('c-1')?.status).toBe('ended');
   });
@@ -104,12 +103,12 @@ describe('сервис звонка', () => {
     expect(intake.submitted).toHaveLength(0);
   });
 
-  it('сервер потерял звонок → берём расшифровку VoxEngine', async () => {
+  it('сервер потерял звонок → берём расшифровку со страницы', async () => {
     const { service, intake } = setup([ask]);
     await service.end(
       EndInput.parse({
         callId: 'c-6',
-        from: '+79120000000',
+        from: 'Android',
         transcript: [
           { speaker: 'ai', text: 'Здравствуйте' },
           { speaker: 'caller', text: 'сломался сканер в 204' },
@@ -136,24 +135,14 @@ describe('сервис звонка', () => {
   });
 });
 
-describe('входы вебхука', () => {
-  it('отвергает пустой callId и номер с буквами', () => {
+describe('входы звонка', () => {
+  it('отвергает пустой callId и слишком длинную реплику', () => {
     expect(TurnInput.safeParse({ callId: '', text: 'x' }).success).toBe(false);
-    expect(TurnInput.safeParse({ callId: 'c', from: 'drop table', text: 'x' }).success).toBe(false);
-    expect(TurnInput.safeParse({ callId: 'c', from: 'anonymous' }).success).toBe(true);
-  });
-});
-
-describe('секрет вебхука', () => {
-  it('совпадает только точный секрет', () => {
-    expect(voiceSecretOk('s3cret', 's3cret')).toBe(true);
-    expect(voiceSecretOk('wrong', 's3cret')).toBe(false);
-    expect(voiceSecretOk(undefined, 's3cret')).toBe(false);
-    expect(voiceSecretOk(['s3cret'], 's3cret')).toBe(false);
+    expect(TurnInput.safeParse({ callId: 'c', text: 'я'.repeat(2001) }).success).toBe(false);
   });
 
-  it('секрет не задан в окружении → отказ всем', () => {
-    expect(voiceSecretOk('', '')).toBe(false);
-    expect(voiceSecretOk('anything', undefined)).toBe(false);
+  it('чистит подпись устройства от разметки', () => {
+    expect(TurnInput.parse({ callId: 'c', from: '<b>iPhone</b>' }).from).toBe('biPhoneb');
+    expect(TurnInput.parse({ callId: 'c' }).from).toBe('');
   });
 });
