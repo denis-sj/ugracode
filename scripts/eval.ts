@@ -1,15 +1,18 @@
 import 'dotenv/config';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PROMPT_FILE, appendHistory, historyRow, promptVersion } from '../modules/quality/server/history';
 import { renderConsole, renderQualityReport } from '../modules/quality/server/report';
 import { evalReportJson, runEval } from '../modules/quality/server/run';
 
 /**
  * `pnpm eval [--model <id>] [--cloud] [--case NN]` — оценка качества разбора.
  *
- * Пишет `reports/quality.md` (таблица «эталон / ИИ» — её владелец переносит на слайд)
- * и `reports/eval-<дата-время>.json` (полные траектории). Код выхода 0, даже если
- * пороги не выполнены: провал порога — это результат прогона, а не ошибка запуска.
+ * Пишет `reports/quality.md` (таблица «эталон / ИИ» — её владелец переносит на слайд),
+ * `reports/eval-<дата-время>.json` (полные траектории) и дописывает строку в
+ * `reports/quality-history.md` (дата, модель, версия промпта, итог по 11 оценщикам).
+ * Код выхода 0, даже если пороги не выполнены: провал порога — это результат
+ * прогона, а не ошибка запуска.
  */
 
 interface CliOptions {
@@ -89,15 +92,30 @@ async function main(argv: readonly string[]): Promise<number> {
   mkdirSync(reportsDir, { recursive: true });
   const markdownPath = join(reportsDir, 'quality.md');
   const jsonPath = join(reportsDir, `eval-${reportStamp(run.startedAt)}.json`);
+  const historyPath = join(reportsDir, 'quality-history.md');
   writeFileSync(markdownPath, renderQualityReport(run), 'utf8');
   writeFileSync(jsonPath, evalReportJson(run), 'utf8');
+
+  const existingHistory = existsSync(historyPath) ? readFileSync(historyPath, 'utf8') : '';
+  const row = historyRow(run, { prompt: readPromptVersion() });
+  writeFileSync(historyPath, appendHistory(existingHistory, row), 'utf8');
 
   console.info('');
   const model = run.mode === 'cloud' ? run.model : 'заглушка (сценарии)';
   console.info(`Модель: ${model}, порогов выполнено ${run.summary.met} из ${run.summary.withThreshold}`);
   console.info(`Отчёт: ${markdownPath}`);
   console.info(`Траектории: ${jsonPath}`);
+  console.info(`История: ${historyPath} (промпт ${row.prompt})`);
   return 0;
+}
+
+/** Версия промпта агента `intake`: sha256 файла. Файла нет — «—», прогон не падает. */
+function readPromptVersion(): string {
+  try {
+    return promptVersion(readFileSync(join(process.cwd(), PROMPT_FILE), 'utf8'));
+  } catch {
+    return '—';
+  }
 }
 
 const entry = process.argv[1] ?? '';
