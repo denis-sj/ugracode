@@ -9,6 +9,7 @@ export type TabIconName = Extract<
   | 'incidents'
   | 'journal'
   | 'executors'
+  | 'phone'
   | 'chat'
   | 'tickets'
   | 'tasks'

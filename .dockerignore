@@ -10,3 +10,5 @@ reports/*
 !reports/quality.md
 !reports/quality-history.md
 *.log
+# Адрес туннеля меняется: в образ он попасть не должен, в контейнер приходит томом.
+.demo

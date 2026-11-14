@@ -1,4 +1,4 @@
-import type { OverviewResult } from '../contracts';
+import type { OverdueResult, OverviewResult } from '../contracts';
 import { isValidRange, rangeEnd, rangeStart } from './format';
 
 /** Клиент отчёта О0: только чтение маршрута модуля, cookie-сессия. */
@@ -43,6 +43,18 @@ function queryString(query: OverviewQuery): string {
     if (value) params.set(key, value);
   }
   return params.toString();
+}
+
+export async function fetchOverdue(query: OverviewQuery, signal?: AbortSignal): Promise<OverdueResult> {
+  const suffix = queryString(query);
+  const response = await fetch(
+    `/api/m/reports-dashboard/overdue${suffix ? `?${suffix}` : ''}`,
+    { credentials: 'include', headers: { accept: 'application/json' }, signal },
+  );
+  if (!response.ok) {
+    throw new Error(`Список просрочек недоступен: HTTP ${response.status}`);
+  }
+  return (await response.json()) as OverdueResult;
 }
 
 export async function fetchOverview(query: OverviewQuery): Promise<OverviewResult> {

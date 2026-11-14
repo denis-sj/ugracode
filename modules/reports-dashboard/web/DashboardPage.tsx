@@ -2,26 +2,18 @@ import './dashboard.css';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WebPageProps } from '@ugra/ui';
+import { Icon } from '@ugra/ui';
 import type { OverviewFiltersState } from './api';
 import { overviewQuery } from './api';
-import {
-  formatDateRange,
-  isValidRange,
-  periodName,
-  periodTitle,
-} from './format';
-import { MainWidget } from './MainWidget';
-import {
-  buildFilterOptions,
-  EXPORT_ITEMS,
-  mergeOptions,
-  slicesToOptions,
-} from './options';
+import { formatDateRange, isValidRange, periodTitle } from './format';
+import { OverdueDrawer } from './OverdueDrawer';
+import { buildFilterOptions, EXPORT_ITEMS, mergeOptions, slicesToOptions } from './options';
 import type { SelectOption } from './options';
+import { PriorityCards } from './PriorityCards';
 import { TilesWidget } from './TilesWidget';
 import { useOverview } from './useOverview';
 
-/** Страница `/dashboard`: период, фильтры, выгрузка, плитки и основной блок. */
+/** Страница `/dashboard`: 5 карточек приоритетов и 3 плитки периода (макет D2). */
 
 const PERIODS: readonly { days: number; label: string }[] = [
   { days: 1, label: 'Смена' },
@@ -60,22 +52,19 @@ function Select({
   );
 }
 
-/** Дашборд руководителя: один запрос к маршруту отчёта, виджеты получают готовые данные. */
 export function DashboardPage({ meta }: WebPageProps): JSX.Element {
   const [days, setDays] = useState(30);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [filters, setFilters] = useState<OverviewFiltersState>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [overdueOpen, setOverdueOpen] = useState(false);
   const [assignees, setAssignees] = useState<SelectOption[]>([]);
   const exportRef = useRef<HTMLDivElement | null>(null);
 
   const rangeReady = isValidRange(from, to);
-  const rangeBroken = from !== '' && to !== '' && !rangeReady;
-  const query = useMemo(
-    () => overviewQuery(days, from, to, filters),
-    [days, from, to, filters],
-  );
+  const query = useMemo(() => overviewQuery(days, from, to, filters), [days, from, to, filters]);
   const { data, loading, error } = useOverview(query);
 
   useEffect(() => {
@@ -87,9 +76,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
     if (!exportOpen) return undefined;
     const onPointerDown = (event: MouseEvent): void => {
       const node = exportRef.current;
-      if (node && event.target instanceof Node && !node.contains(event.target)) {
-        setExportOpen(false);
-      }
+      if (node && event.target instanceof Node && !node.contains(event.target)) setExportOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') setExportOpen(false);
@@ -103,9 +90,9 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
   }, [exportOpen]);
 
   const options = useMemo(() => buildFilterOptions(meta, data, assignees), [meta, data, assignees]);
-  const previousLabel = data
-    ? formatDateRange(data.previousPeriod.from, data.previousPeriod.to)
-    : periodName(days);
+  const activeFilters = Object.keys(filters).length;
+  const periodLabel = periodTitle(days, from, to);
+  const compareLabel = data ? formatDateRange(data.previousPeriod.from, data.previousPeriod.to) : null;
 
   const patch = (key: keyof OverviewFiltersState) => (value: string) => {
     setFilters((current) => {
@@ -124,16 +111,11 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
 
   return (
     <div className="rd-page">
-      <div className="rd-head" data-reveal>
-        <div className="rd-head__titles">
-          <h1 className="ugra-page-title rd-title">Обращения за {periodTitle(days, from, to)}</h1>
-          <p className="rd-head__subtitle">
-            Сравнение с прошлым таким же периодом: {previousLabel}. Клик по цифре откроет заявки.
-          </p>
-        </div>
+      <div className="rd-top" data-reveal>
+        <h1 className="rd-title">Обращения за {periodLabel}</h1>
 
         <div className="rd-controls">
-          <div className="rd-periods ugra-liquid" role="group" aria-label="Период">
+          <div className="rd-periods" role="group" aria-label="Период">
             {PERIODS.map((period) => {
               const active = !rangeReady && days === period.days;
               return (
@@ -150,41 +132,28 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
             })}
           </div>
 
-          <label className="rd-range">
-            <span className="rd-range__label">Даты</span>
-            <input
-              type="date"
-              className="rd-range__input"
-              value={from}
-              max={to || undefined}
-              onChange={(event) => setFrom(event.target.value)}
-              aria-label="Дата начала"
-            />
-            <span className="rd-range__dash" aria-hidden="true">
-              —
-            </span>
-            <input
-              type="date"
-              className="rd-range__input"
-              value={to}
-              min={from || undefined}
-              onChange={(event) => setTo(event.target.value)}
-              aria-label="Дата конца"
-            />
-          </label>
+          <button
+            type="button"
+            className={activeFilters > 0 ? 'rd-chip rd-chip--on' : 'rd-chip'}
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+          >
+            <Icon name="reports" size={16} />
+            Фильтры
+            {activeFilters > 0 && <span className="rd-chip__count">{activeFilters}</span>}
+          </button>
 
           <div className="rd-export" ref={exportRef}>
             <button
               type="button"
-              className="ugra-btn ugra-btn--primary rd-export__button"
+              className="rd-chip rd-chip--icon"
               onClick={() => setExportOpen((open) => !open)}
               aria-expanded={exportOpen}
               aria-haspopup="menu"
+              aria-label="Выгрузить"
+              title="Выгрузить"
             >
-              Выгрузить
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+              <Icon name="tasks" size={16} />
             </button>
             {exportOpen && (
               <div className="rd-menu" role="menu" aria-label="Выгрузка">
@@ -207,28 +176,73 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
         </div>
       </div>
 
-      <div className="rd-filters">
-        <span className="rd-filters__label">Фильтры</span>
-        <Select label="Категория" value={filters.category ?? ''} options={options.categories} onChange={patch('category')} />
-        <Select label="Исполнитель" value={filters.assigneeId ?? ''} options={options.assignees} onChange={patch('assigneeId')} />
-        <Select label="Канал" value={filters.channel ?? ''} options={options.channels} onChange={patch('channel')} />
-        <Select label="Корпус" value={filters.building ?? ''} options={options.buildings} onChange={patch('building')} />
-        <Select label="Статус" value={filters.status ?? ''} options={options.statuses} onChange={patch('status')} />
-        {Object.keys(filters).length > 0 && (
-          <button type="button" className="ugra-btn ugra-btn--ghost ugra-btn--sm rd-reset" onClick={() => setFilters({})}>
-            Сбросить
-          </button>
-        )}
-        <span className="rd-filters__spacer" />
-        {rangeBroken && <span className="rd-status rd-status--warn">Конец раньше начала — показываем пресет</span>}
-        {loading && <span className="rd-status">обновляем…</span>}
-        {error && <span className="rd-status rd-status--error">{error}</span>}
-      </div>
+      {filtersOpen && (
+        <div className="rd-filters" data-motion="off">
+          <Select label="Категория" value={filters.category ?? ''} options={options.categories} onChange={patch('category')} />
+          <Select label="Исполнитель" value={filters.assigneeId ?? ''} options={options.assignees} onChange={patch('assigneeId')} />
+          <Select label="Канал" value={filters.channel ?? ''} options={options.channels} onChange={patch('channel')} />
+          <Select label="Корпус" value={filters.building ?? ''} options={options.buildings} onChange={patch('building')} />
+          <Select label="Статус" value={filters.status ?? ''} options={options.statuses} onChange={patch('status')} />
+          <label className="rd-range">
+            <span className="rd-range__label">Даты</span>
+            <input
+              type="date"
+              className="rd-range__input"
+              value={from}
+              max={to || undefined}
+              onChange={(event) => setFrom(event.target.value)}
+              aria-label="Дата начала"
+            />
+            <input
+              type="date"
+              className="rd-range__input"
+              value={to}
+              min={from || undefined}
+              onChange={(event) => setTo(event.target.value)}
+              aria-label="Дата конца"
+            />
+          </label>
+          {activeFilters > 0 && (
+            <button
+              type="button"
+              className="ugra-btn ugra-btn--ghost ugra-btn--sm"
+              onClick={() => setFilters({})}
+            >
+              Сбросить
+            </button>
+          )}
+        </div>
+      )}
 
-      <TilesWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
-      <MainWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
+      {loading && !data && <div className="rd-placeholder">Считаем показатели…</div>}
+      {error && <div className="rd-placeholder rd-placeholder--error">{error}</div>}
 
-      <p className="rd-source-note">Данные — синтетическая история за 6 месяцев.</p>
+      {data && (
+        <>
+          <PriorityCards
+            slices={data.byPriority}
+            previous={data.previousByPriority}
+            periodDays={data.period.days}
+          />
+          <TilesWidget
+            overview={data}
+            fetchOwn={false}
+            onOverdue={() => setOverdueOpen(true)}
+          />
+          {compareLabel && (
+            <p className="rd-compare" data-motion="off">
+              Сравнение с прошлым периодом: {compareLabel}
+            </p>
+          )}
+        </>
+      )}
+
+      <OverdueDrawer
+        open={overdueOpen}
+        onClose={() => setOverdueOpen(false)}
+        query={query}
+        reason={data?.insights.sla ?? null}
+      />
     </div>
   );
 }

@@ -649,6 +649,11 @@ export async function computeOverview(
     ...slice,
     daily: priorityDaily.get(slice.key) ?? new Array<number>(period.days).fill(0),
   }));
+  const previousByPriority = toSlices(
+    countBy(previousTickets, (ticket) => ticket.priority),
+    (key) => labelOf(deps.data, 'priority', key, PRIORITY_FALLBACK[key as PriorityLevel]),
+    PRIORITY_ORDER,
+  );
   const byCategory = toSlices(
     countBy(currentTickets, (ticket) => ticket.category),
     (key) => labelOf(deps.data, 'category', key),
@@ -691,6 +696,7 @@ export async function computeOverview(
     avgResolutionMinutes: current.avgResolutionMinutes,
     previousAvgResolutionMinutes: previousTotals.avgResolutionMinutes,
     byPriority,
+    previousByPriority,
     slaTargetPercent: typeof slaTarget === 'number' ? slaTarget : null,
     aiEffect,
     byCategory,

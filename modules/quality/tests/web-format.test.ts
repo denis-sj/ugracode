@@ -5,9 +5,14 @@ import {
   QUALITY_COLUMNS,
   caseRows,
   cellState,
+  columnTotals,
+  fieldsPercent,
   metricRows,
+  qualityHero,
+  runTimeLabel,
   summaryText,
   thresholdState,
+  typicalFailure,
 } from '../web/format';
 
 function qualityCase(patch: Partial<QualityCase> = {}): QualityCase {

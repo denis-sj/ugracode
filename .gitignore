@@ -14,3 +14,5 @@ __pycache__/
 generated_images/
 # Пакет макетов от владельца (картинки, HTML, архивы) — не часть сборки.
 Claude outputs/
+.demo/*
+!.demo/.gitkeep

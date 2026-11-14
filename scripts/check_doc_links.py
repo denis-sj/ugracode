@@ -19,6 +19,8 @@ LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 BACKTICK_RE = re.compile(r"`([^`\s]+)`")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
 PATH_PREFIXES = ("docs/", "scripts/", "tests/", ".github/", "src/", "apps/", "backend/", "frontend/")
+# Сборочные артефакты в репозитории не лежат: упоминание такого пути в карте — не ссылка.
+BUILD_PATHS = ("apps/web/dist", "dist/", "node_modules/", "coverage/")
 
 
 def strip_fenced_blocks(text: str) -> str:
@@ -61,6 +63,8 @@ def find_missing_map_paths(md_file: Path, root: Path) -> list[str]:
         if candidate in ("AGENTS.md", "CLAUDE.md", "README.md") or candidate.startswith(PATH_PREFIXES):
             if any(ch in candidate for ch in "<>*"):
                 continue  # template like docs/map/features/<feature>.md
+            if candidate.startswith(BUILD_PATHS):
+                continue  # build output is not committed
             if not (root / candidate.rstrip("/")).exists():
                 missing.append(f"{md_file}: missing path -> {candidate}")
     return missing

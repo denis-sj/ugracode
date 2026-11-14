@@ -1,3 +1,4 @@
+import type { FieldDef } from '@ugra/contracts';
 import type { QualityCase, QualityMetric, QualityReport } from '../contracts';
 
 /**
@@ -217,4 +218,151 @@ export function summaryText(report: QualityReport | null | undefined): string {
   const head = `${cases} ${plural(cases, 'обращение', 'обращения', 'обращений')}`;
   if (total === 0) return `${head}: пороги не заданы`;
   return `${head} · выполнено ${met} из ${total} порогов`;
+}
+
+/** Пара «верно из проверенных»: знаменатель — только обращения с эталоном. */
+export interface CountPair {
+  correct: number;
+  total: number;
+}
+
+/** Частое поле ошибки из строк разбора: сколько замечаний и в скольких обращениях. */
+export interface TypicalFailure {
+  key: string;
+  label: string;
+  mentions: number;
+  cases: number;
+  invented: number;
+}
+
+/** Цифры шапки экрана: процент полей, исполнитель, аварии и приоритет, типичная ошибка. */
+export interface QualityHero {
+  fieldsPercent: number | null;
+  fieldsPassed: boolean;
+  assignee: CountPair | null;
+  incidents: CountPair | null;
+  typical: TypicalFailure | null;
+}
+
+/** Итог одной колонки сетки: сколько верных из проверенных обращений. */
+export interface ColumnTotal {
+  key: ColumnKey;
+  ok: number;
+  total: number;
+}
+
+/** Процент полей из оценщика `fields`. Нет эталона — null, а не «ноль процентов». */
+export function fieldsPercent(metric: QualityMetric | null | undefined): number | null {
+  if (!metric || safeCount(metric.total) === 0) return null;
+  const match = /(\d{1,3})\s*%/.exec(metric.display);
+  if (match) {
+    const parsed = Number(match[1]);
+    return Number.isFinite(parsed) ? Math.min(100, parsed) : null;
+  }
+  if (Number.isFinite(metric.value) && metric.value >= 0 && metric.value <= 1) {
+    return Math.round(metric.value * 100);
+  }
+  return null;
+}
+
+function assigneePair(cases: readonly QualityCase[]): CountPair | null {
+  const evaluated = cases.filter((item) => item.assigneeTop1 !== null);
+  if (evaluated.length === 0) return null;
+  return { correct: evaluated.filter((item) => item.assigneeTop1 === true).length, total: evaluated.length };
+}
+
+function incidentsPair(cases: readonly QualityCase[]): CountPair | null {
+  const evaluated = cases.filter((item) => item.priority !== null || item.emergency !== null);
+  if (evaluated.length === 0) return null;
+  const correct = evaluated.filter(
+    (item) => item.priority !== false && item.emergency !== 'miss' && item.emergency !== 'false',
+  ).length;
+  return { correct, total: evaluated.length };
+}
+
+const DETAIL_FIELD = /^(поля|выдуманное поле) · ([A-Za-z0-9_]+)/;
+
+/** Типичная ошибка — самое частое поле в строках разбора отчёта; нет строк — null. */
+export function typicalFailure(
+  cases: readonly QualityCase[],
+  labels: ReadonlyMap<string, string> = new Map(),
+): TypicalFailure | null {
+  const counts = new Map<string, { mentions: number; cases: Set<string>; invented: number }>();
+  for (const item of cases) {
+    for (const line of item.details ?? []) {
+      const match = DETAIL_FIELD.exec(line.trim());
+      const key = match?.[2] ?? '';
+      if (key === '') continue;
+      const entry = counts.get(key) ?? { mentions: 0, cases: new Set<string>(), invented: 0 };
+      entry.mentions += 1;
+      entry.cases.add(item.id);
+      if (match?.[1] === 'выдуманное поле') entry.invented += 1;
+      counts.set(key, entry);
+    }
+  }
+  let best: { key: string; entry: { mentions: number; cases: Set<string>; invented: number } } | null = null;
+  for (const [key, entry] of counts) {
+    if (best === null || entry.mentions > best.entry.mentions) {
+      best = { key, entry };
+      continue;
+    }
+    if (entry.mentions === best.entry.mentions && entry.invented > best.entry.invented) {
+      best = { key, entry };
+    }
+  }
+  if (best === null) return null;
+  return {
+    key: best.key,
+    label: labels.get(best.key) ?? best.key,
+    mentions: best.entry.mentions,
+    cases: best.entry.cases.size,
+    invented: best.entry.invented,
+  };
+}
+
+/** Все цифры шапки из одного отчёта: ничего не выдумываем, пустое — null. */
+export function qualityHero(
+  report: QualityReport | null | undefined,
+  fields: readonly Pick<FieldDef, 'key' | 'label'>[] = [],
+): QualityHero {
+  const cases = Array.isArray(report?.cases) ? report.cases : [];
+  const metrics = Array.isArray(report?.summary?.metrics) ? report.summary.metrics : [];
+  const fieldsMetric = metrics.find((metric) => metric.key === 'fields') ?? null;
+  const percent = fieldsPercent(fieldsMetric);
+  const labels = new Map(fields.map((field) => [field.key, field.label]));
+  return {
+    fieldsPercent: percent,
+    fieldsPassed: fieldsMetric?.passed === true,
+    assignee: assigneePair(cases),
+    incidents: incidentsPair(cases),
+    typical: typicalFailure(cases, labels),
+  };
+}
+
+/** Итог колонки: верные клетки из проверенных; `?` в знаменатель не входит. */
+export function columnTotals(rows: readonly CaseRow[]): ColumnTotal[] {
+  return QUALITY_COLUMNS.map((column) => {
+    let ok = 0;
+    let total = 0;
+    for (const row of rows) {
+      const cell = row.cells.find((entry) => entry.key === column.key);
+      if (!cell || cell.state === 'none') continue;
+      total += 1;
+      if (cell.state === 'ok') ok += 1;
+    }
+    return { key: column.key, ok, total };
+  });
+}
+
+const MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
+/** «14 ноя, 16:20» для шапки; мусор и пустое — null. */
+export function runTimeLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const month = MONTHS[date.getMonth()] ?? '';
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${date.getDate()} ${month}, ${hours}:${minutes}`;
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Appeal, Ticket } from '@ugra/contracts';
 import { createReferenceData, MemoryStore } from '@ugra/core';
 import { OverviewResult } from '../contracts';
-import { computeOverview } from '../server/overview';
+import { computeOverdue, computeOverview } from '../server/overview';
 import { factsOf } from '../server';
 
 const clock = { now: () => new Date('2026-11-14T12:00:00.000Z') };
@@ -175,5 +175,72 @@ describe('computeOverview', () => {
     const monday = result.heatmap.days.find((row) => row.day === 'Пн');
     expect(monday?.cells.find((cell) => cell.hour === 10)?.count).toBe(1);
     expect(result.heatmap.max).toBe(1);
+  });
+});
+
+describe('данные для карточек дашборда D2', () => {
+  it('по каждому приоритету есть ряд по дням периода', async () => {
+    const store = await storeWith([
+      makeTicket('t-1', { priority: 'emergency', isEmergency: true }),
+      makeTicket('t-2', { priority: 'high' }),
+      makeTicket('t-3', { priority: 'high' }),
+    ]);
+    const result = await computeOverview({ days: 30 }, { db: store, data: createReferenceData(), clock });
+
+    expect(result.period.days).toBe(30);
+    for (const slice of result.byPriority) {
+      expect(slice.daily).toHaveLength(30);
+      expect(slice.daily.reduce((sum, value) => sum + value, 0)).toBe(slice.count);
+    }
+    const high = result.byPriority.find((slice) => slice.key === 'high');
+    expect(high?.count).toBe(2);
+    expect(high?.daily.reduce((sum, value) => sum + value, 0)).toBe(2);
+  });
+
+  it('считает эффект ИИ по правкам диспетчера и не выдумывает цель SLA', async () => {
+    const store = await storeWith([makeTicket('t-1'), makeTicket('t-2')]);
+    await store.appendEvent({
+      id: 'e-1',
+      type: 'ticket.field.corrected',
+      at: iso(NOW - DAY),
+      actor: { kind: 'user', id: 'u-dispatcher-1' },
+      ticketId: 't-1',
+      payload: { fieldKey: 'cabinet', value: '313', previous: '312' },
+    });
+    const result = await computeOverview({ days: 30 }, { db: store, data: createReferenceData(), clock });
+
+    expect(result.aiEffect).toEqual({ correctedTickets: 1, totalTickets: 2, withoutEditsPercent: 50 });
+    expect(result.slaTargetPercent).toBeNull();
+  });
+
+  it('берёт цель SLA из настроек, если она задана', async () => {
+    const store = await storeWith([]);
+    const result = await computeOverview(
+      { days: 30 },
+      { db: store, data: createReferenceData({ settings: { slaTargetPercent: 90 } }), clock },
+    );
+    expect(result.slaTargetPercent).toBe(90);
+  });
+});
+
+describe('computeOverdue', () => {
+  it('отдаёт только открытые просроченные заявки, самые долгие — первыми', async () => {
+    const store = await storeWith([
+      makeTicket('t-old', { status: 'assigned', slaDueAt: iso(NOW - 3 * DAY) }),
+      makeTicket('t-new', { status: 'in_progress', slaDueAt: iso(NOW - 60 * 60_000) }),
+      makeTicket('t-ok', { status: 'in_progress', slaDueAt: iso(NOW + 5 * DAY) }),
+      makeTicket('t-closed', { status: 'closed', slaDueAt: iso(NOW - 5 * DAY) }),
+    ]);
+    const result = await computeOverdue({ days: 30 }, { db: store, data: createReferenceData(), clock });
+
+    expect(result.total).toBe(2);
+    expect(result.items.map((item) => item.ticketId)).toEqual(['t-old', 't-new']);
+    expect(result.items[0]?.overdueMinutes).toBe(3 * 24 * 60);
+    expect(result.groups[0]).toMatchObject({ assigneeId: 'u-engineer-2', count: 2 });
+  });
+
+  it('на пустой базе — пустой список, а не ошибка', async () => {
+    const result = await computeOverdue({ days: 30 }, { db: new MemoryStore(), data: createReferenceData(), clock });
+    expect(result).toEqual({ total: 0, items: [], groups: [] });
   });
 });

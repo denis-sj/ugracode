@@ -87,6 +87,14 @@ export const REPORTS: readonly ReportSpec[] = [
   },
 ];
 
+/** «Вау»-отчёт экрана: О2 «Горячие точки» показываем крупно, остальные — карточками. */
+export const HERO_REPORT_ID = 'report-hotspots';
+
+/** Карточки-вопросы под главным отчётом: О1, О3–О7 (без О2). */
+export const CARD_REPORTS: readonly ReportSpec[] = REPORTS.filter(
+  (report) => report.id !== HERO_REPORT_ID,
+);
+
 export interface ReportRowView {
   key: string;
   cells: string[];
@@ -522,4 +530,292 @@ export function isKnownReportPayload(payload: unknown): boolean {
 /** Пусто: ни строк в таблице, ни показателей — за период нечего показывать. */
 export function reportIsEmpty(payload: unknown): boolean {
   return numberRows(payload) === 0 && reportFacts(payload).length === 0;
+}
+
+/* ---------- Карточки-ответы на экране «Отчёты» ---------- */
+
+/**
+ * Короткий ответ отчёта без модели: карточка показывает одну цифру.
+ * `GET /api/m/<id>/?…` считает цифры кодом (без вызова ИИ), поэтому хаб грузит
+ * все ответы сразу. Вывод ИИ («что это значит») остаётся в самом отчёте.
+ */
+export function summaryUrl(spec: ReportSpec, days: number, date: string): string {
+  const params = new URLSearchParams();
+  if (spec.params === 'date') params.set('date', date);
+  else params.set('days', String(days));
+  // Маршрут модуля зарегистрирован как `/` — без косой черты Fastify вернёт 404.
+  return `/api/m/${spec.id}/?${params.toString()}`;
+}
+
+/** Единица измерения ответа: проценты, минуты, штуки или текст (имя, место, тема). */
+export type AnswerUnit = 'percent' | 'minutes' | 'count' | 'text';
+
+export interface ReportAnswer {
+  /** Число — анимируется счётчиком; строка — место, имя или тема. */
+  readonly value: number | string;
+  readonly unit: AnswerUnit;
+  /** Короткая подпись к цифре: «закрыто в срок», «заявок без правки». */
+  readonly caption: string;
+  /** Вторая строка при наличии данных; `null` — не показываем. */
+  readonly hint: string | null;
+}
+
+/** Русское склонение: `plural(23, 'заявка', 'заявки', 'заявок')` → «заявки». */
+export function plural(count: number, one: string, few: string, many: string): string {
+  const absolute = Math.abs(Math.trunc(count));
+  const tail100 = absolute % 100;
+  const tail10 = absolute % 10;
+  if (tail100 >= 11 && tail100 <= 14) return many;
+  if (tail10 === 1) return one;
+  if (tail10 >= 2 && tail10 <= 4) return few;
+  return many;
+}
+
+/** Значение ответа без анимации: «48,2%», «19 мин», «1 284», «Кузнецов». */
+export function formatAnswer(answer: ReportAnswer): string {
+  if (typeof answer.value === 'string') return answer.value;
+  const text = formatMetric(answer.value);
+  if (answer.unit === 'percent') return `${text}%`;
+  if (answer.unit === 'minutes') return `${text} мин`;
+  return text;
+}
+
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function records(value: unknown): Array<Record<string, unknown>> {
+  return asList(value).flatMap((item) => {
+    const record = asRecord(item);
+    return record === null ? [] : [record];
+  });
+}
+
+/** Последнее слово имени: «Артём Кузнецов» → «Кузнецов». */
+function surname(name: string): string {
+  const words = name.trim().split(/\s+/).filter((word) => word !== '');
+  return words[words.length - 1] ?? name.trim();
+}
+
+/** Длинная тема не должна разваливать карточку: обрезаем по границе слова. */
+function shortLabel(text: string, limit = 26): string {
+  if (text.length <= limit) return text;
+  const cut = text.slice(0, limit);
+  const space = cut.lastIndexOf(' ');
+  const base = space > 12 ? cut.slice(0, space) : cut;
+  return `${base.trimEnd()}…`;
+}
+
+function minutesText(value: number | null): string | null {
+  if (value === null) return null;
+  if (value < 60) return `${Math.round(value)} мин`;
+  const hours = Math.floor(value / 60);
+  const rest = Math.round(value % 60);
+  return rest === 0 ? `${hours} ч` : `${hours} ч ${rest} мин`;
+}
+
+/** О1: сколько заявок пришло за смену и сколько из них аварий. */
+function shiftAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const totals = asRecord(report['totals']);
+  const created = num(totals?.['created']);
+  if (created === null) return null;
+  const emergency = num(totals?.['emergency']) ?? 0;
+  return {
+    value: created,
+    unit: 'count',
+    caption: `${plural(created, 'заявка', 'заявки', 'заявок')} за смену`,
+    hint:
+      emergency === 0
+        ? 'без аварий'
+        : `${emergency} ${plural(emergency, 'авария', 'аварии', 'аварий')}`,
+  };
+}
+
+/** О3: доля закрытых в срок и сколько заявок уже вне срока. */
+function slaAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const summary = asRecord(report['summary']);
+  const percent = num(summary?.['slaOnTimePercent']);
+  if (percent === null) return null;
+  const overdue = num(summary?.['openOverdue']) ?? 0;
+  const atRisk = num(summary?.['atRisk']) ?? 0;
+  const parts = [
+    overdue > 0 ? `${overdue} просрочено` : null,
+    atRisk > 0 ? `${atRisk} под риском` : null,
+  ].filter((part): part is string => part !== null);
+  return {
+    value: percent,
+    unit: 'percent',
+    caption: 'закрыто в срок',
+    hint: parts.length === 0 ? 'сроки не нарушены' : parts.join(' · '),
+  };
+}
+
+/** О4: перегружен ли кто-то; если нет — честно говорим «никто» и показываем лидера. */
+function workloadAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const summary = asRecord(report['summary']);
+  const threshold = num(summary?.['overloadThreshold']);
+  const overloaded = num(summary?.['overloaded']) ?? 0;
+  const engineers = records(report['byEngineer'])
+    .filter((row) => asText(row['name']) !== null && row['assigneeId'] !== null)
+    .sort((left, right) => (num(right['open']) ?? 0) - (num(left['open']) ?? 0));
+  const top = engineers[0];
+  const topName = top === undefined ? null : asText(top['name']);
+  const topOpen = top === undefined ? null : num(top['open']);
+
+  if (overloaded > 0) {
+    const busy = engineers.find((row) => row['overload'] === true) ?? top;
+    const name = busy === undefined ? null : asText(busy['name']);
+    const open = busy === undefined ? null : num(busy['open']);
+    if (name === null || open === null) return null;
+    return {
+      value: surname(name),
+      unit: 'text',
+      caption:
+        threshold === null
+          ? `${open} ${plural(open, 'открытая заявка', 'открытые заявки', 'открытых заявок')}`
+          : `${open} из ${threshold} задач`,
+      hint: `${overloaded} ${plural(overloaded, 'инженер перегружен', 'инженера перегружены', 'инженеров перегружены')}`,
+    };
+  }
+
+  if (topName === null || topOpen === null || topOpen === 0) return null;
+  return {
+    value: 'Никто',
+    unit: 'text',
+    caption: 'перегруженных инженеров нет',
+    hint: `больше всех — ${surname(topName)}, ${topOpen} ${plural(topOpen, 'задача', 'задачи', 'задач')}`,
+  };
+}
+
+/** О5: какая доля заявок оформлена ИИ без правок диспетчера. */
+function aiEffectAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const totals = asRecord(report['totals']);
+  const share = num(totals?.['shareWithoutEditsPercent']);
+  if (share === null) return null;
+  const confirm = minutesText(num(totals?.['avgMinutesToConfirm']));
+  return {
+    value: share,
+    unit: 'percent',
+    caption: 'заявок ИИ оформил без правок',
+    hint: confirm === null ? null : `${confirm} до подтверждения`,
+  };
+}
+
+/** О6: тема, по которой чаще всего нет статьи. */
+function kbGapsAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const theme = records(report['themes'])[0];
+  if (theme === undefined) return null;
+  const label = asText(theme['label']);
+  const count = num(theme['count']);
+  if (label === null || count === null) return null;
+  return {
+    value: shortLabel(label),
+    unit: 'text',
+    caption: `${count} ${plural(count, 'заявка', 'заявки', 'заявок')} без статьи`,
+    hint: null,
+  };
+}
+
+/** О7: средняя реакция на аварию; если реакций не мерили — число аварий. */
+function emergencyAnswer(report: Record<string, unknown>): ReportAnswer | null {
+  const summary = asRecord(report['summary']);
+  if (summary === null) return null;
+  const reaction = num(summary['avgReactionMinutes']);
+  const emergency = num(summary['emergency']) ?? 0;
+  const hint = `${emergency} ${plural(emergency, 'авария', 'аварии', 'аварий')} за период`;
+  if (reaction !== null && reaction > 0) {
+    return { value: reaction, unit: 'minutes', caption: 'средняя реакция на аварию', hint };
+  }
+  if (emergency > 0) {
+    return { value: emergency, unit: 'count', caption: 'аварий за период', hint: null };
+  }
+  return null;
+}
+
+const ANSWERS: Readonly<Record<string, (report: Record<string, unknown>) => ReportAnswer | null>> = {
+  'report-shift': shiftAnswer,
+  'report-sla': slaAnswer,
+  'report-workload': workloadAnswer,
+  'report-ai-effect': aiEffectAnswer,
+  'report-kb-gaps': kbGapsAnswer,
+  'report-emergency': emergencyAnswer,
+};
+
+/** Короткий ответ карточки; `null` — данных нет, показываем честное пустое состояние. */
+export function summaryAnswer(id: string, payload: unknown): ReportAnswer | null {
+  const report = reportOf(payload);
+  if (report === null) return null;
+  const reader = ANSWERS[id];
+  if (reader === undefined) return null;
+  try {
+    return reader(report);
+  } catch {
+    return null;
+  }
+}
+
+/* ---------- Главный отчёт О2 «Что ломается снова» ---------- */
+
+export interface HotspotBarView {
+  readonly key: string;
+  readonly label: string;
+  readonly count: number;
+  /** Ширина полоски от максимума, %: 100 у самой горячей точки. */
+  readonly width: number;
+}
+
+export interface HotspotFocusView {
+  readonly label: string;
+  readonly count: number;
+  /** «6 заявок за 30 дней» — короткая причина без пояснений. */
+  readonly caption: string;
+  /** Сравнение с прошлым периодом одной строкой; `null` — сравнить не с чем. */
+  readonly trend: string | null;
+  readonly bars: HotspotBarView[];
+  /** Заявок в точках, где поломка повторилась. */
+  readonly repeated: number;
+}
+
+function trendText(trend: number | null): string | null {
+  if (trend === null) return null;
+  if (trend === 0) return 'столько же, сколько в прошлом периоде';
+  const sign = trend > 0 ? '+' : '−';
+  return `${sign}${formatMetric(Math.abs(trend))}% к прошлому периоду`;
+}
+
+/** Четыре самые горячие точки: подпись, число и полоска для главной карточки О2. */
+export function hotspotFocus(payload: unknown): HotspotFocusView | null {
+  const report = reportOf(payload);
+  if (report === null) return null;
+  const rows = records(report['rows'])
+    .filter((row) => (num(row['count']) ?? 0) >= 2)
+    .sort((left, right) => (num(right['count']) ?? 0) - (num(left['count']) ?? 0));
+  const top = rows[0];
+  if (top === undefined) return null;
+  const label = asText(top['label']);
+  const count = num(top['count']);
+  if (label === null || count === null) return null;
+  const max = num(rows[0]?.['count']) ?? count;
+  const days = num(asRecord(report['period'])?.['days']) ?? null;
+  const bars = rows.slice(0, 4).map((row, index) => {
+    const barLabel = asText(row['label']) ?? '—';
+    const barCount = num(row['count']) ?? 0;
+    return {
+      key: asText(row['key']) ?? `bar-${index}`,
+      label: shortLabel(barLabel, 22),
+      count: barCount,
+      width: max === 0 ? 0 : Math.round((barCount / max) * 100),
+    };
+  });
+  return {
+    label,
+    count,
+    caption:
+      days === null
+        ? `${count} ${plural(count, 'заявка', 'заявки', 'заявок')}`
+        : `${count} ${plural(count, 'заявка', 'заявки', 'заявок')} за ${days} ${plural(days, 'день', 'дня', 'дней')}`,
+    trend: trendText(num(top['trendPercent'])),
+    bars,
+    repeated: num(report['repeatedTickets']) ?? 0,
+  };
 }

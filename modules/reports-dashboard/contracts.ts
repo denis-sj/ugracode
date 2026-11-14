@@ -164,6 +164,8 @@ export const OverviewResult = z.object({
   avgResolutionMinutes: z.number().nullable(),
   previousAvgResolutionMinutes: z.number().nullable(),
   byPriority: z.array(OverviewPrioritySlice),
+  /** Те же срезы за прошлый период — для строки «+N к прошлому» на карточке. */
+  previousByPriority: z.array(OverviewSlice),
   /** Цель по доле заявок «в срок», % (из настроек; `null` — цель не задана). */
   slaTargetPercent: z.number().nullable(),
   aiEffect: OverviewAiEffect,

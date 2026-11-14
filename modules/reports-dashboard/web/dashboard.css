@@ -1,40 +1,32 @@
-/*
- * Стили экрана руководителя (`reports-dashboard`).
- * Только переменные из `@ugra/ui` (tokens.css): своих цветов и «сырых» длительностей нет.
- */
+/* Дашборд D2: пять карточек приоритетов и три плитки. Цвета и отступы — только токенами. */
 
 .rd-page {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  width: 100%;
-  max-width: 1376px;
-  margin: 0 auto;
+  gap: var(--space-6);
 }
 
-/* ---------- Заголовок и управление ---------- */
+/* ---------- Шапка страницы ---------- */
 
-.rd-head {
+.rd-top {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
 
-.rd-head__titles {
-  min-width: 0;
-}
-
 .rd-title {
   margin: 0;
-  font-size: var(--text-page);
-}
-
-.rd-head__subtitle {
-  margin: var(--space-1) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-md);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.03em;
+  background: var(--gradient-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1.15;
 }
 
 .rd-controls {
@@ -44,29 +36,29 @@
   flex-wrap: wrap;
 }
 
+/* Период — сегменты в стеклянной капсуле, как на макете. */
 .rd-periods {
-  display: flex;
+  display: inline-flex;
   gap: 2px;
-  padding: 3px;
+  padding: 4px;
   border-radius: var(--radius-md);
+  background: var(--color-graphite-soft);
+  box-shadow: var(--ring-inset-soft);
 }
 
 .rd-period {
-  position: relative;
-  z-index: 1;
-  min-height: 36px;
-  padding: 0 var(--space-3);
+  padding: 8px 14px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
+  font-size: 13.5px;
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition:
-    background var(--dur-base) var(--ease-out),
-    color var(--dur-base) var(--ease-out);
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .rd-period:hover {
@@ -79,86 +71,81 @@
   box-shadow: var(--shadow-1);
 }
 
-.rd-range {
+.rd-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 42px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-md);
-  box-shadow: var(--ring-inset);
-  transition: box-shadow var(--dur-base) var(--ease-out);
-}
-
-.rd-range:focus-within {
-  box-shadow: 0 0 0 1px var(--color-accent-ring);
-}
-
-.rd-range__label {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-}
-
-.rd-range__input {
-  width: 124px;
-  padding: 0;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
   border: none;
-  outline: none;
+  border-radius: var(--radius-md);
   background: transparent;
+  box-shadow: var(--ring-inset);
   color: var(--color-text);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: 13.5px;
   font-weight: var(--weight-semi);
-  color-scheme: light;
+  cursor: pointer;
 }
 
-.rd-range__dash {
-  color: var(--color-text-dim);
+.rd-chip:hover {
+  color: var(--color-accent);
 }
 
-/* ---------- Выгрузка ---------- */
+.rd-chip--on {
+  color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent-ring);
+}
+
+.rd-chip--icon {
+  width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+.rd-chip__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: var(--weight-black);
+}
 
 .rd-export {
   position: relative;
-  z-index: 8;
-}
-
-.rd-export__button {
-  gap: var(--space-2);
 }
 
 .rd-menu {
   position: absolute;
-  top: calc(100% + var(--space-2));
+  top: calc(100% + 6px);
   right: 0;
   z-index: var(--z-overlay);
-  width: 300px;
-  padding: 6px;
+  width: 280px;
+  padding: var(--space-2);
   border-radius: var(--radius-lg);
   background: var(--glass-panel);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow:
-    inset 0 0 0 1px var(--glass-edge),
-    var(--shadow-pop);
-  animation: ugra-pop var(--dur-base) var(--ease-out) both;
+  box-shadow: var(--shadow-pop);
 }
 
 .rd-menu__item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: 2px;
   width: 100%;
-  padding: 10px var(--space-3);
+  padding: 10px 12px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text);
   font: inherit;
   font-size: var(--text-md);
-  font-weight: var(--weight-semi);
   text-align: left;
   cursor: pointer;
 }
@@ -169,439 +156,364 @@
 
 .rd-menu__item:disabled {
   color: var(--color-text-dim);
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .rd-menu__hint {
+  color: var(--color-text-dim);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-dim);
-}
-
-.rd-menu__note {
-  margin: var(--space-1) var(--space-3) 2px;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-dim);
-  font-size: var(--text-xs);
 }
 
 /* ---------- Фильтры ---------- */
 
 .rd-filters {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  align-items: flex-end;
+  gap: var(--space-3);
   flex-wrap: wrap;
-}
-
-.rd-filters__label {
-  margin-right: var(--space-1);
-  color: var(--color-text-dim);
-  font-size: var(--text-sm);
-}
-
-.rd-filters__spacer {
-  flex: 1 1 auto;
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--glass-card);
+  box-shadow: var(--ring-inset-soft);
 }
 
 .rd-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
-  box-shadow: var(--ring-inset-soft);
-  transition: box-shadow var(--dur-base) var(--ease-out);
-}
-
-.rd-filter:focus-within {
-  box-shadow: 0 0 0 1px var(--color-accent-ring);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .rd-filter__label {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
   font-weight: var(--weight-semi);
-  white-space: nowrap;
 }
 
-.rd-filter__select {
-  max-width: 170px;
-  padding: 0;
+.rd-filter__select,
+.rd-range__input {
+  height: 36px;
+  padding: 0 10px;
   border: none;
-  outline: none;
-  background: transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--ring-inset-soft);
   color: var(--color-text);
   font: inherit;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  cursor: pointer;
-}
-
-.rd-reset {
-  color: var(--color-text-muted);
-}
-
-.rd-status {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.rd-status--warn {
-  color: var(--color-warn);
-}
-
-.rd-status--error {
-  color: var(--color-danger);
-}
-
-/* ---------- Плитки ---------- */
-
-.rd-tiles {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.rd-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-4) var(--space-5);
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.rd-tile:hover {
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.rd-tile__label {
-  color: var(--color-text-dim);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.rd-tile__value {
-  margin-top: var(--space-1);
-  color: var(--color-text);
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-  line-height: var(--leading-tight);
-}
-
-.rd-tile__delta {
-  margin-top: 2px;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-}
-
-.rd-delta--ok {
-  color: var(--color-ok);
-}
-
-.rd-delta--warn,
-.rd-delta--danger {
-  color: var(--color-danger);
-}
-
-.rd-delta--muted {
-  color: var(--color-text-dim);
-}
-
-/* ---------- Основной блок ---------- */
-
-.rd-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.rd-summary {
-  margin: 0;
-  color: var(--color-text-muted);
   font-size: var(--text-md);
 }
 
-.rd-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: var(--space-5);
-  align-items: start;
-}
-
-.rd-card {
-  padding: var(--space-5);
-}
-
-.rd-card--wide {
-  padding: var(--space-6);
-}
-
-.rd-card__head {
+.rd-range {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.rd-section-title {
-  margin: 0;
+.rd-range__label {
   color: var(--color-text-dim);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
 }
 
-.rd-card__subtitle {
-  margin-top: 6px;
+/* ---------- Карточки приоритетов (макет D2) ---------- */
+
+.rd-prio {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rd-pri {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  padding: 20px 20px 0;
+  border-radius: var(--radius-card);
+  background: var(--glass-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-inset), var(--shadow-card);
+}
+
+/* Оттенок приоритета — мягкий градиент сверху, без заливки всей карточки. */
+.rd-pri::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pri) 14%, transparent), transparent 55%);
+}
+
+.rd-pri__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--color-text);
-  font-size: var(--text-xl);
+  font-size: 14px;
   font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
 }
 
-.rd-card__note {
+.rd-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pri);
+}
+
+.rd-pri__num {
+  margin-top: 18px;
+  font-size: 48px;
+  font-weight: var(--weight-black);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rd-pri__delta {
+  margin-top: 6px;
   color: var(--color-text-dim);
   font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
 }
 
-/* ---------- График по приоритетам ---------- */
+.rd-track {
+  position: relative;
+  display: block;
+  height: 6px;
+  margin-top: 18px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  overflow: hidden;
+}
+
+.rd-track > i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--pri, var(--color-accent));
+}
+
+.rd-track > i[data-tone='ok'] {
+  background: var(--color-ok);
+}
+
+.rd-pri__share {
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+}
+
+.rd-pri__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 70px;
+  margin: auto -20px 0;
+  padding: 0 12px;
+}
+
+.rd-pri__bars > i {
+  flex: 1 1 0;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--pri);
+}
+
+.rd-pri__bars > i[data-empty='1'] {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+/* ---------- Три плитки ---------- */
+
+.rd-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rd-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+}
+
+.rd-mini__label {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: var(--weight-semi);
+}
+
+.rd-mini__num {
+  font-size: 34px;
+  font-weight: var(--weight-black);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rd-mini__hint {
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+}
+
+.rd-mini .rd-track {
+  margin-top: 0;
+}
+
+/* Целевая отметка на шкале «Закрыто в срок». */
+.rd-track--goal {
+  overflow: visible;
+}
+
+.rd-track--goal > b {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--color-text);
+}
+
+.rd-pipe {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+}
+
+.rd-pipe > i {
+  flex: 1 1 0;
+  border-radius: 3px;
+  background: var(--color-priority-medium);
+}
+
+.rd-pipe > i[data-status='new'],
+.rd-legend i[data-status='new'] {
+  background: var(--color-info);
+}
+
+.rd-pipe > i[data-status='assigned'],
+.rd-legend i[data-status='assigned'],
+.rd-pipe > i[data-status='in_progress'],
+.rd-legend i[data-status='in_progress'] {
+  background: var(--color-accent);
+}
+
+.rd-pipe > i[data-status='ai_draft'],
+.rd-legend i[data-status='ai_draft'],
+.rd-pipe > i[data-status='waiting_applicant'],
+.rd-legend i[data-status='waiting_applicant'],
+.rd-pipe > i[data-status='in_review'],
+.rd-legend i[data-status='in_review'] {
+  background: var(--color-warn);
+}
+
+.rd-pipe > i[data-status='empty'] {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
 
 .rd-legend {
   display: flex;
-  gap: var(--space-3);
+  gap: 14px;
   flex-wrap: wrap;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
 }
 
-.rd-legend__item {
+.rd-legend > span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
 }
 
-.rd-swatch {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.rd-swatch--emergency,
-.rd-swatch--critical {
-  background: var(--color-priority-emergency);
-}
-
-.rd-swatch--high {
-  background: var(--color-priority-high);
-}
-
-.rd-swatch--medium {
+.rd-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
   background: var(--color-priority-medium);
 }
 
-.rd-swatch--low {
-  background: var(--color-priority-low);
-}
-
-.rd-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  height: 220px;
-  margin-top: var(--space-5);
-  padding-bottom: var(--space-1);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.rd-chart__col {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 2px;
-  height: 100%;
-  min-width: 0;
-}
-
-.rd-chart__count {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.rd-chart__track {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  min-height: 0;
-}
-
-.rd-chart__fill {
-  display: block;
-  width: 100%;
-  border-radius: 4px 4px 1px 1px;
-  transition: height var(--dur-slow) var(--ease-emphasized);
-}
-
-.rd-bar__fill--emergency,
-.rd-bar__fill--critical {
-  background: var(--color-priority-emergency);
-}
-
-.rd-bar__fill--high {
-  background: var(--color-priority-high);
-}
-
-.rd-bar__fill--medium {
-  background: var(--color-priority-medium);
-}
-
-.rd-bar__fill--low {
-  background: var(--color-priority-low);
-}
-
-.rd-chart__axis {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.rd-chart__axis span {
-  flex: 1 1 0;
-  min-width: 0;
-  color: var(--color-text-dim);
-  font-size: var(--text-xs);
-  text-align: center;
-}
-
-.rd-insight {
-  margin-top: var(--space-4);
-}
-
-/* ---------- Тепловая карта ---------- */
-
-.rd-heat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: var(--space-4);
-}
-
-.rd-heat__row {
-  display: grid;
-  grid-template-columns: 28px repeat(10, minmax(0, 1fr));
-  gap: var(--space-1);
-  align-items: center;
-}
-
-.rd-heat__row--head {
-  margin-bottom: 2px;
-}
-
-.rd-heat__hour {
-  color: var(--color-text-dim);
-  font-size: var(--text-xs);
-  text-align: center;
-}
-
-.rd-heat__day {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.rd-heat__cell {
-  height: 28px;
-  border-radius: 6px;
-  transition: background var(--dur-slow) var(--ease-out);
-}
-
-.rd-heat__cell--zero {
-  background: var(--color-bg-soft);
-}
-
-/* ---------- Пустые состояния ---------- */
-
-.rd-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  margin-top: var(--space-4);
-  padding: var(--space-7) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-graphite-soft);
-  text-align: center;
-}
-
-.rd-empty--inline {
-  margin-top: var(--space-2);
-  padding: var(--space-5) var(--space-4);
-}
-
-.rd-empty__title {
-  color: var(--color-text);
+.rd-link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
   font-size: var(--text-md);
   font-weight: var(--weight-semi);
+  cursor: pointer;
 }
 
-.rd-empty__hint {
-  max-width: 42ch;
+.rd-link:hover {
+  color: var(--color-accent-strong);
+}
+
+.rd-compare {
+  margin: 0;
   color: var(--color-text-dim);
   font-size: var(--text-sm);
 }
+
+/* ---------- Служебные состояния ---------- */
 
 .rd-placeholder {
-  padding: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--glass-card);
+  box-shadow: var(--ring-inset-soft);
   color: var(--color-text-muted);
   font-size: var(--text-md);
 }
 
-/* ---------- Горячие точки ---------- */
-
-.rd-spots {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: var(--space-7);
-  margin-top: var(--space-4);
-  align-items: start;
+.rd-placeholder--error {
+  color: var(--color-danger);
 }
 
-.rd-spots__table {
-  min-width: 0;
+/* ---------- Шторка просрочек ---------- */
+
+.rd-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  justify-content: flex-end;
 }
 
-.rd-spot {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 80px 80px;
+.rd-drawer__backdrop {
+  flex: 1 1 auto;
+  border: none;
+  background: var(--color-overlay);
+  cursor: pointer;
+}
+
+.rd-drawer {
+  width: min(460px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--text-md);
+  padding: var(--space-6);
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: var(--glass-blur-panel);
+  backdrop-filter: var(--glass-blur-panel);
+  box-shadow: var(--shadow-drawer);
 }
 
-.rd-spot--head {
-  padding-top: var(--space-1);
+.rd-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
-.rd-spot--head span {
+.rd-cap {
   color: var(--color-text-dim);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
@@ -609,105 +521,126 @@
   text-transform: uppercase;
 }
 
-.rd-spot__place {
-  min-width: 0;
+.rd-drawer__title {
+  margin: 4px 0 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
 }
 
-.rd-spot__place strong {
-  overflow-wrap: anywhere;
+.rd-drawer__close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-graphite-soft);
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.rd-spot__count {
+.rd-drawer__reason {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--gradient-insight);
   color: var(--color-text);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--text-md);
+  line-height: 1.5;
 }
 
-.rd-spot__count--hot {
+.rd-drawer__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.rd-drawer__hint--error {
   color: var(--color-danger);
 }
 
-.rd-spot__count--warm {
-  color: var(--color-warn);
-}
-
-.rd-spot__share {
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.rd-spots__insights {
+.rd-groups {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.rd-source-note {
+.rd-groups > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-graphite-soft);
+  color: var(--color-text);
+  font-size: var(--text-md);
+}
+
+.rd-overdue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-overdue > li {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--ring-inset-soft);
+}
+
+.rd-overdue__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semi);
+}
+
+.rd-overdue__meta {
   color: var(--color-text-dim);
   font-size: var(--text-sm);
 }
 
-/* ---------- Адаптив ---------- */
+.rd-overdue__late {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
 
-@media (max-width: 1180px) {
-  .rd-tiles {
+.rd-drawer__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* ---------- Узкие экраны ---------- */
+
+@media (max-width: 1200px) {
+  .rd-prio {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 1080px) {
-  .rd-grid {
+@media (max-width: 900px) {
+  .rd-prio,
+  .rd-trio {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .rd-spots {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
+  .rd-pri {
+    min-height: 240px;
   }
 }
 
-@media (max-width: 760px) {
-  .rd-head {
-    align-items: flex-start;
-  }
-
-  .rd-controls {
-    width: 100%;
-  }
-
-  .rd-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .rd-tile__value {
-    font-size: var(--text-2xl);
-  }
-
-  .rd-chart {
-    height: 180px;
-  }
-
-  .rd-spot {
-    grid-template-columns: minmax(0, 1fr) 60px 64px;
-  }
-
-  .rd-menu {
-    right: auto;
-    left: 0;
-  }
-}
-
-@media (max-width: 520px) {
-  .rd-tiles {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .rd-range {
-    width: 100%;
-  }
-
-  .rd-range__input {
-    flex: 1 1 0;
-    width: auto;
+@media (prefers-reduced-motion: reduce) {
+  .rd-period {
+    transition: none;
   }
 }
