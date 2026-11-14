@@ -1,7 +1,8 @@
+import './profile.css';
 import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, ProfileResponse, User } from '@ugra/contracts';
-import { PersonAvatar } from '@ugra/ui';
+import { Button, Icon, PersonAvatar } from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
 import { departmentLabel, equipmentLine, placeLabel } from './profile-format';
 
@@ -13,8 +14,9 @@ interface ProfilePageProps {
 }
 
 /**
- * Профиль: кто вошёл, подразделение, рабочее место заявителя и техника из профиля.
- * Данные — `GET /api/profile`; смена пользователя — `POST /api/logout`.
+ * Экран 04 «Профиль»: кто вошёл, подразделение, рабочее место и техника из учёта.
+ * Данные — один запрос `GET /api/profile`; смена пользователя — `POST /api/logout`.
+ * Место и техника показываются только из ответа API: пусто — так и написано.
  */
 export function ProfilePage({ user, meta, api, onLogout }: ProfilePageProps): JSX.Element {
   const [state, setState] = useState<
@@ -42,73 +44,69 @@ export function ProfilePage({ user, meta, api, onLogout }: ProfilePageProps): JS
   const profile = state.status === 'ready' ? state.profile.profile : null;
   const equipment = state.status === 'ready' ? state.profile.equipment : [];
   const place = placeLabel(profile);
+  const subtitle = user.departmentId
+    ? `${user.position} · ${departmentLabel(meta, user.departmentId)}`
+    : user.position;
 
   return (
     <div className="profile-page">
-      <section className="profile-hero ugra-card" data-reveal>
+      <section className="ugra-card profile-hero" data-reveal>
         <PersonAvatar name={user.fullName} size={88} />
         <div className="profile-hero__text">
-          <h1>{user.fullName}</h1>
-          <p className="ugra-muted">
-            {user.position} · {departmentLabel(meta, user.departmentId)}
-          </p>
+          <h1 className="profile-hero__name">{user.fullName}</h1>
+          <p className="profile-hero__role">{subtitle}</p>
         </div>
-        <button type="button" className="ugra-btn ugra-btn--secondary profile-switch" onClick={onLogout}>
+        <Button variant="secondary" className="profile-logout" onClick={onLogout}>
           Сменить пользователя
-        </button>
+        </Button>
       </section>
-      <div className="profile-grid">
-        <section className="ugra-card profile-card" data-reveal>
-          <h2>Где вы сидите</h2>
-          {state.status === 'loading' && (
-            <p className="ugra-muted" role="status">
-              Загружаем профиль…
+
+      {state.status === 'loading' && (
+        <p className="profile-note" role="status">
+          Загружаем профиль…
+        </p>
+      )}
+
+      {state.status === 'error' && (
+        <p className="profile-note profile-error" role="alert">
+          Не удалось загрузить профиль: {state.message}
+        </p>
+      )}
+
+      {state.status === 'ready' && (
+        <div className="profile-grid">
+          <section className="ugra-card profile-card" data-reveal>
+            <h2 className="profile-card__cap">Где вы сидите</h2>
+            <p className="profile-place">{place ?? 'Место не указано'}</p>
+            <p className="profile-hint">
+              {user.role === 'applicant'
+                ? 'Помощник подставит это место, если вы его не назовёте.'
+                : 'Место и технику можно уточнить в обращении.'}
             </p>
-          )}
-          {state.status === 'error' && <p role="alert">Не удалось загрузить профиль: {state.message}</p>}
-          {state.status === 'ready' && (
-            <>
-              <p className="profile-place">{place ?? 'Место не указано'}</p>
-              <p className="ugra-muted">
-                {user.role === 'applicant'
-                  ? 'Помощник подставит это место, если вы его не назовёте.'
-                  : 'Место и технику можно уточнить в обращении.'}
-              </p>
-            </>
-          )}
-        </section>
-        <section className="ugra-card profile-card" data-reveal>
-          <h2>Ваша техника</h2>
-          {equipment.length > 0 ? (
-            <ul className="profile-equipment">
-              {equipment.map((item) => (
-                <li key={item.id}>
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="3" width="18" height="13" rx="2" />
-                    <path d="M12 16v5m-5 0h10" />
-                  </svg>
-                  <span>
-                    <strong>{equipmentLine(item)}</strong>
-                    {item.note && <span className="ugra-dim">{item.note}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="ugra-muted">
-              {state.status === 'loading' ? 'Загружаем технику…' : 'Техника в профиле не указана'}
-            </p>
-          )}
-        </section>
-      </div>
+          </section>
+
+          <section className="ugra-card profile-card" data-reveal>
+            <h2 className="profile-card__cap">Ваша техника</h2>
+            {equipment.length > 0 ? (
+              <ul className="profile-equipment">
+                {equipment.map((item) => (
+                  <li className="profile-device" key={item.id}>
+                    <span className="profile-device__icon" aria-hidden="true">
+                      <Icon name="queue" size={22} />
+                    </span>
+                    <span className="profile-device__text">
+                      <strong className="profile-device__name">{equipmentLine(item)}</strong>
+                      {item.note && <span className="profile-device__note">{item.note}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="profile-hint">Техника в профиле не указана</p>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

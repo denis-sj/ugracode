@@ -1,7 +1,70 @@
 import type { FieldDef, MetaResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge, Button } from '@ugra/ui';
 import { dictionaryOptions } from './format';
+
+interface DictSelectProps {
+  id: string;
+  value: string;
+  options: Array<{ code: string; label: string }>;
+  onChange: (code: string) => void;
+}
+
+/**
+ * Выбор из справочника кнопками, а не нативным `<select>`: список всегда открывается
+ * и выбор применяется в любом браузере (у нативного popup клики по пункту не доходили).
+ */
+function DictSelect({ id, value, options, onChange }: DictSelectProps): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = options.find((option) => option.code === value);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointerDown = (event: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [open]);
+
+  const pick = (code: string): void => {
+    onChange(code);
+    setOpen(false);
+  };
+
+  return (
+    <div className="measure-dict" ref={ref}>
+      <button
+        id={id}
+        type="button"
+        className="measure-input measure-dict__btn"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((previous) => !previous)}
+      >
+        {current ? current.label : '— не выбрано —'}
+      </button>
+      {open && (
+        <ul className="measure-dict__list" role="listbox" aria-labelledby={id}>
+          <li role="option" aria-selected={value === ''}>
+            <button type="button" className="measure-dict__opt" onClick={() => pick('')}>
+              — не выбрано —
+            </button>
+          </li>
+          {options.map((option) => (
+            <li key={option.code} role="option" aria-selected={option.code === value}>
+              <button type="button" className="measure-dict__opt" onClick={() => pick(option.code)}>
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export interface ManualFormProps {
   fields: readonly FieldDef[];
@@ -80,25 +143,18 @@ export function ManualForm({
               const options = dictionaryOptions(field, dictionaries);
               const value = values[field.key] ?? '';
               return (
-                <label className="measure-field" key={field.key} htmlFor={id}>
-                  <span className="measure-field__label">
+                <div className="measure-field" key={field.key}>
+                  <label className="measure-field__label" htmlFor={id}>
                     {field.label}
                     {isRequired(field) && <span className="measure-field__required">обязательное</span>}
-                  </span>
+                  </label>
                   {options.length > 0 ? (
-                    <select
+                    <DictSelect
                       id={id}
-                      className="measure-input"
                       value={value}
-                      onChange={(event) => onChange(field.key, event.target.value)}
-                    >
-                      <option value="">— не выбрано —</option>
-                      {options.map((option) => (
-                        <option key={option.code} value={option.code}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={options}
+                      onChange={(code) => onChange(field.key, code)}
+                    />
                   ) : field.type === 'text' ? (
                     <textarea
                       id={id}
@@ -118,7 +174,7 @@ export function ManualForm({
                       onChange={(event) => onChange(field.key, event.target.value)}
                     />
                   )}
-                </label>
+                </div>
               );
             })}
           </div>

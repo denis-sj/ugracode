@@ -411,10 +411,19 @@ function registerCoreRoutes(
       const equipmentList = Array.isArray(cmdb.equipment)
         ? (cmdb.equipment as { id?: string; type?: string; model?: string }[])
         : [];
+      // Подпись техники: «Компьютер Lenovo ThinkCentre M70q», а не «pc Lenovo …».
+      const typeLabels = new Map(
+        (data.dictionaries as DictionaryItem[])
+          .filter((item) => item.dictionary === 'equipmentType')
+          .map((item) => [item.code, item.label]),
+      );
       const labelById = new Map(
         equipmentList
           .filter((item): item is { id: string; type?: string; model?: string } => typeof item.id === 'string')
-          .map((item) => [item.id, [item.type, item.model].filter(Boolean).join(' ')]),
+          .map((item) => [
+            item.id,
+            [item.type ? (typeLabels.get(item.type) ?? item.type) : null, item.model].filter(Boolean).join(' '),
+          ]),
       );
       return {
         user: actor,

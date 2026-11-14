@@ -4,10 +4,15 @@ import type { KernelStore, ReferenceData } from '@ugra/core';
 import type {
   Heatmap,
   HotSpot,
+  OverdueGroup,
+  OverdueItem,
+  OverdueResult,
+  OverviewAiEffect,
   OverviewDeltas,
   OverviewInsights,
   OverviewParams,
   OverviewPeriod,
+  OverviewPrioritySlice,
   OverviewResult,
   OverviewSlice,
   OverviewTotals,
@@ -347,6 +352,50 @@ function toSlices(
   return slices;
 }
 
+/** Сколько обращений каждого приоритета пришло в каждый день периода — мини-столбцы. */
+function dailyByPriority(
+  tickets: readonly Ticket[],
+  period: OverviewPeriod,
+): Map<string, number[]> {
+  const daily = new Map<string, number[]>(
+    PRIORITY_ORDER.map((key) => [key, new Array<number>(period.days).fill(0)]),
+  );
+  const from = Date.parse(period.from);
+  for (const ticket of tickets) {
+    const row = ticket.priority ? daily.get(ticket.priority) : undefined;
+    if (!row) continue;
+    const index = Math.floor((Date.parse(ticket.createdAt) - from) / DAY_MS);
+    if (index < 0 || index >= period.days) continue;
+    row[index] = (row[index] ?? 0) + 1;
+  }
+  return daily;
+}
+
+/** Эффект ИИ: заявки периода, в которых диспетчер правил поля после разбора. */
+function aiEffectOf(
+  tickets: readonly Ticket[],
+  corrections: readonly { at?: string; ticketId?: string }[],
+  period: OverviewPeriod,
+): OverviewAiEffect {
+  const from = Date.parse(period.from);
+  const to = Date.parse(period.to);
+  const ids = new Set(tickets.map((ticket) => ticket.id));
+  const corrected = new Set<string>();
+  for (const event of corrections) {
+    if (!event.ticketId || !ids.has(event.ticketId)) continue;
+    const at = event.at ? Date.parse(event.at) : Number.NaN;
+    if (Number.isNaN(at) || at < from || at > to) continue;
+    corrected.add(event.ticketId);
+  }
+  const total = tickets.length;
+  return {
+    correctedTickets: corrected.size,
+    totalTickets: total,
+    withoutEditsPercent:
+      total === 0 ? null : Math.round((1 - corrected.size / total) * 1000) / 10,
+  };
+}
+
 function heatmapOf(tickets: readonly Ticket[]): Heatmap {
   const counts = new Map<string, number>();
   for (const ticket of tickets) {
@@ -502,6 +551,68 @@ function deltaOf(
   };
 }
 
+/** Короткая тема заявки для списка: симптом, объект или категория. */
+async function titleOf(ticket: Ticket, db: KernelStore): Promise<string> {
+  const fields = await db.getTicketFields(ticket.id);
+  const value = (key: string): string | null => {
+    const found = fields.find((field) => field.fieldKey === key);
+    return found && found.value !== null ? String(found.value) : null;
+  };
+  const text = value('symptoms') ?? value('object') ?? value('category') ?? 'Обращение';
+  return text.length > 80 ? `${text.slice(0, 79)}…` : text;
+}
+
+/** Просроченные заявки периода — список и группы по исполнителям для шторки дашборда. */
+export async function computeOverdue(
+  params: OverviewParams,
+  deps: OverviewDeps,
+): Promise<OverdueResult> {
+  const now = deps.clock.now();
+  const period = periodDays(params, now);
+  const allTickets = await deps.db.listTickets({ limit: MAX_TICKETS });
+  const channels = new Map<string, string>();
+  if (params.channel) {
+    for (const ticket of allTickets) {
+      const appeal = await deps.db.getAppeal(ticket.appealId);
+      if (appeal) channels.set(ticket.id, appeal.channel);
+    }
+  }
+  const tickets = ticketsIn(allTickets, Date.parse(period.from), Date.parse(period.to), params, channels);
+  const items: OverdueItem[] = [];
+  for (const ticket of tickets) {
+    if (!OPEN_STATUSES.includes(ticket.status)) continue;
+    if (!ticket.slaDueAt) continue;
+    const due = Date.parse(ticket.slaDueAt);
+    if (Number.isNaN(due) || due >= now.getTime()) continue;
+    items.push({
+      ticketId: ticket.id,
+      number: ticket.number,
+      title: await titleOf(ticket, deps.db),
+      assigneeId: ticket.assigneeId,
+      assigneeName: ticket.assigneeId ? engineerName(ticket.assigneeId) : null,
+      overdueMinutes: Math.round((now.getTime() - due) / 60_000),
+    });
+  }
+  items.sort((left, right) => right.overdueMinutes - left.overdueMinutes);
+
+  const groupsByKey = new Map<string | null, OverdueGroup>();
+  for (const item of items) {
+    const key = item.assigneeId;
+    const group = groupsByKey.get(key) ?? {
+      assigneeId: key,
+      assigneeName: item.assigneeName ?? 'Без исполнителя',
+      count: 0,
+    };
+    group.count += 1;
+    groupsByKey.set(key, group);
+  }
+  return {
+    total: items.length,
+    items,
+    groups: [...groupsByKey.values()].sort((left, right) => right.count - left.count),
+  };
+}
+
 /** Считает отчёт О0 по заявкам, событиям и ссылочным данным. */
 export async function computeOverview(
   params: OverviewParams,
@@ -529,11 +640,15 @@ export async function computeOverview(
   const current = collectTotals(currentTickets, resolutions, now.getTime());
   const previousTotals = collectTotals(previousTickets, resolutions, now.getTime());
 
-  const byPriority = toSlices(
+  const priorityDaily = dailyByPriority(currentTickets, period);
+  const byPriority: OverviewPrioritySlice[] = toSlices(
     countBy(currentTickets, (ticket) => ticket.priority),
     (key) => labelOf(deps.data, 'priority', key, PRIORITY_FALLBACK[key as PriorityLevel]),
     PRIORITY_ORDER,
-  );
+  ).map((slice) => ({
+    ...slice,
+    daily: priorityDaily.get(slice.key) ?? new Array<number>(period.days).fill(0),
+  }));
   const byCategory = toSlices(
     countBy(currentTickets, (ticket) => ticket.category),
     (key) => labelOf(deps.data, 'category', key),
@@ -556,6 +671,9 @@ export async function computeOverview(
 
   const heatmap = heatmapOf(currentTickets);
   const hotSpots = hotSpotsOf(currentTickets, deps.data);
+  const corrections = await deps.db.listEvents({ type: 'ticket.field.corrected', limit: MAX_EVENTS });
+  const aiEffect = aiEffectOf(currentTickets, corrections, period);
+  const slaTarget = deps.data?.settings?.['slaTargetPercent'];
 
   return {
     period,
@@ -573,6 +691,8 @@ export async function computeOverview(
     avgResolutionMinutes: current.avgResolutionMinutes,
     previousAvgResolutionMinutes: previousTotals.avgResolutionMinutes,
     byPriority,
+    slaTargetPercent: typeof slaTarget === 'number' ? slaTarget : null,
+    aiEffect,
     byCategory,
     byBuilding,
     byAssignee,

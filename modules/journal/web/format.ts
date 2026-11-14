@@ -1,8 +1,10 @@
 import type { DictionaryItem, FieldDef, Ticket, User } from '@ugra/contracts';
 
 /**
- * Чистые функции журнала действий (экран 11): вкладки-фильтры, поиск по периоду,
- * «было → стало», топ исправляемых полей, подписи автора и времени.
+ * Чистые функции журнала действий (экран 07 «Журнал»): вкладки-фильтры, период,
+ * «было → стало», топ исправляемых полей и человеческие подписи.
+ * Служебные шаги пайплайна (`analysis.step.completed`, `agent.step`) отсекаются здесь,
+ * чтобы на экране не было ни сырых кодов, ни технического шума.
  * Ничего не знает про React и сеть — всё проверяется тестами без DOM.
  */
 
@@ -16,23 +18,53 @@ export interface JournalGroupDef {
   types: readonly string[];
 }
 
-/** Вкладки журнала из макета `Log.dc.html`: Все / Правки ИИ / Подтверждения / Аварии. */
+/** Вкладки журнала из макета `07-disp-journal-a`: Все / Правки ИИ / Подтверждения / Аварии. */
 export const JOURNAL_GROUPS: readonly JournalGroupDef[] = [
   { id: 'all', label: 'Все', types: [] },
   { id: 'edits', label: 'Правки ИИ', types: ['ticket.field.corrected'] },
-  { id: 'confirmations', label: 'Подтверждения', types: ['ticket.confirmed', 'ticket.status.changed'] },
+  {
+    id: 'confirmations',
+    label: 'Подтверждения',
+    types: ['ticket.confirmed', 'ticket.assigned', 'ticket.returned'],
+  },
   { id: 'emergency', label: 'Аварии', types: ['emergency.detected', 'mass-incident.opened'] },
 ];
 
+/**
+ * Служебные события: шаги разбора и агента, промахи базы знаний и заполнение полей ИИ.
+ * Диспетчеру они ничего не говорят — в журнале их нет, вместо них одна строка «скрыто N».
+ * Заполнение полей при этом остаётся в знаменателе сводки (`correctedSummary`).
+ */
+export const SERVICE_EVENT_TYPES: readonly string[] = [
+  'analysis.step.completed',
+  'agent.step',
+  'ticket.field.set',
+  'report-kb-gaps.miss',
+];
+
+export function isServiceEvent(row: { type: string; service?: boolean }): boolean {
+  return row.service ?? SERVICE_EVENT_TYPES.includes(row.type);
+}
+
+/**
+ * Статусы, в которые заявку переводит сам разбор («Новая → Разбор ИИ → На проверке»).
+ * Для диспетчера это техническая механика: показываем только его собственные статусы.
+ */
+export const PIPELINE_STATUSES: readonly string[] = ['ai_draft', 'in_review'];
+
+function isPipelineStatus(type: string, payload: Record<string, unknown>): boolean {
+  if (type !== 'ticket.status.changed') return false;
+  const to = readString(payload.to);
+  return to !== null && PIPELINE_STATUSES.includes(to);
+}
+
 export interface JournalFilters {
   group: JournalGroupId;
-  query: string;
   period: JournalPeriod;
 }
 
 export const DEFAULT_JOURNAL_FILTERS: JournalFilters = {
   group: 'all',
-  query: '',
   period: 'week',
 };
 
@@ -51,24 +83,33 @@ export const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Отменена',
 };
 
+/** Человеческие подписи событий: ни один код типа не попадает на экран. */
 export const EVENT_TITLES: Record<string, string> = {
   'appeal.created': 'Обращение создано',
-  'analysis.started': 'Разбор обращения запущен',
+  'analysis.started': 'ИИ начал разбор',
   'analysis.step.completed': 'Шаг разбора выполнен',
-  'analysis.completed': 'Разбор обращения завершён',
+  'analysis.completed': 'ИИ разобрал обращение',
   'agent.step': 'Шаг агента',
-  'ticket.field.set': 'Поле заполнено ИИ',
+  'run.failed': 'Разбор не удался',
+  'ticket.field.set': 'ИИ заполнил поле',
   'ticket.field.corrected': 'Поле исправлено человеком',
   'ticket.confirmed': 'Заявка подтверждена',
   'ticket.assigned': 'Назначен исполнитель',
   'ticket.status.changed': 'Статус изменён',
   'ticket.deadline.extended': 'Срок продлён',
-  'ticket.returned': 'Заявка возвращена диспетчеру',
+  'ticket.returned': 'Возвращена диспетчеру',
   'message.sent': 'Сообщение заявителю',
-  'setting.changed': 'Настройка изменена',
+  'setting.changed': 'Изменена настройка',
   'emergency.detected': 'Обнаружены признаки аварии',
   'mass-incident.opened': 'Открыт массовый инцидент',
+  'report-kb-gaps.miss': 'Пробел в базе знаний',
+  'example.matched': 'Сработал модуль-пример',
 };
+
+/** Подпись периода для сводки: «За сегодня» / «За 7 дней». */
+export function periodLabel(period: JournalPeriod): string {
+  return period === 'today' ? 'За сегодня' : 'За 7 дней';
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -102,27 +143,82 @@ export function actorLabel(event: unknown, resolveName?: (id: string) => string 
   return 'неизвестно';
 }
 
+/**
+ * Короткая подпись автора: «Ксения Нестерова» → «Ксения Н.».
+ * Односложные подписи («ИИ», «система») остаются как есть.
+ */
+export function shortPersonName(fullName: string): string {
+  const words = fullName
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word !== '');
+  const first = words[0] ?? '';
+  if (first === '') return 'Без имени';
+  if (words.length === 1) return first;
+  const last = words[words.length - 1] ?? '';
+  return `${first} ${last.charAt(0).toUpperCase()}.`;
+}
+
+/**
+ * Номер заявки для правой колонки: «З-20261114-0001» → «…0001».
+ * Полный номер остаётся в подсказке ссылки — в колонке 84 px он не помещается.
+ */
+export function shortTicketNumber(number: string): string {
+  const trimmed = number.trim();
+  if (trimmed.length <= 6) return trimmed;
+  return `…${trimmed.slice(-4)}`;
+}
+
+/**
+ * Автор строки журнала: «Анна М.», «ИИ», «система».
+ * `null` — автор уже назван в заголовке события («ИИ разобрал обращение»).
+ */
+export function actorSuffix(row: JournalRow): string | null {
+  const name = shortPersonName(row.actor);
+  return row.title.includes(name) ? null : name;
+}
+
+/** Русское склонение: `plural(23, 'правка', 'правки', 'правок')` → «правки». */
+export function plural(count: number, one: string, few: string, many: string): string {
+  const value = Math.abs(Math.trunc(Number.isFinite(count) ? count : 0));
+  const tail = value % 100;
+  if (tail >= 11 && tail <= 14) return many;
+  const last = value % 10;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
+}
+
+/** «на 23 примерах» / «на 21 примере» — вывод блока «Что чаще исправляют». */
+export function trainingExamples(count: number): string {
+  const value = Math.max(0, Math.trunc(Number.isFinite(count) ? count : 0));
+  const tail = value % 100;
+  const single = tail % 10 === 1 && tail !== 11;
+  return `на ${value} ${single ? 'примере' : 'примерах'}`;
+}
+
 export interface EventTitleLabels {
   fieldLabel?: (key: string) => string | null;
   userName?: (id: string) => string | null;
-  statusLabel?: (status: string) => string;
 }
 
-function statusLabel(code: string, labels: EventTitleLabels): string {
-  return labels.statusLabel?.(code) ?? STATUS_LABELS[code] ?? code;
-}
-
+/** Подпись поля из настроек; без подписи — `null`, чтобы на экран не попал машинный ключ. */
 function fieldTitle(key: string | null, labels: EventTitleLabels): string | null {
   if (key === null) return null;
-  return labels.fieldLabel?.(key) ?? key;
+  return labels.fieldLabel?.(key) ?? null;
 }
 
-/** Человеческая подпись события с деталями payload; неизвестный тип показывается как есть. */
+function assigneeName(payload: Record<string, unknown>, labels: EventTitleLabels): string | null {
+  const id = readString(payload.assigneeId);
+  return id === null ? null : labels.userName?.(id) ?? null;
+}
+
+/** Человеческая подпись события с деталями payload; неизвестный тип — «Событие», без кода. */
 export function eventTitle(event: unknown, labels: EventTitleLabels = {}): string {
   if (!isRecord(event)) return 'Событие';
   const type = readString(event.type) ?? 'event';
   const payload = isRecord(event.payload) ? event.payload : {};
-  const base = EVENT_TITLES[type] ?? type;
+  const base = EVENT_TITLES[type] ?? 'Событие';
   const field = fieldTitle(readFieldKey(payload), labels);
 
   switch (type) {
@@ -130,12 +226,8 @@ export function eventTitle(event: unknown, labels: EventTitleLabels = {}): strin
       return field === null ? base : `Поле «${field}» исправлено`;
     case 'ticket.field.set':
       return field === null ? base : `ИИ заполнил поле «${field}»`;
-    case 'ticket.status.changed': {
-      const from = readString(payload.from);
-      const to = readString(payload.to);
-      if (from === null || to === null) return base;
-      return `Статус: ${statusLabel(from, labels)} → ${statusLabel(to, labels)}`;
-    }
+    case 'ticket.confirmed':
+      return assigneeName(payload, labels) === null ? base : 'Подтверждена и назначена';
     case 'emergency.detected':
       return readString(payload.level) === 'confirmed' ? 'Авария подтверждена' : base;
     case 'mass-incident.opened': {
@@ -278,13 +370,14 @@ export interface JournalRow {
   ticketId: string | null;
   ticketNumber: string | null;
   title: string;
+  /** Вторая строка события: признаки, причина, число собранных полей. */
   description: string | null;
   fieldKey: string | null;
   fieldLabel: string | null;
   diff: JournalDiff | null;
   tone: JournalTone;
-  /** Готовая строка для поиска. */
-  search: string;
+  /** Служебное событие: в списке не показываем. */
+  service: boolean;
 }
 
 export interface JournalOptions {
@@ -295,18 +388,12 @@ export interface JournalOptions {
 }
 
 export function eventTone(type: string): JournalTone {
-  if (type === 'emergency.detected' || type === 'mass-incident.opened') return 'danger';
+  if (type === 'emergency.detected' || type === 'mass-incident.opened' || type === 'run.failed') return 'danger';
   if (type === 'ticket.field.corrected' || type === 'ticket.returned') return 'warn';
   if (type === 'ticket.confirmed' || type === 'ticket.assigned' || type === 'analysis.completed') return 'ok';
   if (type === 'ticket.status.changed') return 'info';
   if (type.startsWith('analysis.')) return 'accent';
   return 'neutral';
-}
-
-/** Вкладка, к которой относится тип события; события вне вкладок видны только в «Все». */
-export function groupOfType(type: string): JournalGroupId | null {
-  const group = JOURNAL_GROUPS.find((entry) => entry.id !== 'all' && entry.types.includes(type));
-  return group?.id ?? null;
 }
 
 function parseTime(value: string | null): number {
@@ -340,7 +427,7 @@ function signsText(payload: Record<string, unknown>): string | null {
     if (quotes.length === 2) break;
   }
   if (quotes.length === 0) return null;
-  return `Признаки: ${quotes.map((quote) => `«${quote}»`).join(', ')}`;
+  return quotes.map((quote) => `«${quote}»`).join(', ');
 }
 
 function descriptionOf(
@@ -349,26 +436,20 @@ function descriptionOf(
   format: (key: string | null, value: string | null) => string | null,
   labels: EventTitleLabels,
 ): string | null {
-  const reason = readString(payload.reason);
   if (type === 'ticket.field.set') {
     const value = format(readFieldKey(payload), readString(payload.value));
-    return value === null ? null : `ИИ предложил: ${value}`;
+    return value === null ? null : `предложено: ${value}`;
   }
-  if (type === 'ticket.confirmed') {
-    const assigneeId = readString(payload.assigneeId);
-    const name = assigneeId === null ? null : labels.userName?.(assigneeId) ?? null;
-    return name === null ? null : `исполнитель: ${name}`;
-  }
-  if (type === 'ticket.assigned') {
-    const assigneeId = readString(payload.assigneeId);
-    const name = assigneeId === null ? null : labels.userName?.(assigneeId) ?? null;
+  if (type === 'ticket.confirmed' || type === 'ticket.assigned') {
+    const name = assigneeName(payload, labels);
     return name === null ? null : `исполнитель: ${name}`;
   }
   if (type === 'analysis.completed') {
     const fields = Array.isArray(payload.fields) ? payload.fields.length : 0;
-    return fields > 0 ? `собрано полей: ${fields}` : null;
+    return fields > 0 ? `${fields} ${plural(fields, 'поле', 'поля', 'полей')}` : null;
   }
   if (type === 'emergency.detected') return signsText(payload);
+  const reason = readString(payload.reason);
   if (reason !== null) return `причина: ${reason}`;
   return null;
 }
@@ -399,7 +480,7 @@ function rowOf(raw: unknown, index: number, options: JournalOptions): JournalRow
       fieldLabel: null,
       diff: null,
       tone: 'neutral',
-      search: 'событие',
+      service: true,
     };
   }
 
@@ -408,11 +489,11 @@ function rowOf(raw: unknown, index: number, options: JournalOptions): JournalRow
   const at = readString(raw.at);
   const actor = actorOf(raw);
   const fieldKey = readFieldKey(payload);
-  const fieldLabel = fieldKey === null ? null : (fields.get(fieldKey) ?? fieldKey);
+  const fieldLabel = fieldKey === null ? null : (fields.get(fieldKey) ?? null);
   const rawDiff = type === 'ticket.field.corrected' || type === 'ticket.status.changed' ? diffPayload(payload) : null;
   const prettify = (value: string | null): string | null => {
     if (value === null) return null;
-    if (type === 'ticket.status.changed') return STATUS_LABELS[value] ?? value;
+    if (type === 'ticket.status.changed') return STATUS_LABELS[value] ?? 'другой статус';
     return format(rawDiff?.fieldKey ?? null, value);
   };
   const before = rawDiff === null ? null : prettify(rawDiff.before);
@@ -430,53 +511,67 @@ function rowOf(raw: unknown, index: number, options: JournalOptions): JournalRow
           changed: segments.changed,
         };
   const ticketId = readString(raw.ticketId);
-  const title = eventTitle(raw, labels);
-  const description = diff === null ? descriptionOf(type, payload, format, labels) : null;
-  const actorName = actorLabel(raw, (id) => users.get(id) ?? null);
-  const ticketNumber = ticketId === null ? null : tickets.get(ticketId) ?? null;
-
-  const search = [title, actorName, ticketNumber ?? '', fieldLabel ?? '', description ?? '', before ?? '', after ?? '', type]
-    .join(' ')
-    .toLowerCase();
 
   return {
     id: readString(raw.id) ?? `event-${index}`,
     type,
     at,
     time: parseTime(at),
-    actor: actorName,
+    actor: actorLabel(raw, (id) => users.get(id) ?? null),
     actorKind: actor.kind,
     ticketId,
-    ticketNumber,
-    title,
-    description,
+    ticketNumber: ticketId === null ? null : (tickets.get(ticketId) ?? null),
+    title: eventTitle(raw, labels),
+    description: descriptionOf(type, payload, format, labels),
     fieldKey,
     fieldLabel,
     diff,
     tone: eventTone(type),
-    search,
+    service: SERVICE_EVENT_TYPES.includes(type) || isPipelineStatus(type, payload),
   };
 }
 
 /** Сырые события API → строки журнала: новые сверху, имена и номера заявок — из справочников. */
 export function toJournalRows(events: readonly unknown[], options: JournalOptions = {}): JournalRow[] {
-  return events
+  const rows = events
     .map((raw, index) => rowOf(raw, index, options))
     .sort((left, right) => right.time - left.time);
+  return mergeAssignments(rows);
+}
+
+/** Подтверждение и назначение — одно действие диспетчера: ядро пишет два события подряд. */
+const CONFIRM_MERGE_MS = 60_000;
+
+/**
+ * Убирает «Назначен исполнитель», если в пределах минуты по той же заявке есть
+ * «Подтверждена и назначена»: в журнале это одна строка, а не две.
+ */
+export function mergeAssignments(rows: readonly JournalRow[]): JournalRow[] {
+  const confirmations = rows.filter((row) => row.type === 'ticket.confirmed' && row.ticketId !== null);
+  if (confirmations.length === 0) return [...rows];
+  return rows.filter((row) => {
+    if (row.type !== 'ticket.assigned' || row.ticketId === null) return true;
+    const paired = confirmations.some(
+      (confirmed) =>
+        confirmed.ticketId === row.ticketId && Math.abs(confirmed.time - row.time) <= CONFIRM_MERGE_MS,
+    );
+    return !paired;
+  });
 }
 
 export interface JournalGroupCount extends JournalGroupDef {
   count: number;
 }
 
-/** Вкладки с числом событий — для `Segmented` и пустых состояний. */
+/** Вкладки с числом событий: служебные шаги в счёт не идут — тот же источник, что у списка. */
 export function eventGroups(rows: readonly JournalRow[]): JournalGroupCount[] {
+  const visible = rows.filter((row) => !isServiceEvent(row));
   return JOURNAL_GROUPS.map((group) => ({
     ...group,
     count:
       group.id === 'all'
-        ? rows.length
-        : rows.filter((row) => group.types.includes(row.type)).length,
+        ? visible.length
+        : visible.filter((row) => group.types.includes(row.type)).length,
   }));
 }
 
@@ -492,58 +587,184 @@ export function inPeriod(time: number, period: JournalPeriod, now: number): bool
   return time >= now - 7 * 24 * 60 * 60 * 1000;
 }
 
-/** Фильтр журнала: вкладка, период и поиск по автору, заявке, полю и значениям. */
+/** Фильтр журнала: вкладка и период. Служебные события не показываются ни на одной вкладке. */
 export function filterEvents(
   rows: readonly JournalRow[],
   filters: JournalFilters,
   now: number,
 ): JournalRow[] {
   const group = JOURNAL_GROUPS.find((entry) => entry.id === filters.group) ?? JOURNAL_GROUPS[0];
-  const query = filters.query.trim().toLowerCase();
   return rows.filter((row) => {
+    if (isServiceEvent(row)) return false;
     if (group && group.id !== 'all' && !group.types.includes(row.type)) return false;
-    if (!inPeriod(row.time, filters.period, now)) return false;
-    if (query !== '' && !row.search.includes(query)) return false;
-    return true;
+    return inPeriod(row.time, filters.period, now);
   });
+}
+
+/** Сколько служебных событий скрыто в периоде — одна честная строка под списком. */
+export function serviceEventCount(
+  rows: readonly JournalRow[],
+  period: JournalPeriod,
+  now: number,
+): number {
+  return rows.filter((row) => isServiceEvent(row) && inPeriod(row.time, period, now)).length;
+}
+
+/** Сколько правок помещается в верхний блок «ИИ предложил → человек исправил». */
+export const FIXES_IN_BLOCK = 4;
+
+/** Сколько событий показываем в «Остальных событиях» до кнопки «Показать ещё». */
+export const REST_IN_BLOCK = 6;
+
+export interface JournalFeed {
+  /** Правки для верхнего блока, самые свежие сверху. */
+  fixes: JournalRow[];
+  /** Остальные события; лишние правки тоже здесь, чтобы ни одно событие не потерялось. */
+  rest: JournalRow[];
+  /** Сколько правок не поместилось в верхний блок. */
+  hiddenFixes: number;
+}
+
+/** Делит видимые события: до `limit` правок — наверх, всё остальное — в «Остальные события». */
+export function splitJournal(rows: readonly JournalRow[], limit = FIXES_IN_BLOCK): JournalFeed {
+  const corrections = rows.filter((row) => row.type === 'ticket.field.corrected');
+  const fixes = corrections.slice(0, Math.max(1, limit));
+  const inFixes = new Set(fixes.map((row) => row.id));
+  return {
+    fixes,
+    rest: rows.filter((row) => !inFixes.has(row.id)),
+    hiddenFixes: Math.max(0, corrections.length - fixes.length),
+  };
+}
+
+export interface CorrectedSummary {
+  /** Сколько полей человек исправил после ИИ. */
+  corrections: number;
+  /** Сколько полей ИИ заполнил сам (`ticket.field.set`) — знаменатель доли правок. */
+  aiFields: number;
+}
+
+/**
+ * Счётчики для подписи «За 7 дней — N правок из M полей».
+ * Считает по периоду, а не по вкладке: сводка справа — про период, а не про выбранный фильтр.
+ * Заполнение полей ИИ в списке скрыто, но в знаменателе остаётся.
+ */
+export function correctedSummary(
+  rows: readonly JournalRow[],
+  period: JournalPeriod,
+  now: number,
+): CorrectedSummary {
+  let corrections = 0;
+  let aiFields = 0;
+  for (const row of rows) {
+    if (!inPeriod(row.time, period, now)) continue;
+    if (row.type === 'ticket.field.corrected') corrections += 1;
+    else if (row.type === 'ticket.field.set') aiFields += 1;
+  }
+  return { corrections, aiFields };
+}
+
+/** Подпись под заголовком блока «Что чаще исправляют»: «За 7 дней — 23 правки из 412 полей». */
+export function correctedCaption(summary: CorrectedSummary, period: JournalPeriod): string {
+  const corrections = `${periodLabel(period)} — ${summary.corrections} ${plural(
+    summary.corrections,
+    'правка',
+    'правки',
+    'правок',
+  )}`;
+  if (summary.aiFields <= 0) return corrections;
+  return `${corrections} из ${summary.aiFields} ${plural(summary.aiFields, 'поля', 'полей', 'полей')}`;
+}
+
+/** Название поля правки для заголовка строки: без машинного ключа, если подписи нет. */
+export function correctedFieldLabel(row: JournalRow): string {
+  if (row.fieldLabel === null || row.fieldLabel === row.fieldKey) return 'Поле';
+  return row.fieldLabel;
+}
+
+export interface CorrectedPair {
+  before: string | null;
+  after: string | null;
 }
 
 export interface CorrectedField {
   fieldKey: string;
   label: string;
   count: number;
-  /** Доля от всех правок полей, 0…100. */
+  /** Доля от всех правок, 0…100. */
   percent: number;
+  /** Длина полоски: доля от самого частого поля, 0…100. */
+  share: number;
+  /** Самая частая пара «было → стало» у этого поля. */
+  pair: CorrectedPair | null;
 }
 
-/** Топ-5 полей, которые человек исправлял после ИИ (`ticket.field.corrected`). */
+interface FieldBucket {
+  fieldKey: string;
+  label: string;
+  count: number;
+  pairs: Map<string, CorrectedPair & { count: number }>;
+}
+
+function bucketOf(buckets: Map<string, FieldBucket>, row: JournalRow): FieldBucket {
+  const key = row.fieldKey ?? '';
+  const bucket = buckets.get(key) ?? {
+    fieldKey: key,
+    label: correctedFieldLabel(row),
+    count: 0,
+    pairs: new Map<string, CorrectedPair & { count: number }>(),
+  };
+  bucket.count += 1;
+  const before = row.diff?.before ?? null;
+  const after = row.diff?.after ?? null;
+  if (before !== null || after !== null) {
+    const pairKey = `${before ?? ''}\u0000${after ?? ''}`;
+    const pair = bucket.pairs.get(pairKey) ?? { before, after, count: 0 };
+    pair.count += 1;
+    bucket.pairs.set(pairKey, pair);
+  }
+  buckets.set(key, bucket);
+  return bucket;
+}
+
+function mostFrequentPair(bucket: FieldBucket): CorrectedPair | null {
+  let best: (CorrectedPair & { count: number }) | null = null;
+  for (const pair of bucket.pairs.values()) {
+    if (best === null || pair.count > best.count) best = pair;
+  }
+  return best === null ? null : { before: best.before, after: best.after };
+}
+
+/** Топ полей, которые человек исправлял после ИИ (`ticket.field.corrected`). */
 export function topCorrectedFields(rows: readonly JournalRow[], limit = 5): CorrectedField[] {
   const corrections = rows.filter((row) => row.type === 'ticket.field.corrected');
   if (corrections.length === 0) return [];
 
-  const map = new Map<string, CorrectedField>();
-  for (const row of corrections) {
-    const key = row.fieldKey ?? '';
-    const item = map.get(key);
-    if (item) {
-      item.count += 1;
-      continue;
-    }
-    map.set(key, {
-      fieldKey: key,
-      label: row.fieldLabel ?? 'Без поля',
-      count: 1,
-      percent: 0,
-    });
-  }
+  const buckets = new Map<string, FieldBucket>();
+  for (const row of corrections) bucketOf(buckets, row);
 
-  return [...map.values()]
+  const sorted = [...buckets.values()]
     .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))
-    .slice(0, Math.max(1, limit))
-    .map((item) => ({
-      ...item,
-      percent: Math.round((item.count / corrections.length) * 100),
-    }));
+    .slice(0, Math.max(1, limit));
+  const maxCount = sorted[0]?.count ?? 1;
+
+  return sorted.map((bucket) => ({
+    fieldKey: bucket.fieldKey,
+    label: bucket.label,
+    count: bucket.count,
+    percent: Math.round((bucket.count / corrections.length) * 100),
+    share: Math.round((bucket.count / maxCount) * 100),
+    pair: mostFrequentPair(bucket),
+  }));
+}
+
+/** Подпись под полоской: «Сети ↔ Рабочие места» — что ИИ путал в этом поле. */
+export function pairLabel(pair: CorrectedPair | null): string | null {
+  if (pair === null) return null;
+  if (pair.before !== null && pair.after !== null) return `${pair.before} ↔ ${pair.after}`;
+  if (pair.after !== null) return `добавляли «${pair.after}»`;
+  if (pair.before !== null) return `убирали «${pair.before}»`;
+  return null;
 }
 
 const MONTHS_SHORT = [

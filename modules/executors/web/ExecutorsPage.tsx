@@ -1,5 +1,5 @@
 import './executors.css';
-import type { EngineersResponse, Ticket, TicketListResponse } from '@ugra/contracts';
+import type { EngineerInfo, EngineersResponse, Ticket, TicketListResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -8,10 +8,12 @@ import {
   Card,
   Chip,
   EmptyState,
+  Icon,
   PersonAvatar,
   PriorityMark,
   SearchField,
   Segmented,
+  cx,
   formatDateTime,
   formatTicketStatus,
   ticketStatusTone,
@@ -35,6 +37,9 @@ import type { EngineerFilters } from './format';
 const TASKS_LIMIT = 20;
 const SKELETON_CARDS = 6;
 
+/** Вкладка фильтра смены: «на смене» или весь справочник. */
+type ShiftView = 'shift' | 'all';
+
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -47,6 +52,104 @@ function categoryLabel(meta: WebPageProps['meta'], code: string | null): string 
   if (!code) return 'Без категории';
   const item = meta.dictionaries.find((entry) => entry.dictionary === 'category' && entry.code === code);
   return item?.label ?? code;
+}
+
+/** Полоса загрузки: пять делений, закрашенных по числу задач, и подпись «N/5». */
+function LoadBar({ load }: { load: ReturnType<typeof loadState> }): JSX.Element {
+  return (
+    <span className="exec-load">
+      <span className="exec-bar" role="img" aria-label={`Загрузка: ${load.text}, ${load.hint}`}>
+        {Array.from({ length: load.threshold }, (_unused, index) => {
+          const on = index < load.filled;
+          return (
+            <span
+              key={index}
+              className={
+                on ? cx('exec-bar__seg', 'exec-bar__seg--on', `exec-bar__seg--${load.tone}`) : 'exec-bar__seg'
+              }
+            />
+          );
+        })}
+      </span>
+      <span className={cx('exec-load__value', `exec-load__value--${load.tone}`)} aria-hidden="true">
+        {load.count}/{load.threshold}
+      </span>
+      {load.overloaded && (
+        <span className="exec-load__flag" aria-hidden="true">
+          перегруз
+        </span>
+      )}
+    </span>
+  );
+}
+
+interface EngineerCardProps {
+  engineer: EngineerInfo;
+  department: string;
+  selected: boolean;
+  onSelect: () => void;
+}
+
+/** Карточка исполнителя: кто это, на смене ли, сколько задач и что умеет. */
+function EngineerCard({ engineer, department, selected, onSelect }: EngineerCardProps): JSX.Element {
+  const load = loadState(engineer.openTickets);
+  const chips = skillChips(engineer.skills);
+  const buildings = engineer.buildings.length > 0 ? engineer.buildings.join(', ') : 'не указаны';
+
+  return (
+    <button
+      type="button"
+      className={cx(
+        'ugra-card',
+        'exec-card',
+        !engineer.onShift && 'exec-card--off',
+        selected && 'exec-card--selected',
+      )}
+      aria-pressed={selected}
+      data-reveal
+      onClick={onSelect}
+    >
+      <span className="exec-card__inner">
+        <span className="exec-card__head">
+          <span className="exec-avatar">
+            <PersonAvatar name={engineer.fullName} size={48} />
+            <span
+              className={engineer.onShift ? 'exec-avatar__dot exec-avatar__dot--on' : 'exec-avatar__dot'}
+              aria-hidden="true"
+            />
+          </span>
+          <span className="exec-card__who">
+            <span className="exec-card__name">{engineer.fullName}</span>
+            <span className="exec-card__dep">
+              {engineer.onShift ? 'на смене' : 'не на смене'} · {department}
+            </span>
+          </span>
+        </span>
+
+        <LoadBar load={load} />
+
+        {chips.length > 0 && (
+          <span className="exec-skills" aria-label="Навыки">
+            {chips.map((chip) => (
+              <Chip
+                key={chip.code}
+                className="exec-skill"
+                title={`${chip.label}: уровень ${chip.level} из 5`}
+              >
+                {chip.label}
+              </Chip>
+            ))}
+          </span>
+        )}
+
+        <span className="exec-meta">
+          <span>{gradeLabel(engineer.level)}</span>
+          <span>Корпуса: {buildings}</span>
+          <span>Решено похожих: {engineer.resolvedSimilar}</span>
+        </span>
+      </span>
+    </button>
+  );
 }
 
 interface TasksState {
@@ -171,11 +274,7 @@ function CurrentTasks({
                   <span className="exec-task__number">№ {ticket.number}</span>
                   <span className="exec-task__title">{categoryLabel(meta, ticket.category)}</span>
                   <Badge tone={ticketStatusTone(ticket.status)}>{formatTicketStatus(ticket.status)}</Badge>
-                  <span
-                    className={`exec-task__due${
-                      due === null ? ' exec-task__due--empty' : ` exec-task__due--${due.tone}`
-                    }`}
-                  >
+                  <span className={`exec-task__due${due === null ? '' : ` exec-task__due--${due.tone}`}`}>
                     {due === null
                       ? 'срок не задан'
                       : due.overdue
@@ -192,7 +291,7 @@ function CurrentTasks({
   );
 }
 
-/** Экран 12 «Исполнители»: кто на смене, чем занят и что умеет; клик — текущие задачи. */
+/** Экран 08 «Исполнители»: кто на смене, чем занят и что умеет; клик — текущие задачи. */
 export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps): JSX.Element {
   const [engineers, setEngineers] = useState<EngineersResponse['engineers']>([]);
   const [loading, setLoading] = useState(true);
@@ -200,6 +299,7 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
   const [reloadKey, setReloadKey] = useState(0);
   const [filters, setFilters] = useState<EngineerFilters>(DEFAULT_ENGINEER_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -234,22 +334,19 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
       if (!engineer.departmentId) continue;
       names.set(engineer.departmentId, departmentLabel(meta.dictionaries, engineer.departmentId));
     }
-    return [
-      { value: ALL_DEPARTMENTS, label: 'Все', count: engineers.length },
-      ...[...names.entries()]
-        .sort((left, right) => left[1].localeCompare(right[1], 'ru'))
-        .map(([code, label]) => ({
-          value: code,
-          label,
-          count: engineers.filter((engineer) => engineer.departmentId === code).length,
-        })),
-    ];
+    return [...names.entries()]
+      .sort((left, right) => left[1].localeCompare(right[1], 'ru'))
+      .map(([value, label]) => ({ value, label }));
   }, [engineers, meta.dictionaries]);
 
   const visible = useMemo(
     () => sortEngineers(filterEngineers(engineers, filters, { departmentLabel: departmentOf })),
     [engineers, filters, meta.dictionaries],
   );
+
+  useListMotion(gridRef, !loading && visible.length > 0);
+
+  const onShiftCount = useMemo(() => engineers.filter((engineer) => engineer.onShift).length, [engineers]);
 
   const selected = selectedId ? (engineers.find((engineer) => engineer.id === selectedId) ?? null) : null;
 
@@ -258,54 +355,70 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
     if (!visible.some((engineer) => engineer.id === selectedId)) setSelectedId(null);
   }, [visible, selectedId]);
 
+  const shiftView: ShiftView = filters.onlyOnShift ? 'shift' : 'all';
   const filtersActive =
-    filters.department !== ALL_DEPARTMENTS || filters.onlyOnShift || filters.query.trim() !== '';
+    filters.department !== ALL_DEPARTMENTS || !filters.onlyOnShift || filters.query.trim() !== '';
+  const resetFilters = (): void => setFilters(DEFAULT_ENGINEER_FILTERS);
 
   return (
     <div className="exec-page">
       <header className="exec-head" data-reveal>
-        <div>
-          <h1 className="ugra-page-title">Исполнители</h1>
-          <p className="exec-lead">
-            Кто на смене, чем занят и что умеет. ИИ учитывает это, когда предлагает исполнителя.
-          </p>
+        <h1 className="ugra-page-title">Исполнители</h1>
+        <div className="exec-tools">
+          <Segmented
+            value={shiftView}
+            label="Кто на смене"
+            options={[
+              { value: 'shift', label: 'На смене', count: onShiftCount },
+              { value: 'all', label: 'Все', count: engineers.length },
+            ]}
+            onChange={(view) => {
+              setFilters((previous) => ({ ...previous, onlyOnShift: view === 'shift' }));
+              trackAction?.('select');
+            }}
+          />
+          <SearchField
+            value={filters.query}
+            label="Поиск исполнителей"
+            placeholder="Имя или навык"
+            onChange={(query) => {
+              setFilters((previous) => ({ ...previous, query }));
+              trackAction?.('input');
+            }}
+          />
         </div>
       </header>
 
-      <Card className="exec-toolbar" padded={false}>
-        <div className="exec-toolbar__inner">
-          <Segmented
-            value={filters.department}
-            label="Подразделение"
-            onChange={(department) => {
-              setFilters((previous) => ({ ...previous, department }));
+      {!loading && error === null && departmentOptions.length > 1 && (
+        <div className="exec-deps" role="group" aria-label="Подразделение" data-reveal>
+          <Chip
+            active={filters.department === ALL_DEPARTMENTS}
+            onClick={() => {
+              setFilters((previous) => ({ ...previous, department: ALL_DEPARTMENTS }));
               trackAction?.('select');
             }}
-            options={departmentOptions}
-          />
-          <div className="exec-toolbar__right">
+          >
+            Все отделы
+          </Chip>
+          {departmentOptions.map((option) => (
             <Chip
-              active={filters.onlyOnShift}
+              key={option.value}
+              active={filters.department === option.value}
               onClick={() => {
-                setFilters((previous) => ({ ...previous, onlyOnShift: !previous.onlyOnShift }));
+                setFilters((previous) => ({ ...previous, department: option.value }));
                 trackAction?.('select');
               }}
-              title="Показать только тех, кто сейчас на смене"
             >
-              Только на смене
+              {option.label}
             </Chip>
-            <SearchField
-              value={filters.query}
-              label="Поиск исполнителей"
-              placeholder="Имя, навык, корпус"
-              onChange={(query) => {
-                setFilters((previous) => ({ ...previous, query }));
-                trackAction?.('input');
-              }}
-            />
-          </div>
+          ))}
+          {filtersActive && visible.length > 0 && (
+            <button type="button" className="exec-reset" onClick={resetFilters}>
+              Сбросить
+            </button>
+          )}
         </div>
-      </Card>
+      )}
 
       {error !== null && (
         <Card tone="danger">
@@ -329,96 +442,35 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
         <EmptyState
           title="Исполнителей нет"
           hint="В справочнике инженеров пусто: карточки появятся, когда появятся данные о людях и навыках."
-          icon="👥"
+          icon={<Icon name="executors" size={28} />}
         />
       )}
 
       {!loading && error === null && engineers.length > 0 && visible.length === 0 && (
         <EmptyState
           title="Под фильтры никто не подошёл"
-          hint="Измените подразделение, снимите «Только на смене» или очистите поиск."
+          hint="Измените подразделение, переключитесь на «Все» или очистите поиск."
         >
-          <Button variant="secondary" size="sm" onClick={() => setFilters(DEFAULT_ENGINEER_FILTERS)}>
+          <Button variant="secondary" size="sm" onClick={resetFilters}>
             Сбросить фильтры
           </Button>
         </EmptyState>
       )}
 
       {!loading && error === null && visible.length > 0 && (
-        <div className="exec-grid">
-          {visible.map((engineer) => {
-            const load = loadState(engineer.openTickets);
-            const chips = skillChips(engineer.skills);
-            const isSelected = engineer.id === selectedId;
-            return (
-              <button
-                key={engineer.id}
-                type="button"
-                className={isSelected ? 'ugra-card exec-card exec-card--selected' : 'ugra-card exec-card'}
-                aria-pressed={isSelected}
-                data-reveal
-                onClick={() => {
-                  setSelectedId(isSelected ? null : engineer.id);
-                  trackAction?.('select');
-                }}
-              >
-                <span className="exec-card__top">
-                  <PersonAvatar name={engineer.fullName} size={44} />
-                  <span className="exec-card__who">
-                    <span className="exec-card__name">{engineer.fullName}</span>
-                    <span className="exec-card__dep">{departmentOf(engineer.departmentId)}</span>
-                    <Badge className="exec-card__grade">{gradeLabel(engineer.level)}</Badge>
-                  </span>
-                </span>
-
-                <span className="exec-shift">
-                  <span
-                    className={engineer.onShift ? 'exec-dot exec-dot--on' : 'exec-dot'}
-                    aria-hidden="true"
-                  />
-                  {engineer.onShift ? 'на смене' : 'не на смене'}
-                </span>
-
-                <span className="exec-load">
-                  <span className="exec-load__label">Загрузка</span>
-                  <span className={`exec-load__value exec-load__value--${load.tone}`}>
-                    {load.text}
-                    {load.overloaded ? ' · перегруз' : ''}
-                  </span>
-                </span>
-                <span className="exec-bar" role="img" aria-label={`Загрузка: ${load.text}, ${load.hint}`}>
-                  <span
-                    className={`exec-bar__fill exec-bar__fill--${load.tone}`}
-                    style={{ width: `${load.percent}%` }}
-                  />
-                </span>
-
-                {chips.length > 0 && (
-                  <span className="exec-skills" aria-label="Навыки">
-                    {chips.map((chip) => (
-                      <Chip
-                        key={chip.code}
-                        className="exec-skill"
-                        title={`${chip.label}: уровень ${chip.level} из 5`}
-                      >
-                        {chip.label}
-                        <span className="exec-skill__level" aria-label={`уровень ${chip.level} из 5`}>
-                          {chip.level}
-                        </span>
-                      </Chip>
-                    ))}
-                  </span>
-                )}
-
-                <span className="exec-meta">
-                  <span>
-                    Корпуса: {engineer.buildings.length > 0 ? engineer.buildings.join(', ') : 'не указаны'}
-                  </span>
-                  <span>Решено похожих: {engineer.resolvedSimilar}</span>
-                </span>
-              </button>
-            );
-          })}
+        <div className="exec-grid" ref={gridRef}>
+          {visible.map((engineer) => (
+            <EngineerCard
+              key={engineer.id}
+              engineer={engineer}
+              department={departmentOf(engineer.departmentId)}
+              selected={engineer.id === selectedId}
+              onSelect={() => {
+                setSelectedId(engineer.id === selectedId ? null : engineer.id);
+                trackAction?.('select');
+              }}
+            />
+          ))}
         </div>
       )}
 
@@ -437,21 +489,6 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
             trackAction?.('click');
           }}
         />
-      )}
-
-      {filtersActive && !loading && visible.length > 0 && (
-        <div className="exec-hint">
-          <span className="ugra-dim">
-            Показано {visible.length} из {engineers.length}
-          </span>
-          <button
-            type="button"
-            className="exec-hint__reset"
-            onClick={() => setFilters(DEFAULT_ENGINEER_FILTERS)}
-          >
-            Сбросить фильтры
-          </button>
-        </div>
       )}
     </div>
   );

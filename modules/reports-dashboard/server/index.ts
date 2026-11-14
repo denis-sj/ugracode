@@ -1,11 +1,12 @@
 import type { Fact, KernelStore, ReferenceData, ReportDef } from '@ugra/core';
 import { defineModule } from '@ugra/core';
 import {
+  OverdueResult,
   OverviewParams,
   OverviewResult,
   type OverviewResult as OverviewResultType,
 } from '../contracts';
-import { computeOverview } from './overview';
+import { computeOverdue, computeOverview } from './overview';
 
 /** Отчёт О0 «Дашборд»: плитки, разрезы, тепловая карта и горячие точки. */
 export const overviewReport: ReportDef<OverviewParams, OverviewResultType> = {
@@ -75,6 +76,30 @@ export default defineModule({
         });
       },
       { response: OverviewResult },
+    );
+
+    // Шторка «N просрочено →» на самом дашборде: список и группы по исполнителям.
+    router.get(
+      '/overdue',
+      'reports',
+      async ({ query }) => {
+        const params = OverviewParams.parse({
+          days: query['days'],
+          from: query['from'],
+          to: query['to'],
+          category: query['category'],
+          assigneeId: query['assigneeId'],
+          channel: query['channel'],
+          building: query['building'],
+          status: query['status'],
+        });
+        return computeOverdue(params, {
+          db: deps.db,
+          data: deps.data,
+          clock: deps.clock,
+        });
+      },
+      { response: OverdueResult },
     );
   },
 });

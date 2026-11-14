@@ -1,28 +1,36 @@
 import './review.css';
-import type { Ticket, TicketListResponse, TicketResponse, User, UsersResponse } from '@ugra/contracts';
+import type {
+  AssigneeCandidate,
+  Ticket,
+  TicketListResponse,
+  TicketResponse,
+  User,
+  UsersResponse,
+} from '@ugra/contracts';
 import { hasPermission } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Card, EmptyState, PriorityMark, SearchField, Segmented, useListMotion } from '@ugra/ui';
+import { Button, Card, EmptyState, Icon, SearchField, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
+import { Kbd } from './parts';
 import {
   DEFAULT_FILTERS,
-  locationFromTicket,
   filterTickets,
   formatLocation,
+  locationFromTicket,
   promoteNew,
-  queueAction,
   queueEventAction,
   queueFiltersFromQuery,
-  queueSummary,
   sortTickets,
   STATUS_LABELS,
   ticketSignals,
   ticketTitleFromFields,
   waitingLabel,
 } from './format';
-import type { QueueBucket, QueueSignals, TicketFilters } from './format';
-import { QueuePreview } from './QueuePreview';
+import type { QueueSignals, TicketFilters } from './format';
+import { featuredEmergency, groupTickets, queueSize, unclearNote } from './queue-groups';
+import type { QueueStateView } from './QueueSections';
+import { QueueAlarm, QueueFold, QueueGroup, QueueRow } from './QueueSections';
 import { useNow } from './useNow';
 
 /** Сколько строк догружаем деталями для уверенности и места (кэш до перезагрузки). */
@@ -31,6 +39,8 @@ const DETAIL_LIMIT = 24;
 const POLL_MS = 15_000;
 /** Подсветка новых и изменившихся строк. */
 const FRESH_MS = 12_000;
+/** Сколько висит сообщение о результате подтверждения. */
+const NOTICE_MS = 8000;
 
 interface QueueDetail {
   detail: TicketResponse | null;
@@ -39,37 +49,29 @@ interface QueueDetail {
   title: string;
 }
 
-function categoryLabel(meta: WebPageProps['meta'], code: string | null): string {
-  if (!code) return '—';
-  return meta.dictionaries.find((entry) => entry.dictionary === 'category' && entry.code === code)?.label ?? code;
+type FoldKey = 'engineer' | 'waiting' | 'drafting';
+
+interface QueueNotice {
+  tone: 'ok' | 'danger';
+  text: string;
 }
 
-function buildingLabel(meta: WebPageProps['meta'], code: string): string {
-  return meta.dictionaries.find((entry) => entry.dictionary === 'building' && entry.code === code)?.label ?? code;
-}
-
-function ConfidenceCell({ signals }: { signals?: QueueSignals }): JSX.Element {
-  const value = signals?.confidence ?? null;
-  if (value === null) return <span className="queue-conf queue-conf--empty">—</span>;
-  const percent = Math.round(value * 100);
+/** Подпись категории из справочника; служебный код на экран не выводим. */
+function categoryLabel(meta: WebPageProps['meta'], code: string | null): string | null {
+  if (!code) return null;
   return (
-    <span className={value < 0.75 ? 'queue-conf queue-conf--warn' : 'queue-conf'}>
-      <span className="queue-conf__track" aria-hidden="true">
-        <span className="queue-conf__fill" style={{ width: `${percent}%` }} />
-      </span>
-      <span className="queue-conf__value">{percent}%</span>
-    </span>
+    meta.dictionaries.find((entry) => entry.dictionary === 'category' && entry.code === code)?.label ?? null
   );
 }
 
-const BUCKETS: ReadonlyArray<{ value: QueueBucket; label: string }> = [
-  { value: 'all', label: 'Все' },
-  { value: 'suspicious', label: 'Сомнительные' },
-  { value: 'ready', label: 'Готовые' },
-  { value: 'emergency', label: 'Аварии' },
-];
+function buildingLabel(meta: WebPageProps['meta'], code: string): string {
+  return (
+    meta.dictionaries.find((entry) => entry.dictionary === 'building' && entry.code === code)?.label ??
+    'Корпус'
+  );
+}
 
-/** Очередь диспетчера (4.3): сводка, фильтры, таблица и превью выбранной заявки. */
+/** Очередь диспетчера: полоса аварии, три смысловые группы и поиск. */
 export function QueuePage({ user, meta, api, navigate, query, trackAction }: WebPageProps): JSX.Element {
   const queryKey = query.toString();
   const initialFilters = useMemo(() => queueFiltersFromQuery(new URLSearchParams(queryKey)), [queryKey]);
@@ -78,6 +80,13 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
   const [details, setDetails] = useState<Record<string, QueueDetail>>({});
   const [users, setUsers] = useState<User[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openFold, setOpenFold] = useState<Record<FoldKey, boolean>>({
+    engineer: false,
+    waiting: false,
+    drafting: false,
+  });
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const [notice, setNotice] = useState<QueueNotice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(() => new Set<string>());
@@ -90,9 +99,15 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
   const loadedDetailsRef = useRef<Set<string>>(new Set());
   const detailsInFlightRef = useRef<Set<string>>(new Set());
   const freshTimerRef = useRef<number | null>(null);
-  const bodyRef = useRef<HTMLTableSectionElement | null>(null);
-  useListMotion(bodyRef, tickets.length > 0);
   const reloadTimerRef = useRef<number | null>(null);
+  const busyRef = useRef(false);
+  const decisionRef = useRef<HTMLDivElement | null>(null);
+  const readyRef = useRef<HTMLDivElement | null>(null);
+  const engineerRef = useRef<HTMLDivElement | null>(null);
+  const waitingRef = useRef<HTMLDivElement | null>(null);
+  const draftingRef = useRef<HTMLDivElement | null>(null);
+
+  const canConfirm = hasPermission(user.role, 'tickets.confirm');
 
   useEffect(() => {
     setFilters(initialFilters);
@@ -132,17 +147,26 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
         const previousUpdated = updatedAtRef.current;
         const previousIds = knownIdsRef.current;
         const changed = response.tickets
-          .filter((ticket) => previousUpdated.has(ticket.id) && previousUpdated.get(ticket.id) !== ticket.updatedAt)
+          .filter(
+            (ticket) => previousUpdated.has(ticket.id) && previousUpdated.get(ticket.id) !== ticket.updatedAt,
+          )
           .map((ticket) => ticket.id);
-        const added = response.tickets.filter((ticket) => !previousIds.has(ticket.id)).map((ticket) => ticket.id);
-        updatedAtRef.current = new Map(response.tickets.map((ticket) => [ticket.id, ticket.updatedAt] as const));
+        const added = response.tickets
+          .filter((ticket) => !previousIds.has(ticket.id))
+          .map((ticket) => ticket.id);
+        updatedAtRef.current = new Map(
+          response.tickets.map((ticket) => [ticket.id, ticket.updatedAt] as const),
+        );
         knownIdsRef.current = new Set(response.tickets.map((ticket) => ticket.id));
         setTickets(response.tickets);
         setError(null);
         if (mode === 'quiet') markFresh(changed, added);
-        setSelectedId((current) => (current && !response.tickets.some((ticket) => ticket.id === current) ? null : current));
+        setSelectedId((current) =>
+          current && !response.tickets.some((ticket) => ticket.id === current) ? null : current,
+        );
       } catch (cause) {
-        if (mode === 'loud') setError(cause instanceof Error ? cause.message : 'Не удалось загрузить очередь');
+        if (mode === 'loud')
+          setError(cause instanceof Error ? cause.message : 'Не удалось загрузить очередь');
       } finally {
         if (mode === 'loud') setLoading(false);
       }
@@ -163,8 +187,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
     });
     const missing = sortTickets(candidates)
       .filter(
-        (ticket) =>
-          !loadedDetailsRef.current.has(ticket.id) && !detailsInFlightRef.current.has(ticket.id),
+        (ticket) => !loadedDetailsRef.current.has(ticket.id) && !detailsInFlightRef.current.has(ticket.id),
       )
       .slice(0, DETAIL_LIMIT);
     if (missing.length === 0) return;
@@ -182,9 +205,11 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
             {
               detail,
               signals: ticketSignals(detail.fields),
-              location: formatLocation(locationFromTicket(detail.ticket, detail.fields), (code) => buildingLabel(meta, code)),
+              location: formatLocation(locationFromTicket(detail.ticket, detail.fields), (code) =>
+                buildingLabel(meta, code),
+              ),
               title: ticketTitleFromFields(detail.fields, (key, value) => {
-                if (key === 'category') return categoryLabel(meta, value);
+                if (key === 'category') return categoryLabel(meta, value) ?? 'Обращение';
                 return value;
               }),
             },
@@ -196,7 +221,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
               detail: null,
               signals: { review: 0, confidence: null },
               location: 'место уточняется',
-              title: categoryLabel(meta, ticket.category),
+              title: categoryLabel(meta, ticket.category) ?? 'Обращение',
             },
           ] as const;
         } finally {
@@ -260,6 +285,12 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
     [],
   );
 
+  useEffect(() => {
+    if (notice === null) return undefined;
+    const timer = window.setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
   const signals = useMemo(() => {
     const map: Record<string, QueueSignals> = {};
     for (const [id, detail] of Object.entries(details)) map[id] = detail.signals;
@@ -271,231 +302,438 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
     return map;
   }, [details]);
 
-  const visible = useMemo(() => {
-    const sorted = sortTickets(filterTickets(tickets, filters, { signals, locations }));
-    return promoteNew(sorted, newIds);
-  }, [tickets, filters, signals, locations, newIds]);
+  const visible = useMemo(
+    () => promoteNew(sortTickets(filterTickets(tickets, filters, { signals, locations })), newIds),
+    [tickets, filters, signals, locations, newIds],
+  );
+  const alarmTicket = useMemo(
+    () => featuredEmergency(sortTickets(filterTickets(tickets, DEFAULT_FILTERS))),
+    [tickets],
+  );
+  const groups = useMemo(
+    () =>
+      groupTickets(
+        visible.filter((ticket) => ticket.id !== alarmTicket?.id),
+        signals,
+      ),
+    [visible, signals, alarmTicket],
+  );
+  const total = queueSize(groups);
+  const selectedReady = useMemo(
+    () => (selectedId ? (groups.ready.find((ticket) => ticket.id === selectedId) ?? null) : null),
+    [groups.ready, selectedId],
+  );
 
-  const summary = useMemo(() => queueSummary(tickets, now), [tickets, now]);
-  const bucketCounts = useMemo(() => {
-    const base = {
-      ...DEFAULT_FILTERS,
-      status: filters.status,
-      onlyEmergency: filters.onlyEmergency,
-      assignee: filters.assignee,
-    };
-    const context = { signals, locations };
-    return {
-      all: filterTickets(tickets, base, context).length,
-      suspicious: filterTickets(tickets, { ...base, bucket: 'suspicious' }, context).length,
-      ready: filterTickets(tickets, { ...base, bucket: 'ready' }, context).length,
-      emergency: filterTickets(tickets, { ...base, bucket: 'emergency' }, context).length,
-    };
-  }, [tickets, signals, locations, filters.status, filters.onlyEmergency, filters.assignee]);
+  useListMotion(decisionRef, groups.decision.length > 0);
+  useListMotion(readyRef, groups.ready.length > 0);
+  useListMotion(engineerRef, openFold.engineer);
+  useListMotion(waitingRef, openFold.waiting);
+  useListMotion(draftingRef, openFold.drafting);
 
-  const selected = selectedId ? tickets.find((ticket) => ticket.id === selectedId) ?? null : null;
+  const titleOf = useCallback(
+    (ticket: Ticket): string =>
+      details[ticket.id]?.title ?? categoryLabel(meta, ticket.category) ?? 'Обращение',
+    [details, meta],
+  );
+  const placeOf = useCallback(
+    (ticket: Ticket): string => details[ticket.id]?.location ?? 'место уточняется',
+    [details],
+  );
+  const engineerOf = useCallback(
+    (ticket: Ticket): string | null => {
+      const name = users.find((candidate) => candidate.id === ticket.assigneeId)?.fullName;
+      return name ?? (ticket.assigneeId ? 'Инженер' : null);
+    },
+    [users],
+  );
+
+  const openReview = useCallback(
+    (ticketId: string): void => {
+      trackAction?.('navigate');
+      navigate(`/review?id=${encodeURIComponent(ticketId)}`);
+    },
+    [navigate, trackAction],
+  );
+
+  const resolveAssignee = useCallback(
+    async (ticket: Ticket): Promise<string | null> => {
+      if (ticket.assigneeId) return ticket.assigneeId;
+      try {
+        const response = await api.get<{ candidates: AssigneeCandidate[] }>(
+          `/api/m/routing/candidates/${ticket.id}`,
+        );
+        return response.candidates[0]?.userId ?? null;
+      } catch {
+        return null;
+      }
+    },
+    [api],
+  );
+
+  const confirmTickets = useCallback(
+    async (targets: readonly Ticket[]): Promise<void> => {
+      const list = targets.filter((ticket) => ticket.status === 'in_review');
+      if (list.length === 0 || !canConfirm || busyRef.current) return;
+      busyRef.current = true;
+      setNotice(null);
+      setPendingIds(new Set(list.map((ticket) => ticket.id)));
+      const confirmed: string[] = [];
+      let withoutAssignee = 0;
+      let failure: string | null = null;
+      for (const ticket of list) {
+        const assigneeId = await resolveAssignee(ticket);
+        if (!assigneeId) {
+          withoutAssignee += 1;
+          continue;
+        }
+        try {
+          await api.post(`/api/tickets/${ticket.id}/confirm`, { assigneeId });
+          confirmed.push(ticket.id);
+        } catch (cause) {
+          failure = cause instanceof Error ? cause.message : 'Не удалось подтвердить заявку';
+        }
+      }
+      busyRef.current = false;
+      setPendingIds(new Set<string>());
+      if (confirmed.length > 0) {
+        markFresh(confirmed);
+        setSelectedId((current) => (current && confirmed.includes(current) ? null : current));
+        trackAction?.('system');
+        await load('quiet');
+      }
+      const parts: string[] = [];
+      if (confirmed.length > 0) {
+        parts.push(
+          list.length === 1 ? 'Заявка подтверждена и назначена.' : `Подтверждено: ${confirmed.length}.`,
+        );
+      }
+      if (withoutAssignee > 0) parts.push(`без исполнителя: ${withoutAssignee}`);
+      if (failure) parts.push(failure);
+      setNotice({
+        tone: confirmed.length > 0 && !failure ? 'ok' : 'danger',
+        text: parts.length === 0 ? 'Не удалось подтвердить заявки.' : parts.join(' · '),
+      });
+    },
+    [api, canConfirm, load, markFresh, resolveAssignee, trackAction],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setSelectedId(null);
+        return;
+      }
+      if (event.key !== 'Enter' || event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest('input, textarea, select, button, a, [contenteditable="true"]')
+      ) {
+        return;
+      }
+      if (selectedReady) {
+        event.preventDefault();
+        void confirmTickets([selectedReady]);
+        return;
+      }
+      if (groups.ready.length > 0) {
+        event.preventDefault();
+        void confirmTickets(groups.ready);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [confirmTickets, groups.ready, selectedReady]);
+
+  const scope = useMemo(() => {
+    const parts: string[] = [];
+    if (filters.onlyEmergency) parts.push('только аварии');
+    if (filters.status !== 'all') parts.push(`статус: ${STATUS_LABELS[filters.status]}`);
+    if (filters.assignee !== '') {
+      parts.push(
+        `исполнитель: ${users.find((candidate) => candidate.id === filters.assignee)?.fullName ?? 'выбранный'}`,
+      );
+    }
+    return parts;
+  }, [filters.assignee, filters.onlyEmergency, filters.status, users]);
+
+  const hasQuery = filters.query.trim() !== '';
+  const pendingAll = pendingIds.size > 0;
+
+  const selectRow = (ticketId: string): void => {
+    setSelectedId((current) => (current === ticketId ? null : ticketId));
+    trackAction?.('select');
+    setNotice(null);
+  };
+
+  const alarmInfo = alarmTicket ? details[alarmTicket.id] : undefined;
 
   return (
     <div className="queue-page">
-      <header className="queue-head" data-reveal>
+      <header className="queue-head">
         <div>
           <h1 className="ugra-page-title">Очередь</h1>
-          <p className="queue-lead">
-            ИИ разобрал обращения. Подтвердите готовые и поправьте сомнительные.
-          </p>
+          <p className="queue-lead">ИИ разобрал обращения — проверьте спорные и подтвердите готовые.</p>
         </div>
-        <div className="queue-summary" aria-label="Сводка очереди">
-          <div>
-            <span className="queue-summary__label">Ждут проверки</span>
-            <b className="queue-summary__value">{summary.review}</b>
-          </div>
-          <div>
-            <span className="queue-summary__label">Ждут заявителя</span>
-            <b className="queue-summary__value">{summary.waiting}</b>
-          </div>
-          <div>
-            <span className="queue-summary__label">Аварии</span>
-            <b className="queue-summary__value queue-summary__value--danger">{summary.emergency}</b>
-          </div>
-          <div>
-            <span className="queue-summary__label">За смену</span>
-            <b className="queue-summary__value">{summary.perShift}</b>
-          </div>
-        </div>
+        <SearchField
+          className="queue-search"
+          value={filters.query}
+          label="Поиск заявок"
+          placeholder="Номер, кабинет, текст"
+          onChange={(value) => {
+            setFilters((previous) => ({ ...previous, query: value }));
+            trackAction?.('input');
+          }}
+        />
       </header>
 
-      <Card className="queue-toolbar" padded={false}>
-        <div className="queue-toolbar__inner">
-          <Segmented
-            value={filters.bucket}
-            label="Фильтр очереди"
-            onChange={(bucket) => {
-              setFilters((previous) => ({ ...previous, bucket }));
-              trackAction?.('select');
-            }}
-            options={BUCKETS.map((bucket) => ({
-              ...bucket,
-              count: bucketCounts[bucket.value],
-            }))}
-          />
-          <div className="queue-toolbar__right">
-            <SearchField
-              value={filters.query}
-              label="Поиск заявок"
-              placeholder="Номер, кабинет, текст"
-              onChange={(value) => {
-                setFilters((previous) => ({ ...previous, query: value }));
-                trackAction?.('input');
-              }}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={loading}
-              onClick={() => {
-                void load();
-              }}
-            >
-              Обновить
-            </Button>
-          </div>
+      {scope.length > 0 && (
+        <div className="queue-scope">
+          <span>Показаны: {scope.join(' · ')}</span>
+          <button
+            type="button"
+            className="queue-link"
+            onClick={() => setFilters((previous) => ({ ...DEFAULT_FILTERS, query: previous.query }))}
+          >
+            Сбросить
+          </button>
         </div>
+      )}
 
-        {(filters.status !== 'all' || filters.onlyEmergency || filters.assignee !== '') && (
-          <div className="queue-active-filters">
-            {filters.status !== 'all' && <Badge tone="info">Статус: {STATUS_LABELS[filters.status]}</Badge>}
-            {filters.onlyEmergency && <Badge tone="danger">Только аварии</Badge>}
-            {filters.assignee !== '' && (
-              <Badge tone="accent">
-                Исполнитель: {users.find((candidate) => candidate.id === filters.assignee)?.fullName ?? filters.assignee}
-              </Badge>
-            )}
-            <button
-              type="button"
-              className="queue-reset"
-              onClick={() => setFilters(DEFAULT_FILTERS)}
-            >
-              Сбросить
-            </button>
-          </div>
-        )}
-      </Card>
+      {notice && (
+        <p
+          className={`queue-notice queue-notice--${notice.tone}`}
+          role={notice.tone === 'danger' ? 'alert' : 'status'}
+        >
+          {notice.text}
+        </p>
+      )}
 
       {error && (
-        <Card tone="danger">
-          <h2>API не отвечает</h2>
-          <p className="ugra-muted">{error}</p>
+        <Card tone="danger" className="queue-error">
+          <h2 className="queue-error__title">API не отвечает</h2>
+          <p className="ugra-muted">Не удалось загрузить очередь: {error}</p>
           <Button variant="secondary" size="sm" onClick={() => void load()}>
             Повторить
           </Button>
         </Card>
       )}
 
-      <div className={selected ? 'queue-layout queue-layout--preview' : 'queue-layout'}>
-        <Card className="queue-list" padded={false}>
-          {loading && tickets.length === 0 && (
-            <div className="queue-skeleton" aria-label="Загружаем очередь">
-              {[0, 1, 2, 3].map((index) => (
-                <span className="queue-skeleton__line" key={index} />
-              ))}
-            </div>
-          )}
+      {alarmTicket && (
+        <QueueAlarm
+          ticket={alarmTicket}
+          title={alarmInfo?.title ?? 'Авария на объекте'}
+          place={alarmInfo?.location ?? 'место уточняется'}
+          onOpen={() => openReview(alarmTicket.id)}
+        />
+      )}
 
-          {!loading && !error && visible.length === 0 && (
-            <EmptyState
-              title="Под фильтры ничего не подошло"
-              hint="Измените фильтр или сбросьте его — новые заявки придут сами."
-            >
-              <Button variant="secondary" size="sm" onClick={() => setFilters(DEFAULT_FILTERS)}>
-                Сбросить фильтры
-              </Button>
-            </EmptyState>
-          )}
-
-          {visible.length > 0 && (
-            <div className="queue-table-wrap">
-              <table className="queue-table">
-                <thead>
-                  <tr>
-                    <th aria-label="Приоритет" />
-                    <th>Обращение</th>
-                    <th>Уверенность</th>
-                    <th>Ждёт</th>
-                    <th>Что сделать</th>
-                  </tr>
-                </thead>
-                <tbody ref={bodyRef}>
-                  {visible.map((ticket) => {
-                    const info = details[ticket.id];
-                    const action = queueAction(ticket, info?.signals);
-                    const isFresh = fresh.has(ticket.id) || newIds.has(ticket.id);
-                    return (
-                      <tr
-                        key={ticket.id}
-                        className={`queue-row${ticket.id === selectedId ? ' queue-row--selected' : ''}${
-                          ticket.isEmergency ? ' queue-row--emergency' : ''
-                        }${isFresh ? ' dr-row--fresh' : ''}`}
-                        tabIndex={0}
-                        aria-current={ticket.id === selectedId ? 'true' : undefined}
-                        onClick={() => {
-                          setSelectedId(ticket.id);
-                          trackAction?.('select');
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key !== 'Enter' && event.key !== ' ') return;
-                          if (event.key === 'Enter' && ticket.id === selectedId) return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setSelectedId(ticket.id);
-                          trackAction?.('select');
-                        }}
-                      >
-                        <td className="queue-cell-priority">
-                          <PriorityMark priority={ticket.priority} isEmergency={ticket.isEmergency} />
-                        </td>
-                        <td>
-                          <span className="queue-title">{info?.title ?? categoryLabel(meta, ticket.category)}</span>
-                          <span className="queue-meta">
-                            № {ticket.number} · {info?.location ?? 'место уточняется'}
-                          </span>
-                        </td>
-                        <td>
-                          <ConfidenceCell signals={info?.signals} />
-                        </td>
-                        <td className="queue-wait">{waitingLabel(ticket.createdAt, now)}</td>
-                        <td>
-                          <span className={`queue-action queue-action--${action.tone}`}>
-                            <i className="queue-action__dot" aria-hidden="true" />
-                            {action.text}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {loading && tickets.length === 0 && (
+        <Card padded={false}>
+          <div className="queue-skeleton" aria-label="Загружаем очередь">
+            {[0, 1, 2, 3].map((index) => (
+              <span className="queue-skeleton__line" key={index} />
+            ))}
+          </div>
         </Card>
+      )}
 
-        {selected && (
-          <QueuePreview
-            ticket={selected}
-            detail={details[selected.id]?.detail ?? null}
-            meta={meta}
-            api={api}
-            users={users}
-            canConfirm={hasPermission(user.role, 'tickets.confirm')}
-            navigate={navigate}
-            onClose={() => setSelectedId(null)}
-            onChanged={() => {
-              markFresh([selected.id]);
-              scheduleReload();
-            }}
-            trackAction={trackAction}
-          />
-        )}
-      </div>
+      {!loading && !error && total === 0 && (!alarmTicket || hasQuery || scope.length > 0) && (
+        <EmptyState
+          title={
+            hasQuery ? 'Ничего не нашли' : scope.length > 0 ? 'Под фильтр ничего не подошло' : 'Очередь пуста'
+          }
+          hint={
+            hasQuery
+              ? 'Проверьте номер, кабинет или текст обращения.'
+              : scope.length > 0
+                ? 'Сбросьте фильтр — остальные заявки на месте.'
+                : 'Новые заявки появятся здесь сами: ИИ разберёт обращение и разложит по группам.'
+          }
+          icon={<Icon name="queue" size={28} />}
+        >
+          {(hasQuery || scope.length > 0) && (
+            <Button variant="secondary" size="sm" onClick={() => setFilters(DEFAULT_FILTERS)}>
+              {hasQuery ? 'Очистить поиск' : 'Сбросить фильтр'}
+            </Button>
+          )}
+        </EmptyState>
+      )}
+
+      {groups.decision.length > 0 && (
+        <QueueGroup
+          title="Нужно ваше решение"
+          count={groups.decision.length}
+          note="ИИ не уверен — проверьте поля"
+          decision
+        >
+          <div className="queue-group__rows" ref={decisionRef}>
+            {groups.decision.map((ticket) => (
+              <QueueRow
+                key={ticket.id}
+                ticket={ticket}
+                variant="decision"
+                title={titleOf(ticket)}
+                meta={`№ ${ticket.number} · ${placeOf(ticket)}`}
+                why={unclearNote(details[ticket.id]?.detail?.fields, meta.fields)}
+                confidence={details[ticket.id]?.signals.confidence ?? null}
+                wait={waitingLabel(ticket.createdAt, now)}
+                fresh={fresh.has(ticket.id) || newIds.has(ticket.id)}
+                action={
+                  <Button variant="primary" size="sm" onClick={() => openReview(ticket.id)}>
+                    Проверить
+                  </Button>
+                }
+              />
+            ))}
+          </div>
+        </QueueGroup>
+      )}
+
+      {groups.ready.length > 0 && (
+        <QueueGroup
+          title="Готовы к подтверждению"
+          count={groups.ready.length}
+          action={
+            canConfirm ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={pendingAll}
+                onClick={() => void confirmTickets(groups.ready)}
+                title="Подтвердить все заявки группы"
+              >
+                Подтвердить все <Kbd>Enter</Kbd>
+              </Button>
+            ) : undefined
+          }
+        >
+          <div className="queue-group__rows" ref={readyRef}>
+            {groups.ready.map((ticket) => (
+              <QueueRow
+                key={ticket.id}
+                ticket={ticket}
+                variant="ready"
+                title={titleOf(ticket)}
+                meta={`№ ${ticket.number} · ${placeOf(ticket)}`}
+                confidence={details[ticket.id]?.signals.confidence ?? null}
+                wait={waitingLabel(ticket.createdAt, now)}
+                selectable
+                selected={ticket.id === selectedId}
+                fresh={fresh.has(ticket.id) || newIds.has(ticket.id)}
+                onSelect={() => selectRow(ticket.id)}
+                action={
+                  <button
+                    type="button"
+                    className="queue-link"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openReview(ticket.id);
+                    }}
+                  >
+                    Открыть
+                  </button>
+                }
+              />
+            ))}
+          </div>
+        </QueueGroup>
+      )}
+
+      {groups.withEngineer.length > 0 && (
+        <QueueFold
+          title="Ждут инженера"
+          count={groups.withEngineer.length}
+          summary={groups.withEngineer.map(titleOf).join(' · ')}
+          open={openFold.engineer}
+          onToggle={() => setOpenFold((previous) => ({ ...previous, engineer: !previous.engineer }))}
+        >
+          <div className="queue-group__rows" ref={engineerRef}>
+            {groups.withEngineer.map((ticket) => {
+              const state: QueueStateView =
+                ticket.status === 'in_progress'
+                  ? { tone: 'accent', text: 'В работе' }
+                  : { tone: 'muted', text: 'Ждёт инженера' };
+              return (
+                <QueueRow
+                  key={ticket.id}
+                  ticket={ticket}
+                  variant="engineer"
+                  title={titleOf(ticket)}
+                  meta={`№ ${ticket.number} · ${placeOf(ticket)}`}
+                  state={state}
+                  wait={waitingLabel(ticket.createdAt, now)}
+                  fresh={fresh.has(ticket.id) || newIds.has(ticket.id)}
+                  engineer={engineerOf(ticket)}
+                />
+              );
+            })}
+          </div>
+        </QueueFold>
+      )}
+
+      {groups.waitingApplicant.length > 0 && (
+        <QueueFold
+          title="Ждут заявителя"
+          count={groups.waitingApplicant.length}
+          summary={groups.waitingApplicant.map(titleOf).join(' · ')}
+          open={openFold.waiting}
+          onToggle={() => setOpenFold((previous) => ({ ...previous, waiting: !previous.waiting }))}
+        >
+          <div className="queue-group__rows" ref={waitingRef}>
+            {groups.waitingApplicant.map((ticket) => (
+              <QueueRow
+                key={ticket.id}
+                ticket={ticket}
+                variant="waiting"
+                title={titleOf(ticket)}
+                meta={`№ ${ticket.number} · ${placeOf(ticket)}`}
+                state={{ tone: 'info', text: 'Ждёт ответа заявителя' }}
+                wait={waitingLabel(ticket.createdAt, now)}
+                fresh={fresh.has(ticket.id) || newIds.has(ticket.id)}
+                action={
+                  <button
+                    type="button"
+                    className="queue-link"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openReview(ticket.id);
+                    }}
+                  >
+                    Открыть
+                  </button>
+                }
+              />
+            ))}
+          </div>
+        </QueueFold>
+      )}
+
+      {groups.drafting.length > 0 && (
+        <QueueFold
+          title="ИИ разбирает"
+          count={groups.drafting.length}
+          summary={groups.drafting.map(titleOf).join(' · ')}
+          open={openFold.drafting}
+          onToggle={() => setOpenFold((previous) => ({ ...previous, drafting: !previous.drafting }))}
+        >
+          <div className="queue-group__rows" ref={draftingRef}>
+            {groups.drafting.map((ticket) => (
+              <QueueRow
+                key={ticket.id}
+                ticket={ticket}
+                variant="waiting"
+                title={titleOf(ticket)}
+                meta={`№ ${ticket.number} · ${placeOf(ticket)}`}
+                state={{ tone: 'warn', text: 'ИИ собирает заявку' }}
+                wait={waitingLabel(ticket.createdAt, now)}
+                fresh={fresh.has(ticket.id) || newIds.has(ticket.id)}
+              />
+            ))}
+          </div>
+        </QueueFold>
+      )}
     </div>
   );
 }

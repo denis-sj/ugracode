@@ -58,6 +58,8 @@ export interface LoadState {
   /** Сколько открытых заявок (неотрицательное целое). */
   count: number;
   threshold: number;
+  /** Сколько делений шкалы закрашено, 0…threshold. */
+  filled: number;
   /** Заполнение шкалы, 0…100. */
   percent: number;
   tone: LoadTone;
@@ -82,6 +84,7 @@ export function loadState(openTickets: number, threshold: number = LOAD_THRESHOL
   return {
     count,
     threshold: limit,
+    filled: Math.min(limit, count),
     percent: Math.min(100, Math.round((count / limit) * 100)),
     tone: overloaded ? 'danger' : nearLimit ? 'warn' : 'ok',
     overloaded,
@@ -97,9 +100,10 @@ export interface EngineerFilters {
   query: string;
 }
 
+/** По умолчанию — кто на смене: диспетчеру нужны свободные люди, а не весь справочник. */
 export const DEFAULT_ENGINEER_FILTERS: EngineerFilters = {
   department: ALL_DEPARTMENTS,
-  onlyOnShift: false,
+  onlyOnShift: true,
   query: '',
 };
 

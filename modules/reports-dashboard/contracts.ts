@@ -37,6 +37,52 @@ export const OverviewSlice = z.object({
 });
 export type OverviewSlice = z.infer<typeof OverviewSlice>;
 
+/**
+ * Срез приоритета с разбивкой по дням периода — мини-столбцы на карточке дашборда.
+ * Длина `daily` равна `period.days`, первый день — начало периода.
+ */
+export const OverviewPrioritySlice = OverviewSlice.extend({
+  daily: z.array(z.number().int().nonnegative()),
+});
+export type OverviewPrioritySlice = z.infer<typeof OverviewPrioritySlice>;
+
+/** Эффект ИИ: доля заявок периода, которые диспетчер не правил. */
+export const OverviewAiEffect = z.object({
+  /** Заявок, где ИИ-поля правил человек. */
+  correctedTickets: z.number().int().nonnegative(),
+  /** Заявок периода, по которым был разбор ИИ. */
+  totalTickets: z.number().int().nonnegative(),
+  /** Доля оформленных без правок, %; `null` — нечего считать. */
+  withoutEditsPercent: z.number().nullable(),
+});
+export type OverviewAiEffect = z.infer<typeof OverviewAiEffect>;
+
+/** Просроченная заявка для шторки «N просрочено →». */
+export const OverdueItem = z.object({
+  ticketId: z.string(),
+  number: z.string(),
+  title: z.string(),
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
+  /** На сколько минут просрочен срок решения. */
+  overdueMinutes: z.number().int().nonnegative(),
+});
+export type OverdueItem = z.infer<typeof OverdueItem>;
+
+export const OverdueGroup = z.object({
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string(),
+  count: z.number().int().nonnegative(),
+});
+export type OverdueGroup = z.infer<typeof OverdueGroup>;
+
+export const OverdueResult = z.object({
+  total: z.number().int().nonnegative(),
+  items: z.array(OverdueItem),
+  groups: z.array(OverdueGroup),
+});
+export type OverdueResult = z.infer<typeof OverdueResult>;
+
 export const OverviewTotals = z.object({
   total: z.number().int().nonnegative(),
   open: z.number().int().nonnegative(),
@@ -117,7 +163,10 @@ export const OverviewResult = z.object({
   deltas: OverviewDeltas,
   avgResolutionMinutes: z.number().nullable(),
   previousAvgResolutionMinutes: z.number().nullable(),
-  byPriority: z.array(OverviewSlice),
+  byPriority: z.array(OverviewPrioritySlice),
+  /** Цель по доле заявок «в срок», % (из настроек; `null` — цель не задана). */
+  slaTargetPercent: z.number().nullable(),
+  aiEffect: OverviewAiEffect,
   byCategory: z.array(OverviewSlice),
   byBuilding: z.array(OverviewSlice),
   byAssignee: z.array(OverviewSlice),

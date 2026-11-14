@@ -55,5 +55,15 @@ describe('profile handoff', () => {
   it('shows API failures rather than invented profile data', async () => {
     const { host } = await renderProfile(vi.fn().mockRejectedValue(new Error('Сеть недоступна')));
     expect(host.querySelector('[role="alert"]')?.textContent).toContain('Сеть недоступна');
+    // Ошибка не выдаёт себя за пустой профиль: «техники нет» мы не утверждаем.
+    expect(host.textContent).not.toContain('Техника в профиле не указана');
+    expect(host.textContent).not.toContain('Место не указано');
+  });
+  it('keeps one loading message for the whole profile request', async () => {
+    const { host } = await renderProfile(vi.fn().mockReturnValue(new Promise(() => undefined)));
+    const statuses = host.querySelectorAll('[role="status"]');
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0]?.textContent).toContain('Загружаем профиль');
+    expect(host.textContent).not.toContain('Загружаем технику');
   });
 });

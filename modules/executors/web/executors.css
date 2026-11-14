@@ -1,6 +1,7 @@
 /*
- * Стили веб-части `executors` (экран 12). Только переменные из `@ugra/ui`:
- * своих цветов и «сырых» длительностей нет, тёмная тема наследуется токенами.
+ * Стили веб-части `executors` (экран 08 «Исполнители»).
+ * Только переменные из `@ugra/ui`: своих цветов и «сырых» длительностей нет,
+ * тёмная тема приходит токенами.
  */
 
 /* ---------- Каркас ---------- */
@@ -10,64 +11,38 @@
   flex-direction: column;
   gap: var(--space-4);
   width: 100%;
-  max-width: 1376px;
-  margin: 0 auto;
 }
 
 .exec-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
 
-.exec-lead {
-  max-width: 720px;
-  margin-top: var(--space-1);
-  color: var(--color-text-muted);
-  font-size: var(--text-md);
-  line-height: var(--leading-normal);
+.exec-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.exec-tools .ugra-search {
+  width: 240px;
 }
 
 /* ---------- Фильтры ---------- */
 
-.exec-toolbar {
-  border-radius: var(--radius-lg);
-}
-
-.exec-toolbar__inner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  padding: var(--space-3) var(--space-4);
-}
-
-.exec-toolbar .ugra-segmented {
-  flex-wrap: wrap;
-}
-
-.exec-toolbar__right {
+.exec-deps {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-left: auto;
   flex-wrap: wrap;
 }
 
-.exec-toolbar__right .ugra-search {
-  width: 240px;
-}
-
-.exec-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-}
-
-.exec-hint__reset {
+.exec-reset {
+  padding: 0 var(--space-1);
   border: none;
   background: none;
   color: var(--color-accent);
@@ -83,15 +58,14 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
 }
 
 .exec-card {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
   width: 100%;
-  padding: var(--space-5);
+  height: 100%;
+  padding: 0;
   border: none;
   color: var(--color-text);
   font: inherit;
@@ -116,13 +90,49 @@
     var(--shadow-card);
 }
 
-/* ---------- Карточка ---------- */
+/* Не на смене — карточка тише, но остаётся читаемой. */
+.exec-card--off .exec-card__inner {
+  opacity: 0.62;
+}
 
-.exec-card__top {
+.exec-card__inner {
   display: flex;
-  align-items: center;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+/* ---------- Шапка карточки ---------- */
+
+.exec-card__head {
+  display: flex;
+  align-items: flex-start;
   gap: var(--space-3);
   min-width: 0;
+}
+
+.exec-avatar {
+  position: relative;
+  display: block;
+  flex: none;
+  line-height: 0;
+}
+
+.exec-avatar__dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-text-dim);
+  box-shadow: 0 0 0 3px var(--color-surface);
+}
+
+.exec-avatar__dot--on {
+  background: var(--color-ok);
 }
 
 .exec-card__who {
@@ -135,57 +145,59 @@
 
 .exec-card__name {
   font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-black);
   line-height: var(--leading-tight);
 }
 
 .exec-card__dep {
-  color: var(--color-text-dim);
-  font-size: var(--text-sm);
-}
-
-.exec-card__grade {
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.exec-shift {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   color: var(--color-text-muted);
-  font-size: 13px;
-  font-weight: var(--weight-semi);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
 }
 
-.exec-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-text-dim);
-  box-shadow: 0 0 0 3px var(--color-graphite-soft);
-}
-
-.exec-dot--on {
-  background: var(--color-ok);
-}
+/* ---------- Загрузка ---------- */
 
 .exec-load {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-2);
-  font-size: 13px;
 }
 
-.exec-load__label {
-  color: var(--color-text-dim);
+.exec-bar {
+  display: flex;
+  flex: 1;
+  gap: var(--space-1);
+  min-width: 0;
+  transform-origin: left center;
+  animation: exec-grow var(--dur-slow) var(--ease-out) both;
+}
+
+.exec-bar__seg {
+  flex: 1 1 0;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-graphite-soft);
+}
+
+.exec-bar__seg--ok {
+  background: var(--color-ok);
+}
+
+.exec-bar__seg--warn {
+  background: var(--color-warn-bright);
+}
+
+.exec-bar__seg--danger {
+  background: var(--color-danger);
 }
 
 .exec-load__value {
+  min-width: 34px;
   color: var(--color-text);
+  font-size: var(--text-md);
   font-variant-numeric: tabular-nums;
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-black);
+  text-align: right;
 }
 
 .exec-load__value--warn {
@@ -196,30 +208,11 @@
   color: var(--color-danger);
 }
 
-.exec-bar {
-  display: block;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--color-graphite-soft);
-}
-
-.exec-bar__fill {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--color-ok);
-  transform-origin: left center;
-  animation: exec-grow var(--dur-slow) var(--ease-out) both;
-  transition: width var(--dur-base) var(--ease-out);
-}
-
-.exec-bar__fill--warn {
-  background: var(--color-warn);
-}
-
-.exec-bar__fill--danger {
-  background: var(--color-danger);
+.exec-load__flag {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  white-space: nowrap;
 }
 
 @keyframes exec-grow {
@@ -232,6 +225,8 @@
   }
 }
 
+/* ---------- Навыки и подпись ---------- */
+
 .exec-skills {
   display: flex;
   flex-wrap: wrap;
@@ -239,38 +234,31 @@
 }
 
 .exec-skill {
-  padding-right: 8px;
-}
-
-.exec-skill__level {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
+  min-height: 26px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-graphite-soft);
+  box-shadow: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
 }
 
 .exec-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--space-1) var(--space-2);
+  margin-top: auto;
   color: var(--color-text-dim);
   font-size: var(--text-sm);
 }
 
-/* ---------- Загрузка ---------- */
+/* ---------- Загрузка данных ---------- */
 
 .exec-skeleton {
   position: relative;
   display: block;
-  height: 260px;
+  height: 214px;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--color-surface-2);
@@ -427,10 +415,6 @@
   color: var(--color-danger);
 }
 
-.exec-task__due--empty {
-  color: var(--color-text-dim);
-}
-
 /* ---------- Узкие экраны ---------- */
 
 @media (max-width: 1180px) {
@@ -444,14 +428,13 @@
     grid-template-columns: 1fr;
   }
 
-  .exec-toolbar__right {
+  .exec-tools {
     width: 100%;
-    margin-left: 0;
   }
 
-  .exec-toolbar__right .ugra-search {
+  .exec-tools .ugra-search {
     flex: 1;
-    width: 100%;
+    width: auto;
   }
 
   .exec-task__title {
@@ -461,12 +444,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .exec-card,
-  .exec-bar__fill,
   .exec-task__link {
     transition: none;
   }
 
-  .exec-bar__fill,
+  .exec-bar,
   .exec-skeleton::after {
     animation: none;
   }

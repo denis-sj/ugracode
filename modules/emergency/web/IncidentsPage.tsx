@@ -1,5 +1,7 @@
 import './emergency.css';
+import { hasPermission } from '@ugra/contracts';
 import type {
+  AssigneeCandidate,
   Ticket,
   TicketAnalysisResponse,
   TicketListResponse,
@@ -10,38 +12,30 @@ import type {
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Badge,
   Button,
   Card,
-  ConfidenceBar,
-  DetailRow,
   EmptyState,
+  Icon,
+  PersonAvatar,
+  Timer,
   Timeline,
   Toast,
+  formatDateTime,
   formatTicketStatus,
-  ticketStatusTone,
   pulse,
+  ticketStatusTone,
   useElapsed,
   useListMotion,
 } from '@ugra/ui';
 import type { ToastTone, WebPageProps } from '@ugra/ui';
-import type { Place } from './format';
 import {
   MASS_THRESHOLD,
   MASS_WINDOW_MINUTES,
-  channelLabel,
-  emergencyLevelLabel,
-  emergencyReason,
-  eventTime,
-  formatTimer,
   incidentCards,
-  incidentTimer,
   incidentWindowMinutes,
   massDeclareRights,
   massTimeline,
   placeFromFields,
-  placeLabel,
-  quoteSegments,
   readEmergencyVerdict,
   readIncidentDetail,
   similarTickets,
@@ -49,84 +43,59 @@ import {
   timelineItems,
   type IncidentCard,
   type IncidentDetailView,
+  type Place,
 } from './format';
+import { IncidentHero } from './IncidentHero';
+import { IncidentList } from './IncidentList';
+import { IncidentMiniList } from './IncidentMiniList';
+import { MassBlock } from './MassBlock';
+import {
+  assignmentState,
+  isServiceEvent,
+  plural,
+  previousEmergencies,
+  reactionNormMinutes,
+  reactionState,
+  reactionText,
+  sanitizeTimeline,
+} from './incident-view';
 import { useNow } from './useNow';
 
 const EMPTY_PLACE: Place = { building: null, cabinet: null, floor: null };
 const EMPTY_EVENTS: readonly unknown[] = [];
 const EMPTY_INCIDENTS: readonly IncidentCard[] = [];
+const EMPTY_CANDIDATES: readonly AssigneeCandidate[] = [];
 const INCIDENTS_URL = '/api/m/mass-incident/incidents';
+/** Справочники, значения которых на экране — код: переводим по `meta.dictionaries`. */
+const DICTIONARY_FIELDS = new Set([
+  'category',
+  'serviceType',
+  'urgency',
+  'priority',
+  'impact',
+  'criticality',
+  'department',
+  'channel',
+  'equipmentType',
+  'level',
+]);
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function categoryLabel(meta: WebPageProps['meta'], code: string | null): string {
-  if (!code) return 'Без категории';
+/** Подпись категории из справочника; кода и «Без категории» на экране нет. */
+function categoryLabel(meta: WebPageProps['meta'], code: string | null): string | null {
+  if (!code) return null;
   const item = meta.dictionaries.find((entry) => entry.dictionary === 'category' && entry.code === code);
-  return item?.label ?? code;
+  return item?.label ?? null;
 }
 
-function CheckIcon(): JSX.Element {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-      <path d="M5 12l5 5 9-10" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-interface IncidentListProps {
-  incidents: readonly IncidentCard[];
-  activeId: string | null;
-  loading: boolean;
-  error: string | null;
-  onSelect: (id: string) => void;
-}
-
-/** Список инцидентов из API: номер, размер, корпус, категория, статус, время. */
-function IncidentList({ incidents, activeId, loading, error, onSelect }: IncidentListProps): JSX.Element {
-  return (
-    <div className="er-mass__list">
-      <div className="er-card__head">
-        <h3 className="er-card__title">Массовые сбои</h3>
-        <span className="er-card__counter">{loading ? 'загружаем…' : incidents.length}</span>
-      </div>
-
-      {error !== null && (
-        <p className="er-note" role="alert">
-          Список инцидентов недоступен: {error}
-        </p>
-      )}
-      {error === null && !loading && incidents.length === 0 && <p className="er-note">Массовых сбоев нет</p>}
-
-      {incidents.map((item) => {
-        const active = item.id === activeId;
-        return (
-          <button
-            type="button"
-            key={item.id}
-            className={active ? 'er-incident-row er-incident-row--on' : 'er-incident-row'}
-            aria-pressed={active}
-            onClick={() => onSelect(item.id)}
-          >
-            <span className="er-incident-row__top">
-              <span className="er-incident-row__num">№ {item.number}</span>
-              <Badge tone={item.status === 'open' ? 'danger' : 'neutral'}>{item.statusLabel}</Badge>
-            </span>
-            <span className="er-incident-row__meta">
-              <span>{item.size} заявок</span>
-              <span aria-hidden="true">·</span>
-              <span>{item.place}</span>
-              <span aria-hidden="true">·</span>
-              <span>{item.categoryLabel}</span>
-              <span aria-hidden="true">·</span>
-              <span>{item.openedAt}</span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  if (['INPUT', 'TEXTAREA', 'SELECT', 'SUMMARY'].includes(target.tagName)) return true;
+  return target.closest('a[href]') !== null;
 }
 
 interface DemoIncidentResponse {
@@ -134,9 +103,10 @@ interface DemoIncidentResponse {
   incidentId?: string;
 }
 
-/** Экран «Авария и массовость» (дизайн 4.5): авария — точка и текст, не красный фон. */
+/** Экран «Авария» (вариант B): слева — что делать, справа — время и исполнитель. */
 export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): JSX.Element {
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [allEmergency, setAllEmergency] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +123,10 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   const [events, setEvents] = useState<readonly unknown[]>(EMPTY_EVENTS);
   const [eventsBlocked, setEventsBlocked] = useState(false);
 
-  const [checks, setChecks] = useState<readonly boolean[]>([]);
+  /** Отметки шагов регламента: время клика (мс) или `null`. Живут в состоянии экрана. */
+  const [checks, setChecks] = useState<readonly (number | null)[]>([]);
+  const [candidates, setCandidates] = useState<readonly AssigneeCandidate[]>(EMPTY_CANDIDATES);
+  const [assigning, setAssigning] = useState(false);
 
   /* Массовость: список и карточка инцидента — с сервера, без локальной имитации. */
   const [incidents, setIncidents] = useState<readonly IncidentCard[]>(EMPTY_INCIDENTS);
@@ -163,6 +136,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   const [incidentDetail, setIncidentDetail] = useState<IncidentDetailView | null>(null);
   const [incidentError, setIncidentError] = useState<string | null>(null);
   const [declaring, setDeclaring] = useState(false);
+  const [massOpen, setMassOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: ToastTone } | null>(null);
 
   const rowsRef = useRef<HTMLDivElement | null>(null);
@@ -173,14 +147,19 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
 
   const now = useNow(30_000);
   const selectedTicket = useMemo(
-    () => tickets.find((ticket) => ticket.id === selectedId) ?? allTickets.find((ticket) => ticket.id === selectedId) ?? null,
+    () =>
+      tickets.find((ticket) => ticket.id === selectedId) ??
+      allTickets.find((ticket) => ticket.id === selectedId) ??
+      null,
     [tickets, allTickets, selectedId],
   );
   const verdict = useMemo(() => readEmergencyVerdict(analysis), [analysis]);
   const checklist = useMemo(() => verdict?.checklist ?? [], [verdict]);
   const checklistSignature = checklist.join('|');
-  const elapsed = useElapsed(detail?.appeal.createdAt ?? selectedTicket?.createdAt ?? null);
+  const startedAt = detail?.appeal.createdAt ?? selectedTicket?.createdAt ?? null;
+  const elapsed = useElapsed(startedAt);
   const rights = useMemo(() => massDeclareRights(user.role), [user.role]);
+  const canConfirm = hasPermission(user.role, 'tickets.confirm');
 
   /* ---------- Список аварийных заявок ---------- */
 
@@ -195,8 +174,11 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
     ])
       .then(([emergency, all, usersResponse]) => {
         if (!alive) return;
-        const sorted = sortByRecent(emergency.tickets);
+        const sorted = sortByRecent(
+          emergency.tickets.filter((ticket) => ticket.status !== 'closed' && ticket.status !== 'cancelled'),
+        );
         setTickets(sorted);
+        setAllEmergency(emergency.tickets);
         setAllTickets(all?.tickets ?? emergency.tickets);
         setUsers(usersResponse?.users ?? []);
         setSelectedId((previous) =>
@@ -224,7 +206,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
       .get<unknown>(INCIDENTS_URL)
       .then((response) => {
         if (!alive) return;
-        setIncidents(incidentCards(response, { categoryLabel: (code) => categoryLabel(meta, code) }));
+        setIncidents(incidentCards(response, { categoryLabel: (code) => categoryLabel(meta, code) ?? '' }));
         setIncidentsError(null);
       })
       .catch((cause: unknown) => {
@@ -243,7 +225,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   /* ---------- Место заявок списка (корпус и кабинет — в полях) ---------- */
 
   useEffect(() => {
-    const missing = tickets.filter((ticket) => places[ticket.id] === undefined).slice(0, 40);
+    const missing = allEmergency.filter((ticket) => places[ticket.id] === undefined).slice(0, 40);
     if (missing.length === 0) return undefined;
     let alive = true;
     void Promise.all(
@@ -266,7 +248,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
     return () => {
       alive = false;
     };
-  }, [tickets, places, api]);
+  }, [allEmergency, places, api]);
 
   /* ---------- Место кандидатов «похожих»: только та же категория ---------- */
 
@@ -361,6 +343,27 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
     };
   }, [api, selectedId, refreshToken]);
 
+  /* ---------- Кандидаты на исполнителя для выбранной заявки ---------- */
+
+  useEffect(() => {
+    if (selectedId === null) {
+      setCandidates(EMPTY_CANDIDATES);
+      return undefined;
+    }
+    let alive = true;
+    void api
+      .get<{ candidates: AssigneeCandidate[] }>(`/api/m/routing/candidates/${selectedId}`)
+      .then((response) => {
+        if (alive) setCandidates(response.candidates);
+      })
+      .catch(() => {
+        if (alive) setCandidates(EMPTY_CANDIDATES);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [api, selectedId, refreshToken]);
+
   /* ---------- Выбранная заявка: активный инцидент и его карточка ---------- */
 
   useEffect(() => {
@@ -385,7 +388,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
       .then((response) => {
         if (!alive) return;
         const view = readIncidentDetail(response, {
-          categoryLabel: (code) => categoryLabel(meta, code),
+          categoryLabel: (code) => categoryLabel(meta, code) ?? '',
         });
         setIncidentDetail(view);
         const created = demoCreatedRef.current;
@@ -410,8 +413,8 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   }, [incidentDetail]);
 
   useEffect(() => {
-    setChecks(checklist.map(() => false));
-  }, [checklistSignature]);
+    setChecks(checklist.map(() => null));
+  }, [checklistSignature, checklist]);
 
   /* ---------- Массовость: заявки инцидента или окно по всем заявкам ---------- */
 
@@ -440,47 +443,131 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
       }),
     [incidentDetail, similar, now, massWindow],
   );
-  const massTotal = incidentDetail === null ? mass.total : Math.max(incidentDetail.incident.size, mass.total);
-  const massBadge =
-    incidentDetail !== null
-      ? {
-          tone: incidentDetail.incident.status === 'open' ? ('danger' as const) : ('neutral' as const),
-          label: incidentDetail.incident.status === 'open' ? 'Инцидент объявлен' : 'Инцидент закрыт',
-        }
-      : mass.thresholdMet
-        ? { tone: 'danger' as const, label: 'Порог пройден' }
-        : { tone: 'neutral' as const, label: 'Порог не достигнут' };
+  const massTotal = mass.total;
+
+  useEffect(() => {
+    setMassOpen(mass.thresholdMet || incidentDetail !== null);
+  }, [selectedId, mass.thresholdMet, incidentDetail]);
 
   const userName = useCallback(
-    (id: string): string | null => users.find((item) => item.id === id)?.fullName ?? null,
+    (id: string | null): string | null =>
+      id === null ? null : (users.find((item) => item.id === id)?.fullName ?? null),
     [users],
   );
-  const timeline = useMemo(() => timelineItems(events, { resolveUser: userName }), [events, userName]);
+  const meaningfulEvents = useMemo(() => events.filter((event) => !isServiceEvent(event)), [events]);
+  const timeline = useMemo(
+    () => timelineItems(meaningfulEvents, { resolveUser: userName }),
+    [meaningfulEvents, userName],
+  );
+  const fieldLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    for (const field of meta.fields) labels[field.key] = field.label;
+    return labels;
+  }, [meta.fields]);
+  const valueLabels = useMemo(() => {
+    const labels: Record<string, Record<string, string>> = {};
+    for (const item of meta.dictionaries) {
+      if (!DICTIONARY_FIELDS.has(item.dictionary)) continue;
+      const group = labels[item.dictionary] ?? {};
+      group[item.code] = item.label;
+      labels[item.dictionary] = group;
+    }
+    return labels;
+  }, [meta.dictionaries]);
+  const safeTimeline = useMemo(
+    () => sanitizeTimeline(timeline, fieldLabels, valueLabels),
+    [timeline, fieldLabels, valueLabels],
+  );
+  const previous = useMemo(
+    () =>
+      previousEmergencies(
+        allEmergency.length > 0 ? allEmergency : tickets,
+        selectedTicket,
+        (id) => places[id],
+      ),
+    [allEmergency, tickets, selectedTicket, places],
+  );
 
-  const doneCount = checks.filter(Boolean).length;
-  const progress = checklist.length === 0 ? 0 : Math.round((doneCount / checklist.length) * 100);
   const assignee = selectedTicket?.assigneeId
     ? (users.find((item) => item.id === selectedTicket.assigneeId) ?? null)
     : null;
-  const hasPlace = selectedPlace !== null && selectedPlace.building !== null;
-  const quote = detail?.appeal.originalText ?? '';
-  const quoteParts = quoteSegments(
-    quote,
-    (verdict?.signs ?? []).map((sign) => sign.quote),
-  );
+  const topCandidate = candidates[0] ?? null;
+  const candidateName = topCandidate === null ? null : userName(topCandidate.userId);
+  const assignState =
+    selectedTicket === null
+      ? { allowed: false, hint: null }
+      : assignmentState(selectedTicket, canConfirm);
 
-  const toggleCheck = (index: number): void => {
-    setChecks((previous) => previous.map((value, position) => (position === index ? !value : value)));
-    trackAction?.('select');
-  };
+  const normMinutes = selectedTicket === null ? null : reactionNormMinutes(selectedTicket);
+  const normState = reactionState(normMinutes, elapsed);
+  const normText = reactionText(normMinutes, elapsed);
+  const slabFilled =
+    normMinutes === null
+      ? 0
+      : normState === 'overdue'
+        ? 4
+        : Math.min(4, Math.floor((elapsed / (normMinutes * 60_000)) * 4));
+
+  const toggleCheck = useCallback(
+    (index: number): void => {
+      setChecks((current) =>
+        current.map((value, position) => (position === index ? (value === null ? Date.now() : null) : value)),
+      );
+      trackAction?.('select');
+    },
+    [trackAction],
+  );
 
   const selectIncident = (id: string): void => {
     setPinnedIncidentId(id);
     trackAction?.('select');
   };
 
+  const assign = useCallback(async (): Promise<void> => {
+    if (selectedTicket === null || !assignState.allowed || assigning || topCandidate === null) return;
+    setAssigning(true);
+    setToast(null);
+    trackAction?.('click');
+    try {
+      // «Ждёт ответа» → «на проверке» разрешён диспетчеру: аварию не ждём, забираем в работу.
+      if (selectedTicket.status === 'waiting_applicant') {
+        await api.post(`/api/tickets/${selectedTicket.id}/transition`, {
+          to: 'in_review',
+          reason: 'Авария: диспетчер берёт заявку в работу',
+        });
+      }
+      await api.post(`/api/tickets/${selectedTicket.id}/confirm`, { assigneeId: topCandidate.userId });
+      setToast({ text: `Назначен ${candidateName ?? 'исполнитель'}.`, tone: 'ok' });
+      setRefreshToken((value) => value + 1);
+      trackAction?.('system');
+    } catch (cause) {
+      setToast({ text: `Не удалось назначить: ${errorText(cause)}`, tone: 'danger' });
+    } finally {
+      setAssigning(false);
+    }
+  }, [
+    api,
+    assignState.allowed,
+    assigning,
+    candidateName,
+    selectedTicket,
+    topCandidate,
+    trackAction,
+  ]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Enter' || event.defaultPrevented || event.repeat) return;
+      if (!assignState.allowed || assigning || isInteractiveTarget(event.target)) return;
+      event.preventDefault();
+      void assign();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [assign, assignState.allowed, assigning]);
+
   /**
-   * Демо-всплеск: сервер создаёт 6 похожих заявок и сразу склеивает их в инцидент.
+   * Демо-всплеск: сервер создаёт похожие заявки и сразу склеивает их в инцидент.
    * Без конфетти и «ура» — авария не праздник. Право `admin` проверяет и сервер.
    */
   const declareIncident = useCallback(async (): Promise<void> => {
@@ -509,39 +596,22 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
     }
   }, [api, declaring, rights.allowed, trackAction]);
 
-  const showMassBlock = incidentDetail !== null || hasPlace;
-  const subjectCategory =
-    incidentDetail !== null
-      ? incidentDetail.incident.categoryLabel
-      : selectedTicket !== null
-        ? categoryLabel(meta, selectedTicket.category)
-        : 'Без категории';
-  const subjectPlace = incidentDetail !== null ? incidentDetail.incident.place : placeLabel(selectedPlace);
+  const eventsSummary =
+    safeTimeline.length === 0
+      ? 'событий пока нет'
+      : `${safeTimeline.length} ${plural(safeTimeline.length, 'событие', 'события', 'событий')}`;
+  const previousSummary =
+    previous.total === 0
+      ? 'нет аварий в корпусе'
+      : previous.open > 0
+        ? previous.open === 1
+          ? '1 не закрыта'
+          : `${previous.open} не закрыты`
+        : 'все закрыты';
 
   return (
     <div className="er-page">
-      <header className="er-head" data-reveal>
-        <div>
-          <h1 className="er-title">Аварии и массовость</h1>
-          <p className="er-lead">Аварийные заявки сверху. Проверьте признаки и регламент, при необходимости объявите массовый сбой.</p>
-        </div>
-        <div className="er-head__actions">
-          <Badge tone={tickets.length > 0 ? 'danger' : 'ok'} dot={tickets.length > 0}>
-            Аварий: {tickets.length}
-          </Badge>
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={loading}
-            onClick={() => {
-              setRefreshToken((value) => value + 1);
-              trackAction?.('click');
-            }}
-          >
-            Обновить
-          </Button>
-        </div>
-      </header>
+      <h1 className="ugra-sr-only">Аварии</h1>
 
       {error !== null && (
         <Card tone="danger">
@@ -553,7 +623,7 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
         </Card>
       )}
 
-      {loading && tickets.length === 0 && (
+      {loading && tickets.length === 0 && error === null && (
         <Card>
           <p className="ugra-muted">Загружаем аварийные заявки…</p>
         </Card>
@@ -566,15 +636,17 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
             hint="Аварийных заявок сейчас нет. Экран обновится сам, когда ИИ найдёт признаки аварии в новом обращении."
             icon="✓"
           />
-          <Card className="er-card er-mass">
-            <IncidentList
-              incidents={incidents}
-              activeId={activeIncidentId}
-              loading={incidentsLoading}
-              error={incidentsError}
-              onSelect={selectIncident}
-            />
-          </Card>
+          {incidents.length > 0 && (
+            <Card className="er-empty-mass">
+              <IncidentMiniList
+                incidents={incidents}
+                activeId={activeIncidentId}
+                loading={incidentsLoading}
+                error={incidentsError}
+                onSelect={selectIncident}
+              />
+            </Card>
+          )}
         </>
       )}
 
@@ -582,297 +654,209 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
         <div className="er-layout">
           <Card className="er-list" padded={false} as="section">
             <div className="er-list__head">
-              <h2 className="er-card__title">Аварийные заявки</h2>
+              <h2 className="er-list__title">Аварийные заявки</h2>
               <span className="er-list__count">{tickets.length}</span>
             </div>
-            <div className="er-list__rows" ref={rowsRef}>
-              {tickets.map((ticket) => {
-                const place = places[ticket.id];
-                const active = ticket.id === selectedId;
-                return (
-                  <button
-                    type="button"
-                    key={ticket.id}
-                    className={active ? 'er-row er-row--on' : 'er-row'}
-                    aria-current={active ? 'true' : undefined}
-                    onClick={() => {
-                      setSelectedId(ticket.id);
-                      trackAction?.('select');
-                    }}
-                  >
-                    <span className="er-row__num">№ {ticket.number}</span>
-                    <span className="er-row__age">{incidentTimer(ticket.createdAt, now).age}</span>
-                    <span className="er-row__foot">
-                      <span className="er-row__meta">
-                        <span>{eventTime(ticket.createdAt) ?? '—'}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{place ? placeLabel(place) : 'загружаем…'}</span>
-                      </span>
-                      <Badge tone={ticketStatusTone(ticket.status)}>{formatTicketStatus(ticket.status)}</Badge>
-                    </span>
-                  </button>
-                );
-              })}
+            <div ref={rowsRef}>
+              <IncidentList
+                tickets={tickets}
+                places={places}
+                activeId={selectedId}
+                now={now}
+                loading={loading}
+                onSelect={(id) => {
+                  setSelectedId(id);
+                  trackAction?.('select');
+                }}
+              />
             </div>
           </Card>
 
-          <div className="er-detail">
-            {selectedTicket === null && (
+          <div className="er-main">
+            {selectedTicket === null ? (
               <Card>
                 <p className="ugra-muted">Выберите аварийную заявку слева.</p>
               </Card>
+            ) : (
+              <IncidentHero
+                ticket={selectedTicket}
+                detail={detail}
+                detailError={detailError}
+                verdict={verdict}
+                analysisLoading={analysisLoading}
+                analysisMissing={analysisMissing}
+                categoryLabel={categoryLabel(meta, selectedTicket.category)}
+                place={selectedPlace}
+                checklist={checklist}
+                checks={checks}
+                onToggle={toggleCheck}
+              />
             )}
+          </div>
 
-            {selectedTicket !== null && (
-              <>
-                <Card className="er-hero">
-                  <div className="er-hero__top">
-                    <div className="er-hero__main">
-                      <div className="er-eyebrow">
-                        <span className="er-beat" aria-hidden="true" />
-                        {emergencyLevelLabel(
-                          verdict !== null && verdict.level !== 'none'
-                            ? verdict.level
-                            : selectedTicket.isEmergency
-                              ? 'suspected'
-                              : 'none',
-                        )}{' '}
-                        · № {selectedTicket.number} · {channelLabel(detail?.appeal.channel)}
-                      </div>
-                      <h2 className="er-hero__title">
-                        {categoryLabel(meta, selectedTicket.category)} · {placeLabel(selectedPlace)}
-                      </h2>
-                      {detail !== null && quote !== '' && (
-                        <p className="er-quote">
-                          «
-                          {quoteParts.map((part, index) =>
-                            part.strong ? <strong key={index}>{part.text}</strong> : <span key={index}>{part.text}</span>,
-                          )}
-                          »
-                        </p>
-                      )}
-                      {detail === null && detailError === null && <p className="ugra-muted">Загружаем обращение…</p>}
-                      {detailError !== null && (
-                        <p className="er-note" role="alert">
-                          Не удалось загрузить обращение: {detailError}
-                        </p>
-                      )}
-                    </div>
-                    <div className="er-timer">
-                      <div className="er-timer__label">С момента обращения</div>
-                      <div className="er-timer__value">{formatTimer(elapsed)}</div>
+          {selectedTicket !== null && (
+            <aside className="er-side">
+              <Card className="er-timer-card" padded={false}>
+                <div className="er-timer__label">С момента обращения</div>
+                <Timer from={startedAt} className="er-timer__value" />
+                <div className="er-slabs" aria-hidden="true">
+                  {[0, 1, 2, 3].map((index) => (
+                    <i key={index} className={index < slabFilled ? 'on' : undefined} />
+                  ))}
+                </div>
+                <div className="er-slabs__axis">
+                  <span>0</span>
+                  <span className={`er-slabs__norm er-slabs__norm--${normState}`}>{normText}</span>
+                </div>
+              </Card>
+
+              <Card className="er-owner" padded={false}>
+                <div className="er-owner__head">
+                  {assignee === null ? (
+                    <span className="er-owner__empty" aria-hidden="true">
+                      <Icon name="executors" size={20} />
+                    </span>
+                  ) : (
+                    <PersonAvatar name={assignee.fullName} size={40} />
+                  )}
+                  <div className="er-owner__text">
+                    <div className="er-owner__name">{assignee?.fullName ?? 'Не назначен'}</div>
+                    <div className="er-owner__hint">
+                      {assignee?.position ??
+                        (candidateName === null ? 'Исполнитель не предложен' : `Предлагаем: ${candidateName}`)}
                     </div>
                   </div>
+                </div>
 
-                  <div className="er-meta">
-                    <DetailRow
-                      layout="stack"
-                      label="Почему авария"
-                      value={emergencyReason(verdict)}
-                      tone={verdict !== null && verdict.level !== 'none' ? 'danger' : 'default'}
-                    />
-                    <div className="er-meta__confidence">
-                      <ConfidenceBar compact value={verdict?.confidence ?? 0} label="Уверенность ИИ" />
-                    </div>
-                    <DetailRow
-                      layout="stack"
-                      label="Ответственный"
-                      value={assignee ? assignee.fullName : 'не назначен'}
-                      hint={assignee ? assignee.position : 'назначьте в карточке заявки'}
-                    />
-                    <DetailRow
-                      layout="stack"
-                      label="Статус"
-                      value={
-                        <Badge tone={ticketStatusTone(selectedTicket.status)}>
-                          {formatTicketStatus(selectedTicket.status)}
-                        </Badge>
+                {assignee === null && (
+                  <>
+                    <Button
+                      variant="primary"
+                      block
+                      loading={assigning}
+                      disabled={!assignState.allowed || topCandidate === null}
+                      onClick={() => void assign()}
+                      title={
+                        assignState.hint ??
+                        (candidateName === null
+                          ? 'Сервер не предложил исполнителя'
+                          : `Назначить: ${candidateName} (Enter)`)
                       }
+                    >
+                      Назначить <span className="er-kbd">Enter</span>
+                    </Button>
+                    {assignState.hint !== null && <p className="er-owner__note">{assignState.hint}</p>}
+                  </>
+                )}
+              </Card>
+
+              <Card className="er-folds" padded={false}>
+                <details
+                  className="er-fold"
+                  key={`mass-${selectedId}`}
+                  open={massOpen}
+                  onToggle={(event) => setMassOpen(event.currentTarget.open)}
+                >
+                  <summary className="er-fold__head">
+                    <span className="er-fold__text">
+                      <span className="er-fold__title">Массовый сбой?</span>
+                      <span className="er-fold__summary">
+                        {massTotal} {plural(massTotal, 'похожее', 'похожих', 'похожих')} · порог{' '}
+                        {MASS_THRESHOLD}
+                      </span>
+                    </span>
+                    <span className="er-fold__chevron" aria-hidden="true" />
+                  </summary>
+                  <div className="er-fold__body">
+                    <MassBlock
+                      mass={mass}
+                      massTotal={massTotal}
+                      massWindow={massWindow}
+                      hasPlace={
+                        incidentDetail !== null ||
+                        (selectedPlace !== null && selectedPlace.building !== null)
+                      }
+                      incidentDetail={incidentDetail}
+                      incidentError={incidentError}
+                      incidentRef={incidentRef}
+                      incidents={incidents}
+                      incidentsLoading={incidentsLoading}
+                      incidentsError={incidentsError}
+                      activeIncidentId={activeIncidentId}
+                      onSelectIncident={selectIncident}
+                      rights={rights}
+                      declaring={declaring}
+                      onDeclare={() => void declareIncident()}
                     />
                   </div>
+                </details>
 
-                  {analysisMissing && (
-                    <p className="er-note">Разбор ИИ недоступен: признаки и чек-лист появятся позже.</p>
-                  )}
-                  {verdict !== null && verdict.level === 'none' && (
-                    <p className="er-note">
-                      В разборе признаков аварии нет, но заявка помечена аварийной — проверьте текст и регламент.
-                    </p>
-                  )}
-                </Card>
-
-                <div className="er-cards">
-                  {/* Регламент чек-листом: отметки локальные, сервер их пока не хранит. */}
-                  <Card className="er-card">
-                    <div className="er-card__head">
-                      <h2 className="er-card__title">Регламент</h2>
-                      <span className="er-card__counter">
-                        {doneCount} из {checklist.length}
+                <details className="er-fold" key={`timeline-${selectedId}`}>
+                  <summary className="er-fold__head">
+                    <span className="er-fold__text">
+                      <span className="er-fold__title">Хронология</span>
+                      <span className="er-fold__summary">
+                        {eventsBlocked ? 'журнал недоступен' : eventsSummary}
                       </span>
-                    </div>
-                    <div
-                      className="er-progress"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={checklist.length}
-                      aria-valuenow={doneCount}
-                      aria-label="Пройдено пунктов регламента"
-                    >
-                      <span className="er-progress__fill" style={{ width: `${progress}%` }} />
-                    </div>
-
-                    {analysisLoading && <p className="ugra-muted">Загружаем регламент…</p>}
-                    {!analysisLoading && checklist.length === 0 && (
-                      <p className="ugra-muted">
-                        Регламент не задан: в разборе нет чек-листа. Действуйте по инструкции дежурного.
-                      </p>
-                    )}
-                    {checklist.map((step, index) => {
-                      const on = checks[index] === true;
-                      return (
-                        <button
-                          type="button"
-                          key={`${index}-${step}`}
-                          className={on ? 'er-check er-check--on' : 'er-check'}
-                          aria-pressed={on}
-                          onClick={() => toggleCheck(index)}
-                        >
-                          <span className="er-check__box" aria-hidden="true">
-                            {on && <CheckIcon />}
-                          </span>
-                          <span className="er-check__text">{step}</span>
-                        </button>
-                      );
-                    })}
-                  </Card>
-
-                  <Card className="er-card">
-                    <h2 className="er-card__title">Хронология</h2>
+                    </span>
+                    <span className="er-fold__chevron" aria-hidden="true" />
+                  </summary>
+                  <div className="er-fold__body">
                     {eventsBlocked ? (
                       <p className="er-note">
                         События заявки недоступны: маршрут вернул ошибку или нет права смотреть журнал.
                       </p>
                     ) : (
-                      <Timeline items={timeline} empty="Событий пока нет" />
+                      <Timeline items={safeTimeline} empty="Событий пока нет" />
                     )}
-                  </Card>
+                  </div>
+                </details>
 
-                  <Card className="er-card er-mass">
-                    <div className="er-card__head">
-                      <h2 className="er-card__title">Похоже на массовый сбой</h2>
-                      <Badge tone={massBadge.tone}>{massBadge.label}</Badge>
-                    </div>
-                    <div className="er-mass__subject">
-                      {subjectCategory} · {subjectPlace}
-                    </div>
-
-                    {showMassBlock ? (
-                      <>
-                        <div className="er-mass__count">
-                          <span className="er-mass__num">{massTotal}</span>
-                          <span className="er-mass__caption">
-                            {incidentDetail !== null
-                              ? `заявок в инциденте, окно ${massWindow} мин`
-                              : `похожих обращений за ${MASS_WINDOW_MINUTES} мин, включая эту заявку`}
-                          </span>
-                        </div>
-
-                        <div
-                          className="er-bars"
-                          role="img"
-                          aria-label={`Похожие обращения по минутам: ${massTotal} за ${massWindow} минут, порог ${MASS_THRESHOLD}`}
-                        >
-                          <span
-                            className="er-bars__threshold"
-                            style={{ bottom: `${Math.min(94, Math.round((mass.threshold / mass.max) * 100))}%` }}
-                            aria-hidden="true"
-                          >
-                            <span>порог</span>
-                          </span>
-                          {mass.points.map((point) => {
-                            const tone = point.count === 0 ? 'empty' : mass.thresholdMet ? 'hot' : 'on';
-                            const height = Math.max(2, Math.round((point.count / mass.max) * 100));
-                            return (
-                              <span
-                                key={point.key}
-                                className={`er-bar er-bar--${tone}`}
-                                style={{ height: `${height}%` }}
-                                title={`${point.label} — ${point.count}`}
-                              />
-                            );
-                          })}
-                        </div>
-                        <div className="er-bars__axis" aria-hidden="true">
-                          <span>{mass.points[0]?.label ?? '—'}</span>
-                          <span>сейчас</span>
-                        </div>
-                        <p className="er-note">
-                          Порог — {MASS_THRESHOLD} похожих за {MASS_WINDOW_MINUTES} минут в одном корпусе (настройка
-                          массовости).
-                        </p>
-                      </>
+                <details className="er-fold" key={`previous-${selectedId}`}>
+                  <summary className="er-fold__head">
+                    <span className="er-fold__text">
+                      <span className="er-fold__title">
+                        Ранее{previous.total > 0 ? ` · ${previous.total}` : ''}
+                      </span>
+                      <span className="er-fold__summary">{previousSummary}</span>
+                    </span>
+                    <span className="er-fold__chevron" aria-hidden="true" />
+                  </summary>
+                  <div className="er-fold__body">
+                    {previous.total === 0 ? (
+                      <p className="er-note">Ранее аварий в этом корпусе не было.</p>
                     ) : (
-                      <p className="er-note">
-                        Недостаточно данных: у заявки не указан корпус или категория — сравнивать не с чем.
-                      </p>
-                    )}
-
-                    {incidentError !== null && (
-                      <p className="er-note" role="alert">
-                        Не удалось открыть инцидент: {incidentError}
-                      </p>
-                    )}
-
-                    {incidentDetail !== null && (
-                      <div className="er-incident" ref={incidentRef}>
-                        <div className="er-incident__head">
-                          <span className="er-incident__title">Инцидент № {incidentDetail.incident.number}</span>
-                          <Badge
-                            tone={incidentDetail.incident.status === 'open' ? 'danger' : 'neutral'}
-                            dot={incidentDetail.incident.status === 'open'}
-                          >
-                            {incidentDetail.incident.statusLabel}
-                          </Badge>
-                        </div>
-                        <p className="er-incident__text">
-                          {Math.max(incidentDetail.incident.size, incidentDetail.tickets.length)} заявок ·{' '}
-                          {incidentDetail.incident.place} · открыт в {incidentDetail.incident.openedAt}
-                        </p>
-                        {incidentDetail.tickets.length > 0 && (
-                          <p className="er-incident__tickets">
-                            {incidentDetail.tickets.map((ticket) => `№ ${ticket.number}`).join(', ')}
-                          </p>
+                      <>
+                        {previous.lastAt !== null && (
+                          <p className="er-note">Последняя — {formatDateTime(previous.lastAt)}.</p>
                         )}
-                        <p className="er-note">
-                          Одно сообщение всем заявителям уходит после подтверждения диспетчера.
-                        </p>
-                      </div>
+                        <div className="er-prev">
+                          {previous.items.map((ticket) => (
+                            <button
+                              type="button"
+                              key={ticket.id}
+                              className="er-prev__row"
+                              onClick={() => {
+                                setSelectedId(ticket.id);
+                                trackAction?.('select');
+                              }}
+                            >
+                              <span className="er-prev__num">№ {ticket.number}</span>
+                              <span className="er-prev__date">{formatDateTime(ticket.createdAt)}</span>
+                              <span className={`er-status er-status--${ticketStatusTone(ticket.status)}`}>
+                                <span className="er-status__dot" aria-hidden="true" />
+                                {formatTicketStatus(ticket.status)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
                     )}
-
-                    <IncidentList
-                      incidents={incidents}
-                      activeId={activeIncidentId}
-                      loading={incidentsLoading}
-                      error={incidentsError}
-                      onSelect={selectIncident}
-                    />
-
-                    <Button
-                      variant="primary"
-                      block
-                      loading={declaring}
-                      disabled={!rights.allowed || declaring}
-                      onClick={() => void declareIncident()}
-                      title={rights.hint ?? 'Создать демо-всплеск: 6 похожих обращений и инцидент'}
-                    >
-                      Объявить массовым инцидентом
-                    </Button>
-                    {!rights.allowed && <p className="er-note">{rights.hint}</p>}
-                  </Card>
-                </div>
-              </>
-            )}
-          </div>
+                  </div>
+                </details>
+              </Card>
+            </aside>
+          )}
         </div>
       )}
 

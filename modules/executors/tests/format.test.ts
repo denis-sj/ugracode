@@ -86,17 +86,19 @@ describe('loadState', () => {
   it('свободный исполнитель — зелёная шкала', () => {
     expect(loadState(0)).toMatchObject({
       count: 0,
+      filled: 0,
       percent: 0,
       tone: 'ok',
       overloaded: false,
       text: '0 из 5 задач',
       hint: 'свободен',
     });
-    expect(loadState(2)).toMatchObject({ percent: 40, tone: 'ok', hint: 'есть запас' });
+    expect(loadState(2)).toMatchObject({ filled: 2, percent: 40, tone: 'ok', hint: 'есть запас' });
   });
 
   it('почти предел — жёлтый, без перегруза', () => {
     expect(loadState(4)).toMatchObject({
+      filled: 4,
       percent: 80,
       tone: 'warn',
       overloaded: false,
@@ -107,20 +109,21 @@ describe('loadState', () => {
   it('порог 5 — перегруз', () => {
     expect(loadState(5)).toMatchObject({
       count: 5,
+      filled: 5,
       percent: 100,
       tone: 'danger',
       overloaded: true,
       text: '5 из 5 задач',
       hint: 'перегруз',
     });
-    expect(loadState(7)).toMatchObject({ count: 7, percent: 100, overloaded: true });
+    expect(loadState(7)).toMatchObject({ count: 7, filled: 5, percent: 100, overloaded: true });
   });
 
   it('свой порог и мусор на входе', () => {
-    expect(loadState(3, 3)).toMatchObject({ percent: 100, overloaded: true });
-    expect(loadState(1, 0)).toMatchObject({ threshold: 1, percent: 100 });
-    expect(loadState(Number.NaN)).toMatchObject({ count: 0, overloaded: false });
-    expect(loadState(-4)).toMatchObject({ count: 0 });
+    expect(loadState(3, 3)).toMatchObject({ filled: 3, percent: 100, overloaded: true });
+    expect(loadState(1, 0)).toMatchObject({ threshold: 1, filled: 1, percent: 100 });
+    expect(loadState(Number.NaN)).toMatchObject({ count: 0, filled: 0, overloaded: false });
+    expect(loadState(-4)).toMatchObject({ count: 0, filled: 0 });
   });
 });
 
@@ -156,14 +159,19 @@ const ENGINEERS: EngineerInfo[] = [
 
 const departmentOf = (departmentId: string | null): string => departmentLabel(DICTIONARIES, departmentId);
 
+/** Фильтры «показать всех»: по умолчанию экран показывает только тех, кто на смене. */
+const ALL_FILTERS = { ...DEFAULT_ENGINEER_FILTERS, onlyOnShift: false };
+
 describe('filterEngineers', () => {
-  it('без фильтров отдаёт всех', () => {
-    expect(filterEngineers(ENGINEERS, DEFAULT_ENGINEER_FILTERS)).toHaveLength(3);
+  it('по умолчанию — только на смене, без фильтров — все', () => {
+    expect(DEFAULT_ENGINEER_FILTERS.onlyOnShift).toBe(true);
+    expect(filterEngineers(ENGINEERS, DEFAULT_ENGINEER_FILTERS).map((item) => item.id)).toEqual(['u-2']);
+    expect(filterEngineers(ENGINEERS, ALL_FILTERS)).toHaveLength(3);
   });
 
   it('фильтр по подразделению', () => {
     const result = filterEngineers(ENGINEERS, {
-      ...DEFAULT_ENGINEER_FILTERS,
+      ...ALL_FILTERS,
       department: 'dep-it',
     });
     expect(result.map((item) => item.id)).toEqual(['u-2']);
@@ -171,7 +179,7 @@ describe('filterEngineers', () => {
 
   it('только на смене', () => {
     const result = filterEngineers(ENGINEERS, {
-      ...DEFAULT_ENGINEER_FILTERS,
+      ...ALL_FILTERS,
       onlyOnShift: true,
     });
     expect(result.map((item) => item.id)).toEqual(['u-2']);
@@ -179,11 +187,9 @@ describe('filterEngineers', () => {
 
   it('поиск по имени, навыку, подразделению и корпусу', () => {
     const find = (query: string): string[] =>
-      filterEngineers(
-        ENGINEERS,
-        { ...DEFAULT_ENGINEER_FILTERS, query },
-        { departmentLabel: departmentOf },
-      ).map((item) => item.id);
+      filterEngineers(ENGINEERS, { ...ALL_FILTERS, query }, { departmentLabel: departmentOf }).map(
+        (item) => item.id,
+      );
     expect(find('игорь')).toEqual(['u-1']);
     expect(find('принтер')).toEqual(['u-1']);
     expect(find('связь')).toEqual(['u-3']);
@@ -191,8 +197,8 @@ describe('filterEngineers', () => {
   });
 
   it('пустая выдача, когда никто не подошёл', () => {
-    expect(filterEngineers(ENGINEERS, { ...DEFAULT_ENGINEER_FILTERS, query: 'нет такого' })).toEqual([]);
-    expect(filterEngineers([], { ...DEFAULT_ENGINEER_FILTERS, department: ALL_DEPARTMENTS })).toEqual([]);
+    expect(filterEngineers(ENGINEERS, { ...ALL_FILTERS, query: 'нет такого' })).toEqual([]);
+    expect(filterEngineers([], { ...ALL_FILTERS, department: ALL_DEPARTMENTS })).toEqual([]);
   });
 });
 
