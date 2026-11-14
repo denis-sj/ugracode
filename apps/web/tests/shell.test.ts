@@ -21,10 +21,11 @@ describe('tabsForRole', () => {
     expect(tabsForRole('applicant').map((tab) => tab.path)).toEqual(['/chat', '/tickets']);
   });
 
-  it('у диспетчера очередь, аварии, журнал и исполнители', () => {
+  it('у диспетчера очередь, аварии, звонок, журнал и исполнители', () => {
     const tabs = tabsForRole('dispatcher');
-    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Журнал', 'Исполнители', 'С ИИ / без ИИ']);
+    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Звонок', 'Журнал', 'Исполнители', 'С ИИ / без ИИ']);
     expect(tabs.find((tab) => tab.path === '/incidents')?.danger).toBe(true);
+    expect(tabs.find((tab) => tab.path === '/calls')?.icon).toBe('phone');
   });
 
   it('у инженера задачи и база знаний, у руководителя — отчёты', () => {
