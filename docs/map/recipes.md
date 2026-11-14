@@ -17,3 +17,14 @@
 ## Остальные рецепты
 
 ❓ Добавить после появления кода: эндпоинт API, экран фронтенда, миграцию БД, шаг ИИ-пайплайна, тестовое обращение в наборе.
+
+## Как добавить шаг агента (инструменты и агент)
+
+1. Инструмент (если нужны новые данные): `ToolDef` в `server/tools.ts` модуля — `name`, русское `description` («когда вызывать»), `input`-схема zod, `capability`, `execute(args, ctx)`, `summarize`.
+2. Агент: `AgentProfile` в модуле — `promptId` на файл `prompts/<имя>.vN.md`, `tools: [...]`, `submit`-схема, `check(result, ctx)`.
+3. Шаг: `PipelineStep` в `server/index.ts`, `run` вызывает `runAgent(profile, input, { llm: ctx.ports.llm, tools: registries.tools, store: ctx.db, ... })`.
+4. Зарегистрируй модуль в `modules/registry.server.ts` — инструменты и агенты попадут в реестры сами.
+5. Тест: сценарная заглушка `StubLlm` (`ScenarioTurn`: вызов инструмента → `submit`), проверка блокировки по праву и ошибок `check`.
+6. Образцы: `modules/_example` (минимальный), `modules/extraction` (агент с CMDB и проверками), `modules/knowledge` (инструменты поиска).
+
+Проверка: `npx vitest run modules/<id>`, тест-контракт `assertModuleContract` должен проходить.

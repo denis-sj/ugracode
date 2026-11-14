@@ -17,7 +17,7 @@ apps (api, web) → modules → adapters, db → core → contracts
 | Путь | Что там | Можно импортировать |
 |---|---|---|
 | `packages/contracts/` | zod-схемы: домен, поля, события, ответ ИИ, API. Единственный источник типов | только `zod` |
-| `packages/core/` | движок пайплайна, шина событий, реестры, порты, `defineModule`, флаги фич, сервис заявок | `contracts` |
+| `packages/core/` | движок пайплайна, шина событий, реестры, порты, `defineModule`, флаги фич, сервис заявок, агентный цикл и инструменты | `contracts` |
 | `packages/core/src/web.ts` | браузерная точка входа: `defineWebModule` и типы экранов (без `node:crypto`) | `contracts` |
 | `packages/adapters/` | реализации портов: заглушки, Polza, кэш, CMDB, уведомления, часы | `contracts`, `core` |
 | `packages/db/` | таблицы Drizzle, миграция, `PgStore` (реализация `KernelStore`), сид | `contracts`, `core` |
@@ -49,6 +49,8 @@ apps (api, web) → modules → adapters, db → core → contracts
 | Сид | `packages/db/src/seed/index.ts` (`pnpm seed`) |
 | Проверка Polza | `scripts/check-polza.ts` (`pnpm check:polza`) |
 | Речь → текст | `POST /api/transcribe` → `SpeechPort` (`packages/adapters/src/speech/`) |
+| Агенты и инструменты | `packages/core/src/agent.ts` (`runAgent`, `assembleSystemPrompt`), `packages/core/src/tools.ts` (`coreTools`), `agent_step` в базе |
+| Модули разбора | `modules/extraction` (агент `intake` + `extraction.ground`), `modules/priority` (матрица), `modules/routing` (топ-3), `modules/knowledge` (статьи и похожие) |
 | База знаний | `modules/knowledge` → `GET /api/m/knowledge/search`, инструменты агента `kb_search`/`kb_get_article`/`tickets_find_similar` |
 
 ## Команды
@@ -77,7 +79,7 @@ python3 -m unittest discover -s tests   # проверка ссылок доку
 | `DATABASE_URL` | подключение к PostgreSQL |
 | `PORT` | порт API (по умолчанию 3001) |
 | `SESSION_SECRET` | подпись cookie сессии |
-| `AI_MODE` | `stub` / `cloud` (кэша ответов модели нет) |
+| `AI_MODE` | `stub` / `cloud`; не задан — `cloud` при наличии ключа, иначе `stub` (кэша нет) |
 | `FEATURES_OFF`, `FEATURES_ON` | выключение и включение модулей через запятую |
 | `POLZA_API_KEY`, `POLZA_BASE_URL` | провайдер моделей |
 | `LLM_MODEL_MAIN`, `LLM_MODEL_CHEAP` | модели разбора и дешёвых задач |
