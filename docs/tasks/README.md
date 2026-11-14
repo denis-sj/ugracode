@@ -4,7 +4,7 @@
 Дата: 2026-11-14
 Связано: [../history/2026-11.md](../history/2026-11.md), [../plans/README.md](../plans/README.md)
 
-**Следующий свободный номер: 032.** Номера идут подряд и не переиспользуются.
+**Следующий свободный номер: 034.** Номера идут подряд и не переиспользуются.
 
 ## Как взять задачу
 
@@ -68,20 +68,21 @@ PR: —
 **После брейншторма** (что и почему — [../specs/case9-features.md](../specs/case9-features.md); в задачах 006–023 в конце добавлен раздел «Изменения после брейншторма»):
 
  — **MUST, идёт первой и одна:** правка ядра и контрактов
-- [025-applicant-profile-guest.md](025-applicant-profile-guest.md) — MUST: профиль заявителя и гость
 - [026-screenshot.md](026-screenshot.md) — SHOULD: скриншот и фото шильдика
 - [027-reports-sla-workload.md](027-reports-sla-workload.md) — SHOULD: отчёты О3 и О4
 - [028-reports-kb-gaps-emergency.md](028-reports-kb-gaps-emergency.md) — COULD: отчёты О6 и О7
 - [029-knowledge-extras.md](029-knowledge-extras.md) — COULD: чек-лист шагов, вопрос базе знаний
 - [030-tuning-history.md](030-tuning-history.md) — COULD: история настройки
 
+**Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
+
+- [032-ui-design-foundation.md](032-ui-design-foundation.md) — светлая тема, стекло, компоненты, шапка по ролям, вход
+- [033-ui-screens-redesign.md](033-ui-screens-redesign.md) — перерисовать 14 экранов по макетам (ждёт 032)
+
 **Код, после чекпоинта 1:**
 
 - [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
 - [010-dispatcher-review.md](010-dispatcher-review.md) — поток Б: проверка диспетчером: очередь, правка, подтверждение, журнал
-- [011-emergency.md](011-emergency.md) — поток А: авария: правила + модель, уведомление дежурному, красный режим
-- [014-quality.md](014-quality.md) — поток В: оценщик и экран «Качество»
-- [015-history-dashboard.md](015-history-dashboard.md) — поток Г: история заявок за 6 месяцев и дашборд О0
 - [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
 - [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
 - [018-engineer-desk.md](018-engineer-desk.md) — поток Б: рабочее место инженера и замыкание цикла
