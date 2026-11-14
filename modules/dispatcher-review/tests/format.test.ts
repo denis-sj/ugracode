@@ -1,20 +1,41 @@
 import { describe, expect, it } from 'vitest';
 import type { Ticket, TicketField } from '@ugra/contracts';
 import {
+  analysisEmergency,
+  candidatePercent,
+  DEFAULT_FILTERS,
   deadline,
   diffValues,
+  fieldDisplayValue,
+  filledFieldCount,
   filterJournal,
+  filterTickets,
   formatDuration,
+  formatLocation,
   JOURNAL_ALL,
   journalRows,
   journalTypes,
   lastReturn,
+  locationFromTicket,
   overdueCount,
   priorityRank,
+  promoteNew,
+  queueAction,
+  queueEventAction,
+  queueFiltersFromQuery,
+  queueSummary,
+  replyTemplate,
   reviewFieldKeys,
+  reviewHref,
+  reviewTicketId,
   sortTickets,
   ticketDeadlines,
   ticketDueTime,
+  ticketSignals,
+  ticketTitleFromFields,
+  traceSteps,
+  visibleReviewGroups,
+  waitingLabel,
 } from '../web/format';
 
 const NOW = Date.parse('2026-11-14T10:00:00.000Z');
@@ -341,5 +362,320 @@ describe('reviewFieldKeys', () => {
   it('нет спорных полей — пустой список', () => {
     expect(reviewFieldKeys([])).toEqual([]);
     expect(reviewFieldKeys([{ fields: [{ key: 'a', field: ticketField('a') }] }])).toEqual([]);
+  });
+});
+
+describe('ticketSignals и быстрые фильтры', () => {
+  it('уверенность — по самому слабому заполненному полю, спорные считаются', () => {
+    const signals = ticketSignals([
+      ticketField('a', { confidence: 0.94 }),
+      ticketField('b', { confidence: 0.52, needsReview: true }),
+      ticketField('c', { value: null, confidence: 0.1 }),
+    ]);
+    expect(signals).toEqual({ review: 1, confidence: 0.52 });
+  });
+
+  it('пустые поля не дают ложного нуля', () => {
+    expect(ticketSignals([])).toEqual({ review: 0, confidence: null });
+    expect(ticketSignals([ticketField('a', { value: null, confidence: 0 })])).toEqual({
+      review: 0,
+      confidence: null,
+    });
+  });
+
+  it('сомнительные — спорные поля или уверенность ниже 75 %', () => {
+    const queue = [
+      ticket({ id: 'ok', status: 'in_review' }),
+      ticket({ id: 'low', status: 'in_review' }),
+      ticket({ id: 'review', status: 'in_review' }),
+      ticket({ id: 'emergency', isEmergency: true }),
+      ticket({ id: 'waiting', status: 'waiting_applicant' }),
+    ];
+    const context = {
+      signals: {
+        ok: { review: 0, confidence: 0.9 },
+        low: { review: 0, confidence: 0.4 },
+        review: { review: 2, confidence: 0.95 },
+      },
+    };
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, bucket: 'suspicious' }, context).map((item) => item.id)).toEqual([
+      'low',
+      'review',
+    ]);
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, bucket: 'ready' }, context).map((item) => item.id)).toEqual(['ok']);
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, bucket: 'ready' }).map((item) => item.id)).toEqual([]);
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, bucket: 'emergency' }, context).map((item) => item.id)).toEqual([
+      'emergency',
+    ]);
+  });
+
+  it('без явного статуса очередь не показывает закрытые и решённые', () => {
+    const queue = [
+      ticket({ id: 'open', status: 'in_review' }),
+      ticket({ id: 'closed', status: 'closed' }),
+      ticket({ id: 'cancelled', status: 'cancelled' }),
+      ticket({ id: 'resolved', status: 'resolved' }),
+    ];
+    expect(filterTickets(queue, DEFAULT_FILTERS).map((item) => item.id)).toEqual(['open']);
+    expect(
+      filterTickets(queue, { ...DEFAULT_FILTERS, status: 'closed' }).map((item) => item.id),
+    ).toEqual(['closed']);
+  });
+
+  it('статус, исполнитель и поиск по месту сочетаются', () => {
+    const queue = [
+      ticket({ id: 'a', status: 'in_review', assigneeId: 'u-1' }),
+      ticket({ id: 'b', status: 'in_review', assigneeId: 'u-2' }),
+      ticket({ id: 'c', status: 'assigned', assigneeId: 'u-1' }),
+    ];
+    const context = { locations: { a: 'Корпус Б · кабинет 312' } };
+    expect(
+      filterTickets(queue, { ...DEFAULT_FILTERS, status: 'in_review', assignee: 'u-1' }, context).map((item) => item.id),
+    ).toEqual(['a']);
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, query: '312' }, context).map((item) => item.id)).toEqual(['a']);
+    expect(filterTickets(queue, { ...DEFAULT_FILTERS, assignee: 'u-2' }, context).map((item) => item.id)).toEqual(['b']);
+  });
+});
+
+describe('query из hash', () => {
+  it('очередь читает статус, аварии и исполнителя', () => {
+    const filters = queueFiltersFromQuery(new URLSearchParams('status=in_review&emergency=true&assignee=u-1'));
+    expect(filters.status).toBe('in_review');
+    expect(filters.onlyEmergency).toBe(true);
+    expect(filters.assignee).toBe('u-1');
+  });
+
+  it('неизвестный статус и пустой query дают фильтры по умолчанию', () => {
+    expect(queueFiltersFromQuery(new URLSearchParams('status=что-то'))).toEqual(DEFAULT_FILTERS);
+    expect(queueFiltersFromQuery(new URLSearchParams(''))).toEqual(DEFAULT_FILTERS);
+    expect(queueFiltersFromQuery(new URLSearchParams('emergency=0')).onlyEmergency).toBe(false);
+  });
+
+  it('review берёт id и собирает ссылку обратно', () => {
+    expect(reviewTicketId(new URLSearchParams('id=t-42'))).toBe('t-42');
+    expect(reviewTicketId(new URLSearchParams('id='))).toBeNull();
+    expect(reviewTicketId(new URLSearchParams(''))).toBeNull();
+    expect(reviewHref('t 42')).toBe('/review?id=t%2042');
+  });
+});
+
+describe('события очереди', () => {
+  const known = new Set(['t-1']);
+
+  it('известная заявка — обновление, неизвестная — новая', () => {
+    expect(queueEventAction({ ticketId: 't-1', type: 'ticket.status.changed' }, known)).toBe('updated');
+    expect(queueEventAction({ ticketId: 't-2', type: 'ticket.status.changed' }, known)).toBe('new');
+  });
+
+  it('событие без заявки и мусор игнорируются', () => {
+    expect(queueEventAction({ type: 'appeal.created', payload: { appealId: 'a-1' } }, known)).toBe('ignored');
+    expect(queueEventAction({ ticketId: '' }, known)).toBe('ignored');
+    expect(queueEventAction(null, known)).toBe('ignored');
+    expect(queueEventAction('строка', known)).toBe('ignored');
+  });
+
+  it('неизвестный тип события с заявкой всё равно обновляет строку', () => {
+    expect(queueEventAction({ ticketId: 't-1', type: 'module.custom.event' }, known)).toBe('updated');
+  });
+});
+
+describe('сводка и «что сделать»', () => {
+  it('новые строки поднимаются наверх, остальные не меняются', () => {
+    const queue = [ticket({ id: 'a' }), ticket({ id: 'b' }), ticket({ id: 'c' })];
+    expect(promoteNew(queue, new Set(['c'])).map((item) => item.id)).toEqual(['c', 'a', 'b']);
+    expect(promoteNew(queue, new Set()).map((item) => item.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('сводка считает проверку, ожидание, аварии и смену', () => {
+    const summary = queueSummary(
+      [
+        ticket({ id: 'a', status: 'in_review' }),
+        ticket({ id: 'b', status: 'waiting_applicant' }),
+        ticket({ id: 'c', isEmergency: true }),
+        ticket({ id: 'd', createdAt: new Date(NOW - 86_400_000).toISOString() }),
+      ],
+      NOW,
+    );
+    expect(summary).toEqual({ review: 3, waiting: 1, emergency: 1, perShift: 3 });
+  });
+
+  it('«ждёт» считается от создания', () => {
+    expect(waitingLabel(new Date(NOW - 5 * 60_000).toISOString(), NOW)).toBe('5 мин');
+    expect(waitingLabel('не дата', NOW)).toBe('—');
+  });
+
+  it('«что сделать» отвечает на состояние заявки', () => {
+    expect(queueAction(ticket({ isEmergency: true }), undefined)).toEqual({
+      text: 'Авария · дежурный уведомлён',
+      tone: 'danger',
+    });
+    expect(queueAction(ticket({ status: 'waiting_applicant' }), undefined).text).toBe('Ждёт ответа заявителя');
+    expect(
+      queueAction(ticket({ status: 'in_review' }), { review: 2, confidence: 0.5 }),
+    ).toEqual({ text: 'Проверить 2 поля', tone: 'warn' });
+    expect(
+      queueAction(ticket({ status: 'in_review' }), { review: 0, confidence: 0.5 }),
+    ).toEqual({ text: 'Проверить сомнительные поля', tone: 'warn' });
+    expect(queueAction(ticket({ status: 'in_review' }), { review: 0, confidence: 0.9 })).toEqual({
+      text: 'Готова к подтверждению',
+      tone: 'ok',
+    });
+    expect(queueAction(ticket({ status: 'assigned' }), undefined).text).toBe('Назначена · ждёт инженера');
+    expect(queueAction(ticket({ status: 'in_progress' }), undefined).text).toBe('В работе');
+    expect(queueAction(ticket({ status: 'resolved' }), undefined).text).toBe('Ждёт подтверждения заявителя');
+    expect(queueAction(ticket({ status: 'closed' }), undefined).tone).toBe('muted');
+  });
+
+  it('заголовок и место собираются из полей', () => {
+    const fields = [
+      ticketField('symptoms', { value: 'не печатает принтер' }),
+      ticketField('building', { value: 'Б' }),
+      ticketField('cabinet', { value: '312' }),
+    ];
+    expect(ticketTitleFromFields(fields)).toBe('Не печатает принтер');
+    expect(formatLocation({ building: 'Б', cabinet: '312' }, () => 'Корпус Б')).toBe('Корпус Б · кабинет 312');
+    expect(formatLocation(undefined)).toBe('место уточняется');
+  });
+});
+
+describe('след разбора и ответ', () => {
+  const analysis = {
+    fields: {
+      cabinet: {
+        trace: [
+          { kind: 'found', at: '2026-11-14T10:00:00.000Z', quote: 'в 312 кабинете' },
+          { kind: 'matched_cmdb', at: '2026-11-14T10:01:00.000Z' },
+        ],
+      },
+      urgency: {
+        trace: [
+          { kind: 'asked', at: '2026-11-14T10:02:00.000Z', note: 'Насколько срочно?' },
+          { kind: 'answered', at: '2026-11-14T10:03:00.000Z', quote: 'Работа стоит' },
+        ],
+      },
+      department: {
+        trace: [
+          { kind: 'no_answer', at: '2026-11-14T10:04:00.000Z', note: 'Подразделение' },
+          { kind: 'corrected', at: '2026-11-14T10:05:00.000Z', note: 'Отдел кадров' },
+          { kind: 'unknown_kind', at: '2026-11-14T10:06:00.000Z' },
+        ],
+      },
+    },
+  };
+
+  it('строит шаги в порядке «Нашёл → Сверил → Спросил → Вам»', () => {
+    const steps = traceSteps(analysis, []);
+    expect(steps.map((step) => step.stage)).toEqual(['found', 'checked', 'asked', 'asked', 'you', 'you']);
+    expect(steps[0]?.text).toBe('Нашёл: «в 312 кабинете»');
+    expect(steps[1]?.text).toBe('Сверил с базой оборудования');
+    expect(steps[4]?.text).toBe('Ответа нет — вопрос диспетчеру');
+  });
+
+  it('без analysis собирает след из полей и не дублирует', () => {
+    const steps = traceSteps(null, [
+      ticketField('cabinet', { quote: { sourceId: 's', text: '312 кабинет' }, needsReview: true }),
+      ticketField('equipment', { origin: 'cmdb' }),
+      ticketField('urgency', { origin: 'asked' }),
+    ]);
+    expect(steps.map((step) => step.stage)).toEqual(['found', 'checked', 'asked', 'you']);
+    expect(steps[0]?.text).toBe('Нашёл: «312 кабинет»');
+  });
+
+  it('авария из анализа читается терпимо', () => {
+    expect(
+      analysisEmergency({ emergency: { level: 'confirmed', confidence: 1.4, signs: [{ quote: 'идёт дым' }] } }),
+    ).toEqual({ level: 'confirmed', confidence: 1, signs: ['идёт дым'] });
+    expect(analysisEmergency({ emergency: { level: 'none' } })).toBeNull();
+    expect(analysisEmergency(null)).toBeNull();
+  });
+
+  it('черновик ответа — шаблон из полей заявки', () => {
+    expect(replyTemplate({ number: 'З-1' }, 'Петров С. В.', 'сегодня до 14:30')).toBe(
+      'Заявка № З-1 принята. Петров С. В. придёт сегодня до 14:30. Если проблема повторится, ответьте в этом чате.',
+    );
+    expect(replyTemplate({ number: 'З-2' }, null, null)).toContain('Инженер свяжется с вами');
+  });
+
+  it('подписи справочников и варианты для правки', () => {
+    const meta = {
+      fields: [
+        {
+          key: 'department',
+          label: 'Подразделение',
+          group: 'classification' as const,
+          type: 'dictionary' as const,
+          dictionary: 'department',
+          required: true,
+          extractHint: '',
+          evalMode: 'none' as const,
+        },
+      ],
+      dictionaries: [{ dictionary: 'department', code: 'hr', label: 'Отдел кадров' }],
+    };
+    expect(fieldDisplayValue(meta, 'department', 'hr')).toBe('Отдел кадров');
+    expect(fieldDisplayValue(meta, 'department', 'unknown')).toBe('unknown');
+    expect(fieldDisplayValue(meta, 'department', null)).toBeNull();
+  });
+});
+
+describe('видимые поля и многословие следа', () => {
+  it('пустые поля без пометки не показываются, спорные остаются', () => {
+    const groups = [
+      {
+        group: 'location' as const,
+        label: 'Место',
+        fields: [
+          { key: 'cabinet', label: 'Кабинет', group: 'location' as const, field: ticketField('cabinet'), value: '312', order: 0 },
+          {
+            key: 'floor',
+            label: 'Этаж',
+            group: 'location' as const,
+            field: ticketField('floor', { value: null }),
+            value: null,
+            order: 1,
+          },
+          {
+            key: 'building',
+            label: 'Корпус',
+            group: 'location' as const,
+            field: ticketField('building', { value: null, needsReview: true }),
+            value: null,
+            order: 2,
+          },
+        ],
+      },
+    ];
+    const visible = visibleReviewGroups(groups);
+    expect(visible[0]?.fields.map((entry) => entry.key)).toEqual(['cabinet', 'building']);
+    expect(filledFieldCount(groups)).toBe(2);
+  });
+
+  it('след не раздувается: не больше двух строк на этап', () => {
+    const many = {
+      fields: {
+        a: { trace: [{ kind: 'found', quote: 'раз' }, { kind: 'found', quote: 'два' }, { kind: 'found', quote: 'три' }] },
+      },
+    };
+    expect(traceSteps(many, []).filter((step) => step.stage === 'found')).toHaveLength(2);
+  });
+
+  it('место берётся из locationId, если полей нет', () => {
+    expect(locationFromTicket({ locationId: 'cab-b-312' }, [])).toEqual({ building: 'Б', cabinet: '312' });
+    expect(locationFromTicket({ locationId: null }, [])).toEqual({ building: null, cabinet: null });
+  });
+});
+
+describe('кандидаты', () => {
+  it('процент считается от лучшего балла и не даёт ложных 100 %', () => {
+    expect(candidatePercent(189, 189)).toBe(99);
+    expect(candidatePercent(98, 189)).toBe(52);
+    expect(candidatePercent(69, 189)).toBe(37);
+    expect(candidatePercent(0, 100)).toBe(1);
+  });
+
+  it('мусор и нулевой лучший балл — ноль', () => {
+    expect(candidatePercent(Number.NaN, 100)).toBe(0);
+    expect(candidatePercent(10, 0)).toBe(0);
+    expect(candidatePercent(10, Number.NaN)).toBe(0);
   });
 });

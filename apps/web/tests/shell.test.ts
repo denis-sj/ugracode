@@ -109,4 +109,17 @@ describe('router', () => {
     expect(toHash('tickets')).toBe('#/tickets');
     expect(toHash('/chat/')).toBe('#/chat');
   });
+
+  it('сохраняет query очереди и проверки в hash', () => {
+    expect(toHash('/queue?status=in_review')).toBe('#/queue?status=in_review');
+    const queue = parseHash('#/queue?status=in_review&emergency=true&assignee=u-1');
+    expect(queue.path).toBe('/queue');
+    expect(queue.query.get('status')).toBe('in_review');
+    expect(queue.query.get('emergency')).toBe('true');
+    expect(queue.query.get('assignee')).toBe('u-1');
+
+    const review = parseHash('#/review?id=t-42');
+    expect(review.path).toBe('/review');
+    expect(review.query.get('id')).toBe('t-42');
+  });
 });

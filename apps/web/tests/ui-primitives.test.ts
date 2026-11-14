@@ -3,11 +3,17 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
   ActionCounterPill,
+  Checklist,
+  Chip,
   DetailRow,
   EmptyState,
   InsightBlock,
   Modal,
+  PriorityMark,
   ProgressScale,
+  Segmented,
+  StepBlock,
+  Sticker,
   Timer,
   Toast,
 } from '@ugra/ui';
@@ -110,5 +116,119 @@ describe('InsightBlock', () => {
     expect(
       renderToStaticMarkup(createElement(InsightBlock, { kind: 'action', children: 'Заменить принтер' })),
     ).toContain('Что сделать');
+  });
+});
+
+describe('PriorityMark', () => {
+  it('слово только в aria-label, круг закрашен на долю', () => {
+    const html = renderToStaticMarkup(createElement(PriorityMark, { priority: 'high' }));
+    expect(html).toContain('aria-label="Приоритет: Высокий"');
+    expect(html).toContain('conic-gradient(currentColor 0 75%');
+    expect(html).not.toContain('>Высокий<');
+  });
+
+  it('авария перекрывает уровень и краснеет', () => {
+    const html = renderToStaticMarkup(createElement(PriorityMark, { priority: 'low', isEmergency: true }));
+    expect(html).toContain('aria-label="Приоритет: Авария"');
+    expect(html).toContain('ugra-pmark--emergency');
+  });
+
+  it('без приоритета — пустой круг', () => {
+    expect(renderToStaticMarkup(createElement(PriorityMark, { priority: null }))).toContain(
+      'aria-label="Приоритет: Без приоритета"',
+    );
+  });
+});
+
+describe('Segmented', () => {
+  it('помечает активный сегмент и счётчики', () => {
+    const html = renderToStaticMarkup(
+      createElement(Segmented, {
+        value: 'ready',
+        options: [
+          { value: 'all', label: 'Все', count: 5 },
+          { value: 'ready', label: 'Готовые', count: 2 },
+        ],
+        onChange: () => undefined,
+      }),
+    );
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('Готовые');
+    expect(html).toContain('ugra-segmented__count');
+  });
+});
+
+describe('Chip', () => {
+  it('кликабельный чип — кнопка с нажатием', () => {
+    const html = renderToStaticMarkup(createElement(Chip, { active: true, children: 'Категория' }));
+    expect(html).toContain('ugra-chip--active');
+    expect(html).toContain('Категория');
+  });
+});
+
+describe('Sticker', () => {
+  it('обёртка с подписью и тревожным тоном', () => {
+    const html = renderToStaticMarkup(
+      createElement(Sticker, { label: 'Превью', tone: 'danger', children: 'Заявка' }),
+    );
+    expect(html).toContain('aria-label="Превью"');
+    expect(html).toContain('ugra-sticker--danger');
+  });
+});
+
+describe('StepBlock', () => {
+  it('свёрнутый шаг показывает итог и не рисует тело', () => {
+    const html = renderToStaticMarkup(
+      createElement(StepBlock, {
+        index: 2,
+        title: 'Поля заявки',
+        summary: '6 полей, 1 ждёт вас',
+        open: false,
+        onToggle: () => undefined,
+        children: 'тело',
+      }),
+    );
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('6 полей, 1 ждёт вас');
+    expect(html).not.toContain('тело');
+  });
+
+  it('пройденный шаг помечается галочкой, открытый показывает тело', () => {
+    const html = renderToStaticMarkup(
+      createElement(StepBlock, {
+        index: 1,
+        title: 'Обращение',
+        open: true,
+        done: false,
+        onToggle: () => undefined,
+        children: 'текст',
+      }),
+    );
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('текст');
+  });
+});
+
+describe('Checklist', () => {
+  it('пункты с отметками и без обработчика — статичные', () => {
+    const html = renderToStaticMarkup(
+      createElement(Checklist, {
+        items: [
+          { id: 'a', label: 'Уведомить дежурного', done: true },
+          { id: 'b', label: 'Осмотреть место', hint: 'Отметит дежурный' },
+        ],
+      }),
+    );
+    expect(html).toContain('Уведомить дежурного');
+    expect(html).toContain('ugra-checklist__box--done');
+    expect(html).not.toContain('role="checkbox"');
+  });
+
+  it('с обработчиком пункт работает как чекбокс', () => {
+    const html = renderToStaticMarkup(
+      createElement(Checklist, { items: [{ id: 'a', label: 'Пункт' }], onToggle: () => undefined }),
+    );
+    expect(html).toContain('role="checkbox"');
+    expect(html).toContain('aria-checked="false"');
   });
 });

@@ -59,26 +59,257 @@ export function priorityTone(priority: PriorityLevel | null): UiTone {
   return priority ?? 'neutral';
 }
 
+export type QueueBucket = 'all' | 'suspicious' | 'ready' | 'emergency';
+
 export interface TicketFilters {
   status: TicketStatus | 'all';
   onlyEmergency: boolean;
   query: string;
+  /** Быстрый фильтр очереди: все / сомнительные / готовые / аварии. */
+  bucket: QueueBucket;
+  /** Исполнитель из query дашборда: `#/queue?assignee=u-1`. */
+  assignee: string;
 }
 
-export const DEFAULT_FILTERS: TicketFilters = { status: 'all', onlyEmergency: false, query: '' };
+export const DEFAULT_FILTERS: TicketFilters = {
+  status: 'all',
+  onlyEmergency: false,
+  query: '',
+  bucket: 'all',
+  assignee: '',
+};
 
-/** Фильтр очереди: статус, аварийность и поиск по номеру или категории. */
-export function filterTickets(tickets: readonly Ticket[], filters: TicketFilters): Ticket[] {
+export interface QueueSignals {
+  /** Сколько полей помечено «на проверку». */
+  review: number;
+  /** Минимальная уверенность по заполненным полям; null — полей нет. */
+  confidence: number | null;
+}
+
+export interface FilterContext {
+  signals?: Record<string, QueueSignals>;
+  /** Готовое «корпус · кабинет 312» для поиска по месту. */
+  locations?: Record<string, string>;
+}
+
+function confidenceOf(fields: readonly TicketField[]): number | null {
+  const values = fields
+    .filter((field) => field.value !== null && String(field.value).trim() !== '')
+    .map((field) => field.confidence)
+    .filter((value) => Number.isFinite(value));
+  return values.length === 0 ? null : Math.min(...values);
+}
+
+/** Уверенность заявки — по самому слабому заполненному полю; спорные поля считаются отдельно. */
+export function ticketSignals(fields: readonly TicketField[]): QueueSignals {
+  return {
+    review: fields.filter((field) => field.needsReview).length,
+    confidence: confidenceOf(fields),
+  };
+}
+
+export const CONFIDENCE_THRESHOLD = 0.75;
+
+export function isSuspicious(signals: QueueSignals | undefined): boolean {
+  if (!signals) return false;
+  return signals.review > 0 || (signals.confidence !== null && signals.confidence < CONFIDENCE_THRESHOLD);
+}
+
+function matchesBucket(ticket: Ticket, filters: TicketFilters, context: FilterContext): boolean {
+  if (filters.bucket === 'all') return true;
+  const signals = context.signals?.[ticket.id];
+  if (filters.bucket === 'emergency') return ticket.isEmergency;
+  if (filters.bucket === 'ready') {
+    return (
+      ticket.status === 'in_review' &&
+      !ticket.isEmergency &&
+      signals !== undefined &&
+      !isSuspicious(signals)
+    );
+  }
+  return isSuspicious(signals);
+}
+
+/** Закрытые и решённые не показываем в очереди, пока статус не выбран явно. */
+const ARCHIVE_STATUSES = new Set<TicketStatus>(['closed', 'cancelled', 'resolved']);
+
+/** Фильтр очереди: статус, аварийность, исполнитель, быстрый фильтр и поиск по номеру/категории/месту. */
+export function filterTickets(
+  tickets: readonly Ticket[],
+  filters: TicketFilters,
+  context: FilterContext = {},
+): Ticket[] {
   const query = filters.query.trim().toLowerCase();
   return tickets.filter((ticket) => {
-    if (filters.status !== 'all' && ticket.status !== filters.status) return false;
+    if (filters.status !== 'all') {
+      if (ticket.status !== filters.status) return false;
+    } else if (ARCHIVE_STATUSES.has(ticket.status)) {
+      return false;
+    }
     if (filters.onlyEmergency && !ticket.isEmergency) return false;
+    if (filters.assignee !== '' && ticket.assigneeId !== filters.assignee) return false;
+    if (!matchesBucket(ticket, filters, context)) return false;
     if (query !== '') {
-      const haystack = `${ticket.number} ${ticket.category ?? ''}`.toLowerCase();
+      const haystack = `${ticket.number} ${ticket.category ?? ''} ${context.locations?.[ticket.id] ?? ''}`.toLowerCase();
       if (!haystack.includes(query)) return false;
     }
     return true;
   });
+}
+
+/** Новые строки временно поднимаем наверх — «въезжают» над остальной очередью. */
+export function promoteNew(tickets: readonly Ticket[], newIds: ReadonlySet<string>): Ticket[] {
+  if (newIds.size === 0) return [...tickets];
+  const fresh = tickets.filter((ticket) => newIds.has(ticket.id));
+  const rest = tickets.filter((ticket) => !newIds.has(ticket.id));
+  return [...fresh, ...rest];
+}
+
+function sameLocalDay(iso: string, now: number): boolean {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return false;
+  const current = new Date(now);
+  return (
+    date.getFullYear() === current.getFullYear() &&
+    date.getMonth() === current.getMonth() &&
+    date.getDate() === current.getDate()
+  );
+}
+
+export interface QueueSummary {
+  review: number;
+  waiting: number;
+  emergency: number;
+  perShift: number;
+}
+
+/** Сводка очереди: ждут проверки, ждут заявителя, аварии, за смену (созданы сегодня). */
+export function queueSummary(tickets: readonly Ticket[], now: number): QueueSummary {
+  return {
+    review: tickets.filter((ticket) => ticket.status === 'in_review').length,
+    waiting: tickets.filter((ticket) => ticket.status === 'waiting_applicant').length,
+    emergency: tickets.filter((ticket) => ticket.isEmergency && !ARCHIVE_STATUSES.has(ticket.status)).length,
+    perShift: tickets.filter((ticket) => sameLocalDay(ticket.createdAt, now)).length,
+  };
+}
+
+/** «Сколько ждёт»: от создания до сейчас. */
+export function waitingLabel(createdAt: string, now: number): string {
+  const created = Date.parse(createdAt);
+  if (Number.isNaN(created)) return '—';
+  return formatDuration(Math.max(0, now - created));
+}
+
+function pluralFields(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'поле';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'поля';
+  return 'полей';
+}
+
+export interface QueueAction {
+  text: string;
+  tone: UiTone;
+}
+
+/** «Что сделать» в строке очереди — одна короткая фраза с точкой-статусом. */
+export function queueAction(ticket: Ticket, signals: QueueSignals | undefined): QueueAction {
+  if (ticket.isEmergency) return { text: 'Авария · дежурный уведомлён', tone: 'danger' };
+  if (ticket.status === 'waiting_applicant') return { text: 'Ждёт ответа заявителя', tone: 'info' };
+  if (ticket.status === 'in_review') {
+    if (signals === undefined) return { text: 'Проверить поля', tone: 'warn' };
+    if (signals.review > 0) {
+      return { text: `Проверить ${signals.review} ${pluralFields(signals.review)}`, tone: 'warn' };
+    }
+    if (isSuspicious(signals)) return { text: 'Проверить сомнительные поля', tone: 'warn' };
+    return { text: 'Готова к подтверждению', tone: 'ok' };
+  }
+  if (ticket.status === 'assigned') return { text: 'Назначена · ждёт инженера', tone: 'accent' };
+  if (ticket.status === 'in_progress') return { text: 'В работе', tone: 'accent' };
+  if (ticket.status === 'resolved') return { text: 'Ждёт подтверждения заявителя', tone: 'warn' };
+  if (ticket.status === 'closed') return { text: 'Закрыта', tone: 'muted' };
+  if (ticket.status === 'cancelled') return { text: 'Отменена', tone: 'muted' };
+  return { text: 'Разбирается', tone: 'neutral' };
+}
+
+/** Заголовок заявки из полей: симптом → объект → категория → «Обращение». */
+export function ticketTitleFromFields(
+  fields: readonly TicketField[],
+  resolve: (key: string, value: string) => string = (_key, value) => value,
+): string {
+  const read = (key: string): string | null => {
+    const field = fields.find((entry) => entry.fieldKey === key);
+    if (!field || field.value === null || `${field.value}`.trim() === '') return null;
+    return String(field.value);
+  };
+  const title = read('symptoms') ?? read('object') ?? read('category');
+  if (!title) return 'Обращение';
+  const resolved = read('symptoms') || read('object') ? title : resolve('category', title);
+  const capitalized = resolved.charAt(0).toUpperCase() + resolved.slice(1);
+  return capitalized.length > 80 ? `${capitalized.slice(0, 78)}…` : capitalized;
+}
+
+/** «Корпус Б · кабинет 312» для превью и поиска. */
+export function formatLocation(
+  location: { building: string | null; cabinet: string | null } | undefined,
+  resolveBuilding: (code: string) => string = (code) => code,
+): string {
+  if (!location) return 'место уточняется';
+  const parts: string[] = [];
+  if (location.building) parts.push(resolveBuilding(location.building));
+  if (location.cabinet) parts.push(`кабинет ${location.cabinet}`);
+  return parts.length === 0 ? 'место уточняется' : parts.join(' · ');
+}
+
+/* ---------- Query из hash: очередь и проверка ---------- */
+
+const STATUS_VALUES = new Set<string>([
+  'new',
+  'ai_draft',
+  'waiting_applicant',
+  'in_review',
+  'assigned',
+  'in_progress',
+  'resolved',
+  'closed',
+  'cancelled',
+]);
+
+/** `#/queue?status=in_review&emergency=true&assignee=u-1` → начальные фильтры. */
+export function queueFiltersFromQuery(query: URLSearchParams): TicketFilters {
+  const status = query.get('status') ?? '';
+  const emergency = query.get('emergency');
+  return {
+    ...DEFAULT_FILTERS,
+    status: STATUS_VALUES.has(status) ? (status as TicketStatus) : 'all',
+    onlyEmergency: emergency === 'true' || emergency === '1',
+    assignee: (query.get('assignee') ?? '').trim(),
+  };
+}
+
+/** `#/review?id=…` → id заявки; пустая строка и мусор дают null. */
+export function reviewTicketId(query: URLSearchParams): string | null {
+  const id = (query.get('id') ?? '').trim();
+  return id === '' ? null : id;
+}
+
+export function reviewHref(ticketId: string): string {
+  return `/review?id=${encodeURIComponent(ticketId)}`;
+}
+
+export type QueueEventKind = 'new' | 'updated' | 'ignored';
+
+/**
+ * Событие `GET /api/events/stream` → что делать очереди.
+ * Есть `ticketId`: неизвестный — новая заявка, известный — изменилась.
+ * Без `ticketId` (например, `appeal.created`) — очередь не трогаем, заявка придёт своим событием.
+ */
+export function queueEventAction(raw: unknown, knownIds: ReadonlySet<string>): QueueEventKind {
+  if (!isRecord(raw)) return 'ignored';
+  const ticketId = raw.ticketId;
+  if (typeof ticketId !== 'string' || ticketId === '') return 'ignored';
+  return knownIds.has(ticketId) ? 'updated' : 'new';
 }
 
 export interface ReviewField {
@@ -142,6 +373,24 @@ export function extractLocation(fields: readonly TicketField[] | null | undefine
     return String(field.value);
   };
   return { building: read('building'), cabinet: read('cabinet') };
+}
+
+const LOCATION_BUILDING: Record<string, string> = { a: 'А', b: 'Б', v: 'В', prom: 'ПРОМ' };
+
+/** Место для seeded-заявок: поля могут быть пустыми, но `locationId` = `cab-b-312`. */
+export function locationFromTicket(
+  ticket: Pick<Ticket, 'locationId'>,
+  fields: readonly TicketField[] | null | undefined,
+): { building: string | null; cabinet: string | null } {
+  const fromFields = extractLocation(fields);
+  if (fromFields.building && fromFields.cabinet) return fromFields;
+  const match = /^cab-([a-zа-яё]+)-(\d+)$/i.exec(ticket.locationId ?? '');
+  const code = match?.[1]?.toLowerCase() ?? '';
+  const building = code === '' ? null : (LOCATION_BUILDING[code] ?? code.toUpperCase());
+  return {
+    building: fromFields.building ?? building,
+    cabinet: fromFields.cabinet ?? match?.[2] ?? null,
+  };
 }
 
 /** Текст «почему такой приоритет» — из полей и признака аварии. */
@@ -661,4 +910,251 @@ export function reviewFieldKeys(
   return groups.flatMap((group) =>
     group.fields.filter((entry) => entry.field?.needsReview).map((entry) => entry.key),
   );
+}
+
+/** Поля для показа: заполненные и спорные. Пустые без пометки не засоряют шаг. */
+export function visibleReviewGroups(groups: readonly ReviewGroup[]): ReviewGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      fields: group.fields.filter((entry) => {
+        const field = entry.field;
+        if (!field) return false;
+        if (field.needsReview) return true;
+        return field.value !== null && `${field.value}`.trim() !== '';
+      }),
+    }))
+    .filter((group) => group.fields.length > 0);
+}
+
+/** Сколько полей реально видит диспетчер на шаге «Поля». */
+export function filledFieldCount(groups: readonly ReviewGroup[]): number {
+  return visibleReviewGroups(groups).reduce((total, group) => total + group.fields.length, 0);
+}
+
+/* ---------- След разбора: «Нашёл → Сверил → Спросил → Вам» ---------- */
+
+export type TraceStage = 'found' | 'checked' | 'asked' | 'you';
+
+export interface TraceStepView {
+  id: string;
+  stage: TraceStage;
+  stageLabel: string;
+  text: string;
+  at?: string;
+  tone: UiTone;
+}
+
+const STAGE_LABELS: Record<TraceStage, string> = {
+  found: 'Нашёл',
+  checked: 'Сверил',
+  asked: 'Спросил',
+  you: 'Вам',
+};
+
+const STAGE_ORDER: Record<TraceStage, number> = { found: 0, checked: 1, asked: 2, you: 3 };
+
+/** Сколько строк одного этапа показываем: длинный список цитат не помещается в шаг. */
+const STAGE_LIMIT: Record<TraceStage, number> = { found: 2, checked: 2, asked: 2, you: 2 };
+
+const TRACE_KIND_STAGE: Record<string, TraceStage> = {
+  found: 'found',
+  not_found: 'found',
+  rejected: 'found',
+  matched_cmdb: 'checked',
+  computed: 'checked',
+  from_profile: 'checked',
+  asked: 'asked',
+  answered: 'asked',
+  no_answer: 'you',
+  corrected: 'you',
+};
+
+function traceText(kind: string, note: string | null, quote: string | null): string {
+  if (kind === 'found') return quote ? `Нашёл: «${quote}»` : 'Нашёл в тексте';
+  if (kind === 'not_found') return 'Не нашёл — спрошу';
+  if (kind === 'rejected') return 'Отклонил вариант';
+  if (kind === 'matched_cmdb') return 'Сверил с базой оборудования';
+  if (kind === 'computed') return 'Посчитал по правилу';
+  if (kind === 'from_profile') return 'Взял из профиля';
+  if (kind === 'asked') return note ? `Спросил: ${note}` : 'Спросил заявителя';
+  if (kind === 'answered') return quote ?? note ? `Ответ: «${quote ?? note}»` : 'Заявитель ответил';
+  if (kind === 'no_answer') return 'Ответа нет — вопрос диспетчеру';
+  if (kind === 'corrected') return 'Диспетчер исправил';
+  return kind;
+}
+
+function traceTone(stage: TraceStage): UiTone {
+  if (stage === 'found') return 'ok';
+  if (stage === 'checked') return 'accent';
+  if (stage === 'asked') return 'info';
+  return 'warn';
+}
+
+interface RawTrace {
+  kind: string;
+  note: string | null;
+  quote: string | null;
+  at?: string;
+  index: number;
+}
+
+function traceOfRecord(value: unknown, index: number): RawTrace | null {
+  if (!isRecord(value)) return null;
+  const kind = readString(value.kind);
+  if (!kind || !TRACE_KIND_STAGE[kind]) return null;
+  return {
+    kind,
+    note: readString(value.note),
+    quote: readString(value.quote),
+    at: readString(value.at) ?? undefined,
+    index,
+  };
+}
+
+function analysisTrace(analysis: Record<string, unknown> | null | undefined): RawTrace[] {
+  const fields = analysis ? analysis.fields : undefined;
+  if (!isRecord(fields)) return [];
+  const result: RawTrace[] = [];
+  for (const value of Object.values(fields)) {
+    if (!isRecord(value) || !Array.isArray(value.trace)) continue;
+    value.trace.forEach((entry) => {
+      const parsed = traceOfRecord(entry, result.length);
+      if (parsed) result.push(parsed);
+    });
+  }
+  return result;
+}
+
+function fieldTraceFallback(fields: readonly TicketField[]): RawTrace[] {
+  const result: RawTrace[] = [];
+  for (const field of fields) {
+    for (const entry of field.trace) {
+      const parsed = traceOfRecord(entry, result.length);
+      if (parsed) result.push(parsed);
+    }
+    if (field.trace.length > 0) continue;
+    const key = field.fieldKey;
+    if (field.quote?.text) {
+      result.push({ kind: 'found', note: null, quote: field.quote.text, index: result.length });
+    }
+    if (field.origin === 'cmdb') result.push({ kind: 'matched_cmdb', note: key, quote: null, index: result.length });
+    if (field.origin === 'asked') result.push({ kind: 'asked', note: key, quote: null, index: result.length });
+    if (field.origin === 'human') result.push({ kind: 'corrected', note: key, quote: null, index: result.length });
+    if (field.needsReview) result.push({ kind: 'no_answer', note: key, quote: null, index: result.length });
+  }
+  return result;
+}
+
+/**
+ * Шаги следа для блока «Обращение»: сначала настоящий `trace` из `analysis.fields`,
+ * если его нет — собираем из полей заявки. Дубли и неизвестные виды отбрасываются.
+ */
+export function traceSteps(
+  analysis: Record<string, unknown> | null | undefined,
+  fields: readonly TicketField[],
+): TraceStepView[] {
+  const raw = analysisTrace(analysis);
+  const source = raw.length > 0 ? raw : fieldTraceFallback(fields);
+  const seen = new Set<string>();
+  const steps: TraceStepView[] = [];
+  for (const entry of source) {
+    const stage = TRACE_KIND_STAGE[entry.kind];
+    if (!stage) continue;
+    const text = traceText(entry.kind, entry.note, entry.quote);
+    const id = `${entry.kind}|${text}`;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    steps.push({
+      id,
+      stage,
+      stageLabel: STAGE_LABELS[stage],
+      text,
+      at: entry.at,
+      tone: traceTone(stage),
+    });
+  }
+  const byStage = new Map<TraceStage, number>();
+  return steps
+    .sort(
+      (left, right) =>
+        STAGE_ORDER[left.stage] - STAGE_ORDER[right.stage] ||
+        (left.at && right.at ? left.at.localeCompare(right.at) : 0),
+    )
+    .filter((step) => {
+      const used = byStage.get(step.stage) ?? 0;
+      if (used >= STAGE_LIMIT[step.stage]) return false;
+      byStage.set(step.stage, used + 1);
+      return true;
+    });
+}
+
+export interface EmergencyNote {
+  level: 'suspected' | 'confirmed';
+  confidence: number;
+  signs: string[];
+}
+
+/** Авария из `analysis.emergency` — для шапки проверки и стикера. */
+export function analysisEmergency(
+  analysis: Record<string, unknown> | null | undefined,
+): EmergencyNote | null {
+  if (!analysis || !isRecord(analysis.emergency)) return null;
+  const level = readString(analysis.emergency.level);
+  if (level !== 'suspected' && level !== 'confirmed') return null;
+  const rawConfidence = analysis.emergency.confidence;
+  const confidence =
+    typeof rawConfidence === 'number' && Number.isFinite(rawConfidence)
+      ? Math.min(1, Math.max(0, rawConfidence))
+      : 0;
+  const signsRaw = analysis.emergency.signs;
+  const signs: string[] = [];
+  if (Array.isArray(signsRaw)) {
+    for (const sign of signsRaw) {
+      const text = isRecord(sign) ? (readString(sign.quote) ?? readString(sign.sign)) : readString(sign);
+      if (text && !signs.includes(text)) signs.push(text);
+    }
+  }
+  return { level, confidence, signs };
+}
+
+/** Процент совпадения кандидата относительно лучшего балла: 0…99, без ложных 100 %. */
+export function candidatePercent(score: number, best: number): number {
+  if (!Number.isFinite(score) || !Number.isFinite(best) || best <= 0) return 0;
+  return Math.max(1, Math.min(99, Math.round((score / best) * 100)));
+}
+
+/** Черновик ответа заявителю. ИИ-черновика в API пока нет — шаблон собирается из полей заявки. */
+export function replyTemplate(
+  ticket: Pick<Ticket, 'number'>,
+  assigneeName: string | null,
+  due: string | null,
+): string {
+  const who = assigneeName ?? 'Инженер';
+  const when = due ? `придёт ${due}` : 'свяжется с вами';
+  return `Заявка № ${ticket.number} принята. ${who} ${when}. Если проблема повторится, ответьте в этом чате.`;
+}
+
+/** Код справочника → подпись; неизвестный код остаётся как есть. */
+export function fieldDisplayValue(
+  meta: { fields: readonly FieldDef[]; dictionaries: readonly { dictionary: string; code: string; label: string }[] },
+  key: string,
+  value: string | null,
+): string | null {
+  if (value === null) return null;
+  const def = meta.fields.find((field) => field.key === key);
+  if (!def || def.type !== 'dictionary' || !def.dictionary) return value;
+  return meta.dictionaries.find((item) => item.dictionary === def.dictionary && item.code === value)?.label ?? value;
+}
+
+/** Варианты поля-справочника для правки диспетчером. */
+export function fieldOptions(
+  meta: { fields: readonly FieldDef[]; dictionaries: readonly { dictionary: string; code: string; label: string }[] },
+  key: string,
+): Array<{ code: string; label: string }> {
+  const def = meta.fields.find((field) => field.key === key);
+  if (!def || def.type !== 'dictionary' || !def.dictionary) return [];
+  return meta.dictionaries
+    .filter((item) => item.dictionary === def.dictionary)
+    .map((item) => ({ code: item.code, label: item.label }));
 }

@@ -16,7 +16,7 @@
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/ui/src/tokens.css`                 | единственный источник цветов, отступов, радиусов, теней, типографики и длительностей; **только светлая тема**; самодостаточный Manrope 400–800 (`fonts/*.woff2`, OFL) без CDN    |
 | `packages/ui/src/styles.css`                 | базовые стили и классы компонентов; все цвета — через `var(--…)`, новых хардкод-цветов нет                                                                                       |
-| `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot`, `ProgressScale`, `DetailRow`, `Modal`, `Toast`, `SearchField`, `EmptyState`, `Timer`, `InsightBlock`, `ActionCounterPill` |
+| `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot`, `ProgressScale`, `DetailRow`, `Modal`, `Toast`, `SearchField`, `EmptyState`, `Timer`, `InsightBlock`, `ActionCounterPill`, `PriorityMark`, `Segmented`, `Chip`, `Sticker`, `StepBlock`, `Checklist` |
 | `packages/ui/src/ticket-format.ts`           | чистые функции статусов, шкалы этапов (`in_review` — 2, `assigned` — 3), `stageSegments`, группировки истории, сроков                                                                 |
 | `packages/ui/src/format.ts`                  | уверенность, тона, счётчик действий, `elapsedMs`/`formatElapsed` для таймеров аварии и SLA                                                                                       |
 | `packages/ui/src/animations.ts`              | `flyToField`, `pulse`, `countUp`; длительности читаются из токенов                                                                                                               |
@@ -71,8 +71,8 @@
   прозрачная с `--ring-inset`; градиентных кнопок и свечения нет.
 - Статусы — точка/текст/тонкая линия: `--color-ok`, `--color-warn`, `--color-warn-bright`,
   `--color-info`, `--color-danger`.
-- Приоритет (3.4) — `PriorityBars`: четыре полоски 4 px, закрашенные графитом, у критического/аварии — красным;
-  слово только в `aria-label`/подсказке.
+- Приоритет (3.4) — `PriorityMark`: круг-доля 16 px (25/50/75/100 %), у критического и аварии красный;
+  слово только в `aria-label`/подсказке. `PriorityBars` (полоски) оставлен для совместимости.
 - Анимации: `ugra-rise` 0,4 с, `ugra-drawer` 0,35 с, `ugra-sticker`, плавная шкала, вспышка новой строки
   (`ugra-row-flash`). `prefers-reduced-motion` отключает всё.
 - Атмосфера: `ugra-ambient` — три размытых пятна; на экране обращения добавляется сетка 80 px.
@@ -90,6 +90,12 @@
 | `Timer` и `useElapsed` | таймер аварии и SLA; `formatElapsed` даёт `0:07`, `3 ч 26 мин`, отрицательное время — ноль |
 | `InsightBlock` | «Что это значит» / «Что сделать» под графиками дашборда и отчётов |
 | `ActionCounterPill` | «Ваших действий: N» в карточке проверки (К4) |
+| `PriorityMark` | приоритет кругом-долей (3.4): 25/50/75/100 %, слово в `aria-label`; `PriorityBars` остаётся для совместимости |
+| `Segmented` | сегментированный фильтр «Все / Сомнительные / Готовые / Аварии» с счётчиками |
+| `Chip` | компактный чип-фильтр (категория, исполнитель, канал) |
+| `Sticker` | стеклянная панель-превью: очередь справа, карточка рядом с чатом |
+| `StepBlock` | сворачиваемый шаг проверки с номером/галочкой и итогом |
+| `Checklist` | чек-лист регламента и диагностики: отметки и пояснения |
 
 Шкала этапов исправлена: `in_review` закрашивает два сегмента (заявка проверена ИИ), `assigned` — три
 (диспетчер назначил), `in_progress` остаётся на третьем до фактического выполнения. Тесты — на все статусы
@@ -99,6 +105,8 @@
 
 - Роутинг — hash (`#/chat`, `#/tickets`, `#/queue`), без React Router. Неизвестный путь уводит
   на первую вкладку роли. `#/profile` — заглушка профиля (состав ещё не утверждён).
+- Query из hash (`#/queue?status=in_review&emergency=true&assignee=u-1`, `#/review?id=…`) разбирается
+  в `parseHash` и приходит странице в `WebPageProps.query`; очередь применяет его как начальные фильтры.
 - Страницы берутся из `modules/registry.web.ts`: `defineWebModule({ pages })`.
   Выключенный модуль не попадает в меню, потому что его страницы не регистрируются.
 - `GET /api/meta` также даёт реестр полей и справочники — из них строятся вопросы чата.

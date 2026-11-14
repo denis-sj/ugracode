@@ -112,6 +112,7 @@ export function AppShell({ user, meta, api, route }: AppShellProps): JSX.Element
     meta,
     api,
     navigate: route.navigate,
+    query: route.query,
     trackAction: track,
   };
 

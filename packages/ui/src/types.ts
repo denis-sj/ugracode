@@ -15,6 +15,8 @@ export interface WebPageProps {
   meta: MetaResponse;
   api: ApiClient;
   navigate: (path: string) => void;
+  /** Query из hash: `#/queue?status=in_review` → `query.get('status')`. */
+  query: URLSearchParams;
   /** Счётчик действий для К4: клик, ввод, выбор, переход. */
   trackAction?: (kind: 'click' | 'input' | 'select' | 'navigate' | 'system') => void;
 }
