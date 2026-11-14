@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#39-отчёты), [../../specs/case9-features.md](../../specs/case9-features.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../hackathon/case9-brief.md](../../hackathon/case9-brief.md), [../../tasks/021-reports-insights.md](../../tasks/021-reports-insights.md), [history-dashboard.md](history-dashboard.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#39-отчёты), [../../specs/case9-features.md](../../specs/case9-features.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../hackathon/case9-brief.md](../../hackathon/case9-brief.md), [../../history/2026-11.md](../../history/2026-11.md), [history-dashboard.md](history-dashboard.md)
 
 Три серверных модуля-отчёта. Каждый объявляет `ReportDef`, HTTP-маршруты под `/api/m/<id>/`
 (право `reports`), факты для ИИ и выгрузку в CSV. Веб-части в этой задаче нет: экраны отчётов

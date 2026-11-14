@@ -79,12 +79,10 @@ PR: —
 
 **Код, после чекпоинта 1:**
 
-- [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
 - [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
 - [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
 - [019-voice-call.md](019-voice-call.md) — поток А: звонок: голос → текст → тот же пайплайн
 - [020-feedback-sentiment.md](020-feedback-sentiment.md) — поток А: обратная связь заявителю и метка тональности
-- [021-reports-insights.md](021-reports-insights.md) — поток Г: отчёты О2, О1, О5 с выводами
 - [022-demo-hardening.md](022-demo-hardening.md) — поток В: стабильное демо: кэш, офлайн-режим, сброс, запасная копия
 - [023-delivery.md](023-delivery.md) — поток Г: сдача: README, отчёт о качестве и ограничениях, план внедрения, SonarQube
 

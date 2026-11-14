@@ -145,7 +145,7 @@ sequenceDiagram
 
 | Фича | Приоритет | Модуль | Точки расширения | Задача |
 |---|---|---|---|---|
-| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../history/2026-11.md), [009](../tasks/009-clarify-chat.md) |
+| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../history/2026-11.md), [009](../history/2026-11.md) |
 | Профиль и гость | MUST | `applicant-profile` | шаг, таблицы, сид | [025](../history/2026-11.md) |
 | а4 Голос | MUST | `voice-call` + общий `MicButton` | шаг `enrich`, страница «Входящий звонок» | [019](../tasks/019-voice-call.md) |
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |
@@ -159,10 +159,10 @@ sequenceDiagram
 | в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../history/2026-11.md) |
 | г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |
 | г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../history/2026-11.md) |
-| г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../tasks/021-reports-insights.md) |
+| г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../history/2026-11.md) |
 | г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |
 | д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../history/2026-11.md) |
-| д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../tasks/021-reports-insights.md) |
+| д2, д3, д4, д7, д9 Выводы, О2, О1, О5, клик и выгрузка | MUST / SHOULD | `report-hotspots`, `report-shift`, `report-ai-effect` | отчёты | [021](../history/2026-11.md) |
 | д5, д6 О3 сроки, О4 нагрузка | SHOULD | `report-sla`, `report-workload` | отчёты | [027](../tasks/027-reports-sla-workload.md) |
 | д8, д10 О6 пробелы базы, О7 хронология аварии | COULD | `report-kb-gaps`, `report-emergency` | подписчик, отчёты | [028](../tasks/028-reports-kb-gaps-emergency.md) |
 | е1 Тестовый набор | MUST | — (`testset/`) | данные | [008](../history/2026-11.md) |
