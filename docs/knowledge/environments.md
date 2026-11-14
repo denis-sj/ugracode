@@ -36,10 +36,11 @@
 Fastify, zod, PostgreSQL + pgvector, Drizzle, React + Vite, Tailwind, Framer Motion, ECharts, Vitest.
 
 Провайдер модели ИИ: **Polza** (polza.ai; API по стандарту OpenAI Chat Completions). **Только облако —
-локальные модели не разворачиваем** (владелец, 2026-11-14). Модели: Claude Haiku 5.5 (разбор), DeepSeek V4.1 Flash
-(дешёвые задачи), BGE Multilingual Gemma2 (эмбеддинги), GigaAM-v3 (речь) — таблица и цены в
-[спецификации](../specs/case9-core.md#54-модели-polza). ❓ адрес API, структурированный ответ, эмбеддинги и речь
-через API — проверяет первая задача кода.
+локальные модели не разворачиваем** (владелец, 2026-11-14). Модели (обновлено 2026-11-14 по каталогу
+`https://api.polza.ai/api/v1/models`): `openai/gpt-6-luna` (разбор), `deepseek/deepseek-v4-flash` (дешёвые задачи),
+`baai/bge-m3` (эмбеддинги), `ai-sage/gigaam-v3` (речь) — таблица и цены в
+[спецификации](../specs/case9-core.md#54-модели-polza). Адрес API — `https://api.polza.ai/api/v1`.
+❓ Вживую с ключом не проверено.
 
 Секреты (ключи LLM): ключ есть у владельца, в репозиторий не кладётся — только `.env` (в `.gitignore`) и `.env.example` с пустым значением.
 

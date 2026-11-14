@@ -95,7 +95,8 @@ AGENTS.md  (ты здесь)
 [environments](docs/knowledge/environments.md) ·
 [tasks](docs/tasks/README.md) · [specs](docs/specs/README.md) · [plans](docs/plans/README.md) ·
 [history](docs/history/2026-11.md) · [sessions](docs/sessions/2026-11-14-kickoff.md) ·
-[последняя сессия](docs/sessions/2026-11-14-architecture.md) ·
+[последняя сессия](docs/sessions/2026-11-14-feature-intake.md) ·
+[**фичи в архитектуре**](docs/specs/case9-features.md) ·
 [**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
 [ideas](docs/ideas/README.md)
 
@@ -109,7 +110,8 @@ AGENTS.md  (ты здесь)
 2. [docs/hackathon/criteria.md](docs/hackathon/criteria.md) — **за что дают баллы**. Всё, что не влияет на баллы, — во вторую очередь.
 2a. [docs/hackathon/case9-brief.md](docs/hackathon/case9-brief.md) — **что строим** по выбранному кейсу 9 и как закрываем его критерии.
 2b. [docs/specs/case9-core.md](docs/specs/case9-core.md) — **как строим**: ядро, модули, точки расширения, «как добавить фичу».
-3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-architecture.md) — что решили в прошлый раз.
+2c. [docs/specs/case9-features.md](docs/specs/case9-features.md) — **что изменил брейншторм**: при расхождении с ядром прав этот файл.
+3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-feature-intake.md) — что решили в прошлый раз.
 
 ## Сохранение материалов владельца
 

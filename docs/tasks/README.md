@@ -4,7 +4,7 @@
 Дата: 2026-11-14
 Связано: [../history/2026-11.md](../history/2026-11.md), [../plans/README.md](../plans/README.md)
 
-**Следующий свободный номер: 024.** Номера идут подряд и не переиспользуются.
+**Следующий свободный номер: 031.** Номера идут подряд и не переиспользуются.
 
 ## Как взять задачу
 
@@ -67,6 +67,16 @@ PR: —
 - [006-extraction-priority.md](006-extraction-priority.md) — поток А: извлечение полей и приоритет
 - [007-ui-shell-chat-card.md](007-ui-shell-chat-card.md) — поток Б: дизайн-система, чат заявителя, карточка заявки
 - [008-data-testset.md](008-data-testset.md) — поток В: данные и тестовый набор
+
+**После брейншторма** (что и почему — [../specs/case9-features.md](../specs/case9-features.md); в задачах 006–023 в конце добавлен раздел «Изменения после брейншторма»):
+
+- [024-core-contract-update.md](024-core-contract-update.md) — **MUST, идёт первой и одна:** правка ядра и контрактов
+- [025-applicant-profile-guest.md](025-applicant-profile-guest.md) — MUST: профиль заявителя и гость
+- [026-screenshot.md](026-screenshot.md) — SHOULD: скриншот и фото шильдика
+- [027-reports-sla-workload.md](027-reports-sla-workload.md) — SHOULD: отчёты О3 и О4
+- [028-reports-kb-gaps-emergency.md](028-reports-kb-gaps-emergency.md) — COULD: отчёты О6 и О7
+- [029-knowledge-extras.md](029-knowledge-extras.md) — COULD: чек-лист шагов, вопрос базе знаний
+- [030-tuning-history.md](030-tuning-history.md) — COULD: история настройки
 
 **Код, после чекпоинта 1:**
 
