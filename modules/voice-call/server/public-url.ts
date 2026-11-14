@@ -25,6 +25,15 @@ function readTunnelFile(path: string): string | undefined {
   }
 }
 
+/**
+ * Адрес быстрого туннеля cloudflared в его выводе: `https://<случайно>.trycloudflare.com`.
+ * cloudflared печатает адрес в stderr вместе с рамкой и цветами — берём только сам URL.
+ */
+export function parseTunnelUrl(output: string): string | null {
+  const match = /https:\/\/[a-z0-9][a-z0-9-]*\.trycloudflare\.com/i.exec(output);
+  return match ? match[0].toLowerCase() : null;
+}
+
 /** `PUBLIC_WEB_URL` из `.env` важнее адреса туннеля: адрес туннеля меняется при каждом запуске. */
 export function resolvePublicUrl(
   env: Record<string, string | undefined>,

@@ -21,6 +21,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Телефон жюри открывает страницу по адресу туннеля cloudflared (https://*.trycloudflare.com).
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3001',
