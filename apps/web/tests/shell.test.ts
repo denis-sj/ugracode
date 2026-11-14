@@ -23,7 +23,7 @@ describe('tabsForRole', () => {
 
   it('у диспетчера очередь, аварии, журнал и исполнители', () => {
     const tabs = tabsForRole('dispatcher');
-    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Журнал', 'Исполнители']);
+    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Журнал', 'Исполнители', 'С ИИ / без ИИ']);
     expect(tabs.find((tab) => tab.path === '/incidents')?.danger).toBe(true);
   });
 

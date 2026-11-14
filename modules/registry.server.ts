@@ -12,8 +12,12 @@ import massIncident from './mass-incident/server';
 import priority from './priority/server';
 import quality from './quality/server';
 import reportAiEffect from './report-ai-effect/server';
+import reportEmergency from './report-emergency/server';
 import reportHotspots from './report-hotspots/server';
+import reportKbGaps from './report-kb-gaps/server';
 import reportShift from './report-shift/server';
+import reportSla from './report-sla/server';
+import reportWorkload from './report-workload/server';
 import reportsDashboard from './reports-dashboard/server';
 import routing from './routing/server';
 
@@ -32,8 +36,12 @@ export const serverModules: ServerModule[] = [
   priority,
   quality,
   reportAiEffect,
+  reportEmergency,
   reportHotspots,
+  reportKbGaps,
   reportShift,
+  reportSla,
+  reportWorkload,
   reportsDashboard,
   routing,
 ];
@@ -52,8 +60,12 @@ export {
   priority,
   quality,
   reportAiEffect,
+  reportEmergency,
   reportHotspots,
+  reportKbGaps,
   reportShift,
+  reportSla,
+  reportWorkload,
   reportsDashboard,
   routing,
 };
