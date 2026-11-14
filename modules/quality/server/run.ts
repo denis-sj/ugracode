@@ -1,3 +1,4 @@
+import type { ToolDef } from '@ugra/core';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { z } from 'zod';
@@ -413,6 +414,7 @@ function appealOf(evalCase: EvalCase): Appeal {
 interface CaseEnvironment {
   data: ReferenceData;
   steps: readonly PipelineStep[];
+  tools: ReadonlyMap<string, ToolDef>;
   dirs: EvalDirs;
   mode: 'stub' | 'cloud';
   model?: string | undefined;
@@ -450,6 +452,7 @@ async function runCase(env: CaseEnvironment, evalCase: EvalCase): Promise<CaseRu
   }
 
   const store = new MemoryStore();
+  seedKnowledgeBase(store, env.dirs.dataDir);
   const bus = new KernelEventBus(store);
   const author = authorUser();
   await store.saveUser(author);
@@ -463,6 +466,7 @@ async function runCase(env: CaseEnvironment, evalCase: EvalCase): Promise<CaseRu
     steps: env.steps,
     store,
     mode: env.mode,
+    tools: env.tools,
   });
 
   const startedAt = Date.now();
@@ -535,6 +539,7 @@ export async function runEval(options: EvalOptions = {}): Promise<EvalRun> {
   const env: CaseEnvironment = {
     data,
     steps,
+    tools: registries.tools,
     dirs,
     mode,
     model: options.model,
@@ -595,4 +600,41 @@ export function evalReportJson(run: EvalRun): string {
     null,
     2,
   );
+}
+
+/** Статьи из `data/kb` в память: без PostgreSQL поиск по базе знаний иначе пуст. */
+function seedKnowledgeBase(store: MemoryStore, dataDir: string): void {
+  const dir = join(dataDir, 'kb');
+  let files: string[];
+  try {
+    files = readdirSync(dir).filter((file) => file.endsWith('.json'));
+  } catch {
+    return;
+  }
+  for (const file of files) {
+    try {
+      const parsed = JSON.parse(readFileSync(join(dir, file), 'utf8')) as {
+        articles?: {
+          id: string;
+          title: string;
+          symptoms?: string[];
+          steps?: string[];
+          solution?: string;
+          category?: string;
+        }[];
+      };
+      for (const article of parsed.articles ?? []) {
+        store.saveKnowledgeArticle({
+          id: article.id,
+          title: article.title,
+          symptoms: article.symptoms ?? [],
+          steps: article.steps ?? [],
+          solution: article.solution ?? '',
+          category: article.category ?? '',
+        });
+      }
+    } catch {
+      // битый файл данных не должен ронять прогон
+    }
+  }
 }

@@ -82,7 +82,6 @@ PR: —
 - [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
 - [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
 - [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
-- [018-engineer-desk.md](018-engineer-desk.md) — поток Б: рабочее место инженера и замыкание цикла
 - [019-voice-call.md](019-voice-call.md) — поток А: звонок: голос → текст → тот же пайплайн
 - [020-feedback-sentiment.md](020-feedback-sentiment.md) — поток А: обратная связь заявителю и метка тональности
 - [021-reports-insights.md](021-reports-insights.md) — поток Г: отчёты О2, О1, О5 с выводами

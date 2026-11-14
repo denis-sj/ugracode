@@ -1,0 +1,532 @@
+{
+  "startedAt": "2026-11-14T16:07:03.140Z",
+  "finishedAt": "2026-11-14T16:07:20.148Z",
+  "mode": "cloud",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "set": "/Users/denissakirbaev/Documents/hackathon/testset/cases",
+  "summary": {
+    "cases": 1,
+    "evaluators": [
+      {
+        "key": "fields",
+        "title": "Поля",
+        "value": 0.8181818181818182,
+        "display": "82 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 11
+      },
+      {
+        "key": "fabricated",
+        "title": "Выдуманные поля",
+        "value": 0,
+        "display": "0",
+        "ideal": "0",
+        "threshold": "0",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "emergency",
+        "title": "Авария: пропуски",
+        "value": 0,
+        "display": "0",
+        "ideal": "0",
+        "threshold": "0",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "priority",
+        "title": "Приоритет",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "assigneeTop1",
+        "title": "Исполнитель в топ-1",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 70 %",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "assigneeTop3",
+        "title": "Исполнитель в топ-3",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "article",
+        "title": "Статья в топ-3",
+        "value": 1,
+        "display": "100 %",
+        "ideal": "100 %",
+        "threshold": "≥ 80 %",
+        "passed": true,
+        "total": 1
+      },
+      {
+        "key": "question",
+        "title": "Нужный вопрос заявителю",
+        "value": 0,
+        "display": "—",
+        "ideal": "100 %",
+        "threshold": "≥ 80 %",
+        "passed": true,
+        "total": 0,
+        "note": "в наборе нет эталона вопроса (expected.question)"
+      },
+      {
+        "key": "trajectory",
+        "title": "Траектория агента",
+        "value": 0,
+        "display": "—",
+        "ideal": "100 %",
+        "threshold": "≥ 100 %",
+        "passed": true,
+        "total": 0,
+        "note": "в наборе нет эталона траектории (mustCall/mustNotCall/maxSteps)"
+      },
+      {
+        "key": "time",
+        "title": "Время на обращение (медиана)",
+        "value": 17002,
+        "display": "17,0 с",
+        "ideal": "≤ 8 с",
+        "threshold": "≤ 8 с",
+        "passed": false,
+        "total": 1
+      },
+      {
+        "key": "price",
+        "title": "Цена обращения (медиана)",
+        "value": 0,
+        "display": "—",
+        "ideal": "≤ 0,30 ₽",
+        "threshold": "≤ 0,30 ₽",
+        "passed": true,
+        "total": 1,
+        "note": "заглушка модели: цена не считается"
+      }
+    ],
+    "unmet": [
+      {
+        "key": "fields",
+        "title": "Поля",
+        "value": 0.8181818181818182,
+        "display": "82 %",
+        "ideal": "100 %",
+        "threshold": "≥ 90 %",
+        "passed": false,
+        "total": 11
+      },
+      {
+        "key": "time",
+        "title": "Время на обращение (медиана)",
+        "value": 17002,
+        "display": "17,0 с",
+        "ideal": "≤ 8 с",
+        "threshold": "≤ 8 с",
+        "passed": false,
+        "total": 1
+      }
+    ],
+    "fabricatedTotal": 0,
+    "emergencyMisses": 0,
+    "emergencyFalseAlarms": 0,
+    "failedSteps": 0,
+    "medianMs": 17002,
+    "medianCostRub": 0,
+    "met": 9,
+    "withThreshold": 11
+  },
+  "skipped": [],
+  "warnings": [],
+  "cases": [
+    {
+      "id": "case-01",
+      "file": "01-printer-hp-312",
+      "channel": "chat",
+      "text": "Здравствуйте! В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает. Нужно срочно, до конца дня сдавать отчёт.",
+      "expected": {
+        "fields": {
+          "object": "принтер",
+          "building": "Б",
+          "cabinet": "312",
+          "equipment": "HP LaserJet Pro M404dn",
+          "model": "HP LaserJet Pro M404dn",
+          "category": "printer",
+          "serviceType": "repair",
+          "department": "dep-it",
+          "impact": "one",
+          "urgency": "down",
+          "symptoms": "мигает красный индикатор и ничего не печатает"
+        },
+        "priority": "high",
+        "emergency": false,
+        "assigneeTop3": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-3"
+        ],
+        "kbArticle": "kb-print-red-indicator"
+      },
+      "status": "ok",
+      "runId": "94ef1d0b-2093-4bc1-9f01-3f8ae2497a88",
+      "observed": {
+        "text": "Здравствуйте! В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает. Нужно срочно, до конца дня сдавать отчёт.",
+        "fields": {
+          "building": {
+            "value": "Б",
+            "quoteText": "корпусе Б",
+            "origin": "text"
+          },
+          "cabinet": {
+            "value": "312",
+            "quoteText": "кабинет 312",
+            "origin": "text"
+          },
+          "equipment": {
+            "value": "принтер HP LaserJet Pro M404dn",
+            "quoteText": "принтер HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "object": {
+            "value": "принтер HP LaserJet Pro M404dn",
+            "quoteText": "принтер HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "model": {
+            "value": "HP LaserJet Pro M404dn",
+            "quoteText": "HP LaserJet Pro M404dn",
+            "origin": "text"
+          },
+          "symptoms": {
+            "value": "мигает красный индикатор и ничего не печатает",
+            "quoteText": "мигает красный индикатор и ничего не печатает",
+            "origin": "text"
+          },
+          "category": {
+            "value": "printer",
+            "quoteText": "принтер",
+            "origin": "text"
+          },
+          "serviceType": {
+            "value": "repair",
+            "quoteText": "ничего не печатает",
+            "origin": "text"
+          },
+          "department": {
+            "value": "dep-it",
+            "quoteText": "принтер",
+            "origin": "text"
+          },
+          "impact": {
+            "value": "one",
+            "quoteText": "до конца дня сдавать отчёт",
+            "origin": "text"
+          },
+          "urgency": {
+            "value": "down",
+            "quoteText": "ничего не печатает",
+            "origin": "text"
+          },
+          "inventoryNo": {
+            "value": "INV-000312",
+            "quoteText": null,
+            "origin": "cmdb"
+          },
+          "ip": {
+            "value": "10.10.3.12",
+            "quoteText": null,
+            "origin": "cmdb"
+          }
+        },
+        "priority": "high",
+        "emergency": false,
+        "assignees": [
+          "u-engineer-2",
+          "u-engineer-4",
+          "u-engineer-3"
+        ],
+        "articles": [
+          "kb-print-red-indicator"
+        ],
+        "askedField": null,
+        "tools": [
+          "cmdb_find_equipment",
+          "kb_search",
+          "dictionary_lookup",
+          "cmdb_find_equipment",
+          "cmdb_list_locations",
+          "submit"
+        ],
+        "steps": 6
+      },
+      "evaluation": {
+        "id": "case-01",
+        "fields": {
+          "total": 11,
+          "hits": 9,
+          "rate": 0.8181818181818182,
+          "outcomes": [
+            {
+              "key": "object",
+              "mode": "normalized",
+              "expected": "принтер",
+              "actual": "принтер HP LaserJet Pro M404dn",
+              "hit": false
+            },
+            {
+              "key": "building",
+              "mode": "normalized",
+              "expected": "Б",
+              "actual": "Б",
+              "hit": true
+            },
+            {
+              "key": "cabinet",
+              "mode": "normalized",
+              "expected": "312",
+              "actual": "312",
+              "hit": true
+            },
+            {
+              "key": "equipment",
+              "mode": "normalized",
+              "expected": "HP LaserJet Pro M404dn",
+              "actual": "принтер HP LaserJet Pro M404dn",
+              "hit": false
+            },
+            {
+              "key": "model",
+              "mode": "normalized",
+              "expected": "HP LaserJet Pro M404dn",
+              "actual": "HP LaserJet Pro M404dn",
+              "hit": true
+            },
+            {
+              "key": "category",
+              "mode": "exact",
+              "expected": "printer",
+              "actual": "printer",
+              "hit": true
+            },
+            {
+              "key": "serviceType",
+              "mode": "exact",
+              "expected": "repair",
+              "actual": "repair",
+              "hit": true
+            },
+            {
+              "key": "department",
+              "mode": "exact",
+              "expected": "dep-it",
+              "actual": "dep-it",
+              "hit": true
+            },
+            {
+              "key": "impact",
+              "mode": "exact",
+              "expected": "one",
+              "actual": "one",
+              "hit": true
+            },
+            {
+              "key": "urgency",
+              "mode": "exact",
+              "expected": "down",
+              "actual": "down",
+              "hit": true
+            },
+            {
+              "key": "symptoms",
+              "mode": "normalized",
+              "expected": "мигает красный индикатор и ничего не печатает",
+              "actual": "мигает красный индикатор и ничего не печатает",
+              "hit": true
+            }
+          ],
+          "fabricated": []
+        },
+        "priority": true,
+        "emergency": {
+          "expected": false,
+          "actual": false,
+          "miss": false,
+          "falseAlarm": false
+        },
+        "assignee": {
+          "top1": true,
+          "top3": true,
+          "expected": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-3"
+          ],
+          "actual": [
+            "u-engineer-2",
+            "u-engineer-4",
+            "u-engineer-3"
+          ]
+        },
+        "article": true,
+        "question": null,
+        "trajectory": null,
+        "ms": 17002,
+        "costRub": 0,
+        "steps": 6,
+        "errors": []
+      },
+      "stepMetrics": [
+        {
+          "stepId": "emergency.detect",
+          "metrics": [
+            {
+              "key": "emergency_match",
+              "value": 1,
+              "expected": "false",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "agent.intake",
+          "metrics": [
+            {
+              "key": "field_object",
+              "value": 0,
+              "expected": "принтер",
+              "passed": false
+            },
+            {
+              "key": "field_building",
+              "value": 1,
+              "expected": "Б",
+              "passed": true
+            },
+            {
+              "key": "field_cabinet",
+              "value": 1,
+              "expected": "312",
+              "passed": true
+            },
+            {
+              "key": "field_equipment",
+              "value": 0,
+              "expected": "HP LaserJet Pro M404dn",
+              "passed": false
+            },
+            {
+              "key": "field_model",
+              "value": 1,
+              "expected": "HP LaserJet Pro M404dn",
+              "passed": true
+            },
+            {
+              "key": "field_category",
+              "value": 1,
+              "expected": "printer",
+              "passed": true
+            },
+            {
+              "key": "field_serviceType",
+              "value": 1,
+              "expected": "repair",
+              "passed": true
+            },
+            {
+              "key": "field_department",
+              "value": 1,
+              "expected": "dep-it",
+              "passed": true
+            },
+            {
+              "key": "field_impact",
+              "value": 1,
+              "expected": "one",
+              "passed": true
+            },
+            {
+              "key": "field_urgency",
+              "value": 1,
+              "expected": "down",
+              "passed": true
+            },
+            {
+              "key": "field_symptoms",
+              "value": 1,
+              "expected": "мигает красный индикатор и ничего не печатает",
+              "passed": true
+            },
+            {
+              "key": "fields_accuracy",
+              "value": 0.8181818181818182
+            }
+          ]
+        },
+        {
+          "stepId": "priority.compute",
+          "metrics": [
+            {
+              "key": "priority",
+              "value": 1,
+              "expected": "high",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "stepId": "routing.recommend",
+          "metrics": [
+            {
+              "key": "assignee_top1",
+              "value": 1,
+              "expected": "u-engineer-2",
+              "passed": true
+            },
+            {
+              "key": "assignee_top3",
+              "value": 1,
+              "expected": "u-engineer-2, u-engineer-4, u-engineer-3",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "trace": [
+        "шаги пайплайна (ok):",
+        "  intake.normalize — ok, 0 мс",
+        "  example.extract — ok, 1 мс",
+        "  agent.intake — ok, 16993 мс",
+        "  extraction.ground — ok, 1 мс",
+        "  profile.prefill — ok, 1 мс",
+        "  emergency.detect — ok, 2 мс",
+        "  priority.compute — ok, 2 мс",
+        "  routing.recommend — ok, 1 мс",
+        "  finalize — ok, 0 мс",
+        "шаги агента (6):",
+        "  1. cmdb_find_equipment {\"building\":\"Б\",\"cabinet\":\"312\",\"type\":\"принтер\",\"model\":\"HP LaserJet Pro M404dn\"} → CMDB: найдено 0 единиц(ы) техники",
+        "  2. kb_search {\"query\":\"принтер HP LaserJet Pro M404dn мигает красный индикатор не печатает\",\"category\":\"printer\"} → База знаний: 3 статей, первая — «Принтер HP не печатает, мигает красный индикатор»",
+        "  3. dictionary_lookup {\"dictionary\":\"building\",\"query\":\"Б\"} → Справочник: 1 вариант(ов)",
+        "  4. cmdb_find_equipment {\"cabinet\":\"312\",\"text\":\"HP LaserJet Pro M404dn\"} → CMDB: найдено 1 единиц(ы) техники",
+        "  5. cmdb_list_locations {\"building\":\"Б\"} → CMDB: 3 мест(а)",
+        "  6. submit {\"fields\":[{\"key\":\"object\",\"value\":\"принтер HP LaserJet Pro M404dn\",\"quote\":\"принтер HP LaserJet Pro M404dn\",\"confidence\":0.97},{\"key\":\"building\",\"value\":\"Б\",\"quote\":\"корпусе Б\",\"confidence\":0.98},{\"key\":\"cabinet\",\"value\":\"312\",\"quote\":\"кабинет 312\",\"confidence\":0.98},{\"key\":\"equipment\",\"value\":\"принтер HP LaserJet Pro M404dn\",\"quote\":\"принтер HP LaserJet Pro M404dn\",\"confidence\":0.9},{\"key\":\"model\",\"value\":\"HP LaserJet Pro M404dn\",\"quote\":\"HP LaserJet Pro M404dn\",\"confidence\":0.97},{\"key\":\"symptoms\",\"value\":\"мигает красный индикатор и ничего не печатает\",\"quote\":\"мигает красный индикатор и ничего не печатает\",\"confidence\":0.97},{\"key\":\"category\",\"value\":\"printer\",\"quote\":\"принтер\",\"confidence\":0.95},{\"key\":\"serviceType\",\"value\":\"repair\",\"quote\":\"ничего не печатает\",\"confidence\":0.65},{\"key\":\"department\",\"value\":\"dep-it\",\"quote\":\"принтер\",\"confidence\":0.6},{\"key\":\"impact\",\"value\":\"one\",\"quote\":\"до конца дня сдавать отчёт\",\"confidence\":0.55},{\"key\":\"urgency\",\"value\":\"down\",\"quote\":\"ничего не печатает\",\"confidence\":0.7}],\"emergency\":{\"suspected\":false,\"signs\":[],\"confidence\":0.9},\"clarify\":null,\"summary\":\"В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает; отчёт нужно сдать до конца дня.\",\"articles\":[{\"id\":\"kb-print-red-indicator\",\"title\":\"Принтер HP не печатает, мигает красный индикатор\"}]} → результат принят"
+      ]
+    }
+  ]
+}

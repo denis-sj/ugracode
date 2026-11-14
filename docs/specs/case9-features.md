@@ -150,7 +150,7 @@ sequenceDiagram
 | а4 Голос | MUST | `voice-call` + общий `MicButton` | шаг `enrich`, страница «Входящий звонок» | [019](../tasks/019-voice-call.md) |
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |
 | а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../tasks/026-screenshot.md) |
-| а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../tasks/018-engineer-desk.md) |
+| а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../history/2026-11.md) |
 | б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../history/2026-11.md) |
 | б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../history/2026-11.md), [008](../history/2026-11.md) |
 | б4, в6 Авария | MUST | `emergency` | аспект, шаг, подписчик, виджеты | [011](../history/2026-11.md) |
@@ -158,7 +158,7 @@ sequenceDiagram
 | в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../history/2026-11.md) |
 | в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../history/2026-11.md) |
 | г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |
-| г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../tasks/018-engineer-desk.md) |
+| г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../history/2026-11.md) |
 | г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../tasks/021-reports-insights.md) |
 | г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |
 | д1 Дашборд О0 | MUST | `reports-dashboard`, `history-seed` | отчёт, сид | [015](../history/2026-11.md) |
