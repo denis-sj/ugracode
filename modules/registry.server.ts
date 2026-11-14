@@ -1,4 +1,5 @@
 import type { ServerModule } from '@ugra/core';
+import applicantFeedback from './applicant-feedback/server';
 import applicantProfile from './applicant-profile/server';
 import clarifyChat from './clarify-chat/server';
 import emergency from './emergency/server';
@@ -17,6 +18,7 @@ import routing from './routing/server';
 
 /** Манифест серверных частей модулей: одна строка на модуль, порядок алфавитный. */
 export const serverModules: ServerModule[] = [
+  applicantFeedback,
   applicantProfile,
   clarifyChat,
   emergency,
@@ -35,6 +37,7 @@ export const serverModules: ServerModule[] = [
 ];
 
 export {
+  applicantFeedback,
   applicantProfile,
   clarifyChat,
   emergency,
