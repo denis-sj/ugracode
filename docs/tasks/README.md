@@ -76,13 +76,11 @@ PR: —
 
 **Фронтенд по утверждённому дизайну** ([../specs/case9-ui-design.md](../specs/case9-ui-design.md)):
 
-- [032-ui-design-foundation.md](032-ui-design-foundation.md) — светлая тема, стекло, компоненты, шапка по ролям, вход
 - [033-ui-screens-redesign.md](033-ui-screens-redesign.md) — перерисовать 14 экранов по макетам (ждёт 032)
 
 **Код, после чекпоинта 1:**
 
 - [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
-- [010-dispatcher-review.md](010-dispatcher-review.md) — поток Б: проверка диспетчером: очередь, правка, подтверждение, журнал
 - [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
 - [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
 - [018-engineer-desk.md](018-engineer-desk.md) — поток Б: рабочее место инженера и замыкание цикла

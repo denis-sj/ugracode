@@ -64,7 +64,7 @@
 
 ЗАДАНИЕ ВЛАДЕЛЬЦА:
 Холст макетов: https://claude.ai/artifact/3LqKwphtxf7KX8sb2cpXfE (если не открывается — те же макеты в docs/specs/ui-mockups/)
-Сначала задача docs/tasks/032-ui-design-foundation.md, затем docs/tasks/033-ui-screens-redesign.md по порядку из таблицы.
-Вариант меню в шапке: <A | B | C | D | E — впишет владелец>
+Задача 032 (основа) закрыта — см. docs/history/2026-11.md; дальше docs/tasks/033-ui-screens-redesign.md по порядку из таблицы.
+Вариант меню в шапке: E «Вдавленное стекло с иконками».
 <что ещё важно в этой сессии>
 ```

@@ -6,7 +6,7 @@
 Исполнитель: —
 Ветка: feature/ui-screens-redesign
 PR: —
-Связано: [../specs/case9-ui-design.md](../specs/case9-ui-design.md), [../specs/ui-mockups/](../specs/ui-mockups/), [032-ui-design-foundation.md](032-ui-design-foundation.md), [README.md](README.md#скиллы-superpowers-для-семёна)
+Связано: [../specs/case9-ui-design.md](../specs/case9-ui-design.md), [../specs/ui-mockups/](../specs/ui-mockups/), [../history/2026-11.md](../history/2026-11.md), [README.md](README.md#скиллы-superpowers-для-семёна)
 
 Каждый экран — по своему макету и разделу 4 спецификации, на компонентах из задачи 032. Данные — из API,
 не из макета. Работать по одному экрану за PR, в папке модуля этого экрана; общие файлы не трогать.
