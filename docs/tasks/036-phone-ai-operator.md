@@ -91,3 +91,67 @@ PR: —
   «кладёт трубку» — на проекторе у диспетчера появляется звонок с репликами и собранная заявка.
 - `pnpm voice:sim` проходит весь путь без телефона.
 - `pnpm check` зелёный, с выключенным модулем остальное работает. Нет новых замечаний SonarQube Blocker/Critical/Major.
+
+## Состояние ветки и план для кодера (Данкония, 2026-11-14)
+
+Ветка `feature/phone-ai-operator` отрезана от `feature/core-contract-update` (в `main` пусто). Начинать с неё:
+`git checkout feature/phone-ai-operator && pnpm install`. `.env` скопировать из основной папки (в git его нет).
+
+### Уже сделано (не переделывать)
+
+| Коммит | Что |
+|---|---|
+| `e962ff4` | **Ядро, вариант A** — отдельный коммит, можно влить отдельно. `ModuleDeps.appeals?.submit(appeal, { actor?, wait? })` → `{ appealId, ticketId, ticketNumber, runId }`; `wait: false` — заявка сразу, разбор в фоне. `headers?` в ctx обработчика модуля. `POST /api/appeals` переведён на тот же `createAppealIntake` (`apps/api/src/server.ts`). Тесты `apps/api/tests/module-intake.test.ts` (успех, фон, ошибка хранилища, заголовки). Запись в `docs/specs/case9-core.md` §3.7 |
+| `1610eb7`, `61423cb`, `45ff915` | Модуль `modules/voice-call/` (см. ниже), регистрация в `modules/registry.*.ts`, зависимость `qrcode@1.5.4` + `@types/qrcode` в корневом `package.json` |
+
+Файлы модуля:
+
+- `server/dialog.ts` + `prompts/dialog.v1.md` — **диалоговый шаг готов**: `ports.llm.chat` (без инструментов), разбор JSON `{say, done, emergency}`,
+  таймаут 6 с → `FALLBACK_QUESTION`; авария по словам кодом (`hasEmergencySign`, без модели) и по `emergency` модели → `EMERGENCY_SAY`;
+  лимит 3 реплики / 90 с → `LIMIT_FAREWELL`; тишина → `SILENCE_QUESTION`; `speakable()` чистит markdown и режет до 200 символов.
+- `server/calls.ts` — `CallStore` в памяти, TTL 30 мин. `server/service.ts` — `createVoiceService`: `turn`, `end` (идемпотентный, запасная расшифровка с клиента, сбой приёма → вежливое прощание).
+- `server/intake.ts` — итог звонка → `deps.appeals.submit(..., { wait: false })`, заявитель `u-call-guest` (создаётся сидом и по месту), разговор пишется в чат обращения.
+- `server/rate-limit.ts` — `RateLimiter` (скользящее окно) и `clientAddress(headers)` (`cf-connecting-ip` → `x-forwarded-for` → `x-real-ip` → `local`).
+- `server/public-url.ts` — `resolvePublicUrl(env)`: `PUBLIC_WEB_URL` важнее `.demo/public-url`.
+- `server/index.ts` — маршруты `POST /turn`, `POST /end`, `GET /calls`, `GET /calls/active`, `GET /calls/:id`, `GET /public-url`; лимиты 6 звонков и 30 реплик в минуту с адреса (429).
+- `web/CallsPage.tsx`, `web/format.ts`, `web/voice.css` — экран диспетчера `/calls` (опрос 1 с, реплики пузырями, «ИИ думает», ссылка на заявку, список звонков).
+- Тесты: `modules/voice-call/tests/*` — 42 зелёных, 1 красный (ниже).
+
+**Замер задержки (реальный ключ Polza, `deepseek/deepseek-v4.1-flash-1017`):** диалоговый шаг через `ports.llm.chat` — **1,5–3,1 с** на 5 фразах,
+укладывается в 6 с. `json_schema` быстрее не делает (2,1–2,4 с). `max_tokens: 120` обрезает русский ответ — не ставить ниже ~300 (и порт его пока не принимает).
+
+### Что осталось — по порядку
+
+1. **Починить тест-контракт (красный).** `assertModuleContract` запрещает модулю маршруты с правом `any`, а `/turn` и `/end` сейчас `any`.
+   Решение (не трогать testkit и ядро): страница `/call` при «Ответить» входит гостем — `POST /api/session { userId: 'u-call-guest' }`
+   (пользователь уже создаётся сидом модуля; добавить его и в `data/users.json`, если сид не гоняется в демо) — и маршруты `/turn`, `/end`
+   объявить с правом `appeal.create`. Лимит частоты по адресу остаётся.
+2. **Тесты API** — `apps/api/tests/voice-call.test.ts` по образцу `clarify-chat.test.ts`: полный путь `turn → turn → end` → заявка с `channel: 'phone'`
+   и сообщениями в чате; 429 при превышении лимита; `FEATURES_OFF=voice-call` → `/api/m/voice-call/turn` 404, остальное работает;
+   `/calls` без права `tickets.queue` → 403.
+3. **Публичная страница `/call`** (`modules/voice-call/web/PhoneCallPage.tsx` + чистые функции в `web/call-flow.ts` с тестами):
+   - Вход без оболочки: в `apps/web/src/App.tsx` до проверки `boot.user` — если `location.pathname === '/call'` или hash `#/call`, рендерить
+     страницу звонка (одна ветка в общем файле). QR ведёт на `<адрес>/call`; Vite в dev отдаёт `index.html` на любой путь.
+   - Экран «входящего вызова»: аватар «ИИ-диспетчер», кольца, зелёная «Ответить», красная «Завершить», таймер, субтитры, индикатор «слушаю», в конце — номер заявки крупно.
+   - **В обработчике нажатия «Ответить»** (жест!): `getUserMedia({audio:true})`, «разблокировать» `speechSynthesis` (пустая `SpeechSynthesisUtterance`), гостевой вход, приветствие.
+   - Цикл: `SpeechRecognition`/`webkitSpeechRecognition` (`lang: 'ru-RU'`, `interimResults: true` для живых субтитров, одна фраза за раз, таймаут тишины ~8 с → пустой текст)
+     → `POST /api/m/voice-call/turn {callId, from, text}` (пока ждём — «Секунду, записываю» и анимация) → `speechSynthesis` (голос `ru-RU`) → снова слушаем;
+     `done` → `POST /end` → прощание с номером. «Завершить» в любой момент → `end` с `transcript`. `callId` — `crypto.randomUUID()`, `from` — «iPhone»/«Android»/«Компьютер» по userAgent.
+   - Нет `SpeechRecognition` или отказ в микрофоне → поле ввода текста (одна строка-пояснение), синтез — если есть.
+   - Анимации — только через `@ugra/ui` (`docs/rules/animations.md`); бесконечные — только кольца вызова и «ИИ думает», с `prefers-reduced-motion`.
+4. **Экран диспетчера** (`web/CallsPage.tsx`): поправить подписи под QR-сценарий (`formatPhone` → подпись устройства, в `format.test.ts` тоже);
+   активный звонок всплывает сам (смена `calls/active` с `null` на звонок → `Modal`/подсветка + короткий звук вызова); QR-код
+   (`qrcode` → `toDataURL`) по `GET /api/m/voice-call/public-url`; нет адреса — подсказка «запустите `pnpm demo:tunnel`».
+5. **`pnpm demo:tunnel`** (`scripts/demo-tunnel.ts`): `spawn('cloudflared', ['tunnel','--url','http://localhost:5173'])`; `ENOENT` →
+   «Нет cloudflared: `brew install cloudflared`»; адрес `https://*.trycloudflare.com` вынуть из stderr (функция `parseTunnelUrl` — отдельно, с тестом
+   на образце вывода), напечатать адрес и QR (`qrcode.toString(url + '/call', { type: 'terminal', small: true })`), записать в `.demo/public-url`.
+   `.demo/` — в `.gitignore`. В `apps/web/vite.config.ts` — `server.allowedHosts: ['.trycloudflare.com']`. **cloudflared не ставить.**
+6. **`pnpm voice:sim`** (`scripts/voice-sim.ts`): поднимает `buildServer` в процессе (как тесты, `MemoryStore`, порты из `.env` — с ключом Polza
+   идёт в облако, без — заглушка) и гоняет `turn`/`end` по сценариям из `testset/calls/*.json` (2–3 звонка: принтер в 312, дым → авария, тишина);
+   печатает реплики, задержку каждого шага и номер заявки; код выхода ≠ 0, если заявка не создана. Скрипт в `package.json`.
+7. **Документы:** `modules/voice-call/README.md` (5 строк по шаблону + «как позвонить с телефона»: туннель, QR, разрешение микрофона),
+   `docs/map/features/voice-call.md`, `.env.example` (`PUBLIC_WEB_URL=`), шаг в `docs/hackathon/demo-script.md`, ограничения в
+   `docs/knowledge/limitations.md` (распознавание делает браузер — Google в Chrome, Apple в Safari; в продукте — серверное распознавание в контуре РФ;
+   состояние звонков в памяти процесса).
+8. **Проверка:** `pnpm check` зелёный, `python3 -m unittest discover -s tests`, страница `/call` и экран `/calls` проверены в браузере
+   (на ноутбуке — `localhost`, микрофон работает без HTTPS). Затем запись в `docs/history/2026-11.md`, удалить этот файл задачи. PR — только после «ок» владельца.
