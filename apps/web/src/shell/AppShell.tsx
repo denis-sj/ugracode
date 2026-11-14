@@ -1,7 +1,7 @@
 import { createElement, useEffect, useMemo, useState } from 'react';
 import type { ComponentType, JSX } from 'react';
 import type { MetaResponse, Ticket, TicketListResponse, User } from '@ugra/contracts';
-import { useActionCounter } from '@ugra/ui';
+import { ThemeToggle, useActionCounter } from '@ugra/ui';
 import type { ApiClient, WebPageProps } from '@ugra/ui';
 import { webModules } from '../web-modules';
 import type { HashRoute } from '../router';
@@ -39,7 +39,6 @@ function ProfileCard({ user }: { user: User }): JSX.Element {
         <p className="ugra-muted">{user.position}</p>
         <p className="ugra-dim">{roleLabel(user.role)}</p>
       </div>
-      <p className="shell-profile__note">Состав профиля ещё не утверждён — экран появится позже.</p>
     </section>
   );
 }
@@ -192,6 +191,8 @@ export function AppShell({ user, meta, api, route }: AppShellProps): JSX.Element
               </svg>
             </button>
           )}
+
+          <ThemeToggle />
 
           <NotificationsButton api={api} user={user} navigate={route.navigate} />
 

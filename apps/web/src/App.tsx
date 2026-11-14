@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, SessionResponse, User, UsersResponse } from '@ugra/contracts';
-import { useBlockMotion } from '@ugra/ui';
+import { ThemeToggle, useBlockMotion } from '@ugra/ui';
 import { ApiError, api } from './api';
 import { LoginScreen } from './LoginScreen';
 import { useHashRoute } from './router';
@@ -75,6 +75,9 @@ export function App(): JSX.Element {
         <span className="ugra-ambient__blob ugra-ambient__blob--blue" />
         <span className="ugra-ambient__blob ugra-ambient__blob--ice" />
       </div>
+
+      {/* Вне шапки (заставка, ошибка API, вход) переключатель плавает в углу. */}
+      {(boot.status !== 'ready' || boot.user === null) && <ThemeToggle floating />}
 
       <div className="app__content" ref={contentRef}>
         {boot.status === 'loading' && (

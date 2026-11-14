@@ -15,6 +15,10 @@ body {
   min-height: 100%;
 }
 
+html {
+  background: var(--color-bg);
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -24,6 +28,37 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Смена темы: плавно только цвета. Класс `theme-animated` ставит inline-скрипт
+   после первой отрисовки, чтобы появление страницы не анимировалось.
+   При prefers-reduced-motion переходы отключаются общим правилом в конце файла. */
+:where(.theme-animated) body {
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
+}
+
+/* Поверхности тоже перекрашиваются плавно. `:where` — нулевая специфичность,
+   чтобы не перебивать собственные transition компонентов (hover, transform). */
+:where(.theme-animated) :where(
+    .ugra-card,
+    .ugra-stat,
+    .ugra-sticker,
+    .ugra-step,
+    .ugra-empty,
+    .ugra-modal__panel,
+    .ugra-toast,
+    .ugra-segmented,
+    .ugra-chip,
+    .ugra-search,
+    .ugra-actions,
+    .ugra-badge,
+    .ugra-field
+  ) {
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--ease-out);
 }
 
 h1,
@@ -226,7 +261,7 @@ kbd {
   border-radius: var(--radius-xl);
   background: var(--glass-sticker);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-sticker);
 }
 
@@ -239,21 +274,21 @@ kbd {
 
 .ugra-card--ok {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-ok) 24%, transparent),
     var(--shadow-card);
 }
 
 .ugra-card--warn {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-warn) 24%, transparent),
     var(--shadow-card);
 }
 
 .ugra-card--danger {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
     var(--shadow-card);
 }
@@ -549,7 +584,7 @@ kbd {
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-pop);
   color: var(--color-text);
   font-size: var(--text-sm);
@@ -941,6 +976,45 @@ kbd {
   animation-delay: calc(var(--dur-loop) / 3);
 }
 
+/* ---------- ThemeToggle (2.4) ---------- */
+
+.ugra-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.ugra-theme-btn:hover {
+  color: var(--color-accent);
+}
+
+.ugra-theme-btn__icon {
+  display: block;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+
+.ugra-theme-btn[aria-pressed='true'] .ugra-theme-btn__icon {
+  transform: rotate(-16deg);
+}
+
+/* На экране входа шапки нет — кнопка висит в правом верхнем углу. */
+.ugra-theme-btn--floating {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-sticky);
+}
+
 /* ---------- Slot ---------- */
 
 .ugra-slot {
@@ -1095,21 +1169,21 @@ kbd {
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-pop);
   outline: none;
 }
 
 .ugra-modal__panel--ok {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-ok) 24%, transparent),
     var(--shadow-pop);
 }
 
 .ugra-modal__panel--danger {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
     var(--shadow-pop);
 }
@@ -1182,7 +1256,7 @@ kbd {
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-pop);
   color: var(--color-text-muted);
   font-size: var(--text-md);
@@ -1489,13 +1563,13 @@ kbd {
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-sticker);
 }
 
 .ugra-sticker--danger {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px color-mix(in srgb, var(--color-danger) 28%, transparent),
     var(--shadow-sticker);
 }
@@ -1513,7 +1587,7 @@ kbd {
 
 .ugra-step--open {
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     0 0 0 1px var(--color-border-strong),
     0 18px 50px color-mix(in srgb, var(--color-text) 10%, transparent);
 }

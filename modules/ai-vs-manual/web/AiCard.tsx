@@ -39,10 +39,7 @@ export function AiCard({
           <h2 id="measure-ai-title">С ИИ</h2>
           <Badge tone="accent">уверенность и цитаты</Badge>
         </div>
-        <p className="measure-lead">
-          Та же заявка из очереди: поля заполнены, у каждого — уверенность и цитата из обращения. Диспетчер
-          сверяет и подтверждает.
-        </p>
+        <p className="measure-lead">Та же заявка из очереди: поля заполнены, у каждого — уверенность и цитата.</p>
       </header>
 
       {!active ? (
@@ -50,9 +47,6 @@ export function AiCard({
           <Button variant="primary" onClick={onStart} disabled={busy}>
             Начать замер с ИИ
           </Button>
-          <span className="measure-hint">
-            Откроется первая заявка из очереди — или та, что указана в <code>?ticket=…</code>.
-          </span>
         </div>
       ) : loading ? (
         <>
@@ -110,7 +104,6 @@ export function AiCard({
             <Button variant="ghost" onClick={onCancel}>
               Отменить
             </Button>
-            <span className="measure-hint">Проверили поля — зафиксировали действия и время.</span>
           </div>
         </>
       ) : (

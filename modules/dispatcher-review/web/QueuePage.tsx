@@ -381,12 +381,6 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
         )}
       </Card>
 
-      <p className="queue-hint">
-        {liveMode === 'sse' ? 'Живые обновления включены' : 'Обновляем опросом раз в 15 секунд'}
-        {' · '}
-        <b>Enter</b> в превью подтверждает, <b>Открыть</b> — проверка по шагам
-      </p>
-
       {error && (
         <Card tone="danger">
           <h2>API не отвечает</h2>

@@ -201,7 +201,6 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
                     <span className="rd-menu__hint">{item.hint}</span>
                   </button>
                 ))}
-                <p className="rd-menu__note">Выгрузка появится с отчётами О1–О8.</p>
               </div>
             )}
           </div>
@@ -229,10 +228,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
       <TilesWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
       <MainWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
 
-      <p className="rd-source-note">
-        Заявки и события — синтетическая история за 6 месяцев (модуль `history-seed`). Выгрузка в
-        Excel, PDF и CSV, отправка на почту и еженедельная сводка появятся вместе с отчётами О1–О8.
-      </p>
+      <p className="rd-source-note">Данные — синтетическая история за 6 месяцев.</p>
     </div>
   );
 }

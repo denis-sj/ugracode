@@ -927,10 +927,6 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
                           {ACTION_LABELS.return}
                         </Button>
                       </div>
-                      <p className="ed-hint">
-                        «Сохранить как статью базы знаний» появится, когда API базы знаний разрешит сохранение
-                        статьи.
-                      </p>
                     </>
                   )}
 
@@ -980,7 +976,6 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
               label="Поиск по базе знаний"
               autoFocus
             />
-            <p className="ed-hint">Поиск по словам и полнотекстовому индексу, без эмбеддингов.</p>
           </Card>
 
           {kbState.error && (

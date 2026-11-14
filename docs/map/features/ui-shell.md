@@ -8,23 +8,29 @@
 очередь диспетчера — [dispatcher-review-ui.md](dispatcher-review-ui.md).
 
 Источник правды по внешнему виду — [case9-ui-design.md](../../specs/case9-ui-design.md), раздел 2.
-Тёмной темы нет; класс `.theme-dark` и тёмные значения удалены из кода.
+**Светлая тема — по умолчанию; тёмная — второй режим** (раздел 2.4): переключатель луна/солнце в шапке,
+значения токенов — в `html[data-theme="dark"]`. Класс `.theme-dark` не используется, системную тему
+(`prefers-color-scheme`) не включаем.
 
 ## Что сделано
 
 | Где                                          | Что                                                                                                                                                                              |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/ui/src/tokens.css`                 | единственный источник цветов, отступов, радиусов, теней, типографики и длительностей; **только светлая тема**; самодостаточный Manrope 400–800 (`fonts/*.woff2`, OFL) без CDN    |
+| `packages/ui/src/tokens.css`                 | единственный источник цветов, отступов, радиусов, теней, типографики и длительностей; светлая тема в `:root`, тёмная — в `html[data-theme="dark"]`; самодостаточный Manrope 400–800 (`fonts/*.woff2`, OFL) без CDN |
 | `packages/ui/src/styles.css`                 | базовые стили и классы компонентов; все цвета — через `var(--…)`, новых хардкод-цветов нет                                                                                       |
 | `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot`, `ProgressScale`, `DetailRow`, `Modal`, `Toast`, `SearchField`, `EmptyState`, `Timer`, `InsightBlock`, `ActionCounterPill`, `PriorityMark`, `Segmented`, `Chip`, `Sticker`, `StepBlock`, `Checklist` |
 | `packages/ui/src/ticket-format.ts`           | чистые функции статусов, шкалы этапов (`in_review` — 2, `assigned` — 3), `stageSegments`, группировки истории, сроков                                                                 |
 | `packages/ui/src/format.ts`                  | уверенность, тона, счётчик действий, `elapsedMs`/`formatElapsed` для таймеров аварии и SLA                                                                                       |
 | `packages/ui/src/animations.ts`              | `flyToField`, `pulse`, `countUp`; длительности читаются из токенов                                                                                                               |
 | `packages/ui/src/useActionCounter.ts`        | счётчик действий для К4: клик, ввод, выбор, переход, системное действие                                                                                                          |
+| `packages/ui/src/theme.ts`                   | тема: чистые функции (`normalizeTheme`, `readStoredTheme`, `applyTheme`, `initialTheme`) и `useTheme`; хранилище в try/catch, системная тема не используется                     |
+| `packages/ui/src/components/ThemeToggle.tsx` | кнопка-переключатель 44 px (луна/солнце), `aria-label="Тёмная тема"`, `aria-pressed`; ставит `data-theme` на `<html>` и пишет выбор в `localStorage` (`ugra.theme`)              |
 | `apps/web/src/App.tsx`                       | загрузка `/api/meta`, `/api/session`, `/api/users`; вход, экран «API не отвечает»                                                                                                |
 | `apps/web/src/LoginScreen.tsx`               | вход выбором готового пользователя (гость — обычный пользователь из данных)                                                                                                      |
 | `apps/web/src/shell/AppShell.tsx`            | одна шапка на все роли, вкладки по роли, счётчики, отрисовка страниц веб-модулей                                                                                                 |
 | `apps/web/src/shell/NotificationsButton.tsx` | колокольчик с выпадающим блоком, `GET /api/notifications`, «Прочитать все»                                                                                                       |
+| `apps/web/index.html`                        | inline-скрипт в `<head>`: читает `ugra.theme` и ставит `data-theme="dark"` до рендера — при перезагрузке нет вспышки светлой                                                    |
+| `apps/web/src/App.tsx`                       | плавающий `ThemeToggle` на заставке, ошибке API и экране входа (шапки там нет)                                                                                                   |
 | `apps/web/src/shell/HistoryDrawer.tsx`       | история обращений заявителя выезжающей панелью справа                                                                                                                            |
 | `apps/web/src/shell/lib.ts`                  | чистые функции: вкладки ролей, инициалы, время уведомлений, поиск                                                                                                                |
 | `apps/web/src/router.ts`                     | hash-роутинг без React Router                                                                                                                                                    |
@@ -67,11 +73,13 @@
   Модулям запрещены свои цвета и «сырые» значения длительностей.
 - Подключение: `apps/web/src/main.tsx` импортирует `@ugra/ui/tokens.css` и `@ugra/ui/styles.css`;
   псевдонимы заданы в `apps/web/vite.config.ts` и корневом `tsconfig.json`.
-- Тема одна — светлая: фон `#F5F6FB`, текст `#0F1222 / #5B6178 / #8A90A6`, акцент `#5A49E0`.
-- Стекло: `--glass-card` (белый градиент .8→.58), `--glass-blur` (20 px, saturate 160 %),
-  `--glass-inset` (внутренняя обводка), `--shadow-card`; у шапки — `--glass-liquid`.
+- Светлая тема (по умолчанию): фон `#F5F6FB`, текст `#0F1222 / #5B6178 / #8A90A6`, акцент `#5A49E0`.
+  Тёмная — второй режим, значения ниже.
+- Стекло: `--glass-card` (в светлой белый градиент .8→.58), `--glass-blur` (20 px, saturate 160 %),
+  `--glass-inset` (внутренняя обводка через `--glass-edge`), `--shadow-card`; у шапки — `--glass-liquid`.
 - Кнопки: главная — графит `--color-graphite` (hover `--color-graphite-hover`), второстепенная —
-  прозрачная с `--ring-inset`; градиентных кнопок и свечения нет.
+  прозрачная с `--ring-inset`; градиентных кнопок и свечения нет. В тёмной теме главная кнопка
+  светлая (`#F2F3FA`) с тёмным текстом — это те же токены, не отдельные правила.
 - Статусы — точка/текст/тонкая линия: `--color-ok`, `--color-warn`, `--color-warn-bright`,
   `--color-info`, `--color-danger`.
 - Приоритет (3.4) — `PriorityMark`: круг-доля 16 px (25/50/75/100 %), у критического и аварии красный;
@@ -80,6 +88,25 @@
   (`ugra-row-flash`). `ugra-rise` и `ugra-sticker` остаются для совместимости, но узлы, которые двигает
   GSAP, их не используют — иначе двойная анимация. `prefers-reduced-motion` отключает всё.
 - Атмосфера: `ugra-ambient` — три размытых пятна; на экране обращения добавляется сетка 80 px.
+  В тёмной теме пятна тише и темнее (`--blob-violet/blue/ice`), сетка почти не видна (`--grid-line`).
+
+### Тёмная тема (2.4)
+
+- Включение: `ThemeToggle` в шапке **слева от колокольчика** (на входе — плавающая кнопка справа
+  сверху). Иконка: луна в светлой теме, солнце в тёмной. `aria-label="Тёмная тема"`, `aria-pressed`
+  отражает режим.
+- Состояние — атрибут `data-theme="dark"` на `<html>`; выбор хранится в `localStorage` под ключом
+  `ugra.theme`. Это единственное место, где тема меняется вручную: экраны и модули своих цветов не знают.
+- Светлая — по умолчанию. Системная тема не используется: без сохранённого выбора всегда светлая.
+- Без вспышки: inline-скрипт в `apps/web/index.html` ставит атрибут до загрузки React; `initialTheme`
+  читает атрибут раньше хранилища. Хранилище недоступно или значение битое — светлая тема, без ошибок.
+- Значения: фон `#0B0D17`, текст `#F2F3FA / #B7BDD3 / #8A90A6`, стекло `rgba(26,29,50,.8→.58)`,
+  обводка `--glass-edge` = `rgba(255,255,255,.08)`, тени `rgba(0,0,0,.4)`, акцент `#A99BFF`,
+  ссылки `#B3A6FF`, статусы `#3DD6A0 / #F5B84A / #5CB8FF / #FF7A59`.
+- Правило для новых стилей: жёстких `#fff`, `#0F1222` и `rgba(...)` в CSS экранов нет; текст на цветной
+  заливке — `--color-on-accent` (белый в обеих темах), на графитовой кнопке — `--color-graphite-contrast`.
+- Плавность: `background-color/color/border-color` меняются за `--dur-base`; `prefers-reduced-motion`
+  отключает переходы (общее правило в конце `styles.css`).
 
 ## Анимации по экранам
 
@@ -166,6 +193,10 @@ npx vite build --config apps/web/vite.config.ts
 - `apps/web/tests/shell.test.ts` — вкладки ролей, инициалы, время уведомлений, поиск, router.
 - `apps/web/tests/meta.test.ts` — сводка `/api/meta`.
 - `apps/web/tests/ui-primitives.test.ts` — разметка примитивов: шкала, `DetailRow`, `Modal`, `Toast`, `Timer`, `InsightBlock`.
+- `packages/ui/tests/theme.test.ts` — тема: светлая по умолчанию, чтение и запись выбора, битое и
+  недоступное хранилище, `data-theme` на `<html>`, приоритет атрибута над хранилищем.
+- `apps/web/tests/theme-toggle.test.ts` — кнопка: луна/солнце, `aria-pressed`, клик меняет тему и
+  сохраняет выбор.
 - `packages/ui/tests/ticket-format.test.ts` — статусы, шкала этапов (`stageSegments`, все статусы и границы), группировка истории, сроки.
 - `packages/ui/tests/format.test.ts` — уверенность, тона, счётчик действий, `elapsedMs` и `formatElapsed`.
 - Сборка кладёт результат в `apps/web/dist` (в репозиторий не коммитится).

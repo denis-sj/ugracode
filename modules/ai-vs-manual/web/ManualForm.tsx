@@ -57,10 +57,7 @@ export function ManualForm({
           <h2 id="measure-manual-title">Вручную</h2>
           <Badge tone="muted">без подсказок</Badge>
         </div>
-        <p className="measure-lead">
-          Пустая форма из реестра полей: искать корпус, кабинет и оборудование нужно самому — в справочниках и
-          CMDB. Ни уверенности, ни цитат здесь нет.
-        </p>
+        <p className="measure-lead">Пустая форма: все поля заполняем сами, уверенности и цитат нет.</p>
       </header>
 
       {fields.length === 0 ? (
@@ -70,9 +67,6 @@ export function ManualForm({
           <Button variant="primary" onClick={onStart} disabled={busy}>
             Начать замер вручную
           </Button>
-          <span className="measure-hint">
-            {fields.length} полей. Счётчик действий и таймер включатся со старта.
-          </span>
         </div>
       ) : (
         <>
@@ -123,9 +117,6 @@ export function ManualForm({
                       inputMode={field.type === 'number' ? 'numeric' : undefined}
                       onChange={(event) => onChange(field.key, event.target.value)}
                     />
-                  )}
-                  {field.type === 'cmdbRef' && (
-                    <span className="measure-field__note">Поиск в CMDB — такое же ручное действие, оно считается.</span>
                   )}
                 </label>
               );

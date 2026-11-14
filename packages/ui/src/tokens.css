@@ -3,8 +3,9 @@
  * Единственный источник цветов, отступов, радиусов, теней и длительностей.
  * Модулям запрещены свои цвета и «сырые» значения анимаций — только эти переменные.
  *
- * Тема одна — светлая (docs/specs/case9-ui-design.md, раздел 2). Тёмной темы нет,
- * класс `.theme-dark` не поддерживается.
+ * Светлая тема — по умолчанию (`:root`), тёмная — второй режим: `html[data-theme="dark"]`
+ * (docs/specs/case9-ui-design.md, раздел 2.4). Класс `.theme-dark` не поддерживается.
+ * Переключатель ставит атрибут на <html>; компоненты о теме не знают и читают только переменные.
  * Шрифт Manrope лежит рядом (fonts/, OFL) — демо работает без интернета и CDN.
  */
 
@@ -72,6 +73,8 @@
   --color-accent-soft: rgba(102, 58, 243, 0.06);
   --color-accent-ring: rgba(102, 58, 243, 0.28);
   --color-accent-contrast: #ffffff;
+  /* Текст на цветной заливке (аватар, пузырь сообщения) — белый в обеих темах. */
+  --color-on-accent: #ffffff;
 
   /* Графит — главные кнопки, закрашенные полоски, счётчики */
   --color-graphite: #14172b;
@@ -79,12 +82,17 @@
   --color-graphite-soft: rgba(15, 18, 34, 0.05);
   --color-graphite-contrast: #ffffff;
 
+  /* Активная вкладка меню: вдавленное стекло (вариант E, дизайн 3.1). */
+  --nav-active-bg: rgba(214, 220, 250, 0.45);
+  --nav-active-inset: inset 0 2px 6px rgba(60, 70, 160, 0.22);
+
   /* Статусы: точка / текст / тонкая линия, не фон экрана */
   --color-ok: #0e8a5f;
   --color-warn: #b26a00;
   --color-warn-bright: #e0a100;
   --color-info: #027dea;
   --color-danger: #d4380d;
+  --color-danger-contrast: #ffffff;
 
   /* Приоритеты */
   --color-priority-emergency: #d4380d;
@@ -109,18 +117,30 @@
   --glass-blur: blur(20px) saturate(160%);
   --glass-blur-panel: blur(24px) saturate(160%);
   --glass-blur-liquid: blur(14px) saturate(180%);
-  --glass-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  /* Кромка стекла: белая в светлой теме, едва заметная в тёмной. */
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --glass-edge-soft: rgba(255, 255, 255, 0.75);
+  --glass-shade: rgba(110, 120, 210, 0.16);
+  --glass-inset: inset 0 0 0 1px var(--glass-edge);
   --glass-inset-liquid:
-    inset 0 1px 1px #fff, inset 0 -3px 8px rgba(110, 120, 210, 0.16),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.75), 0 0 0 1px rgba(15, 18, 34, 0.05);
+    inset 0 1px 1px var(--glass-edge), inset 0 -3px 8px var(--glass-shade),
+    inset 0 0 0 1px var(--glass-edge-soft), 0 0 0 1px var(--color-border);
 
   /* Градиенты интерфейса */
-  --gradient-title: linear-gradient(180deg, #0f1222 35%, #5a49e0);
+  --gradient-title: linear-gradient(180deg, var(--color-text) 35%, var(--color-accent));
   --gradient-progress: linear-gradient(90deg, #7b4dff, #4f6bff);
   --gradient-user-bubble: linear-gradient(135deg, #6a45f5, #4f6bff);
   --gradient-avatar: radial-gradient(120% 90% at 30% 0%, #9b7bff, #5b5bff 55%, #027dea);
-  --gradient-success-wash: linear-gradient(150deg, rgba(14, 138, 95, 0.14), transparent);
-  --gradient-insight: linear-gradient(135deg, rgba(123, 77, 255, 0.09), rgba(2, 125, 234, 0.07));
+  --gradient-success-wash: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--color-ok) 14%, transparent),
+    transparent
+  );
+  --gradient-insight: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 9%, transparent),
+    color-mix(in srgb, var(--color-info) 7%, transparent)
+  );
 
   /* Атмосфера: 2–3 больших размытых пятна */
   --blob-violet: rgba(123, 77, 255, 0.24);
@@ -204,4 +224,97 @@
   --z-sticky: 20;
   --z-overlay: 40;
   --z-toast: 60;
+}
+
+/* ---------- Тёмная тема (второй режим) ----------
+ * Включается атрибутом data-theme="dark" на <html> (переключатель луна/солнце в шапке).
+ * Светлая остаётся по умолчанию; системную тему (prefers-color-scheme) не используем.
+ * Значения — docs/specs/case9-ui-design.md, раздел 2.4.
+ */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Фон и поверхности */
+  --color-bg: #0b0d17;
+  --color-bg-soft: #10131f;
+  --color-surface: #1e2238;
+  --color-surface-2: #171a2b;
+  --color-surface-3: #262b45;
+  --color-overlay: rgba(0, 0, 0, 0.55);
+  --color-border: rgba(242, 243, 250, 0.1);
+  --color-border-strong: rgba(242, 243, 250, 0.18);
+
+  /* Текст */
+  --color-text: #f2f3fa;
+  --color-text-muted: #b7bdd3;
+  --color-text-dim: #8a90a6;
+
+  /* Акцент: на тёмном фиолетовый светлее, иначе не читается */
+  --color-accent: #a99bff;
+  --color-accent-strong: #b3a6ff;
+  --color-accent-soft: rgba(169, 155, 255, 0.12);
+  --color-accent-ring: rgba(169, 155, 255, 0.32);
+  --color-accent-contrast: #0b0d17;
+
+  /* Графит: главная кнопка становится светлой */
+  --color-graphite: #f2f3fa;
+  --color-graphite-hover: #ffffff;
+  --color-graphite-soft: rgba(242, 243, 250, 0.08);
+  --color-graphite-contrast: #0b0d17;
+
+  /* Активная вкладка: вдавленное стекло в тёмном варианте */
+  --nav-active-bg: rgba(169, 155, 255, 0.14);
+  --nav-active-inset: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+
+  /* Статусы — по-прежнему точкой и текстом, не фоном */
+  --color-ok: #3dd6a0;
+  --color-warn: #f5b84a;
+  --color-warn-bright: #ffc94d;
+  --color-info: #5cb8ff;
+  --color-danger: #ff7a59;
+  --color-danger-contrast: #0b0d17;
+
+  /* Приоритеты */
+  --color-priority-emergency: #ff7a59;
+  --color-priority-critical: #ff7a59;
+  --color-priority-high: #ffc94d;
+  --color-priority-medium: #5cb8ff;
+  --color-priority-low: #8a90a6;
+
+  /* Стекло: тёмное, размытие и радиусы те же */
+  --glass-card: linear-gradient(180deg, rgba(26, 29, 50, 0.8), rgba(26, 29, 50, 0.58));
+  --glass-sticker: linear-gradient(180deg, rgba(26, 29, 50, 0.9), rgba(26, 29, 50, 0.72));
+  --glass-panel: rgba(26, 29, 50, 0.9);
+  --glass-liquid:
+    radial-gradient(
+      120% 90% at 30% 0%,
+      rgba(58, 64, 96, 0.95),
+      rgba(26, 29, 50, 0.55) 55%,
+      rgba(16, 19, 34, 0.4)
+    ),
+    linear-gradient(180deg, rgba(26, 29, 50, 0.78), rgba(12, 14, 26, 0.62));
+  --glass-header: linear-gradient(135deg, rgba(123, 77, 255, 0.22), rgba(2, 125, 234, 0.16));
+  --glass-edge: rgba(255, 255, 255, 0.08);
+  --glass-edge-soft: rgba(255, 255, 255, 0.06);
+  --glass-shade: rgba(0, 0, 0, 0.35);
+
+  /* Градиенты: шкала этапов светлее, пузырь и аватар — прежние */
+  --gradient-progress: linear-gradient(90deg, #a99bff, #5cb8ff);
+
+  /* Атмосфера: те же пятна, но тише и темнее; сетка едва заметна */
+  --blob-violet: rgba(90, 60, 200, 0.24);
+  --blob-blue: rgba(20, 90, 170, 0.2);
+  --blob-ice: rgba(60, 90, 130, 0.5);
+  --grid-line: rgba(242, 243, 250, 0.04);
+
+  /* Тени глубже: на тёмном мягкая тень не видна */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-liquid: 0 10px 26px rgba(0, 0, 0, 0.45);
+  --shadow-drawer: 0 24px 70px rgba(0, 0, 0, 0.6);
+  --shadow-sticker: 0 22px 60px rgba(0, 0, 0, 0.5);
+  --shadow-button: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --ring-inset: inset 0 0 0 1px rgba(242, 243, 250, 0.2);
+  --ring-inset-soft: inset 0 0 0 1px rgba(242, 243, 250, 0.12);
 }

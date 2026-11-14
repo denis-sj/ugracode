@@ -321,10 +321,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       <header className="er-head" data-reveal>
         <div>
           <h1 className="er-title">Аварии и массовость</h1>
-          <p className="er-lead">
-            Аварийные заявки сверху и сами в шапке. Проверьте признаки, пройдите регламент и объявите массовый
-            сбой, если похожих обращений из одного корпуса стало много.
-          </p>
+          <p className="er-lead">Аварийные заявки сверху. Проверьте признаки и регламент, при необходимости объявите массовый сбой.</p>
         </div>
         <div className="er-head__actions">
           <Badge tone={tickets.length > 0 ? 'danger' : 'ok'} dot={tickets.length > 0}>
@@ -482,10 +479,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                   </div>
 
                   {analysisMissing && (
-                    <p className="er-note">
-                      ❓ Разбор ИИ недоступен: маршрут анализа вернул ошибку. Признаки, чек-лист и уверенность
-                      появятся, когда разбор завершится.
-                    </p>
+                    <p className="er-note">Разбор ИИ недоступен: признаки и чек-лист появятся позже.</p>
                   )}
                   {verdict !== null && verdict.level === 'none' && (
                     <p className="er-note">
@@ -600,8 +594,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                           <span>сейчас</span>
                         </div>
                         <p className="er-note">
-                          Порог — {MASS_THRESHOLD} похожих за {MASS_WINDOW_MINUTES} минут в одном корпусе. Считает код,
-                          не модель.
+                          Порог — {MASS_THRESHOLD} похожих за {MASS_WINDOW_MINUTES} минут в одном корпусе.
                         </p>
                       </>
                     ) : (
@@ -615,9 +608,6 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                         <Button variant="primary" block onClick={declareIncident} disabled={!hasPlace}>
                           Объявить массовым инцидентом
                         </Button>
-                        <p className="er-note">
-                          ❓ сверить с контрактом: серверного инцидента пока нет — объявление имитируется на клиенте.
-                        </p>
                       </>
                     ) : (
                       <div className="er-incident" ref={incidentRef}>
@@ -625,9 +615,6 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                         <p className="er-incident__text">
                           {incident.size} заявителей получили одно сообщение. Новые похожие обращения прикрепляются
                           сами.
-                        </p>
-                        <p className="er-note">
-                          ❓ сверить с контрактом: серверного инцидента пока нет — это локальная имитация.
                         </p>
                       </div>
                     )}

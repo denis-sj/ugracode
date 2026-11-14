@@ -38,10 +38,7 @@ export function LoginScreen({
       <section className="login-hero">
         <span className="login-brand">Диспетчерская</span>
         <h1 className="login-title">Обращения, которые разбирает ИИ</h1>
-        <p className="login-lead">
-          Выберите, кем войти. Диспетчер видит очередь и проверяет заявки, заявитель — обращение и свои
-          заявки, инженер — задачи, руководитель — отчёты.
-        </p>
+        <p className="login-lead">Выберите, кем войти: диспетчер, заявитель, инженер или руководитель.</p>
       </section>
 
       <section className="login-panel ugra-card" aria-label="Выбор пользователя">

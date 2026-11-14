@@ -185,10 +185,7 @@ export function MeasurePage({ meta, api, query, user }: WebPageProps): JSX.Eleme
         <div>
           <span className="measure-eyebrow">Критерий К4 · {user.role === 'admin' ? 'админ' : 'диспетчер'}</span>
           <h1 className="measure-title">С ИИ / без ИИ</h1>
-          <p className="measure-lead">
-            Одна и та же заявка дважды: пустая форма руками и готовая карточка с уверенностью. Система сама
-            считает действия и время — цифры для финала защиты.
-          </p>
+          <p className="measure-lead">Одна заявка дважды: вручную и с ИИ. Система считает действия и время.</p>
         </div>
         <div className="measure-head__actions">
           {demo && <Badge tone="warn">демо-данные</Badge>}

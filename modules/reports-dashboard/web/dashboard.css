@@ -140,7 +140,7 @@
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 0 0 1px var(--color-surface),
+    inset 0 0 0 1px var(--glass-edge),
     var(--shadow-pop);
   animation: ugra-pop var(--dur-base) var(--ease-out) both;
 }

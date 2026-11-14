@@ -560,7 +560,6 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
                 >
                   Подтвердить и назначить <Kbd>Enter</Kbd>
                 </Button>
-                <span className="review-hint">«Вернуть заявителю» появится вместе с сообщениями (009).</span>
               </>
             }
           >
@@ -577,9 +576,6 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
                 }}
               />
             </label>
-            <p className="review-hint">
-              ❓ Это шаблон из полей заявки: ИИ-черновик и отправка появятся с модулем сообщений (009).
-            </p>
           </StepBlock>
         </div>
 
