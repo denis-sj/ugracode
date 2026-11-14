@@ -1,4 +1,4 @@
-import type { DictionaryItem, FieldDef, FieldOrigin, TicketField } from '@ugra/contracts';
+import type { DictionaryItem, FieldDef, FieldOrigin, RunStreamEvent, TicketField } from '@ugra/contracts';
 
 /** Значение поля в чате: серверное или локальный ответ заявителя. */
 export interface FieldSnapshot {
@@ -334,4 +334,232 @@ export function clampIndex(index: number, total: number): number {
   if (index < 0) return total - 1;
   if (index >= total) return 0;
   return index;
+}
+
+/* ---------- Разбор из `GET /api/tickets/:id/analysis` ---------- */
+
+export interface MissingQuestionOption {
+  value: string;
+  label: string;
+}
+
+export interface MissingQuestion {
+  key: string;
+  label: string;
+  question: string;
+  options: MissingQuestionOption[];
+}
+
+export interface EmergencyView {
+  level: 'suspected' | 'confirmed';
+  /** Уверенность 0…1, в интерфейсе — проценты. */
+  confidence: number;
+  /** Цитаты-признаки из обращения. */
+  signs: string[];
+}
+
+export interface AnalysisView {
+  missing: MissingQuestion[];
+  emergency: EmergencyView | null;
+}
+
+function recordOf(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function textOf(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+function optionsOf(value: unknown): MissingQuestionOption[] {
+  if (!Array.isArray(value)) return [];
+  const options: MissingQuestionOption[] = [];
+  for (const raw of value) {
+    const item = recordOf(raw);
+    const optionValue = item ? textOf(item.value) : null;
+    const optionLabel = item ? textOf(item.label) : null;
+    if (optionValue && optionLabel && !options.some((option) => option.value === optionValue)) {
+      options.push({ value: optionValue, label: optionLabel });
+    }
+  }
+  return options;
+}
+
+function missingOf(value: unknown): MissingQuestion | null {
+  const item = recordOf(value);
+  const key = item ? textOf(item.key) : null;
+  const question = item ? textOf(item.question) : null;
+  if (!item || !key || !question) return null;
+  return { key, label: textOf(item.label) ?? key, question, options: optionsOf(item.options) };
+}
+
+function signsOf(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const signs: string[] = [];
+  for (const raw of value) {
+    const item = recordOf(raw);
+    const sign = item ? textOf(item.quote) ?? textOf(item.sign) : textOf(raw);
+    if (sign && !signs.includes(sign)) signs.push(sign);
+  }
+  return signs;
+}
+
+function emergencyOf(value: unknown): EmergencyView | null {
+  const item = recordOf(value);
+  const level = item ? textOf(item.level) : null;
+  if (level !== 'suspected' && level !== 'confirmed') return null;
+  const rawConfidence = item?.confidence;
+  const confidence =
+    typeof rawConfidence === 'number' && Number.isFinite(rawConfidence)
+      ? Math.min(1, Math.max(0, rawConfidence))
+      : 0;
+  return { level, confidence, signs: signsOf(item?.signs) };
+}
+
+/** Терпимо разбирает `analysis` из ответа API: битое поле не роняет экран. */
+export function parseAnalysis(raw: Record<string, unknown> | null | undefined): AnalysisView {
+  const missingRaw = raw ? raw.missing : undefined;
+  const missing = Array.isArray(missingRaw)
+    ? missingRaw.map(missingOf).filter((item): item is MissingQuestion => item !== null)
+    : [];
+  return { missing, emergency: raw ? emergencyOf(raw.emergency) : null };
+}
+
+export interface EmergencyBadge {
+  text: string;
+  title: string;
+}
+
+/** Плашка аварии для стикера: уровень и уверенность в процентах, цитата — в подсказке. */
+export function emergencyBadge(analysis: AnalysisView | null | undefined): EmergencyBadge | null {
+  const emergency = analysis?.emergency;
+  if (!emergency) return null;
+  const percent = Math.round(emergency.confidence * 100);
+  const text = emergency.level === 'confirmed' ? `Авария · ${percent}%` : `Возможна авария · ${percent}%`;
+  const quote = emergency.signs[0];
+  return { text, title: quote ? `${text}. Признак: «${quote}»` : text };
+}
+
+export interface QuestionsInput {
+  fields: readonly FieldDef[];
+  dictionaries: readonly DictionaryItem[];
+  values: FieldValues;
+  answered?: ReadonlySet<string>;
+  analysis?: AnalysisView | null;
+}
+
+function missingToQuestion(item: MissingQuestion, fields: readonly FieldDef[]): ChatQuestion {
+  const def = fields.find((field) => field.key === item.key);
+  const placeholder = def?.type === 'text' ? 'Свой вариант, например: шумит и мигает' : 'Свой вариант';
+  return {
+    key: item.key,
+    label: item.label,
+    question: item.question,
+    options: item.options.slice(0, 3),
+    placeholder,
+  };
+}
+
+/**
+ * Вопросы из анализа (`missing`) важнее шаблонов реестра: их формулирует модель.
+ * Если `missing` нет — работает прежняя клиентская сборка из `GET /api/meta`.
+ * Ответы, которые уже дали, повторно не спрашиваем.
+ */
+export function questionsFor(input: QuestionsInput): ChatQuestion[] {
+  const answered = input.answered ?? new Set<string>();
+  if (input.analysis && input.analysis.missing.length > 0) {
+    return input.analysis.missing
+      .filter((item) => !answered.has(item.key))
+      .map((item) => missingToQuestion(item, input.fields));
+  }
+  return buildQuestions(input.fields, input.dictionaries, input.values, answered);
+}
+
+/* ---------- Поток разбора (SSE) ---------- */
+
+export type RunStepStatus = 'started' | 'progress' | 'completed' | 'failed';
+
+export interface RunStepView {
+  stepId: string;
+  label: string;
+  status: RunStepStatus;
+  message?: string;
+}
+
+export interface RunProgressView {
+  steps: RunStepView[];
+  /** Текущая подпись для перелива; `null` — шаг закончился. */
+  current: string | null;
+  finished: boolean;
+  failed: boolean;
+}
+
+/** Человеческие подписи шагов пайплайна: в SSE приходит только `stepId`. */
+export const RUN_STEP_LABELS: Readonly<Record<string, string>> = {
+  'intake.normalize': 'Собираем текст обращения',
+  'agent.intake': 'Разбираем обращение',
+  'extraction.ground': 'Проверяем цитаты и технику',
+  'profile.prefill': 'Смотрим профиль и место',
+  'priority.compute': 'Считаем приоритет',
+  'routing.recommend': 'Подбираем исполнителя',
+  'emergency.detect': 'Проверяем признаки аварии',
+  finalize: 'Готовим итог разбора',
+};
+
+export function runStepLabel(stepId: string | undefined): string {
+  if (!stepId) return 'Разбираем обращение';
+  return RUN_STEP_LABELS[stepId] ?? 'Обрабатываем обращение';
+}
+
+export function initialRunProgress(): RunProgressView {
+  return { steps: [], current: null, finished: false, failed: false };
+}
+
+function upsertStep(steps: readonly RunStepView[], next: RunStepView): RunStepView[] {
+  const index = steps.findIndex((step) => step.stepId === next.stepId);
+  if (index < 0) return [...steps, next];
+  return steps.map((step, position) =>
+    position === index ? { ...step, ...next, message: next.message ?? step.message } : step,
+  );
+}
+
+function stepEvent(
+  state: RunProgressView,
+  event: RunStreamEvent,
+  status: RunStepStatus,
+): RunProgressView {
+  if (!event.stepId) return state;
+  const message = textOf(event.message) ?? undefined;
+  const label = runStepLabel(event.stepId);
+  const step: RunStepView = { stepId: event.stepId, label, status, message };
+  return {
+    ...state,
+    steps: upsertStep(state.steps, step),
+    current: status === 'completed' ? null : message ?? label,
+  };
+}
+
+/**
+ * Событие SSE → состояние шагов. История разбора может прийти одним пакетом,
+ * поэтому шаги уникальны по `stepId`, а неизвестный тип события ничего не ломает.
+ */
+export function reduceRunEvent(state: RunProgressView, event: RunStreamEvent): RunProgressView {
+  switch (event.type) {
+    case 'step.started':
+      return stepEvent(state, event, 'started');
+    case 'step.progress':
+      return stepEvent(state, event, 'progress');
+    case 'step.completed':
+      return stepEvent(state, event, 'completed');
+    case 'run.completed':
+      return { ...state, current: null, finished: true, failed: false };
+    case 'run.failed':
+      return { ...state, current: null, finished: true, failed: true };
+    default:
+      return state;
+  }
 }

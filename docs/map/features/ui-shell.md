@@ -16,8 +16,9 @@
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/ui/src/tokens.css`                 | единственный источник цветов, отступов, радиусов, теней, типографики и длительностей; **только светлая тема**; самодостаточный Manrope 400–800 (`fonts/*.woff2`, OFL) без CDN    |
 | `packages/ui/src/styles.css`                 | базовые стили и классы компонентов; все цвета — через `var(--…)`, новых хардкод-цветов нет                                                                                       |
-| `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot` |
-| `packages/ui/src/ticket-format.ts`           | чистые функции статусов, шкалы этапов, группировки истории, сроков                                                                                                               |
+| `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot`, `ProgressScale`, `DetailRow`, `Modal`, `Toast`, `SearchField`, `EmptyState`, `Timer`, `InsightBlock`, `ActionCounterPill` |
+| `packages/ui/src/ticket-format.ts`           | чистые функции статусов, шкалы этапов (`in_review` — 2, `assigned` — 3), `stageSegments`, группировки истории, сроков                                                                 |
+| `packages/ui/src/format.ts`                  | уверенность, тона, счётчик действий, `elapsedMs`/`formatElapsed` для таймеров аварии и SLA                                                                                       |
 | `packages/ui/src/animations.ts`              | `flyToField`, `pulse`, `countUp`; длительности читаются из токенов                                                                                                               |
 | `packages/ui/src/useActionCounter.ts`        | счётчик действий для К4: клик, ввод, выбор, переход, системное действие                                                                                                          |
 | `apps/web/src/App.tsx`                       | загрузка `/api/meta`, `/api/session`, `/api/users`; вход, экран «API не отвечает»                                                                                                |
@@ -76,6 +77,24 @@
   (`ugra-row-flash`). `prefers-reduced-motion` отключает всё.
 - Атмосфера: `ugra-ambient` — три размытых пятна; на экране обращения добавляется сетка 80 px.
 
+## Примитивы экранов (033)
+
+| Компонент | Зачем |
+|---|---|
+| `ProgressScale` | шкала «Собрана → Проверена → Назначена → Выполнена»: 4 сегмента, `stageSegments` обрезает значения и переживает `NaN`; подписи — по флагу |
+| `DetailRow` | пара «подпись → значение» в стикере (`layout="stack"`), итоге проверки и шапке аварии; тон значения — `ok/warn/danger/accent/muted` |
+| `Modal` | окно «Заявка назначена»: Escape, клик по затемнению, фокус в панель |
+| `Toast` | короткая ошибка действия внизу экрана, закрывается сама |
+| `SearchField` | поиск в очереди и истории: лупа, прозрачный ввод, подпись для скринридера |
+| `EmptyState` | пустая очередь/история: заголовок, объяснение, действие |
+| `Timer` и `useElapsed` | таймер аварии и SLA; `formatElapsed` даёт `0:07`, `3 ч 26 мин`, отрицательное время — ноль |
+| `InsightBlock` | «Что это значит» / «Что сделать» под графиками дашборда и отчётов |
+| `ActionCounterPill` | «Ваших действий: N» в карточке проверки (К4) |
+
+Шкала этапов исправлена: `in_review` закрашивает два сегмента (заявка проверена ИИ), `assigned` — три
+(диспетчер назначил), `in_progress` остаётся на третьем до фактического выполнения. Тесты — на все статусы
+и границы (`0…4`, отрицательное, `NaN`, своё число сегментов).
+
 ## Маршруты
 
 - Роутинг — hash (`#/chat`, `#/tickets`, `#/queue`), без React Router. Неизвестный путь уводит
@@ -105,6 +124,7 @@ npx vite build --config apps/web/vite.config.ts
 
 - `apps/web/tests/shell.test.ts` — вкладки ролей, инициалы, время уведомлений, поиск, router.
 - `apps/web/tests/meta.test.ts` — сводка `/api/meta`.
-- `packages/ui/tests/ticket-format.test.ts` — статусы, шкала этапов, группировка истории, сроки.
-- `packages/ui/tests/format.test.ts` — уверенность, тона, счётчик действий.
+- `apps/web/tests/ui-primitives.test.ts` — разметка примитивов: шкала, `DetailRow`, `Modal`, `Toast`, `Timer`, `InsightBlock`.
+- `packages/ui/tests/ticket-format.test.ts` — статусы, шкала этапов (`stageSegments`, все статусы и границы), группировка истории, сроки.
+- `packages/ui/tests/format.test.ts` — уверенность, тона, счётчик действий, `elapsedMs` и `formatElapsed`.
 - Сборка кладёт результат в `apps/web/dist` (в репозиторий не коммитится).

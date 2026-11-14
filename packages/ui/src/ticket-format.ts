@@ -25,12 +25,17 @@ export function ticketStatusTone(status: TicketStatus): BadgeTone {
 /** Шкала «Собрана → Проверена → Назначена → Выполнена»: сколько сегментов закрашено (0…4). */
 export const TICKET_STAGES = ['Собрана', 'Проверена', 'Назначена', 'Выполнена'] as const;
 
+/**
+ * Статус → число закрашенных сегментов шкалы (4.1).
+ * `in_review` — заявка уже проверена ИИ и ждёт диспетчера, поэтому горят «Собрана» и «Проверена»;
+ * `assigned` — диспетчер назначил, горит третий сегмент; `in_progress` — работа идёт, но ещё не выполнена.
+ */
 const STAGE_BY_STATUS: Record<TicketStatus, number> = {
   new: 1,
   ai_draft: 1,
   waiting_applicant: 1,
-  in_review: 1,
-  assigned: 2,
+  in_review: 2,
+  assigned: 3,
   in_progress: 3,
   resolved: 4,
   closed: 4,
@@ -39,6 +44,13 @@ const STAGE_BY_STATUS: Record<TicketStatus, number> = {
 
 export function ticketStage(status: TicketStatus): number {
   return STAGE_BY_STATUS[status];
+}
+
+/** Сегменты шкалы: `true` — закрашен. Значения вне диапазона обрезаются, `NaN` — ноль. */
+export function stageSegments(stage: number, total: number = TICKET_STAGES.length): boolean[] {
+  const count = Number.isFinite(total) ? Math.max(0, Math.trunc(total)) : 0;
+  const filled = Number.isFinite(stage) ? Math.min(count, Math.max(0, Math.trunc(stage))) : 0;
+  return Array.from({ length: count }, (_unused, index) => index < filled);
 }
 
 export function isActiveStatus(status: TicketStatus): boolean {

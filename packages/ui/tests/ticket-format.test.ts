@@ -7,6 +7,7 @@ import {
   formatTicketStatus,
   groupHistory,
   isActiveStatus,
+  stageSegments,
   ticketStage,
   ticketStatusTone,
 } from '../src/ticket-format';
@@ -53,15 +54,44 @@ describe('formatTicketStatus', () => {
 describe('ticketStage', () => {
   it('считает сегменты «Собрана → Проверена → Назначена → Выполнена»', () => {
     expect(ticketStage('new')).toBe(1);
-    expect(ticketStage('in_review')).toBe(1);
-    expect(ticketStage('assigned')).toBe(2);
+    expect(ticketStage('ai_draft')).toBe(1);
+    expect(ticketStage('waiting_applicant')).toBe(1);
+    expect(ticketStage('in_review')).toBe(2);
+    expect(ticketStage('assigned')).toBe(3);
     expect(ticketStage('in_progress')).toBe(3);
     expect(ticketStage('resolved')).toBe(4);
     expect(ticketStage('closed')).toBe(4);
   });
 
+  it('проверенная заявка закрашивает два сегмента, назначенная — три', () => {
+    expect(ticketStage('in_review')).toBeGreaterThan(ticketStage('new'));
+    expect(ticketStage('assigned')).toBeGreaterThan(ticketStage('in_review'));
+    expect(ticketStage('resolved')).toBe(4);
+  });
+
   it('отменённая заявка не заполняет шкалу', () => {
     expect(ticketStage('cancelled')).toBe(0);
+  });
+});
+
+describe('stageSegments', () => {
+  it('закрашивает ровно столько сегментов, сколько прошла заявка', () => {
+    expect(stageSegments(0)).toEqual([false, false, false, false]);
+    expect(stageSegments(2)).toEqual([true, true, false, false]);
+    expect(stageSegments(4)).toEqual([true, true, true, true]);
+  });
+
+  it('обрезает значения вне диапазона и переживает мусор', () => {
+    expect(stageSegments(-3)).toEqual([false, false, false, false]);
+    expect(stageSegments(9)).toEqual([true, true, true, true]);
+    expect(stageSegments(Number.NaN)).toEqual([false, false, false, false]);
+    expect(stageSegments(2, Number.NaN)).toEqual([]);
+    expect(stageSegments(0, 0)).toEqual([]);
+  });
+
+  it('поддерживает своё число сегментов', () => {
+    expect(stageSegments(1, 3)).toEqual([true, false, false]);
+    expect(stageSegments(2.9, 3)).toEqual([true, true, false]);
   });
 });
 

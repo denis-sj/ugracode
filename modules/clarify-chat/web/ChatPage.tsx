@@ -1,18 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import type { CreateAppealResponse, TicketResponse, User, UsersResponse } from '@ugra/contracts';
+import type {
+  CreateAppealResponse,
+  TicketAnalysisResponse,
+  TicketResponse,
+  User,
+  UsersResponse,
+} from '@ugra/contracts';
 import { formatDue } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { AskCard } from './AskCard';
 import { TicketSticker } from './TicketSticker';
 import {
   buildAiSummary,
-  buildQuestions,
   clampIndex,
   fieldValues,
+  parseAnalysis,
   parseEmphasis,
+  questionsFor,
+  type AnalysisView,
   type AnswerMap,
 } from './format';
+import { useRunStream } from './useRunStream';
 import { useVoiceInput } from './useVoiceInput';
 
 interface ChatMessage {
@@ -46,6 +55,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const [error, setError] = useState<string | null>(null);
   const [finalShown, setFinalShown] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [analysis, setAnalysis] = useState<AnalysisView | null>(null);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -53,6 +63,8 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const lastText = useRef('');
   const sendingRef = useRef(false);
   const answeringRef = useRef(false);
+  const ticketIdRef = useRef<string | null>(null);
+  const completionRef = useRef(false);
 
   const nextMessageId = (): string => {
     messageId.current += 1;
@@ -86,8 +98,15 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const values = useMemo(() => (ticket ? fieldValues(ticket.fields, answers) : {}), [ticket, answers]);
   const answeredKeys = useMemo(() => new Set(Object.keys(answers)), [answers]);
   const questions = useMemo(
-    () => buildQuestions(meta.fields, meta.dictionaries, values, answeredKeys),
-    [meta.fields, meta.dictionaries, values, answeredKeys],
+    () =>
+      questionsFor({
+        fields: meta.fields,
+        dictionaries: meta.dictionaries,
+        values,
+        answered: answeredKeys,
+        analysis,
+      }),
+    [analysis, meta.fields, meta.dictionaries, values, answeredKeys],
   );
   const safeIndex = clampIndex(questionIndex, questions.length);
   const question = questions[safeIndex] ?? null;
@@ -105,35 +124,40 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
     [api],
   );
 
-  const sendText = useCallback(
-    async (raw: string, echo: boolean): Promise<void> => {
-      const text = raw.trim();
-      if (text === '' || sendingRef.current) return;
-      sendingRef.current = true;
-      lastText.current = text;
-      setError(null);
-      setSending(true);
-      setStarted(true);
-      setBusy('Разбираю обращение');
-      const sentAttachments = [...attachments];
-      if (echo) {
-        setMessages((previous) => [...previous, { id: nextMessageId(), from: 'me', text }]);
-        setComposerText('');
-        setAttachments([]);
-      }
-      const minimumThinking = sleep(700);
+  const loadAnalysis = useCallback(
+    async (id: string): Promise<AnalysisView | null> => {
       try {
-        const created = await api.post<CreateAppealResponse>('/api/appeals', {
-          text,
-          channel: 'chat',
-          attachments: sentAttachments,
-        });
-        const detail = await api.get<TicketResponse>(`/api/tickets/${created.ticketId}`);
-        await minimumThinking;
-        setTicket(detail);
-        setAnswers({});
-        setQuestionIndex(0);
-        setFinalShown(false);
+        const response = await api.get<TicketAnalysisResponse>(`/api/tickets/${id}/analysis`);
+        return parseAnalysis(response.analysis);
+      } catch {
+        return null;
+      }
+    },
+    [api],
+  );
+
+  const completeRun = useCallback(
+    async (failed: boolean): Promise<void> => {
+      const id = ticketIdRef.current;
+      if (id === null) {
+        setBusy(null);
+        setSending(false);
+        sendingRef.current = false;
+        return;
+      }
+      if (completionRef.current) return;
+      completionRef.current = true;
+      try {
+        if (failed) {
+          setError('Не удалось разобрать обращение. Попробуйте отправить ещё раз.');
+          return;
+        }
+        const detail = await refreshTicket(id);
+        if (!detail) {
+          setError('Разбор завершён, но заявка не открылась. Обновите страницу.');
+          return;
+        }
+        setAnalysis(await loadAnalysis(id));
         const summary = buildAiSummary({
           fields: fieldValues(detail.fields, {}),
           fieldsMeta: meta.fields,
@@ -141,16 +165,60 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         });
         setMessages((previous) => [...previous, { id: nextMessageId(), from: 'ai', text: summary }]);
         trackAction?.('system');
-      } catch (caught) {
-        await minimumThinking;
-        setError(`Не удалось отправить обращение: ${errorText(caught)}`);
       } finally {
         setBusy(null);
         setSending(false);
         sendingRef.current = false;
       }
     },
-    [api, attachments, meta.dictionaries, meta.fields, sending, trackAction],
+    [loadAnalysis, meta.dictionaries, meta.fields, refreshTicket, trackAction],
+  );
+
+  const { progress: runProgress, running: runRunning, start: startRun } = useRunStream({
+    onFinished: (failed) => {
+      void completeRun(failed);
+    },
+  });
+
+  const sendText = useCallback(
+    async (raw: string, echo: boolean): Promise<void> => {
+      const text = raw.trim();
+      if (text === '' || sendingRef.current) return;
+      sendingRef.current = true;
+      completionRef.current = false;
+      lastText.current = text;
+      setError(null);
+      setSending(true);
+      setStarted(true);
+      setBusy('Разбираю обращение');
+      setAnalysis(null);
+      setTicket(null);
+      setAnswers({});
+      setQuestionIndex(0);
+      setFinalShown(false);
+      const sentAttachments = [...attachments];
+      if (echo) {
+        setMessages((previous) => [...previous, { id: nextMessageId(), from: 'me', text }]);
+        setComposerText('');
+        setAttachments([]);
+      }
+      try {
+        const created = await api.post<CreateAppealResponse>('/api/appeals', {
+          text,
+          channel: 'chat',
+          attachments: sentAttachments,
+        });
+        ticketIdRef.current = created.ticketId;
+        void refreshTicket(created.ticketId);
+        startRun(created.appealId);
+      } catch (caught) {
+        setError(`Не удалось отправить обращение: ${errorText(caught)}`);
+        setBusy(null);
+        setSending(false);
+        sendingRef.current = false;
+      }
+    },
+    [api, attachments, refreshTicket, startRun],
   );
 
   const answerQuestion = useCallback(
@@ -240,6 +308,10 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   };
 
   const composerRows = started ? 1 : 4;
+  const currentStepId =
+    runProgress.current === null
+      ? null
+      : ([...runProgress.steps].reverse().find((step) => step.status !== 'completed')?.stepId ?? null);
 
   return (
     <div className={started ? 'chat-page' : 'chat-page chat-page--start'}>
@@ -269,6 +341,29 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
                 )}
               </div>
             ),
+          )}
+
+          {runRunning && runProgress.steps.length > 0 && (
+            <ol className="chat-steps" aria-hidden="true">
+              {runProgress.steps.map((step) => (
+                <li
+                  key={step.stepId}
+                  className={
+                    step.status === 'completed'
+                      ? 'chat-steps__item chat-steps__item--done'
+                      : step.stepId === currentStepId
+                        ? 'chat-steps__item chat-steps__item--current'
+                        : 'chat-steps__item'
+                  }
+                >
+                  <span className="chat-steps__mark">{step.status === 'completed' ? '✓' : '·'}</span>
+                  <span className="chat-steps__label">{step.label}</span>
+                  {step.message && step.message !== step.label && step.status !== 'completed' && (
+                    <span className="chat-steps__message">{step.message}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
           )}
 
           {busy && (
@@ -474,6 +569,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           meta={meta}
           users={users}
           answers={answers}
+          analysis={analysis}
         />
       )}
     </div>

@@ -126,6 +126,57 @@
   animation: ugra-shimmer var(--dur-shimmer) linear infinite;
 }
 
+/* Шаги разбора: приходят из SSE и показываются по мере поступления. */
+.chat-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-steps__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+  animation: ugra-fade var(--dur-base) var(--ease-out) both;
+}
+
+.chat-steps__item--done {
+  color: var(--color-text-muted);
+}
+
+.chat-steps__item--current {
+  color: var(--color-text);
+  font-weight: var(--weight-semi);
+}
+
+.chat-steps__mark {
+  width: 12px;
+  flex: none;
+  text-align: center;
+}
+
+.chat-steps__item--done .chat-steps__mark {
+  color: var(--color-ok);
+}
+
+.chat-steps__label {
+  flex: none;
+}
+
+.chat-steps__message {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-regular);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chat-thread__end {
   height: 2px;
   flex: none;
@@ -584,57 +635,26 @@
   padding: 4px 20px 18px;
 }
 
-.chat-sticker__field {
-  padding: 11px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.chat-sticker__label {
-  color: var(--color-text-dim);
-  font-size: var(--text-sm);
-}
-
-.chat-sticker__value {
-  margin-top: 2px;
-  color: var(--color-text);
-  font-size: 15px;
-  font-weight: var(--weight-semi);
-}
-
-.chat-sticker__value--wait {
-  color: var(--color-text-dim);
-  font-weight: var(--weight-regular);
-}
-
-.chat-sticker__value--accent {
-  color: var(--color-accent);
-}
-
-.chat-sticker__scale {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 5px;
+.chat-sticker__progress {
   margin-top: var(--space-4);
 }
 
-.chat-sticker__seg {
-  height: 5px;
-  border-radius: 3px;
-  background: var(--color-graphite-soft);
-  transition: background var(--dur-slow) var(--ease-out);
-}
-
-.chat-sticker__seg--on {
-  background: var(--gradient-progress);
-}
-
-.chat-sticker__scale-legend {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 5px;
+.chat-sticker__emergency {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 6px;
-  color: var(--color-text-dim);
-  font-size: var(--text-xs);
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+.chat-sticker__emergency-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  animation: ugra-blink var(--dur-loop) var(--ease-out) infinite;
 }
 
 /* ---------- Мои заявки ---------- */

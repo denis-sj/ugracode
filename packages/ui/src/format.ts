@@ -32,6 +32,42 @@ export function formatActions(count: number): string {
   return `Действий: ${safe}`;
 }
 
+export type ElapsedStyle = 'clock' | 'short';
+
+/** Миллисекунды с момента `from`; будущее и мусор дают 0. */
+export function elapsedMs(
+  from: string | number | Date | null | undefined,
+  now: number = Date.now(),
+): number {
+  if (from === null || from === undefined || from === '') return 0;
+  const startedAt = from instanceof Date ? from.getTime() : typeof from === 'number' ? from : Date.parse(from);
+  if (!Number.isFinite(startedAt) || !Number.isFinite(now)) return 0;
+  return Math.max(0, now - startedAt);
+}
+
+/**
+ * Прошедшее время для таймера аварии и SLA.
+ * `clock` — «0:07», «12:40», «1:03:09»; `short` — «меньше минуты», «12 мин», «3 ч 26 мин».
+ * Отрицательные и нечисловые значения дают ноль, а не «-1:05».
+ */
+export function formatElapsed(ms: number, style: ElapsedStyle = 'clock'): string {
+  const safeMs = Number.isFinite(ms) ? Math.max(0, Math.round(ms)) : 0;
+  const totalSeconds = Math.floor(safeMs / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const minutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+
+  if (style === 'short') {
+    if (totalSeconds < 60) return 'меньше минуты';
+    if (hours === 0) return `${Math.max(1, minutes)} мин`;
+    return minutes === 0 ? `${hours} ч` : `${hours} ч ${minutes} мин`;
+  }
+
+  const seconds = totalSeconds % 60;
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+}
+
 /** Дата и время в локальном поясе: «14.11, 10:42». */
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
