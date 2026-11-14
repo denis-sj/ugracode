@@ -60,7 +60,10 @@ export const ticketTable = pgTable(
     assigneeId: text('assignee_id'),
     isEmergency: boolean('is_emergency').notNull().default(false),
     incidentId: text('incident_id'),
+    reactDueAt: tstz('react_due_at'),
     slaDueAt: tstz('sla_due_at'),
+    equipmentId: text('equipment_id'),
+    locationId: text('location_id'),
     confirmedBy: text('confirmed_by'),
     confirmedAt: tstz('confirmed_at'),
     createdAt: tstz('created_at').notNull(),
@@ -237,13 +240,6 @@ export const notificationTable = pgTable('notification', {
   createdAt: tstz('created_at').notNull().defaultNow(),
 });
 
-/** Кэш ответов моделей (порт + ключ запроса). */
-export const aiCacheTable = pgTable('ai_cache', {
-  key: text('key').primaryKey(),
-  port: text('port').notNull(),
-  response: jsonb('response').notNull(),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-});
 
 export const schema = {
   userTable,
@@ -264,7 +260,6 @@ export const schema = {
   dutyShiftTable,
   kbArticleTable,
   notificationTable,
-  aiCacheTable,
 };
 
 export type UserRow = typeof userTable.$inferSelect;

@@ -37,7 +37,9 @@ export function missingFields(fields: readonly FieldDef[], draftFields: Record<s
       label: field.label,
       question: field.ask?.question ?? `Уточните, пожалуйста: ${field.label.toLowerCase()}`,
       widget: field.ask?.widget ?? 'text',
-      options: undefined,
+      source: 'template' as const,
+      allowUnknown: true,
+      allowFreeText: field.ask?.widget === 'text' || field.ask?.widget === 'location',
     }));
 }
 

@@ -28,11 +28,11 @@ services:
       FEATURES_ON: ${FEATURES_ON:-}
       POLZA_API_KEY: ${POLZA_API_KEY:-}
       POLZA_BASE_URL: ${POLZA_BASE_URL:-https://api.polza.ai/api/v1}
-      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-claude-haiku-5.5}
-      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek-v4.1-flash}
-      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-bge-multilingual-gemma2}
-      EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-768}
-      SPEECH_MODEL: ${SPEECH_MODEL:-gigaam-v3}
+      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-deepseek/deepseek-v4.1-flash}
+      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek/deepseek-v4.1-flash}
+      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-}
+      EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-}
+      SPEECH_MODEL: ${SPEECH_MODEL:-ai-sage/gigaam-v3}
     depends_on:
       db:
         condition: service_healthy

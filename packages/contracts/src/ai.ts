@@ -17,19 +17,12 @@ export const EmergencyAspect = z.object({
 });
 export type EmergencyAspect = z.infer<typeof EmergencyAspect>;
 
-export const SentimentAspect = z.object({
-  label: z.enum(['neutral', 'negative', 'pressure']),
-  quote: z.string().nullable(),
-});
-export type SentimentAspect = z.infer<typeof SentimentAspect>;
-
 export const SummaryAspect = z.object({ text: z.string().max(300) });
 export type SummaryAspect = z.infer<typeof SummaryAspect>;
 
 /** Базовые аспекты ядра; модули добавляют свои через реестр аспектов. */
 export const CORE_ASPECTS = {
   emergency: EmergencyAspect,
-  sentiment: SentimentAspect,
   summary: SummaryAspect,
 } as const;
 

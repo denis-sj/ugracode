@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldValue } from './fields';
+import { FieldOrigin, FieldValue } from './fields';
 
 export const Role = z.enum(['applicant', 'dispatcher', 'engineer', 'manager', 'admin']);
 export type Role = z.infer<typeof Role>;
@@ -36,7 +36,7 @@ export const TicketStatus = z.enum([
 ]);
 export type TicketStatus = z.infer<typeof TicketStatus>;
 
-export const PriorityLevel = z.enum(['critical', 'high', 'medium', 'low']);
+export const PriorityLevel = z.enum(['emergency', 'critical', 'high', 'medium', 'low']);
 export type PriorityLevel = z.infer<typeof PriorityLevel>;
 
 export type Permission =
@@ -115,6 +115,8 @@ export const TRANSITIONS: readonly StatusTransition[] = [
   { from: 'waiting_applicant', to: 'in_review', roles: ['dispatcher', 'admin'], permission: 'tickets.transition' },
   { from: 'in_review', to: 'assigned', roles: ['dispatcher', 'admin'], permission: 'tickets.confirm' },
   { from: 'in_review', to: 'cancelled', roles: ['dispatcher', 'admin'], permission: 'tickets.transition' },
+  { from: 'assigned', to: 'in_review', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
+  { from: 'in_progress', to: 'in_review', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
   { from: 'assigned', to: 'in_progress', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
   { from: 'in_progress', to: 'resolved', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
   { from: 'resolved', to: 'closed', roles: ['applicant', 'admin'], permission: 'tickets.transition' },
@@ -146,7 +148,7 @@ export type Appeal = z.infer<typeof Appeal>;
 
 export const SourceFragment = z.object({
   id: z.string(),
-  kind: z.enum(['text', 'transcript', 'image', 'attachment']),
+  kind: z.enum(['text', 'transcript', 'image', 'attachment', 'answer']),
   text: z.string(),
   label: z.string().optional(),
 });
@@ -157,7 +159,15 @@ export const MissingField = z.object({
   label: z.string(),
   question: z.string(),
   widget: z.enum(['buttons', 'select', 'text', 'location']),
-  options: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
+  options: z
+    .array(z.object({ value: z.string(), label: z.string(), validated: z.boolean().default(true) }))
+    .optional(),
+  /** Откуда взялся вопрос: агент или шаблон из реестра полей. */
+  source: z.enum(['ai', 'template']).default('template'),
+  /** Можно ответить «Не знаю» — тогда вопрос уходит диспетчеру. */
+  allowUnknown: z.boolean().default(false),
+  /** Можно ответить свободным текстом, а не только вариантом. */
+  allowFreeText: z.boolean().default(false),
 });
 export type MissingField = z.infer<typeof MissingField>;
 
@@ -183,6 +193,8 @@ export type IncidentLink = z.infer<typeof IncidentLink>;
 
 export const PriorityVerdict = z.object({
   value: PriorityLevel,
+  /** Срок реакции; `slaDueAt` — срок решения. */
+  reactDueAt: z.string().nullable().default(null),
   slaDueAt: z.string(),
   rule: z.string(),
   reasons: z.array(z.string()).default([]),
@@ -210,6 +222,32 @@ export const ReplyDraft = z.object({
 });
 export type ReplyDraft = z.infer<typeof ReplyDraft>;
 
+export const Estimate = z.object({
+  minMinutes: z.number().nonnegative(),
+  maxMinutes: z.number().nonnegative(),
+  basedOn: z.array(z.string()).default([]),
+});
+export type Estimate = z.infer<typeof Estimate>;
+
+export const ChatCard = z.object({
+  cardType: z.string(),
+  payload: z.record(z.string(), z.unknown()),
+});
+export type ChatCard = z.infer<typeof ChatCard>;
+
+/** Сообщение чата заявителя: текст, карточка-вопрос, ответ, системная запись. */
+export const AppealMessage = z.object({
+  id: z.string(),
+  appealId: z.string(),
+  direction: z.enum(['in', 'out']),
+  kind: z.enum(['text', 'question_card', 'answer', 'system', 'card']),
+  body: z.string(),
+  fieldKey: z.string().nullable().default(null),
+  card: ChatCard.optional(),
+  createdAt: z.string(),
+});
+export type AppealMessage = z.infer<typeof AppealMessage>;
+
 export const AnalysisDraft = z.object({
   sources: z.array(SourceFragment),
   fields: z.record(z.string(), FieldValue),
@@ -220,6 +258,7 @@ export const AnalysisDraft = z.object({
   assignees: z.array(AssigneeCandidate).optional(),
   knowledge: z.array(KnowledgeHit).optional(),
   replyDraft: ReplyDraft.optional(),
+  estimate: Estimate.optional(),
   /** Данные модулей: ключ = id модуля, схема живёт в модуле. */
   ext: z.record(z.string(), z.unknown()).default({}),
 });
@@ -293,7 +332,12 @@ export const Ticket = z.object({
   assigneeId: z.string().nullable(),
   isEmergency: z.boolean(),
   incidentId: z.string().nullable(),
+  /** Срок реакции и срок решения. */
+  reactDueAt: z.string().nullable().default(null),
   slaDueAt: z.string().nullable(),
+  /** Связки с CMDB для отчётов и истории оборудования. */
+  equipmentId: z.string().nullable().default(null),
+  locationId: z.string().nullable().default(null),
   confirmedBy: z.string().nullable(),
   confirmedAt: z.string().nullable(),
   createdAt: z.string(),
@@ -307,7 +351,7 @@ export const TicketField = z.object({
   value: z.union([z.string(), z.number()]).nullable(),
   confidence: z.number(),
   quote: z.object({ sourceId: z.string(), text: z.string() }).nullable(),
-  origin: z.enum(['text', 'asked', 'cmdb', 'rule', 'human', 'none']),
+  origin: FieldOrigin,
   needsReview: z.boolean(),
   trace: z.array(z.unknown()).default([]),
   aiValue: z.union([z.string(), z.number()]).nullable(),

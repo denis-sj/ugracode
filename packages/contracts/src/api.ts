@@ -81,6 +81,20 @@ export type TransitionInput = z.infer<typeof TransitionInput>;
 export const ReanalyzeResponse = z.object({ runId: z.string(), ticketId: z.string() });
 export type ReanalyzeResponse = z.infer<typeof ReanalyzeResponse>;
 
+export const TranscribeInput = z.object({
+  audio: z.string().min(1),
+  mimeType: z.string().min(1),
+  language: z.string().optional(),
+});
+export type TranscribeInput = z.infer<typeof TranscribeInput>;
+
+export const TranscribeResponse = z.object({
+  text: z.string(),
+  language: z.string().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+});
+export type TranscribeResponse = z.infer<typeof TranscribeResponse>;
+
 export const UpdateSettingInput = z.object({ value: z.unknown() });
 export type UpdateSettingInput = z.infer<typeof UpdateSettingInput>;
 
@@ -88,7 +102,7 @@ export const MetaResponse = z.object({
   modules: z.array(z.object({ id: z.string(), title: z.string() })),
   fields: z.array(FieldDef),
   dictionaries: z.array(DictionaryItem),
-  aiMode: z.enum(['stub', 'cloud', 'cache-only']),
+  aiMode: z.enum(['stub', 'cloud']),
   roles: z.array(Role),
   priorities: z.array(PriorityLevel),
 });

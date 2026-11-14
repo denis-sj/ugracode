@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FieldDef,
   FieldValue,
+  PriorityLevel,
   Role,
   Ticket,
   TRANSITIONS,
@@ -97,6 +98,17 @@ describe('статусы и права', () => {
       expect(t.roles.length).toBeGreaterThan(0);
       expect(t.permission).not.toBe('any');
     }
+  });
+
+  it('разрешает инженеру вернуть заявку диспетчеру', () => {
+    const transition = findTransition('assigned', 'in_review');
+    expect(transition?.roles).toContain('engineer');
+    expect(findTransition('in_progress', 'in_review')?.roles).toContain('engineer');
+  });
+
+  it('знает пять уровней приоритета, включая emergency', () => {
+    expect(PriorityLevel.safeParse('emergency').success).toBe(true);
+    expect(PriorityLevel.options).toHaveLength(5);
   });
 
   it('проверяет права по роли', () => {

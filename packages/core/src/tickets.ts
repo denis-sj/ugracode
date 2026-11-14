@@ -48,7 +48,10 @@ export class TicketService {
       assigneeId: null,
       isEmergency: false,
       incidentId: null,
+      reactDueAt: null,
       slaDueAt: null,
+      equipmentId: null,
+      locationId: null,
       confirmedBy: null,
       confirmedAt: null,
       createdAt: now,
@@ -85,7 +88,10 @@ export class TicketService {
     const patch: Partial<Ticket> = {
       category,
       departmentId: department,
+      equipmentId: asText(draft.fields.equipmentId?.value) ?? ticket.equipmentId,
+      locationId: asText(draft.fields.locationId?.value) ?? ticket.locationId,
       priority: draft.priority?.value ?? ticket.priority,
+      reactDueAt: draft.priority?.reactDueAt ?? ticket.reactDueAt,
       slaDueAt: draft.priority?.slaDueAt ?? ticket.slaDueAt,
       isEmergency: draft.emergency ? draft.emergency.level !== 'none' : false,
       incidentId: draft.incident?.incidentId ?? null,
@@ -100,7 +106,13 @@ export class TicketService {
     return this.requireTicket(ticketId);
   }
 
-  async transition(ticketId: string, to: TicketStatus, actor: Actor, role?: Role): Promise<Ticket> {
+  async transition(
+    ticketId: string,
+    to: TicketStatus,
+    actor: Actor,
+    role?: Role,
+    reason?: string,
+  ): Promise<Ticket> {
     const ticket = await this.requireTicket(ticketId);
     const transition = findTransition(ticket.status, to);
     if (!transition) {
@@ -116,7 +128,26 @@ export class TicketService {
       updatedAt: this.deps.clock.now().toISOString(),
     });
     if (!updated) throw new Error(`Заявка ${ticketId} не найдена`);
-    await this.publish('ticket.status.changed', actor, ticketId, { from: ticket.status, to });
+    await this.publish('ticket.status.changed', actor, ticketId, { from: ticket.status, to, reason });
+    if (to === 'in_review') {
+      await this.publish('ticket.returned', actor, ticketId, { from: ticket.status, reason });
+    }
+    return updated;
+  }
+
+  /** Продление срока решения с причиной: событие `ticket.deadline.extended`. */
+  async extendDeadline(ticketId: string, newDueAt: string, reason: string, actor: Actor): Promise<Ticket> {
+    const ticket = await this.requireTicket(ticketId);
+    const updated = await this.deps.store.updateTicket(ticketId, {
+      slaDueAt: newDueAt,
+      updatedAt: this.deps.clock.now().toISOString(),
+    });
+    if (!updated) throw new Error(`Заявка ${ticketId} не найдена`);
+    await this.publish('ticket.deadline.extended', actor, ticketId, {
+      previous: ticket.slaDueAt,
+      slaDueAt: newDueAt,
+      reason,
+    });
     return updated;
   }
 

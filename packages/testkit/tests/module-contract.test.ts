@@ -53,6 +53,7 @@ const assessModule = defineModule({
         return {
           priority: {
             value: known ? 'medium' : 'low',
+            reactDueAt: null,
             slaDueAt: '2026-11-15T10:00:00.000Z',
             rule: 'тест',
             reasons: [],

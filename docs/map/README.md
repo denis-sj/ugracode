@@ -45,6 +45,7 @@ apps (api, web) → modules → adapters, db → core → contracts
 | Таблицы и миграция | `packages/db/src/schema.ts`, `packages/db/migrations/0001_init.sql` |
 | Сид | `packages/db/src/seed/index.ts` (`pnpm seed`) |
 | Проверка Polza | `scripts/check-polza.ts` (`pnpm check:polza`) |
+| Речь → текст | `POST /api/transcribe` → `SpeechPort` (`packages/adapters/src/speech/`) |
 
 ## Команды
 
@@ -71,11 +72,11 @@ python3 -m unittest discover -s tests   # проверка ссылок доку
 | `DATABASE_URL` | подключение к PostgreSQL |
 | `PORT` | порт API (по умолчанию 3001) |
 | `SESSION_SECRET` | подпись cookie сессии |
-| `AI_MODE` | `stub` / `cloud` / `cache-only` |
+| `AI_MODE` | `stub` / `cloud` (кэша ответов модели нет) |
 | `FEATURES_OFF`, `FEATURES_ON` | выключение и включение модулей через запятую |
 | `POLZA_API_KEY`, `POLZA_BASE_URL` | провайдер моделей |
 | `LLM_MODEL_MAIN`, `LLM_MODEL_CHEAP` | модели разбора и дешёвых задач |
-| `EMBEDDINGS_MODEL`, `EMBEDDINGS_DIM` | эмбеддинги |
+| `EMBEDDINGS_MODEL`, `EMBEDDINGS_DIM` | не используются (оставлены на будущее) |
 | `SPEECH_MODEL` | распознавание речи |
 | `VITE_API_URL` | адрес API для веба и прокси Vite |
 

@@ -26,15 +26,5 @@ describe('createPorts', () => {
     expect(result.model).toBe('stub');
   });
 
-  it('в cache-only на промахе отдаёт заглушку', async () => {
-    const ports = createPorts({ AI_MODE: 'cache-only' });
-    const result = await ports.llm.structured({
-      promptId: 'x',
-      vars: {},
-      schema: MinimalSchema,
-    });
 
-    expect(result.value).toEqual({ fields: [], aspects: {} });
-    expect(result.cached).toBe(false);
-  });
 });

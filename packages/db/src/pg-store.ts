@@ -54,7 +54,10 @@ function ticketToInsert(ticket: Ticket): TicketInsert {
     assigneeId: ticket.assigneeId,
     isEmergency: ticket.isEmergency,
     incidentId: ticket.incidentId,
+    reactDueAt: ticket.reactDueAt,
     slaDueAt: ticket.slaDueAt,
+    equipmentId: ticket.equipmentId,
+    locationId: ticket.locationId,
     confirmedBy: ticket.confirmedBy,
     confirmedAt: ticket.confirmedAt,
     createdAt: ticket.createdAt,
@@ -74,7 +77,10 @@ function ticketToPatch(patch: Partial<Ticket>): Partial<TicketInsert> {
   if (patch.assigneeId !== undefined) row.assigneeId = patch.assigneeId;
   if (patch.isEmergency !== undefined) row.isEmergency = patch.isEmergency;
   if (patch.incidentId !== undefined) row.incidentId = patch.incidentId;
+  if (patch.reactDueAt !== undefined) row.reactDueAt = patch.reactDueAt;
   if (patch.slaDueAt !== undefined) row.slaDueAt = patch.slaDueAt;
+  if (patch.equipmentId !== undefined) row.equipmentId = patch.equipmentId;
+  if (patch.locationId !== undefined) row.locationId = patch.locationId;
   if (patch.confirmedBy !== undefined) row.confirmedBy = patch.confirmedBy;
   if (patch.confirmedAt !== undefined) row.confirmedAt = patch.confirmedAt;
   if (patch.createdAt !== undefined) row.createdAt = patch.createdAt;

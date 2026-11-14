@@ -11,6 +11,8 @@ export const CoreEventType = z.enum([
   'ticket.confirmed',
   'ticket.assigned',
   'ticket.status.changed',
+  'ticket.deadline.extended',
+  'ticket.returned',
   'message.sent',
   'setting.changed',
 ]);

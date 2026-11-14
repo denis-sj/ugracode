@@ -176,10 +176,8 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
       await db
         .insert(settingTable)
         .values({ key, value, updatedAt: now })
-        .onConflictDoUpdate({
-          target: settingTable.key,
-          set: { value, updatedAt: now },
-        });
+        // Настройки, изменённые в интерфейсе, сид не перезаписывает.
+        .onConflictDoNothing({ target: settingTable.key });
     }
 
     for (const location of mergeLocations(data.cmdb.locations, data.cmdb.equipment)) {

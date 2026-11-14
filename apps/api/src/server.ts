@@ -15,6 +15,8 @@ import {
   TicketField,
   TicketListQuery,
   TicketResponse,
+  TranscribeInput,
+  TranscribeResponse,
   TransitionInput,
   UpdateFieldInput,
   UpdateSettingInput,
@@ -134,7 +136,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     onProgress: (progress) => hub.publish(progress),
   });
 
-  const app = Fastify({ logger: options.logger ?? false });
+  const app = Fastify({ logger: options.logger ?? false, bodyLimit: 25 * 1024 * 1024 });
   const ctx: AppContext = { app, store: options.store, tickets, engine, bus, hub, modules: enabled };
 
   const addRoute = (def: RouteDef): void => {
@@ -175,7 +177,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     });
   };
 
-  registerCoreRoutes(addRoute, options.store, ctx, data, env);
+  registerCoreRoutes(addRoute, options.store, ctx, data, env, options.ports);
 
   for (const mounted of collectRoutes(enabled, deps)) {
     for (const route of mounted.routes) {
@@ -209,6 +211,7 @@ function registerCoreRoutes(
   ctx: AppContext,
   data: ReferenceData,
   env: Record<string, string | undefined>,
+  ports: Ports,
 ): void {
   const { tickets, engine } = ctx;
   addRoute({
@@ -227,10 +230,32 @@ function registerCoreRoutes(
       modules: ctx.modules.map((module) => ({ id: module.id, title: module.title })),
       fields: data.fields,
       dictionaries: data.dictionaries as DictionaryItem[],
-      aiMode: (env.AI_MODE ?? 'stub') as 'stub' | 'cloud' | 'cache-only',
+      aiMode: (env.AI_MODE === 'cloud' ? 'cloud' : 'stub') as 'stub' | 'cloud',
       roles: [...Role.options],
       priorities: [...PriorityLevel.options],
     }),
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/transcribe',
+    access: 'any',
+    body: TranscribeInput,
+    response: TranscribeResponse,
+    handler: async ({ body, user }) => {
+      requireUser(user);
+      const input = body as { audio: string; mimeType: string };
+      try {
+        const transcript = await ports.speech.transcribe({
+          kind: 'audio',
+          data: input.audio,
+          mimeType: input.mimeType,
+        });
+        return { text: transcript.text, language: transcript.language, confidence: transcript.confidence };
+      } catch {
+        throw httpError('Не удалось распознать речь', 502);
+      }
+    },
   });
 
   addRoute({
