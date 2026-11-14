@@ -2,23 +2,23 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md#51-контракт-ответа-модели-шаг-извлечения), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/006-extraction-priority.md](../../tasks/006-extraction-priority.md)
+Связано: [../README.md](../README.md), [../../specs/case9-agent-harness.md](../../specs/case9-agent-harness.md), [../../specs/case9-core.md](../../specs/case9-core.md#51-контракт-ответа-модели-шаг-извлечения), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Агент `intake` разбирает обращение инструментами, затем код проверяет каждый факт. Поля без цитаты
 или вне справочника в заявку не попадают: «агент предлагает — код проверяет — человек подтверждает».
 
 ## Файлы
 
-| Файл | Что там |
-|---|---|
-| `modules/extraction/contracts.ts` | zod-схемы результата агента (`IntakeResult`) и данных модуля в черновике (`ExtractionExtras`) |
-| `modules/extraction/server/intake.ts` | профиль агента `intake`: промпт, инструменты, `submit`, `state()`, `check()`, преобразование полей в `FieldValue` |
-| `modules/extraction/server/rules.ts` | проверки кодом: цитата в тексте, значение из справочника, `pattern`, поиск источника цитаты |
-| `modules/extraction/server/ground.ts` | шаг `extraction.ground`: повторные проверки, порог уверенности, сверка с CMDB, инвентарный номер/IP, `equipmentId`/`locationId` |
-| `modules/extraction/server/evaluate.ts` | точность по полям эталона (`evalMode`), метрики для оценщика 014 |
-| `modules/extraction/server/index.ts` | `defineModule`: шаги `agent.intake` и `extraction.ground`, регистрация агента |
-| `modules/extraction/prompts/intake.v1.md` | промпт агента: роль, реестр полей, правило цитаты, CMDB, авария, вопрос заявителю |
-| `modules/extraction/tests/` | успешный сценарий, выдуманная цитата, значение вне справочника, CMDB, порог, `evaluate`, тест-контракт |
+| Файл                                      | Что там                                                                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `modules/extraction/contracts.ts`         | zod-схемы результата агента (`IntakeResult`) и данных модуля в черновике (`ExtractionExtras`)                                   |
+| `modules/extraction/server/intake.ts`     | профиль агента `intake`: промпт, инструменты, `submit`, `state()`, `check()`, преобразование полей в `FieldValue`               |
+| `modules/extraction/server/rules.ts`      | проверки кодом: цитата в тексте, значение из справочника, `pattern`, поиск источника цитаты                                     |
+| `modules/extraction/server/ground.ts`     | шаг `extraction.ground`: повторные проверки, порог уверенности, сверка с CMDB, инвентарный номер/IP, `equipmentId`/`locationId` |
+| `modules/extraction/server/evaluate.ts`   | точность по полям эталона (`evalMode`), метрики для оценщика 014                                                                |
+| `modules/extraction/server/index.ts`      | `defineModule`: шаги `agent.intake` и `extraction.ground`, регистрация агента                                                   |
+| `modules/extraction/prompts/intake.v1.md` | промпт агента: роль, реестр полей, правило цитаты, CMDB, авария, вопрос заявителю                                               |
+| `modules/extraction/tests/`               | успешный сценарий, выдуманная цитата, значение вне справочника, CMDB, порог, `evaluate`, тест-контракт                          |
 
 ## Как работает
 
@@ -43,13 +43,13 @@
 
 ## Точки входа
 
-| Что | Где |
-|---|---|
-| Агент `intake` (`promptId: modules/extraction/prompts/intake.v1.md`, `maxSteps: 6`) | `modules/extraction/server/intake.ts` |
-| Шаг `agent.intake` (`reads: sources`, `writes: fields, ext`) | `modules/extraction/server/index.ts` |
-| Шаг `extraction.ground` (`reads: fields`, `writes: fields, ext`) | `modules/extraction/server/index.ts`, логика в `ground.ts` |
-| Данные модуля `draft.ext.extraction` | `contracts.ts` (`ExtractionExtras`), читаются другими модулями как данные |
-| Метрики `field_<ключ>` и `fields_accuracy` | `evaluate()` шага `agent.intake` |
+| Что                                                                                 | Где                                                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Агент `intake` (`promptId: modules/extraction/prompts/intake.v1.md`, `maxSteps: 6`) | `modules/extraction/server/intake.ts`                                     |
+| Шаг `agent.intake` (`reads: sources`, `writes: fields, ext`)                        | `modules/extraction/server/index.ts`                                      |
+| Шаг `extraction.ground` (`reads: fields`, `writes: fields, ext`)                    | `modules/extraction/server/index.ts`, логика в `ground.ts`                |
+| Данные модуля `draft.ext.extraction`                                                | `contracts.ts` (`ExtractionExtras`), читаются другими модулями как данные |
+| Метрики `field_<ключ>` и `fields_accuracy`                                          | `evaluate()` шага `agent.intake`                                          |
 
 ## Проверки
 

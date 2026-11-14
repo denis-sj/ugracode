@@ -173,14 +173,14 @@
       "group": "classification",
       "type": "dictionary",
       "dictionary": "impact",
-      "required": false,
-      "extractHint": "Сколько людей затронуто: one (один сотрудник), group (отдел, кабинет, несколько человек), building (весь корпус), enterprise (всё предприятие).",
+      "required": true,
+      "extractHint": "На кого влияет: один человек, группа, корпус, предприятие.",
+      "evalMode": "exact",
       "ask": {
         "question": "Сколько сотрудников затронуто?",
         "widget": "buttons",
         "optionsFrom": "impact"
-      },
-      "evalMode": "exact"
+      }
     },
     {
       "key": "urgency",
@@ -188,14 +188,14 @@
       "group": "classification",
       "type": "dictionary",
       "dictionary": "urgency",
-      "required": false,
-      "extractHint": "Насколько срочно: down (работа полностью стоит), workaround (есть обходной путь), planned (можно подождать, плановое).",
+      "required": true,
+      "extractHint": "Работа стоит / есть обход / не срочно.",
+      "evalMode": "exact",
       "ask": {
         "question": "Работа остановлена или есть обходной путь?",
         "widget": "buttons",
         "optionsFrom": "urgency"
-      },
-      "evalMode": "exact"
+      }
     }
   ]
 }

@@ -151,8 +151,8 @@ sequenceDiagram
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |
 | а6 Скриншот и фото шильдика | SHOULD | `screenshot` | шаг `enrich` (VisionPort), виджет в чате | [026](../tasks/026-screenshot.md) |
 | а7 Подтверждение выполнения | MUST | `engineer-desk` | карточка чата, переход статуса | [018](../tasks/018-engineer-desk.md) |
-| б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../tasks/006-extraction-priority.md) |
-| б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../tasks/006-extraction-priority.md), [008](../history/2026-11.md) |
+| б1, б7–б9 Поля, уверенность, CMDB, защита | MUST | `extraction` | шаги, поля | [006](../history/2026-11.md) |
+| б2, б3 Приоритет и «почему» | MUST | `priority` | шаг, поля, данные | [006](../history/2026-11.md), [008](../history/2026-11.md) |
 | б4, в6 Авария | MUST | `emergency` | аспект, шаг, подписчик, виджеты | [011](../tasks/011-emergency.md) |
 | б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../tasks/016-mass-incident.md) |
 | в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../tasks/010-dispatcher-review.md) |

@@ -2,19 +2,19 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/006-extraction-priority.md](../../tasks/006-extraction-priority.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md#53-ключевые-алгоритмы), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md)
 
 Приоритет считает код по регламенту, а не модель: поля «влияние» и «срочность» приходят из разбора
 с цитатами, дальше — матрица и поправки. Тональность и указания из текста не участвуют.
 
 ## Файлы
 
-| Файл | Что там |
-|---|---|
-| `modules/priority/contracts.ts` | zod-схема `data/priority-matrix.json` и чтение критичности техники из `draft.ext.extraction` |
-| `modules/priority/server/compute.ts` | чистая функция `computePriority()`: матрица, поправки, сроки, «почему»; `evaluatePriority()` |
-| `modules/priority/server/index.ts` | `defineModule`: поля `impact` и `urgency`, шаг `priority.compute` |
-| `modules/priority/tests/` | все клетки матрицы, авария, критичное оборудование, массовость, сроки от `ClockPort`, защита от текста, тест-контракт |
+| Файл                                 | Что там                                                                                                               |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `modules/priority/contracts.ts`      | zod-схема `data/priority-matrix.json` и чтение критичности техники из `draft.ext.extraction`                          |
+| `modules/priority/server/compute.ts` | чистая функция `computePriority()`: матрица, поправки, сроки, «почему»; `evaluatePriority()`                          |
+| `modules/priority/server/index.ts`   | `defineModule`: поля `impact` и `urgency`, шаг `priority.compute`                                                     |
+| `modules/priority/tests/`            | все клетки матрицы, авария, критичное оборудование, массовость, сроки от `ClockPort`, защита от текста, тест-контракт |
 
 ## Как считаем
 
@@ -33,12 +33,12 @@
 
 ## Точки входа
 
-| Что | Где |
-|---|---|
-| Поля `impact`, `urgency` (словари, обязательные, с вопросом в чате) | `modules/priority/server/index.ts` |
-| Шаг `priority.compute` (стадия `assess`, `order 200`, `reads: fields, emergency`, `writes: priority`) | там же |
-| Метрика `priority` по `expected.priority` | `evaluate()` шага |
-| Матрица и сроки | `data/priority-matrix.json` → `data.extra.priorityMatrix` |
+| Что                                                                                                   | Где                                                       |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Поля `impact`, `urgency` (словари, обязательные, с вопросом в чате)                                   | `modules/priority/server/index.ts`                        |
+| Шаг `priority.compute` (стадия `assess`, `order 200`, `reads: fields, emergency`, `writes: priority`) | там же                                                    |
+| Метрика `priority` по `expected.priority`                                                             | `evaluate()` шага                                         |
+| Матрица и сроки                                                                                       | `data/priority-matrix.json` → `data.extra.priorityMatrix` |
 
 ## Проверки
 

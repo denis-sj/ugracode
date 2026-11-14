@@ -94,6 +94,7 @@ export class PipelineEngine {
       missing: [],
       ext: {},
     };
+    const author = this.deps.store ? ((await this.deps.store.getUser(appeal.authorId)) ?? undefined) : undefined;
     const steps = this.selectSteps(options.fromStage);
     const results: StepResultLike[] = [];
     let failed = false;
@@ -105,7 +106,7 @@ export class PipelineEngine {
       if (inStage.length === 0) continue;
       for (const batch of planBatches(inStage)) {
         const outcomes = await Promise.all(
-          batch.map((step) => this.runStep(step, appeal, draft, runId, options)),
+          batch.map((step) => this.runStep(step, appeal, draft, runId, options, author)),
         );
         batch.forEach((_step, index) => {
           const outcome = outcomes[index];
@@ -155,6 +156,7 @@ export class PipelineEngine {
     draft: AnalysisDraft,
     runId: string,
     options: RunOptions,
+    author?: import('@ugra/contracts').User,
   ): Promise<StepOutcome> {
     const startedAt = Date.now();
     const controller = new AbortController();
@@ -165,6 +167,9 @@ export class PipelineEngine {
     const ctx = {
       runId,
       appeal,
+      user: author,
+      db: this.deps.store,
+      bus: this.deps.bus,
       draft: draft as Readonly<AnalysisDraft>,
       ports: this.deps.ports,
       data: this.deps.data,

@@ -1,4 +1,6 @@
-import type { AnalysisDraft, Appeal, DraftKey, Metric, Stage, TraceEntry } from '@ugra/contracts';
+import type { AnalysisDraft, Appeal, DraftKey, Metric, Stage, TraceEntry, User } from '@ugra/contracts';
+import type { EventBus } from '@ugra/contracts';
+import type { KernelStore } from './storage';
 import type { ReferenceData } from './data';
 import type { Ports } from './ports';
 
@@ -18,6 +20,12 @@ export type DraftPatch = Partial<Omit<AnalysisDraft, 'fields' | 'ext'>> & {
 export interface StepContext {
   runId: string;
   appeal: Appeal;
+  /** Автор обращения (если хранилище его знает) — для агентов и проверки ролей. */
+  user?: User;
+  /** Хранилище ядра: шаги могут читать и писать через сервисы, не зная БД. */
+  db?: KernelStore;
+  /** Шина событий — шаги модулей публикуют свои события. */
+  bus?: EventBus;
   draft: Readonly<AnalysisDraft>;
   ports: Ports;
   data: ReferenceData;
