@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "dev:api": "tsx watch apps/api/src/index.ts",
     "dev:web": "vite --config apps/web/vite.config.ts",
@@ -21,7 +22,8 @@
     "check:polza": "tsx scripts/check-polza.ts",
     "eval": "tsx scripts/eval.ts",
     "demo:check": "tsx scripts/demo-check.ts",
-    "demo:reset": "tsx packages/db/src/seed/index.ts --reset"
+    "demo:reset": "tsx packages/db/src/seed/index.ts --reset",
+    "sonar": "bash scripts/sonar.sh"
   },
   "dependencies": {
     "@ugra/adapters": "workspace:*",
@@ -43,6 +45,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/coverage-v8": "^3.2.7",
     "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.4",
     "eslint": "^9.39.0",

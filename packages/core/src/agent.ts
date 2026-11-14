@@ -328,11 +328,30 @@ export async function runAgent<S>(
           runId: deps.runId,
           agentId: profile.id,
           appealId: ctx.appeal?.id,
+          phase: 'finished',
           step,
         },
       });
     } catch {
       // Ошибка шины — не повод падать агенту.
+    }
+  };
+
+  const publishTrace = async (payload: Record<string, unknown>): Promise<void> => {
+    try {
+      await deps.bus?.publish({
+        type: 'agent.step',
+        actor: { kind: 'ai', id: profile.id },
+        payload: {
+          runId: deps.runId,
+          agentId: profile.id,
+          appealId: ctx.appeal?.id,
+          phase: 'running',
+          ...payload,
+        },
+      });
+    } catch {
+      // След в интерфейсе не должен ломать разбор.
     }
   };
 
@@ -344,6 +363,7 @@ export async function runAgent<S>(
     callTokensOut: number,
   ): Promise<CallOutcome> => {
     const tokens = { tokensIn: callTokensIn, tokensOut: callTokensOut };
+    await publishTrace({ n, tool: call.name });
 
     if (call.name === SUBMIT_TOOL) {
       const args = parseArguments(call.arguments);

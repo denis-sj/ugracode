@@ -362,9 +362,12 @@ describe('runAgent', () => {
       makeDeps(llm, [], { bus, store }),
     );
 
+    // След живёт в двух событиях: «шаг начался» (для живого следа в интерфейсе)
+    // и «шаг закончился» (после сохранения шага в БД).
     const events = await store.listEvents({ type: 'agent.step' });
-    expect(events).toHaveLength(1);
-    expect(events[0]?.payload).toMatchObject({ runId: 'run-1', agentId: 'test' });
+    expect(events).toHaveLength(2);
+    expect(events[0]?.payload).toMatchObject({ runId: 'run-1', agentId: 'test', phase: 'running' });
+    expect(events[1]?.payload).toMatchObject({ runId: 'run-1', agentId: 'test', phase: 'finished' });
   });
 });
 

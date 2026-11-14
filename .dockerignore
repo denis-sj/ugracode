@@ -6,5 +6,7 @@ coverage
 .env
 .env.*
 !.env.example
-reports
+reports/*
+!reports/quality.md
+!reports/quality-history.md
 *.log

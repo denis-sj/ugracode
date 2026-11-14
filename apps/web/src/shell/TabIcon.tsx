@@ -78,6 +78,9 @@ export function TabIcon({ name }: { name: TabIconName }): JSX.Element {
       strokeLinejoin="round"
       aria-hidden="true"
     >
+      <g className="shell-tab__duotone" fill="currentColor" stroke="none">
+        {PATHS[name]}
+      </g>
       {PATHS[name]}
     </svg>
   );

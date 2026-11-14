@@ -10,6 +10,7 @@ import type {
 import { formatDue } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { AskCard } from './AskCard';
+import { RunTrace } from './RunTrace';
 import { TicketSticker } from './TicketSticker';
 import {
   buildAiSummary,
@@ -48,6 +49,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const [started, setStarted] = useState(false);
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [traceOpen, setTraceOpen] = useState(false);
   const [ticket, setTicket] = useState<TicketResponse | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -177,7 +179,12 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
     [loadAnalysis, meta.dictionaries, meta.fields, refreshTicket, trackAction],
   );
 
-  const { progress: runProgress, running: runRunning, start: startRun } = useRunStream({
+  const {
+    progress: runProgress,
+    running: runRunning,
+    start: startRun,
+  } = useRunStream({
+    stepDelayMs: 20,
     onFinished: (failed) => {
       void completeRun(failed);
     },
@@ -210,6 +217,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           text,
           channel: 'chat',
           attachments: sentAttachments,
+          async: true,
         });
         ticketIdRef.current = created.ticketId;
         void refreshTicket(created.ticketId);
@@ -323,7 +331,6 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         {!started && (
           <div className="chat-hero" data-reveal>
             <h1 className="chat-hero__title">Что случилось?</h1>
-            <p className="chat-hero__lead">Опишите своими словами — я разберу обращение и соберу заявку.</p>
           </div>
         )}
 
@@ -369,10 +376,13 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
             </ol>
           )}
 
-          {busy && (
-            <div className="chat-think" role="status">
-              {busy}
-            </div>
+          {(busy || runProgress.finished || runProgress.trace.length > 0) && (
+            <RunTrace
+              progress={runProgress}
+              busy={Boolean(busy)}
+              open={traceOpen}
+              onToggle={() => setTraceOpen((previous) => !previous)}
+            />
           )}
 
           {question && !busy && (
@@ -407,9 +417,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           <ScreenshotWidget
             api={api}
             onText={(text) =>
-              setComposerText((previous) =>
-                previous.trim() === '' ? text : `${previous.trim()}\n${text}`,
-              )
+              setComposerText((previous) => (previous.trim() === '' ? text : `${previous.trim()}\n${text}`))
             }
             onError={setError}
           />
@@ -572,6 +580,22 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
               </button>
             </div>
           </form>
+          {!started && (
+            <div className="chat-examples" aria-label="Примеры обращений">
+              {['Не печатает принтер', 'Нет доступа к 1С', 'Не работает интернет'].map((example) => (
+                <button
+                  type="button"
+                  key={example}
+                  onClick={() => {
+                    setComposerText(example);
+                    document.getElementById('chat-input')?.focus();
+                  }}
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

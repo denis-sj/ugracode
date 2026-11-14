@@ -34,6 +34,15 @@ export class ProgressHub {
     return this.finished.has(appealId);
   }
 
+  /** Готовое событие (например, `agent.step`) — в тот же буфер и слушатели. */
+  publishRaw(event: RunStreamEvent): void {
+    const buffer = this.buffers.get(event.appealId) ?? [];
+    buffer.push(event);
+    this.buffers.set(event.appealId, buffer.slice(-300));
+    if (event.type === 'run.completed' || event.type === 'run.failed') this.finished.add(event.appealId);
+    for (const listener of this.listeners.get(event.appealId) ?? []) listener(event);
+  }
+
   subscribe(appealId: string, listener: Listener): () => void {
     const set = this.listeners.get(appealId) ?? new Set<Listener>();
     set.add(listener);

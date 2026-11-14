@@ -61,6 +61,7 @@ import {
 } from '@ugra/core';
 import { serverModules } from '../../../modules/registry.server';
 import { resolveRequestUser, sessionCookieHeader } from './auth';
+import { traceEventFromBus } from './agent-trace';
 import { canSeeEvent } from './event-access';
 import { ProgressHub } from './hub';
 
@@ -262,6 +263,15 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
   const registries = buildRegistries(enabled, options.data.fields);
   const data: ReferenceData = { ...options.data, fields: registries.fields };
   const bus = new KernelEventBus(options.store);
+  // Живой журнал работы агента: событие шины → SSE заявителя (без args и служебных данных).
+  bus.subscribe('agent.step', (event) => {
+    const payload = asRecord(event.payload);
+    const appealId = typeof payload.appealId === 'string' ? payload.appealId : '';
+    const runId = typeof payload.runId === 'string' ? payload.runId : '';
+    if (!appealId || !runId) return;
+    const trace = traceEventFromBus(payload, runId, appealId);
+    if (trace) hub.publishRaw(trace);
+  });
   const tickets = new TicketService({ store: options.store, bus, clock, fields: registries.fields });
   const settings = createSettingsService({ settings: data.settings });
   const deps: ModuleDeps = {
@@ -524,7 +534,7 @@ function registerCoreRoutes(
     access: 'appeal.create',
     body: CreateAppealInput,
     handler: async ({ body, user }) => {
-      const input = body as { text: string; channel: Appeal['channel']; attachments: string[] };
+      const input = body as { text: string; channel: Appeal['channel']; attachments: string[]; async?: boolean };
       if (!user) throw new Error('Нужен вход');
       const appeal: Appeal = {
         id: randomUUID(),
@@ -542,7 +552,27 @@ function registerCoreRoutes(
       });
       const ticket = await tickets.createDraft(appeal);
       await tickets.transition(ticket.id, 'ai_draft', { kind: 'system' });
-      const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' } });
+      const runId = randomUUID();
+
+      if (input.async === true) {
+        // Ответ сразу: клиент подключается к SSE и видит шаги разбора живьём.
+        void (async () => {
+          try {
+            const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' }, runId });
+            await tickets.applyAnalysis(ticket.id, run.draft);
+          } catch (error) {
+            ctx.hub.publishRaw({
+              type: 'run.failed',
+              runId,
+              appealId: appeal.id,
+              status: error instanceof Error ? error.message : 'failed',
+            });
+          }
+        })();
+        return { appealId: appeal.id, ticketId: ticket.id, runId };
+      }
+
+      const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' }, runId });
       await tickets.applyAnalysis(ticket.id, run.draft);
       return { appealId: appeal.id, ticketId: ticket.id, runId: run.runId };
     },

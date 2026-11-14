@@ -89,6 +89,7 @@ const intakeStep: PipelineStep = {
         tools: ctx.tools ?? intakeTools(),
         runId: ctx.runId,
         store: runtime.db,
+        bus: ctx.bus,
         onStep: (step) => reportStep(ctx, step.tool, step.resultSummary),
       },
     );

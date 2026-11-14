@@ -490,12 +490,27 @@ export interface RunStepView {
   message?: string;
 }
 
+export interface RunTraceView {
+  n: number;
+  tool?: string;
+  label: string;
+  summary?: string;
+  durationMs: number;
+  status: 'running' | 'done' | 'blocked' | 'error';
+}
+
 export interface RunProgressView {
   steps: RunStepView[];
+  /** Журнал работы ИИ: вызовы инструментов по порядку. */
+  trace: RunTraceView[];
   /** Текущая подпись для перелива; `null` — шаг закончился. */
   current: string | null;
   finished: boolean;
   failed: boolean;
+  /** Когда начался разбор: для «Разобрал за N с». */
+  startedAt: number;
+  /** Сколько шёл разбор; заполняется при завершении. */
+  elapsedMs?: number;
 }
 
 /** Человеческие подписи шагов пайплайна: в SSE приходит только `stepId`. */
@@ -515,8 +530,36 @@ export function runStepLabel(stepId: string | undefined): string {
   return RUN_STEP_LABELS[stepId] ?? 'Обрабатываем обращение';
 }
 
-export function initialRunProgress(): RunProgressView {
-  return { steps: [], current: null, finished: false, failed: false };
+export function initialRunProgress(now = Date.now()): RunProgressView {
+  return { steps: [], trace: [], current: null, finished: false, failed: false, startedAt: now };
+}
+
+/** «12 с» / «1,2 с» — время шага и всего разбора. */
+export function formatRunDuration(ms: number | undefined): string {
+  if (ms === undefined || !Number.isFinite(ms) || ms < 0) return '';
+  if (ms < 1000) return `${Math.max(1, Math.round(ms))} мс`;
+  const seconds = ms / 1000;
+  return `${seconds >= 10 ? Math.round(seconds) : seconds.toFixed(1).replace('.', ',')} с`;
+}
+
+function upsertTrace(trace: readonly RunTraceView[], next: RunTraceView): RunTraceView[] {
+  const index = trace.findIndex((item) => item.n === next.n);
+  if (index < 0) return [...trace, next];
+  return trace.map((item, position) =>
+    position === index ? { ...item, ...next, summary: next.summary ?? item.summary } : item,
+  );
+}
+
+export function agentStepView(event: RunStreamEvent): RunTraceView | null {
+  if (event.type !== 'agent.step' || !event.n || !event.label) return null;
+  return {
+    n: event.n,
+    tool: event.tool,
+    label: event.label,
+    summary: event.summary,
+    durationMs: event.durationMs ?? 0,
+    status: (event.status as RunTraceView['status']) ?? 'running',
+  };
 }
 
 function upsertStep(steps: readonly RunStepView[], next: RunStepView): RunStepView[] {
@@ -555,6 +598,15 @@ export function reduceRunEvent(state: RunProgressView, event: RunStreamEvent): R
       return stepEvent(state, event, 'progress');
     case 'step.completed':
       return stepEvent(state, event, 'completed');
+    case 'agent.step': {
+      const trace = agentStepView(event);
+      if (!trace) return state;
+      return {
+        ...state,
+        trace: upsertTrace(state.trace, trace),
+        current: trace.status === 'running' ? trace.label : state.current,
+      };
+    }
     case 'run.completed':
       return { ...state, current: null, finished: true, failed: false };
     case 'run.failed':

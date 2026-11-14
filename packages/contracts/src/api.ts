@@ -34,6 +34,8 @@ export const CreateAppealInput = z.object({
   text: z.string().min(1),
   channel: Channel.default('chat'),
   attachments: z.array(z.string()).default([]),
+  /** `true` — ответ сразу после создания заявки, разбор идёт в фоне и стримится в SSE. */
+  async: z.boolean().default(false),
 });
 export type CreateAppealInput = z.infer<typeof CreateAppealInput>;
 
@@ -220,14 +222,30 @@ export const MetaResponse = z.object({
 export type MetaResponse = z.infer<typeof MetaResponse>;
 
 /** События хода разбора, которые уходят в SSE. */
+export const AgentTraceStatus = z.enum(['running', 'done', 'blocked', 'error']);
+export type AgentTraceStatus = z.infer<typeof AgentTraceStatus>;
+
 export const RunStreamEvent = z.object({
-  type: z.enum(['step.started', 'step.progress', 'step.completed', 'run.completed', 'run.failed']),
+  type: z.enum([
+    'step.started',
+    'step.progress',
+    'step.completed',
+    'agent.step',
+    'run.completed',
+    'run.failed',
+  ]),
   runId: z.string(),
   appealId: z.string(),
   stepId: z.string().optional(),
   message: z.string().optional(),
   fields: z.array(z.string()).optional(),
-  status: z.string().optional(),
+  status: z.union([z.string(), AgentTraceStatus]).optional(),
+  /** Шаг работы агента (только для `agent.step`), безопасный для заявителя. */
+  n: z.number().int().positive().optional(),
+  tool: z.string().optional(),
+  label: z.string().optional(),
+  summary: z.string().optional(),
+  durationMs: z.number().nonnegative().optional(),
 });
 export type RunStreamEvent = z.infer<typeof RunStreamEvent>;
 

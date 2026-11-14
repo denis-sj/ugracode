@@ -3,7 +3,8 @@ import type { RunStreamEvent } from '@ugra/contracts';
 import { initialRunProgress, reduceRunEvent, type RunProgressView } from './format';
 
 const DEFAULT_STEP_DELAY_MS = 160;
-const DEFAULT_GUARD_MS = 12_000;
+const DEFAULT_GUARD_MS = 120_000;
+const INACTIVITY_GUARD_MS = 30_000;
 
 export interface UseRunStreamOptions {
   /** Вызывается один раз: `failed` — разбор не удался или поток оборвался. */
@@ -70,13 +71,14 @@ export function useRunStream({
       clearTimers();
       closeSource();
       setRunning(false);
-      setProgress((previous) =>
-        reduceRunEvent(previous, {
+      setProgress((previous) => {
+        const next = reduceRunEvent(previous, {
           type: failed ? 'run.failed' : 'run.completed',
           runId: '',
           appealId: '',
-        }),
-      );
+        });
+        return { ...next, elapsedMs: Date.now() - previous.startedAt };
+      });
       finishedRef.current(failed);
     },
     [clearTimers, closeSource],
@@ -130,6 +132,9 @@ export function useRunStream({
           return;
         }
         queueRef.current.push(event);
+        // Пока события идут, страховка продлевается: живой разбор может идти дольше 12 с.
+        if (guardRef.current !== null) window.clearTimeout(guardRef.current);
+        guardRef.current = window.setTimeout(() => finish(false), INACTIVITY_GUARD_MS);
         if (event.type === 'run.completed' || event.type === 'run.failed') closeSource();
         schedule();
       };

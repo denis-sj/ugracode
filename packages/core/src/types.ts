@@ -51,6 +51,8 @@ export interface PipelineStep {
 }
 
 export interface RunOptions {
+  /** Готовый id запуска: нужен, чтобы API вернул его до фонового разбора. */
+  runId?: string;
   fromStage?: Stage;
   ticketId?: string;
   actor?: { kind: 'user' | 'ai' | 'system'; id?: string };

@@ -1,16 +1,15 @@
 import { createElement, useEffect, useMemo, useState } from 'react';
 import type { ComponentType, JSX } from 'react';
 import type { MetaResponse, Ticket, TicketListResponse, User } from '@ugra/contracts';
-import { ThemeToggle, useActionCounter } from '@ugra/ui';
+import { PersonAvatar, ThemeToggle, useActionCounter } from '@ugra/ui';
 import type { ApiClient, WebPageProps } from '@ugra/ui';
 import { webModules } from '../web-modules';
 import type { HashRoute } from '../router';
 import { toHash } from '../router';
 import { ProfilePage } from '../screens/ProfilePage';
-import { HistoryDrawer } from './HistoryDrawer';
 import { NotificationsButton } from './NotificationsButton';
 import { TabIcon } from './TabIcon';
-import { firstTab, initials, isTabPath, roleLabel, tabTitle, tabsForRole, type TabCounter } from './lib';
+import { firstTab, isTabPath, roleLabel, tabTitle, tabsForRole, type TabCounter } from './lib';
 
 export interface AppShellProps {
   user: User;
@@ -30,7 +29,6 @@ function Placeholder({ title }: { title: string }): JSX.Element {
   );
 }
 
-
 function emptyCounts(): Record<TabCounter, number> {
   return { queue: 0, incidents: 0, tasks: 0 };
 }
@@ -38,7 +36,6 @@ function emptyCounts(): Record<TabCounter, number> {
 /** Одна шапка на все роли (3.1) и отрисовка страницы текущего модуля. */
 export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): JSX.Element {
   const { track } = useActionCounter();
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const tabs = tabsForRole(user.role);
 
@@ -118,6 +115,14 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
             route.navigate(firstTab(user.role).path);
           }}
         >
+          <svg className="shell-brand__mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="currentColor" />
+            <g fill="var(--color-graphite-contrast)">
+              <rect x="8" y="8" width="6" height="16" rx="2" />
+              <rect x="18" y="8" width="6" height="6" rx="2" />
+              <rect x="18" y="18" width="6" height="6" rx="2" />
+            </g>
+          </svg>
           Диспетчерская
         </button>
 
@@ -142,7 +147,9 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
                   {tab.label}
                   {count > 0 && (
                     <span
-                      className={tab.danger ? 'shell-tab__count shell-tab__count--danger' : 'shell-tab__count'}
+                      className={
+                        tab.danger ? 'shell-tab__count shell-tab__count--danger' : 'shell-tab__count'
+                      }
                     >
                       {count}
                     </span>
@@ -153,40 +160,14 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
           })}
         </nav>
 
-        <div className="shell-actions">
-          {user.role === 'applicant' && (
-            <button
-              type="button"
-              className="shell-icon ugra-liquid"
-              aria-label="История обращений"
-              aria-expanded={historyOpen}
-              onClick={() => {
-                track('click');
-                setHistoryOpen(true);
-              }}
-            >
-              <svg
-                width="19"
-                height="19"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                aria-hidden="true"
-              >
-                <path d="M9 6h11M9 12h11M9 18h11" strokeLinecap="round" />
-                <path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" strokeWidth="2.6" strokeLinecap="round" />
-              </svg>
-            </button>
-          )}
-
+        <div className="shell-actions ugra-liquid">
           <ThemeToggle />
 
           <NotificationsButton api={api} user={user} navigate={route.navigate} />
 
           <button
             type="button"
-            className="shell-avatar"
+            className="shell-account"
             aria-label={`Профиль: ${user.fullName}`}
             title={`${user.fullName} — ${roleLabel(user.role)}`}
             onClick={() => {
@@ -194,7 +175,11 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
               route.navigate('/profile');
             }}
           >
-            {initials(user.fullName)}
+            <PersonAvatar name={user.fullName} size={36} />
+            <span className="shell-account__text">
+              <strong>{user.fullName}</strong>
+              <span>{roleLabel(user.role)}</span>
+            </span>
           </button>
         </div>
       </header>
@@ -208,16 +193,6 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
           <Placeholder title={title} />
         )}
       </main>
-
-      {user.role === 'applicant' && (
-        <HistoryDrawer
-          open={historyOpen}
-          api={api}
-          meta={meta}
-          onClose={() => setHistoryOpen(false)}
-          navigate={route.navigate}
-        />
-      )}
     </>
   );
 }

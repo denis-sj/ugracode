@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client } from 'pg';
+import { log } from './log';
 import { DEFAULT_DATABASE_URL } from './pg-store';
 
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url));
@@ -26,7 +27,7 @@ const entry = process.argv[1];
 if (entry && import.meta.url === pathToFileURL(entry).href) {
   runMigrations()
     .then(() => {
-      console.log('Миграция выполнена');
+      log('Миграция выполнена');
     })
     .catch((error: unknown) => {
       console.error('Ошибка миграции:', error);

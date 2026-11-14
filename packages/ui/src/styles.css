@@ -41,7 +41,8 @@ body {
 
 /* Поверхности тоже перекрашиваются плавно. `:where` — нулевая специфичность,
    чтобы не перебивать собственные transition компонентов (hover, transform). */
-:where(.theme-animated) :where(
+:where(.theme-animated)
+  :where(
     .ugra-card,
     .ugra-stat,
     .ugra-sticker,
@@ -1913,4 +1914,37 @@ kbd {
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Локальные векторные аватары: без сети и без персональных фотографий. */
+.ugra-person {
+  display: block;
+  flex: none;
+  border-radius: var(--radius-pill);
+}
+.ugra-person--1,
+.ugra-person--6 {
+  --avatar-hair: var(--avatar-purple);
+  --avatar-face: var(--avatar-peach);
+}
+.ugra-person--2,
+.ugra-person--7 {
+  --avatar-hair: var(--avatar-pink);
+  --avatar-face: var(--avatar-cream);
+}
+.ugra-person--3,
+.ugra-person--8 {
+  --avatar-hair: var(--avatar-purple);
+  --avatar-face: var(--avatar-lilac);
+}
+.ugra-person--4,
+.ugra-person--9 {
+  --avatar-hair: var(--avatar-orange);
+  --avatar-face: var(--avatar-navy);
+  --avatar-ink: var(--avatar-white);
+}
+.ugra-person--5 {
+  --avatar-hair: var(--avatar-gold);
+  --avatar-face: var(--avatar-purple);
+  --avatar-ink: var(--avatar-white);
 }

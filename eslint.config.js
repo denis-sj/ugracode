@@ -19,7 +19,17 @@ const forbidden = (pkgs, allowedSubpaths = []) => ({
 });
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', 'coverage/**', '**/*.d.ts'] },
+  {
+    // Артефакты вне сборки: чужие worktree-копии в .claude/ и пакет макетов владельца.
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'coverage/**',
+      '**/*.d.ts',
+      '.claude/**',
+      'Claude outputs/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

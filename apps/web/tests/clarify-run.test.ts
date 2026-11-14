@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DictionaryItem, FieldDef, RunStreamEvent } from '@ugra/contracts';
 import {
   emergencyBadge,
+  formatRunDuration,
   initialRunProgress,
   parseAnalysis,
   questionsFor,
@@ -250,5 +251,59 @@ describe('стикер обновляется по ответам', () => {
     });
     expect(filled.find((row) => row.key === 'place')?.value).toBe('кабинет 312, корпус Б');
     expect(filled.find((row) => row.key === 'place')?.tone).toBe('ok');
+  });
+});
+
+describe('журнал работы ИИ', () => {
+  const agentEvent = (payload: Partial<RunStreamEvent>): RunStreamEvent => ({
+    type: 'agent.step',
+    runId: 'run-1',
+    appealId: 'appeal-1',
+    ...payload,
+  } as RunStreamEvent);
+
+  it('старт инструмента добавляет шаг со статусом running', () => {
+    const state = reduceRunEvent(
+      initialRunProgress(1000),
+      agentEvent({ n: 1, tool: 'cmdb_find_equipment', label: 'Ищу оборудование в базе', status: 'running' }),
+    );
+    expect(state.trace).toHaveLength(1);
+    expect(state.trace[0]).toMatchObject({ n: 1, status: 'running' });
+    expect(state.current).toBe('Ищу оборудование в базе');
+  });
+
+  it('завершение обновляет шаг, итог и время, не плодит дубли', () => {
+    const running = reduceRunEvent(
+      initialRunProgress(),
+      agentEvent({ n: 1, tool: 'kb_search', label: 'Ищу в базе знаний', status: 'running' }),
+    );
+    const done = reduceRunEvent(
+      running,
+      agentEvent({
+        n: 1,
+        tool: 'kb_search',
+        label: 'Ищу в базе знаний',
+        summary: 'База знаний: 2 статей',
+        durationMs: 1200,
+        status: 'done',
+      }),
+    );
+    expect(done.trace).toHaveLength(1);
+    expect(done.trace[0]).toMatchObject({ status: 'done', summary: 'База знаний: 2 статей', durationMs: 1200 });
+  });
+
+  it('ошибка инструмента остаётся в журнале', () => {
+    const state = reduceRunEvent(
+      initialRunProgress(),
+      agentEvent({ n: 2, label: 'Смотрю справочник', summary: 'не удалось выполнить', status: 'error' }),
+    );
+    expect(state.trace[0]?.status).toBe('error');
+  });
+
+  it('форматирует время разбора и шага', () => {
+    expect(formatRunDuration(850)).toBe('850 мс');
+    expect(formatRunDuration(1240)).toBe('1,2 с');
+    expect(formatRunDuration(12_400)).toBe('12 с');
+    expect(formatRunDuration(undefined)).toBe('');
   });
 });

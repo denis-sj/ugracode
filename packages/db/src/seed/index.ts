@@ -26,6 +26,7 @@ import {
   settingTable,
   userTable,
 } from '../schema';
+import { log } from '../log';
 import { loadSeedData, mergeLocations } from './load-data';
 
 /** Демо-таблицы для `--reset`. `event_log` не трогаем: журнал только на добавление. */
@@ -74,7 +75,7 @@ function pickModuleList(loaded: unknown): unknown[] {
 async function loadEnabledModules(): Promise<ServerModule[]> {
   const url = new URL('../../../../modules/registry.server.ts', import.meta.url);
   if (!existsSync(fileURLToPath(url))) {
-    console.log('Реестр модулей не найден — сид без модулей');
+    log('Реестр модулей не найден — сид без модулей');
     return [];
   }
   try {
@@ -109,7 +110,7 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
   try {
     if (options.reset) {
       await pool.query(`TRUNCATE TABLE ${RESET_TABLES.join(', ')} RESTART IDENTITY CASCADE`);
-      console.log('Демо-таблицы очищены, event_log сохранён');
+      log('Демо-таблицы очищены, event_log сохранён');
     }
 
     // Пользователей из data/users.json не перезаписываем: правки в интерфейсе важнее сида.
@@ -309,7 +310,7 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
     }
 
     const onShift = data.engineers.filter((engineer) => engineer.onShift).length;
-    console.log(
+    log(
       `Базовые данные: ${data.users.length} пользователей, ${data.engineers.length} инженеров ` +
         `(${onShift} на смене), ${data.fields.length} полей, ${data.dictionaries.length} справочников, ` +
         `${data.cmdb.equipment.length} единиц оборудования, ${data.kbArticles.length} статей`,
@@ -341,7 +342,7 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
       if (!module.seed) continue;
       try {
         await module.seed(seedDeps);
-        console.log(`Модуль ${module.id}: данные загружены`);
+        log(`Модуль ${module.id}: данные загружены`);
       } catch (error) {
         console.warn(`Модуль ${module.id}: сид упал:`, error);
       }
@@ -355,7 +356,7 @@ const entry = process.argv[1];
 if (entry && import.meta.url === pathToFileURL(entry).href) {
   seed({ reset: process.argv.includes('--reset') })
     .then(() => {
-      console.log('Сид выполнен');
+      log('Сид выполнен');
     })
     .catch((error: unknown) => {
       console.error('Ошибка сида:', error);

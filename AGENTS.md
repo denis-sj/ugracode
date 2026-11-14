@@ -99,10 +99,10 @@ AGENTS.md  (ты здесь)
 [environments](docs/knowledge/environments.md) · [limitations](docs/knowledge/limitations.md) ·
 [tasks](docs/tasks/README.md) · [specs](docs/specs/README.md) · [plans](docs/plans/README.md) ·
 [history](docs/history/2026-11.md) · [sessions](docs/sessions/2026-11-14-kickoff.md) ·
-[последняя сессия](docs/sessions/2026-11-14-agent-harness.md) ·
+[последняя сессия](docs/sessions/2026-11-14-presentation.md) ·
 [**агентный харнесс и проверки**](docs/specs/case9-agent-harness.md) ·
 [**фичи в архитектуре**](docs/specs/case9-features.md) ·
-[**дизайн интерфейса**](docs/specs/case9-ui-design.md) · [**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
+[**дизайн интерфейса**](docs/specs/case9-ui-design.md) · [**презентация**](docs/specs/case9-presentation.md) · [**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
 [ideas](docs/ideas/README.md)
 
 Правило: новый файл в `docs/rules/`, `docs/map/`, `docs/knowledge/` или `docs/hackathon/`

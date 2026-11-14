@@ -18,5 +18,33 @@ export default defineConfig({
     include: ['packages/**/tests/**/*.test.ts', 'modules/**/tests/**/*.test.ts', 'apps/**/tests/**/*.test.ts'],
     environment: 'node',
     testTimeout: 15000,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
+      // Меряем серверную логику: API, ядро/адаптеры/база и серверные части модулей.
+      include: [
+        'apps/api/src/**/*.ts',
+        'packages/contracts/src/**/*.ts',
+        'packages/core/src/**/*.ts',
+        'packages/adapters/src/**/*.ts',
+        'packages/db/src/**/*.ts',
+        'modules/*/server/**/*.ts',
+      ],
+      exclude: [
+        '**/*.test.ts',
+        '**/tests/**',
+        '**/prompts/**',
+        'packages/db/src/seed/**',
+        'packages/db/src/migrate.ts',
+        'modules/*/server/index.ts',
+      ],
+      thresholds: {
+        lines: 60,
+        statements: 60,
+        functions: 60,
+        branches: 50,
+      },
+    },
   },
 });

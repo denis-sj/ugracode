@@ -78,7 +78,7 @@ export class PipelineEngine {
   constructor(private readonly deps: PipelineDeps) {}
 
   async run(appeal: Appeal, options: RunOptions = {}): Promise<RunResult> {
-    const runId = randomUUID();
+    const runId = options.runId ?? randomUUID();
     const run: PipelineRun = {
       id: runId,
       ticketId: options.ticketId ?? null,

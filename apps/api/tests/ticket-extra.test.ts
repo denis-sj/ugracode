@@ -205,3 +205,38 @@ describe('возврат заявителю и фильтр аварий', () =>
     expect((emergencies.json() as { tickets: unknown[] }).tickets).toHaveLength(0);
   });
 });
+
+describe('фоновый разбор (async)', () => {
+  it('отвечает сразу с runId и не ждёт пайплайн', async () => {
+    const { ctx, applicant } = await setup();
+    const started = Date.now();
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/appeals',
+      headers: { cookie: applicant },
+      payload: { text: PRINTER_TEXT, async: true },
+    });
+    const took = Date.now() - started;
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as { appealId: string; ticketId: string; runId: string };
+    expect(body.runId.length).toBeGreaterThan(0);
+    expect(took).toBeLessThan(1500);
+  });
+
+  it('без async работает как раньше — заявка уже разобрана', async () => {
+    const { ctx, applicant } = await setup();
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/appeals',
+      headers: { cookie: applicant },
+      payload: { text: PRINTER_TEXT },
+    });
+    const body = response.json() as { ticketId: string };
+    const ticket = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/tickets/${body.ticketId}`,
+      headers: { cookie: applicant },
+    });
+    expect((ticket.json() as { ticket: { status: string } }).ticket.status).not.toBe('new');
+  });
+});

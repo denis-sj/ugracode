@@ -224,6 +224,23 @@
   --z-sticky: 20;
   --z-overlay: 40;
   --z-toast: 60;
+
+  /* Светлый handoff владельца: 16 экранов, 2026-11-14. */
+  --layout-page: 1160px;
+  --layout-applicant: 960px;
+  --avatar-ink: #202338;
+  --avatar-face: #fff4b0;
+  --avatar-hair: #2cbfb5;
+  --avatar-peach: #ffd6a2;
+  --avatar-cream: #fff1e7;
+  --avatar-lilac: #f0e3ff;
+  --avatar-purple: #795aff;
+  --avatar-pink: #f34179;
+  --avatar-teal: #05bd9a;
+  --avatar-navy: #084550;
+  --avatar-orange: #ff9468;
+  --avatar-gold: #f8bc35;
+  --avatar-white: #ffffff;
 }
 
 /* ---------- Тёмная тема (второй режим) ----------

@@ -12,3 +12,5 @@ __pycache__/
 
 .claude/
 generated_images/
+# Пакет макетов от владельца (картинки, HTML, архивы) — не часть сборки.
+Claude outputs/

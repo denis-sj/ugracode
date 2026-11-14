@@ -23,9 +23,9 @@
 | 9 | План и описание внедрения | раздел 4 этого файла | ✅ |
 | 10 | Сценарий демо на защите | [demo-script.md](demo-script.md) | ✅ |
 | 11 | Видео демо | записать по сценарию (5 минут) | ❌ |
-| 12 | Презентация | файл для платформы event.edro.su | ❓ |
-| 13 | SonarQube: нет Blocker / Critical / Major | локальный прогон не зафиксирован | ❓ |
-| 14 | Покрытие тестами в SonarQube | нет `@vitest/coverage-v8` → lcov не создаётся | ❌ TODO |
+| 12 | Презентация | `presentation/index.html` под кликер — [спецификация](../specs/case9-presentation.md), README в `presentation/`; цифры К4 вписать в `DATA` из [reports/measure.md](../../reports/measure.md) после замера | ✅ |
+| 13 | SonarQube: нет Blocker / Critical / Major | прогон 2026-11-14, Quality Gate OK, 0 issues; [reports/sonarqube-summary.md](../../reports/sonarqube-summary.md) | ✅ |
+| 14 | Покрытие тестами в SonarQube | lcov создаётся, Sonar 83 %, Vitest 84,11 % строк (цель ≥ 60 %) | ✅ |
 | 15 | Флаги фич | `FEATURES_OFF=<id>` выключает модуль, остальное работает | ✅ |
 | 16 | Запасная копия демо | сервер владельца, ❓ адрес | ❓ |
 | 17 | Ключи и доступы | `POLZA_API_KEY` в `.env`, в репозиторий не попадает | ✅ |
@@ -44,27 +44,15 @@
   документации (`python3 -m unittest discover -s tests`).
 - `pnpm check` = `tsc --noEmit` + ESLint (включая границы слоёв) + Vitest.
 
-Чего нет и почему:
+Покрытие и анализ:
 
-- **Покрытие не подключено.** В зависимостях нет `@vitest/coverage-v8`, в `vitest.config.ts` нет
-  `test.coverage`, поэтому `coverage/lcov.info` не создаётся, а пути в `sonar-project.properties`
-  указывают на несуществующий файл. Добавлять зависимость в этой задаче нельзя (зона — документация);
-  TODO для владельца: `pnpm add -D @vitest/coverage-v8`, включить `coverage.reporter: ['lcov']`
-  и `coverage.include` для серверной логики, затем добавить шаг `pnpm test -- --coverage` в CI.
-  Цель из правил — не ниже 60 % для серверной логики.
-- **`pnpm sonar` не существует**, хотя спецификация его упоминает. Запуск вручную:
-
-  ```bash
-  docker compose --profile sonar up -d sonar     # http://localhost:9000, admin/admin
-  docker run --rm \
-    -e SONAR_HOST_URL=http://host.docker.internal:9000 \
-    -e SONAR_TOKEN=<токен из интерфейса> \
-    -v "$PWD:/usr/src" sonarsource/sonar-scanner-cli
-  ```
-
-  Либо добавить скрипт `sonar` в `package.json` (вне зоны этой задачи).
-- **Sonar не запускается в CI**: нужен `SONAR_TOKEN` в секретах GitHub и публичный/доступный
-  сервер SonarQube. На хакатоне достаточно локального прогона перед сдачей — статус ❓.
+- `@vitest/coverage-v8` (3.2.7) подключён, `pnpm test:coverage` пишет `coverage/lcov.info`,
+  в CI добавлен шаг покрытия. Серверная логика — **84,11 %** строк (цель ≥ 60 %).
+- `pnpm sonar` запускает официальный scanner через Docker; токен — только в `.env` (`SONAR_TOKEN`).
+- Первый и итоговый прогоны зафиксированы в [reports/sonarqube-summary.md](../../reports/sonarqube-summary.md):
+  Quality Gate **OK**, issues **0**, Security Hotspots **4 → 0** (Dockerfile), покрытие Sonar 83 %.
+- Sonar в CI не запускается (нужен `SONAR_TOKEN` в секретах и доступный сервер) — на хакатоне
+  локальный прогон перед сдачей достаточно; статус ✅ для локальной сдачи.
 
 Перед PR: прогнать `pnpm check`, локальный Sonar; новых Blocker / Critical / Major не сливать.
 

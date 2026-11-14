@@ -20,5 +20,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Покрытие в SonarQube не подключено: нет @vitest/coverage-v8 (docs/hackathon/delivery.md).
       - run: pnpm check
+      - run: pnpm test:coverage
       - name: Проверка ссылок документации
         run: python3 -m unittest discover -s tests
