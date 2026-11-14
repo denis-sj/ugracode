@@ -1,4 +1,5 @@
 import type { OverviewResult } from '../contracts';
+import { isValidRange, rangeEnd, rangeStart } from './format';
 
 /** Клиент отчёта О0: только чтение маршрута модуля, cookie-сессия. */
 
@@ -14,6 +15,19 @@ export interface OverviewQuery extends OverviewFiltersState {
   days?: number;
   from?: string;
   to?: string;
+}
+
+/** Запрос страницы: выбранные даты важнее пресета, конец диапазона включает весь день. */
+export function overviewQuery(
+  days: number,
+  from: string,
+  to: string,
+  filters: OverviewFiltersState,
+): OverviewQuery {
+  if (isValidRange(from, to)) {
+    return { ...filters, from: rangeStart(from), to: rangeEnd(to) };
+  }
+  return { ...filters, days };
 }
 
 function queryString(query: OverviewQuery): string {

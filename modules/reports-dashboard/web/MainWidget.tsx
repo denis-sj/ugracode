@@ -1,7 +1,8 @@
-import type { CSSProperties, JSX } from 'react';
-import type { OverviewResult } from '../contracts';
+import type { JSX } from 'react';
+import { InsightBlock } from '@ugra/ui';
+import type { Heatmap, OverviewResult, OverviewSlice } from '../contracts';
 import type { OverviewFiltersState } from './api';
-import { heatLevel } from './format';
+import { barPercent, formatCount, formatPercent, heatLevel, heatmapIsEmpty } from './format';
 import { SectionTitle } from './TilesWidget';
 import { useOverview } from './useOverview';
 
@@ -12,257 +13,205 @@ export interface MainWidgetProps {
   fetchOwn?: boolean;
 }
 
-const PRIORITY_COLOR: Record<string, string> = {
-  emergency: 'var(--color-priority-emergency)',
-  critical: 'var(--color-priority-critical)',
-  high: 'var(--color-priority-high)',
-  medium: 'var(--color-priority-medium)',
-  low: 'var(--color-priority-low)',
+const PRIORITY_CLASS: Record<string, string> = {
+  emergency: 'rd-bar__fill--emergency',
+  critical: 'rd-bar__fill--critical',
+  high: 'rd-bar__fill--high',
+  medium: 'rd-bar__fill--medium',
+  low: 'rd-bar__fill--low',
 };
 
-const card: CSSProperties = { padding: 'var(--space-5)' };
-const mean: CSSProperties = {
-  marginTop: 'var(--space-4)',
-  padding: 'var(--space-3) var(--space-4)',
-  borderRadius: 'var(--radius-md)',
-  background: 'var(--color-bg-soft)',
-  fontSize: 14,
-  lineHeight: 1.55,
-  color: 'var(--color-text)',
+const PRIORITY_SWATCH: Record<string, string> = {
+  emergency: 'rd-swatch--emergency',
+  critical: 'rd-swatch--critical',
+  high: 'rd-swatch--high',
+  medium: 'rd-swatch--medium',
+  low: 'rd-swatch--low',
 };
-const label: CSSProperties = {
-  display: 'block',
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  color: 'var(--color-text-muted)',
-};
-const gridTwo: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-  gap: 'var(--space-4)',
-  alignItems: 'start',
-};
+
+function hasPriorityData(slices: readonly OverviewSlice[]): boolean {
+  return slices.some((slice) => slice.count > 0);
+}
 
 function PriorityChart({ data }: { data: OverviewResult }): JSX.Element {
   const max = Math.max(1, ...data.byPriority.map((slice) => slice.count));
+  const empty = !hasPriorityData(data.byPriority);
+
   return (
-    <section className="ugra-card ugra-card--padded" style={card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+    <section className="ugra-card rd-card">
+      <div className="rd-card__head">
         <SectionTitle>По приоритетам</SectionTitle>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div className="rd-legend" aria-hidden="true">
           {data.byPriority.map((slice) => (
-            <span
-              key={slice.key}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 12,
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 3,
-                  display: 'inline-block',
-                  background: PRIORITY_COLOR[slice.key] ?? 'var(--color-text-dim)',
-                }}
-              />
+            <span className="rd-legend__item" key={slice.key}>
+              <i className={`rd-swatch ${PRIORITY_SWATCH[slice.key] ?? 'rd-swatch--low'}`} />
               {slice.label}
             </span>
           ))}
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 14,
-          height: 200,
-          marginTop: 'var(--space-5)',
-          paddingBottom: 4,
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
-        {data.byPriority.map((slice) => (
-          <div
-            key={slice.key}
-            title={`${slice.label}: ${slice.count}`}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}
-          >
-            <span
-              style={{
-                display: 'block',
-                borderRadius: '4px 4px 1px 1px',
-                height: `${Math.round((slice.count / max) * 100)}%`,
-                minHeight: slice.count > 0 ? 4 : 0,
-                background: PRIORITY_COLOR[slice.key] ?? 'var(--color-text-dim)',
-              }}
-            />
-            <span style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-text-muted)' }}>
-              {slice.count}
-            </span>
+      {empty ? (
+        <div className="rd-empty" role="status">
+          <span className="rd-empty__title">За период обращений нет</span>
+          <span className="rd-empty__hint">График заполнится, когда появятся заявки.</span>
+        </div>
+      ) : (
+        <>
+          <div className="rd-chart" role="img" aria-label="Обращения по приоритетам">
+            {data.byPriority.map((slice) => (
+              <div
+                className="rd-chart__col"
+                key={slice.key}
+                title={`${slice.label}: ${formatCount(slice.count)}`}
+              >
+                <span className="rd-chart__count">{formatCount(slice.count)}</span>
+                <span className="rd-chart__track">
+                  <span
+                    className={`rd-chart__fill ${PRIORITY_CLASS[slice.key] ?? 'rd-bar__fill--low'}`}
+                    style={{ height: `${barPercent(slice.count, max)}%` }}
+                  />
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          <div className="rd-chart__axis" aria-hidden="true">
+            {data.byPriority.map((slice) => (
+              <span key={slice.key}>{slice.label}</span>
+            ))}
+          </div>
+        </>
+      )}
 
-      <div style={mean}>
-        <strong>Что это значит.</strong> {data.insights.priorities}
-      </div>
+      <InsightBlock className="rd-insight">{data.insights.priorities}</InsightBlock>
     </section>
   );
 }
 
-function Heatmap({ data }: { data: OverviewResult }): JSX.Element {
+function HeatmapGrid({ heatmap }: { heatmap: Heatmap }): JSX.Element {
   return (
-    <section className="ugra-card ugra-card--padded" style={card}>
-      <SectionTitle>Когда приходят обращения</SectionTitle>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `28px repeat(${data.heatmap.hours.length}, minmax(0, 1fr))`,
-          gap: 4,
-          marginTop: 'var(--space-4)',
-          alignItems: 'center',
-        }}
-      >
+    <div className="rd-heat" role="table" aria-label="Тепловая карта: день и час">
+      <div className="rd-heat__row rd-heat__row--head" role="row">
         <span />
-        {data.heatmap.hours.map((hour) => (
-          <span key={hour} style={{ textAlign: 'center', fontSize: 11, color: 'var(--color-text-muted)' }}>
+        {heatmap.hours.map((hour) => (
+          <span className="rd-heat__hour" key={hour} role="columnheader">
             {hour}
           </span>
         ))}
       </div>
-      {data.heatmap.days.map((row) => (
-        <div
-          key={row.day}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `28px repeat(${data.heatmap.hours.length}, minmax(0, 1fr))`,
-            gap: 4,
-            marginTop: 4,
-            alignItems: 'center',
-          }}
-        >
-          <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{row.day}</span>
+      {heatmap.days.map((row) => (
+        <div className="rd-heat__row" key={row.day} role="row">
+          <span className="rd-heat__day" role="rowheader">
+            {row.day}
+          </span>
           {row.cells.map((cell) => {
-            const level = heatLevel(cell.count, data.heatmap.max);
+            const level = heatLevel(cell.count, heatmap.max);
             return (
               <span
+                className={cell.count === 0 ? 'rd-heat__cell rd-heat__cell--zero' : 'rd-heat__cell'}
                 key={cell.hour}
-                title={`${row.day} ${cell.hour}:00 — ${cell.count}`}
-                style={{
-                  height: 28,
-                  borderRadius: 6,
-                  background:
-                    cell.count === 0
-                      ? 'var(--color-bg-soft)'
-                      : `color-mix(in srgb, var(--color-accent) ${8 + Math.round(level * 72)}%, transparent)`,
-                }}
+                role="cell"
+                title={`${row.day} ${cell.hour}:00 — ${formatCount(cell.count)}`}
+                aria-label={`${row.day} ${cell.hour}:00 — ${cell.count}`}
+                style={
+                  cell.count === 0
+                    ? undefined
+                    : {
+                        background: `color-mix(in srgb, var(--color-accent) ${8 + Math.round(level * 72)}%, transparent)`,
+                      }
+                }
               />
             );
           })}
         </div>
       ))}
-      <div style={mean}>
-        <strong>Что это значит.</strong> {data.insights.heatmap}
+    </div>
+  );
+}
+
+function HeatmapCard({ data }: { data: OverviewResult }): JSX.Element {
+  const empty = heatmapIsEmpty(data.heatmap);
+
+  return (
+    <section className="ugra-card rd-card">
+      <div className="rd-card__head">
+        <SectionTitle>Когда приходят обращения</SectionTitle>
+        <span className="rd-card__note">Пн–Пт, 8–17</span>
       </div>
+
+      {empty ? (
+        <div className="rd-empty" role="status">
+          <span className="rd-empty__title">Обращений в рабочие часы нет</span>
+          <span className="rd-empty__hint">
+            Карта заполнится, когда появятся заявки в это окно.
+          </span>
+        </div>
+      ) : (
+        <HeatmapGrid heatmap={data.heatmap} />
+      )}
+
+      <InsightBlock className="rd-insight">{data.insights.heatmap}</InsightBlock>
     </section>
   );
 }
 
+function SpotCount({ count }: { count: number }): JSX.Element {
+  const tone = count >= 3 ? 'rd-spot__count--hot' : count === 2 ? 'rd-spot__count--warm' : '';
+  return <strong className={`rd-spot__count ${tone}`}>{formatCount(count)}</strong>;
+}
+
 function HotSpots({ data }: { data: OverviewResult }): JSX.Element {
+  const meaning = data.insights.hotspots.meaning;
+  const action = data.insights.hotspots.action;
+
   return (
-    <section className="ugra-card ugra-card--padded" style={card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+    <section className="ugra-card rd-card rd-card--wide">
+      <div className="rd-card__head">
         <div>
           <SectionTitle>Отчёт · горячие точки оборудования</SectionTitle>
-          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 6 }}>Что ломается снова и снова</div>
+          <div className="rd-card__subtitle">Что ломается снова и снова</div>
         </div>
+        <span className="rd-card__note">О0 · топ-5 за период</span>
       </div>
 
-      <div style={gridTwo}>
-        <div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1fr) 80px 90px',
-              gap: 12,
-              padding: '12px 0 8px',
-              borderBottom: '1px solid var(--color-border)',
-            }}
-          >
-            <span style={label}>Место</span>
-            <span style={label}>Заявок</span>
-            <span style={label}>Доля</span>
+      <div className="rd-spots">
+        <div className="rd-spots__table">
+          <div className="rd-spot rd-spot--head" aria-hidden="true">
+            <span>Корпус и кабинет</span>
+            <span>Заявок</span>
+            <span>Доля</span>
           </div>
           {data.hotSpots.length === 0 && (
-            <p className="ugra-muted" style={{ marginTop: 12 }}>
-              Повторных обращений по одному месту за период нет.
-            </p>
+            <div className="rd-empty rd-empty--inline" role="status">
+              <span className="rd-empty__title">Повторных обращений нет</span>
+              <span className="rd-empty__hint">За период ни один кабинет не повторился.</span>
+            </div>
           )}
           {data.hotSpots.map((spot) => (
-            <div
-              key={`${spot.building}-${spot.cabinet}`}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0,1fr) 80px 90px',
-                gap: 12,
-                alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--color-border)',
-                fontSize: 14,
-              }}
-            >
-              <span>
+            <div className="rd-spot" key={`${spot.building}-${spot.cabinet}`}>
+              <span className="rd-spot__place">
                 <strong>{spot.label}</strong>
               </span>
-              <strong
-                style={{
-                  color:
-                    spot.count >= 3 ? 'var(--color-danger)' : spot.count === 2 ? 'var(--color-warn)' : 'var(--color-text)',
-                }}
-              >
-                {spot.count}
-              </strong>
-              <span style={{ color: 'var(--color-text-muted)' }}>{spot.sharePercent}%</span>
+              <SpotCount count={spot.count} />
+              <span className="rd-spot__share">{formatPercent(spot.sharePercent)}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--color-bg-soft)' }}>
-            <div style={label}>Что это значит</div>
-            <div style={{ fontSize: 14, lineHeight: 1.55, marginTop: 6 }}>{data.insights.hotspots.meaning}</div>
-          </div>
-          {data.insights.hotspots.action && (
-            <div
-              style={{
-                padding: 'var(--space-4)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-accent-soft)',
-              }}
-            >
-              <div style={{ ...label, color: 'var(--color-accent)' }}>Что сделать</div>
-              <div style={{ fontSize: 14, lineHeight: 1.55, marginTop: 6 }}>{data.insights.hotspots.action}</div>
-            </div>
-          )}
-          <div style={{ fontSize: 12, color: 'var(--color-text-dim)' }}>
-            Цифры посчитал код, вывод собран по фактам шаблоном. ИИ-агент `analyst` подключится отдельной задачей.
-          </div>
+        <div className="rd-spots__insights">
+          <InsightBlock>{meaning}</InsightBlock>
+          {action && <InsightBlock kind="action">{action}</InsightBlock>}
+          <p className="rd-source-note">
+            Цифры посчитал код, вывод собран по фактам шаблоном. ИИ-агент `analyst` подключится
+            отдельной задачей.
+          </p>
         </div>
       </div>
     </section>
   );
 }
 
-/** Основной блок дашборда: приоритеты, тепловая карта и горячие точки. */
+/** Основной блок дашборда: сводка, приоритеты, тепловая карта и горячие точки. */
 export function MainWidget({
   days = 30,
   filters = {},
@@ -274,20 +223,20 @@ export function MainWidget({
 
   if (!data) {
     return (
-      <div className="ugra-card ugra-card--padded" aria-busy={fetched.loading}>
-        <span className="ugra-muted">{fetched.error ?? 'Считаем разрезы…'}</span>
+      <div className="ugra-card rd-card">
+        <span className="rd-placeholder">{fetched.error ?? 'Считаем разрезы…'}</span>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: 14 }}>
+    <div className="rd-main">
+      <p className="rd-summary">
         {data.insights.summary} {data.insights.sla}
       </p>
-      <div style={gridTwo}>
+      <div className="rd-grid">
         <PriorityChart data={data} />
-        <Heatmap data={data} />
+        <HeatmapCard data={data} />
       </div>
       <HotSpots data={data} />
     </div>

@@ -1,10 +1,24 @@
-import type { ChangeEvent, CSSProperties, JSX } from 'react';
-import { useState } from 'react';
-import type { OverviewResult } from '../contracts';
-import type { OverviewFiltersState, OverviewQuery } from './api';
-import { formatDateRange } from './format';
+import './dashboard.css';
+import type { JSX } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { WebPageProps } from '@ugra/ui';
+import type { OverviewFiltersState } from './api';
+import { overviewQuery } from './api';
+import {
+  formatDateRange,
+  isValidRange,
+  periodName,
+  periodTitle,
+} from './format';
 import { MainWidget } from './MainWidget';
-import { SectionTitle, TilesWidget } from './TilesWidget';
+import {
+  buildFilterOptions,
+  EXPORT_ITEMS,
+  mergeOptions,
+  slicesToOptions,
+} from './options';
+import type { SelectOption } from './options';
+import { TilesWidget } from './TilesWidget';
 import { useOverview } from './useOverview';
 
 /** Страница `/dashboard`: период, фильтры, выгрузка, плитки и основной блок. */
@@ -16,54 +30,6 @@ const PERIODS: readonly { days: number; label: string }[] = [
   { days: 90, label: 'Квартал' },
 ];
 
-const CHANNELS: readonly { value: string; label: string }[] = [
-  { value: 'chat', label: 'Чат' },
-  { value: 'phone', label: 'Телефон' },
-  { value: 'email', label: 'Почта' },
-  { value: 'screenshot', label: 'Скриншот' },
-];
-
-const STATUSES: readonly { value: string; label: string }[] = [
-  { value: 'new', label: 'Новая' },
-  { value: 'in_review', label: 'На проверке' },
-  { value: 'assigned', label: 'Назначена' },
-  { value: 'in_progress', label: 'В работе' },
-  { value: 'resolved', label: 'Решена' },
-  { value: 'closed', label: 'Закрыта' },
-  { value: 'cancelled', label: 'Отменена' },
-];
-
-const EXPORTS: readonly { label: string; hint: string }[] = [
-  { label: 'Excel (.xlsx)', hint: 'все разрезы, по листам' },
-  { label: 'PDF-отчёт', hint: 'с выводами, для печати' },
-  { label: 'CSV', hint: 'сырые заявки периода' },
-  { label: 'Отправить на почту', hint: 'сейчас' },
-  { label: 'Присылать сводку', hint: 'каждый понедельник' },
-];
-
-const control: CSSProperties = {
-  font: 'inherit',
-  fontSize: 13,
-  fontWeight: 600,
-  color: 'var(--color-text)',
-  background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-pill)',
-  padding: '7px 12px',
-};
-
-const segBase: CSSProperties = {
-  font: 'inherit',
-  fontSize: 13,
-  fontWeight: 600,
-  color: 'var(--color-text-muted)',
-  background: 'transparent',
-  border: 'none',
-  borderRadius: 'var(--radius-sm)',
-  padding: '8px 14px',
-  cursor: 'pointer',
-};
-
 function Select({
   label,
   value,
@@ -72,16 +38,16 @@ function Select({
 }: {
   label: string;
   value: string;
-  options: readonly { value: string; label: string }[];
+  options: readonly SelectOption[];
   onChange: (value: string) => void;
 }): JSX.Element {
   return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-      <span style={{ color: 'var(--color-text-muted)' }}>{label}:</span>
+    <label className="rd-filter">
+      <span className="rd-filter__label">{label}</span>
       <select
-        style={control}
+        className="rd-filter__select"
         value={value}
-        onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}
+        onChange={(event) => onChange(event.target.value)}
       >
         <option value="">все</option>
         {options.map((option) => (
@@ -94,41 +60,52 @@ function Select({
   );
 }
 
-function filterOptions(data: OverviewResult | null): {
-  categories: { value: string; label: string }[];
-  buildings: { value: string; label: string }[];
-  assignees: { value: string; label: string }[];
-} {
-  if (!data) return { categories: [], buildings: [], assignees: [] };
-  return {
-    categories: data.byCategory.map((slice) => ({ value: slice.key, label: slice.label })),
-    buildings: data.byBuilding.map((slice) => ({ value: slice.key, label: slice.label })),
-    assignees: data.byAssignee.map((slice) => ({ value: slice.key, label: slice.label })),
-  };
-}
-
-function periodTitle(days: number, from: string, to: string): string {
-  if (from && to) return formatDateRange(from, to);
-  if (days === 1) return 'смену';
-  if (days === 90) return 'квартал';
-  return `${days} дней`;
-}
-
 /** Дашборд руководителя: один запрос к маршруту отчёта, виджеты получают готовые данные. */
-export function DashboardPage(): JSX.Element {
+export function DashboardPage({ meta }: WebPageProps): JSX.Element {
   const [days, setDays] = useState(30);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [filters, setFilters] = useState<OverviewFiltersState>({});
   const [exportOpen, setExportOpen] = useState(false);
+  const [assignees, setAssignees] = useState<SelectOption[]>([]);
+  const exportRef = useRef<HTMLDivElement | null>(null);
 
-  const customRange = from !== '' && to !== '';
-  const query: OverviewQuery = {
-    ...(customRange ? { from, to } : { days }),
-    ...filters,
-  };
+  const rangeReady = isValidRange(from, to);
+  const rangeBroken = from !== '' && to !== '' && !rangeReady;
+  const query = useMemo(
+    () => overviewQuery(days, from, to, filters),
+    [days, from, to, filters],
+  );
   const { data, loading, error } = useOverview(query);
-  const options = filterOptions(data);
+
+  useEffect(() => {
+    if (!data) return;
+    setAssignees((current) => mergeOptions(current, slicesToOptions(data.byAssignee)));
+  }, [data]);
+
+  useEffect(() => {
+    if (!exportOpen) return undefined;
+    const onPointerDown = (event: MouseEvent): void => {
+      const node = exportRef.current;
+      if (node && event.target instanceof Node && !node.contains(event.target)) {
+        setExportOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') setExportOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [exportOpen]);
+
+  const options = useMemo(() => buildFilterOptions(meta, data, assignees), [meta, data, assignees]);
+  const previousLabel = data
+    ? formatDateRange(data.previousPeriod.from, data.previousPeriod.to)
+    : periodName(days);
 
   const patch = (key: keyof OverviewFiltersState) => (value: string) => {
     setFilters((current) => {
@@ -139,49 +116,32 @@ export function DashboardPage(): JSX.Element {
     });
   };
 
+  const pickPeriod = (nextDays: number): void => {
+    setFrom('');
+    setTo('');
+    setDays(nextDays);
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 700, letterSpacing: '-0.04em' }}>
-            Обращения за {periodTitle(days, customRange ? from : '', customRange ? to : '')}
-          </h1>
-          <div style={{ fontSize: 14, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            Сравнение с прошлым таким же периодом
-            {data ? `: ${formatDateRange(data.previousPeriod.from, data.previousPeriod.to)}` : ''}. Клик по цифре
-            открывает очередь заявок.
-          </div>
+    <div className="rd-page">
+      <div className="rd-head">
+        <div className="rd-head__titles">
+          <h1 className="ugra-page-title rd-title">Обращения за {periodTitle(days, from, to)}</h1>
+          <p className="rd-head__subtitle">
+            Сравнение с прошлым таким же периодом: {previousLabel}. Клик по цифре откроет заявки.
+          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div
-            role="group"
-            aria-label="Период"
-            style={{
-              display: 'flex',
-              gap: 2,
-              padding: 3,
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-            }}
-          >
+        <div className="rd-controls">
+          <div className="rd-periods ugra-liquid" role="group" aria-label="Период">
             {PERIODS.map((period) => {
-              const active = !customRange && days === period.days;
+              const active = !rangeReady && days === period.days;
               return (
                 <button
                   key={period.days}
                   type="button"
-                  onClick={() => {
-                    setFrom('');
-                    setTo('');
-                    setDays(period.days);
-                  }}
-                  style={{
-                    ...segBase,
-                    color: active ? 'var(--color-text)' : segBase.color,
-                    background: active ? 'var(--color-bg-soft)' : 'transparent',
-                  }}
+                  className={active ? 'rd-period rd-period--on' : 'rd-period'}
+                  onClick={() => pickPeriod(period.days)}
                   aria-pressed={active}
                 >
                   {period.label}
@@ -190,105 +150,88 @@ export function DashboardPage(): JSX.Element {
             })}
           </div>
 
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-            <span style={{ color: 'var(--color-text-muted)' }}>Даты:</span>
+          <label className="rd-range">
+            <span className="rd-range__label">Даты</span>
             <input
               type="date"
+              className="rd-range__input"
               value={from}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => setFrom(event.target.value)}
-              style={control}
+              max={to || undefined}
+              onChange={(event) => setFrom(event.target.value)}
               aria-label="Дата начала"
             />
+            <span className="rd-range__dash" aria-hidden="true">
+              —
+            </span>
             <input
               type="date"
+              className="rd-range__input"
               value={to}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => setTo(event.target.value)}
-              style={control}
+              min={from || undefined}
+              onChange={(event) => setTo(event.target.value)}
               aria-label="Дата конца"
             />
           </label>
 
-          <div style={{ position: 'relative' }}>
+          <div className="rd-export" ref={exportRef}>
             <button
               type="button"
-              className="ugra-button"
+              className="ugra-btn ugra-btn--primary rd-export__button"
               onClick={() => setExportOpen((open) => !open)}
               aria-expanded={exportOpen}
-              style={{
-                ...control,
-                background: 'var(--color-text)',
-                color: 'var(--color-bg)',
-                cursor: 'pointer',
-              }}
+              aria-haspopup="menu"
             >
-              Выгрузить ▾
+              Выгрузить
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
             </button>
             {exportOpen && (
-              <div
-                className="ugra-card"
-                role="menu"
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: 44,
-                  zIndex: 8,
-                  width: 300,
-                  padding: 6,
-                  background: 'var(--color-surface)',
-                }}
-              >
-                {EXPORTS.map((item) => (
+              <div className="rd-menu" role="menu" aria-label="Выгрузка">
+                {EXPORT_ITEMS.map((item) => (
                   <button
                     key={item.label}
                     type="button"
                     role="menuitem"
-                    disabled
-                    title="Серверный маршрут выгрузки появится вместе с отчётами О1–О8"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 16,
-                      width: '100%',
-                      textAlign: 'left',
-                      border: 'none',
-                      background: 'transparent',
-                      padding: '10px 12px',
-                      borderRadius: 'var(--radius-sm)',
-                      font: 'inherit',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: 'var(--color-text-dim)',
-                      cursor: 'not-allowed',
-                    }}
+                    disabled={item.disabled}
+                    title={item.title}
+                    className="rd-menu__item"
                   >
-                    {item.label}
-                    <span style={{ fontSize: 12, fontWeight: 500 }}>{item.hint}</span>
+                    <span>{item.label}</span>
+                    <span className="rd-menu__hint">{item.hint}</span>
                   </button>
                 ))}
+                <p className="rd-menu__note">Выгрузка появится с отчётами О1–О8.</p>
               </div>
             )}
           </div>
         </div>
-      </header>
+      </div>
 
-      <section style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 12, color: 'var(--color-text-dim)', marginRight: 4 }}>Фильтры</span>
+      <div className="rd-filters">
+        <span className="rd-filters__label">Фильтры</span>
         <Select label="Категория" value={filters.category ?? ''} options={options.categories} onChange={patch('category')} />
         <Select label="Исполнитель" value={filters.assigneeId ?? ''} options={options.assignees} onChange={patch('assigneeId')} />
-        <Select label="Канал" value={filters.channel ?? ''} options={CHANNELS} onChange={patch('channel')} />
+        <Select label="Канал" value={filters.channel ?? ''} options={options.channels} onChange={patch('channel')} />
         <Select label="Корпус" value={filters.building ?? ''} options={options.buildings} onChange={patch('building')} />
-        <Select label="Статус" value={filters.status ?? ''} options={STATUSES} onChange={patch('status')} />
-        {loading && <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>обновляем…</span>}
-        {error && <span style={{ fontSize: 12, color: 'var(--color-danger)' }}>{error}</span>}
-      </section>
+        <Select label="Статус" value={filters.status ?? ''} options={options.statuses} onChange={patch('status')} />
+        {Object.keys(filters).length > 0 && (
+          <button type="button" className="ugra-btn ugra-btn--ghost ugra-btn--sm rd-reset" onClick={() => setFilters({})}>
+            Сбросить
+          </button>
+        )}
+        <span className="rd-filters__spacer" />
+        {rangeBroken && <span className="rd-status rd-status--warn">Конец раньше начала — показываем пресет</span>}
+        {loading && <span className="rd-status">обновляем…</span>}
+        {error && <span className="rd-status rd-status--error">{error}</span>}
+      </div>
 
       <TilesWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
       <MainWidget days={days} filters={filters} overview={data ?? undefined} fetchOwn={false} />
 
-      <SectionTitle>Источник данных</SectionTitle>
-      <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-dim)' }}>
-        Заявки и события — синтетическая история за 6 месяцев (модуль `history-seed`). Выгрузка в Excel, PDF и CSV,
-        отправка на почту и еженедельная сводка требуют серверных маршрутов выгрузки — пункты меню пока выключены.
+      <p className="rd-source-note">
+        Заявки и события — синтетическая история за 6 месяцев (модуль `history-seed`). Выгрузка в
+        Excel, PDF и CSV, отправка на почту и еженедельная сводка появятся вместе с отчётами О1–О8.
       </p>
     </div>
   );
