@@ -22,9 +22,17 @@ services:
     environment:
       DATABASE_URL: postgres://ugra:ugra@db:5432/ugra
       PORT: "3001"
-      SESSION_SECRET: demo-secret
-      AI_MODE: stub
-      FEATURES_OFF: ""
+      SESSION_SECRET: ${SESSION_SECRET:-demo-secret}
+      AI_MODE: ${AI_MODE:-stub}
+      FEATURES_OFF: ${FEATURES_OFF:-}
+      FEATURES_ON: ${FEATURES_ON:-}
+      POLZA_API_KEY: ${POLZA_API_KEY:-}
+      POLZA_BASE_URL: ${POLZA_BASE_URL:-https://api.polza.ai/api/v1}
+      LLM_MODEL_MAIN: ${LLM_MODEL_MAIN:-claude-haiku-5.5}
+      LLM_MODEL_CHEAP: ${LLM_MODEL_CHEAP:-deepseek-v4.1-flash}
+      EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-bge-multilingual-gemma2}
+      EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-768}
+      SPEECH_MODEL: ${SPEECH_MODEL:-gigaam-v3}
     depends_on:
       db:
         condition: service_healthy
