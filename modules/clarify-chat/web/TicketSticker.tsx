@@ -55,7 +55,11 @@ export function TicketSticker({
     : `№ ${ticket.number} · ${formatDayTime(ticket.createdAt)}`;
 
   return (
-    <aside className={className ? `chat-sticker ${className}` : 'chat-sticker'} aria-label="Ваше обращение">
+    <aside
+      className={className ? `chat-sticker ${className}` : 'chat-sticker'}
+      aria-label="Ваше обращение"
+      data-reveal
+    >
       <header className="chat-sticker__head">
         <div className="chat-sticker__eyebrow-row">
           <span className="chat-sticker__eyebrow">Ваше обращение</span>
@@ -75,13 +79,14 @@ export function TicketSticker({
 
       <div className="chat-sticker__body">
         {rows.map((row) => (
-          <DetailRow
-            key={row.key}
-            layout="stack"
-            label={row.label}
-            value={row.value}
-            tone={row.tone === 'wait' ? 'muted' : row.tone === 'accent' ? 'accent' : 'default'}
-          />
+          <div className="chat-sticker__row" key={row.key} data-reveal>
+            <DetailRow
+              layout="stack"
+              label={row.label}
+              value={row.value}
+              tone={row.tone === 'wait' ? 'muted' : row.tone === 'accent' ? 'accent' : 'default'}
+            />
+          </div>
         ))}
 
         <ProgressScale className="chat-sticker__progress" stage={stage} labels={TICKET_STAGES} showLabels />

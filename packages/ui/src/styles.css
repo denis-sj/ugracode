@@ -1098,7 +1098,6 @@ kbd {
     inset 0 0 0 1px var(--color-surface),
     var(--shadow-pop);
   outline: none;
-  animation: ugra-pop var(--dur-slow) var(--ease-emphasized) both;
 }
 
 .ugra-modal__panel--ok {
@@ -1582,7 +1581,7 @@ kbd {
 
 .ugra-step__body {
   padding: 0 22px 22px 66px;
-  animation: ugra-fade var(--dur-base) var(--ease-out) both;
+  overflow: hidden;
 }
 
 .ugra-step__footer {

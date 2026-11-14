@@ -11,5 +11,14 @@
   },
   "peerDependencies": {
     "react": ">=19"
+  },
+  "dependencies": {
+    "@formkit/auto-animate": "^0.10.2",
+    "canvas-confetti": "^1.9.4",
+    "gsap": "^3.15.1",
+    "motion": "^14.14.0"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0"
   }
 }

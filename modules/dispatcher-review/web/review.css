@@ -347,7 +347,6 @@
 .queue-preview {
   width: 340px;
   flex: none;
-  animation: ugra-sticker var(--dur-sticker) var(--ease-emphasized) both;
 }
 
 .queue-preview__head {
@@ -1061,23 +1060,8 @@
 
 /* ---------- Живое обновление ---------- */
 
-.dr-row--fresh {
-  animation: dr-row-in var(--dur-slow) var(--ease-out) both;
-}
-
 .dr-row--fresh td {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-}
-
-@keyframes dr-row-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 @keyframes dr-deadline-pulse {

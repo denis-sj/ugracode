@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, SessionResponse, User, UsersResponse } from '@ugra/contracts';
+import { useBlockMotion } from '@ugra/ui';
 import { ApiError, api } from './api';
 import { LoginScreen } from './LoginScreen';
 import { useHashRoute } from './router';
@@ -24,6 +25,8 @@ export function App(): JSX.Element {
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const route = useHashRoute();
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  useBlockMotion(contentRef);
 
   const bootLoad = useCallback(async (): Promise<void> => {
     setBoot({ status: 'loading' });
@@ -73,7 +76,7 @@ export function App(): JSX.Element {
         <span className="ugra-ambient__blob ugra-ambient__blob--ice" />
       </div>
 
-      <div className="app__content">
+      <div className="app__content" ref={contentRef}>
         {boot.status === 'loading' && (
           <main className="splash">
             <span className="splash__mark" aria-hidden="true">

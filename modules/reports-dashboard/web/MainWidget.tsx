@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
-import { InsightBlock } from '@ugra/ui';
+import { useRef } from 'react';
+import { InsightBlock, useListMotion } from '@ugra/ui';
 import type { Heatmap, OverviewResult, OverviewSlice } from '../contracts';
 import type { OverviewFiltersState } from './api';
 import { barPercent, formatCount, formatPercent, heatLevel, heatmapIsEmpty } from './format';
@@ -163,6 +164,8 @@ function SpotCount({ count }: { count: number }): JSX.Element {
 function HotSpots({ data }: { data: OverviewResult }): JSX.Element {
   const meaning = data.insights.hotspots.meaning;
   const action = data.insights.hotspots.action;
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  useListMotion(tableRef, data.hotSpots.length > 0);
 
   return (
     <section className="ugra-card rd-card rd-card--wide">
@@ -175,7 +178,7 @@ function HotSpots({ data }: { data: OverviewResult }): JSX.Element {
       </div>
 
       <div className="rd-spots">
-        <div className="rd-spots__table">
+        <div className="rd-spots__table" ref={tableRef}>
           <div className="rd-spot rd-spot--head" aria-hidden="true">
             <span>Корпус и кабинет</span>
             <span>Заявок</span>
@@ -223,7 +226,7 @@ export function MainWidget({
 
   if (!data) {
     return (
-      <div className="ugra-card rd-card">
+      <div className="ugra-card rd-card" data-motion="off">
         <span className="rd-placeholder">{fetched.error ?? 'Считаем разрезы…'}</span>
       </div>
     );
@@ -231,7 +234,7 @@ export function MainWidget({
 
   return (
     <div className="rd-main">
-      <p className="rd-summary">
+      <p className="rd-summary" data-reveal>
         {data.insights.summary} {data.insights.sla}
       </p>
       <div className="rd-grid">

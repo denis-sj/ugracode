@@ -1,6 +1,7 @@
 import type { JSX, ReactNode } from 'react';
 import { useEffect, useId, useRef } from 'react';
 import { cx } from '../cx';
+import { celebrate, springIn } from '../motion';
 
 export type ModalTone = 'default' | 'ok' | 'danger';
 
@@ -31,6 +32,13 @@ export function Modal({
 }: ModalProps): JSX.Element | null {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const backdropRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    springIn(panelRef.current, backdropRef.current);
+    if (tone === 'ok') celebrate(panelRef.current);
+  }, [open, tone]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -47,6 +55,7 @@ export function Modal({
   return (
     <div
       className="ugra-modal"
+      ref={backdropRef}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

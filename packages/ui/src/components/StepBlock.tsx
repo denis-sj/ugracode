@@ -1,5 +1,6 @@
 import type { JSX, ReactNode } from 'react';
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import { expandBody } from '../motion';
 import { cx } from '../cx';
 
 export interface StepBlockProps {
@@ -30,6 +31,10 @@ export function StepBlock({
   className,
 }: StepBlockProps): JSX.Element {
   const bodyId = useId();
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (open) expandBody(bodyRef.current);
+  }, [open]);
   return (
     <section className={cx('ugra-step', open && 'ugra-step--open', done && 'ugra-step--done', className)}>
       <button
@@ -49,7 +54,7 @@ export function StepBlock({
         </span>
       </button>
       {open && (
-        <div className="ugra-step__body" id={bodyId}>
+        <div className="ugra-step__body" id={bodyId} ref={bodyRef}>
           {children}
           {footer && <div className="ugra-step__footer">{footer}</div>}
         </div>

@@ -1,7 +1,7 @@
 import './engineer-desk.css';
 import type { Ticket, TicketListResponse, TicketResponse, TicketStatus, User, UsersResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -15,6 +15,7 @@ import {
   formatDateTime,
   formatTicketStatus,
   ticketStatusTone,
+  useListMotion,
 } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
@@ -218,6 +219,11 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
   const [kbTick, setKbTick] = useState(0);
 
   const now = useNow(30_000);
+
+  const tasksRef = useRef<HTMLUListElement | null>(null);
+  const kbRef = useRef<HTMLUListElement | null>(null);
+  useListMotion(tasksRef, tab === 'tasks' && tasks.length > 0);
+  useListMotion(kbRef, tab === 'kb' && (kbState.data?.articles.length ?? 0) > 0);
 
   const loadTasks = useCallback(
     async (mode: 'loud' | 'quiet' = 'loud'): Promise<void> => {
@@ -521,7 +527,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
 
   return (
     <main className="ed-page">
-      <header className="ed-head">
+      <header className="ed-head" data-reveal>
         <div>
           <h1 className="ugra-page-title">{tab === 'tasks' ? 'Мои задачи' : 'База знаний'}</h1>
           <p className="ed-head__lead">
@@ -601,7 +607,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
             )}
 
             {tasksVisible.length > 0 && (
-              <ul className="ed-list__items" aria-label="Задачи на сегодня">
+              <ul className="ed-list__items" aria-label="Задачи на сегодня" ref={tasksRef}>
                 {tasksVisible.map((ticket) => {
                   const preview = previews[ticket.id];
                   const due = dueState(ticket.slaDueAt ?? ticket.reactDueAt, now);
@@ -1021,7 +1027,7 @@ export function EngineerDeskPage({ user, meta, api, trackAction }: WebPageProps)
                   Найдено {kbArticles.length}{' '}
                   {pluralRu(kbArticles.length, 'статья', 'статьи', 'статей')}
                 </p>
-                <ul className="ed-kb__items">
+                <ul className="ed-kb__items" ref={kbRef}>
                   {kbArticles.map((article) => (
                     <li key={article.id}>
                       <button

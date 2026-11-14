@@ -7,6 +7,7 @@ export * from './types';
 export * from './format';
 export * from './ticket-format';
 export * from './animations';
+export * from './motion';
 export * from './useActionCounter';
 export { cx } from './cx';
 export { Card } from './components/Card';

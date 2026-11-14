@@ -327,7 +327,7 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
         ← Очередь
       </button>
 
-      <header className="review-head">
+      <header className="review-head" data-reveal>
         <div className="review-head__meta">
           № {ticket.number} · {detail.appeal.channel} · {formatDateTime(ticket.createdAt)}
         </div>

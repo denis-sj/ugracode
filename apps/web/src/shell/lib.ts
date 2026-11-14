@@ -2,9 +2,24 @@ import type { Role } from '@ugra/contracts';
 
 export type TabCounter = 'queue' | 'incidents' | 'tasks';
 
+/** Иконка над подписью вкладки (вариант E «Вдавленное стекло с иконками»). */
+export type TabIconName =
+  | 'queue'
+  | 'incidents'
+  | 'journal'
+  | 'executors'
+  | 'chat'
+  | 'tickets'
+  | 'tasks'
+  | 'knowledge'
+  | 'dashboard'
+  | 'reports'
+  | 'quality';
+
 export interface ShellTab {
   path: string;
   label: string;
+  icon: TabIconName;
   /** Счётчик в шапке: очередь, аварии или мои задачи. */
   counter?: TabCounter;
   /** Красный счётчик — аварии. */
@@ -14,30 +29,30 @@ export interface ShellTab {
 /** Вкладки шапки по ролям — ровно как в утверждённом дизайне (3.1). */
 const TABS: Record<Role, readonly ShellTab[]> = {
   applicant: [
-    { path: '/chat', label: 'Обращение' },
-    { path: '/tickets', label: 'Мои заявки' },
+    { path: '/chat', label: 'Обращение', icon: 'chat' },
+    { path: '/tickets', label: 'Мои заявки', icon: 'tickets' },
   ],
   dispatcher: [
-    { path: '/queue', label: 'Очередь', counter: 'queue' },
-    { path: '/incidents', label: 'Аварии', counter: 'incidents', danger: true },
-    { path: '/journal', label: 'Журнал' },
-    { path: '/executors', label: 'Исполнители' },
+    { path: '/queue', label: 'Очередь', icon: 'queue', counter: 'queue' },
+    { path: '/incidents', label: 'Аварии', icon: 'incidents', counter: 'incidents', danger: true },
+    { path: '/journal', label: 'Журнал', icon: 'journal' },
+    { path: '/executors', label: 'Исполнители', icon: 'executors' },
   ],
   engineer: [
-    { path: '/tasks', label: 'Мои задачи', counter: 'tasks' },
-    { path: '/knowledge', label: 'База знаний' },
+    { path: '/tasks', label: 'Мои задачи', icon: 'tasks', counter: 'tasks' },
+    { path: '/knowledge', label: 'База знаний', icon: 'knowledge' },
   ],
   manager: [
-    { path: '/dashboard', label: 'Дашборд' },
-    { path: '/reports', label: 'Отчёты' },
-    { path: '/quality', label: 'Качество ИИ' },
+    { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
+    { path: '/reports', label: 'Отчёты', icon: 'reports' },
+    { path: '/quality', label: 'Качество ИИ', icon: 'quality' },
   ],
   admin: [
-    { path: '/queue', label: 'Очередь', counter: 'queue' },
-    { path: '/incidents', label: 'Аварии', counter: 'incidents', danger: true },
-    { path: '/journal', label: 'Журнал' },
-    { path: '/executors', label: 'Исполнители' },
-    { path: '/dashboard', label: 'Дашборд' },
+    { path: '/queue', label: 'Очередь', icon: 'queue', counter: 'queue' },
+    { path: '/incidents', label: 'Аварии', icon: 'incidents', counter: 'incidents', danger: true },
+    { path: '/journal', label: 'Журнал', icon: 'journal' },
+    { path: '/executors', label: 'Исполнители', icon: 'executors' },
+    { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
   ],
 };
 
@@ -47,7 +62,7 @@ export function tabsForRole(role: Role): readonly ShellTab[] {
 
 export function firstTab(role: Role): ShellTab {
   const tabs = TABS[role];
-  return tabs[0] ?? { path: '/', label: 'Главная' };
+  return tabs[0] ?? { path: '/', label: 'Главная', icon: 'dashboard' };
 }
 
 export function isTabPath(role: Role, path: string): boolean {

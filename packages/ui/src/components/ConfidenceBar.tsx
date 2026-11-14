@@ -1,4 +1,6 @@
 import type { JSX } from 'react';
+import { useEffect, useRef } from 'react';
+import { fillBar } from '../motion';
 import { cx } from '../cx';
 import { clamp01, confidenceTone, formatConfidence } from '../format';
 
@@ -22,6 +24,8 @@ export function ConfidenceBar({
 }: ConfidenceBarProps): JSX.Element {
   const tone = confidenceTone(value, threshold);
   const percent = Math.round(clamp01(value) * 100);
+  const fillRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => fillBar(fillRef.current), []);
   return (
     <div
       className={cx('ugra-confidence', `ugra-confidence--${tone}`, compact && 'ugra-confidence--compact', className)}
@@ -36,7 +40,7 @@ export function ConfidenceBar({
         <span className="ugra-confidence__value">{formatConfidence(value)}</span>
       </div>
       <div className="ugra-confidence__track">
-        <div className="ugra-confidence__fill" style={{ width: `${percent}%` }} />
+        <div className="ugra-confidence__fill" ref={fillRef} style={{ width: `${percent}%` }} />
       </div>
     </div>
   );

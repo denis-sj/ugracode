@@ -40,7 +40,7 @@ export function AskCard({
   };
 
   return (
-    <section className="chat-ask ugra-rise" aria-label={`Вопрос: ${question.question}`}>
+    <section className="chat-ask" aria-label={`Вопрос: ${question.question}`}>
       <header className="chat-ask__head">
         <b className="chat-ask__title">{question.question}</b>
         <span className="chat-ask__counter">

@@ -318,7 +318,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
       <div className="chat-page__grid" aria-hidden="true" />
       <div className="chat-main">
         {!started && (
-          <div className="chat-hero">
+          <div className="chat-hero" data-reveal>
             <h1 className="chat-hero__title">Что случилось?</h1>
             <p className="chat-hero__lead">Опишите своими словами — я разберу обращение и соберу заявку.</p>
           </div>
@@ -327,11 +327,11 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
         <div className="chat-thread" ref={threadRef} aria-live="polite">
           {messages.map((message) =>
             message.from === 'me' ? (
-              <div className="chat-me ugra-rise" key={message.id}>
+              <div className="chat-me" key={message.id}>
                 {message.text}
               </div>
             ) : (
-              <div className="chat-ai ugra-rise" key={message.id}>
+              <div className="chat-ai" key={message.id}>
                 {parseEmphasis(message.text).map((segment, index) =>
                   segment.strong ? (
                     <strong key={index}>{segment.text}</strong>
@@ -374,6 +374,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
 
           {question && !busy && (
             <AskCard
+              key={question.key}
               question={question}
               index={safeIndex}
               total={questions.length}

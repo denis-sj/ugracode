@@ -3,7 +3,7 @@ import type { Ticket, TicketListResponse, TicketResponse, User, UsersResponse } 
 import { hasPermission } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Card, EmptyState, PriorityMark, SearchField, Segmented } from '@ugra/ui';
+import { Badge, Button, Card, EmptyState, PriorityMark, SearchField, Segmented, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
   DEFAULT_FILTERS,
@@ -90,6 +90,8 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
   const loadedDetailsRef = useRef<Set<string>>(new Set());
   const detailsInFlightRef = useRef<Set<string>>(new Set());
   const freshTimerRef = useRef<number | null>(null);
+  const bodyRef = useRef<HTMLTableSectionElement | null>(null);
+  useListMotion(bodyRef, tickets.length > 0);
   const reloadTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -295,7 +297,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
 
   return (
     <div className="queue-page">
-      <header className="queue-head">
+      <header className="queue-head" data-reveal>
         <div>
           <h1 className="ugra-page-title">Очередь</h1>
           <p className="queue-lead">
@@ -428,7 +430,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
                     <th>Что сделать</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={bodyRef}>
                   {visible.map((ticket) => {
                     const info = details[ticket.id];
                     const action = queueAction(ticket, info?.signals);

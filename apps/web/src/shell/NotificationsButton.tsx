@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { NotificationsResponse, User, UserNotification } from '@ugra/contracts';
-import { cx } from '@ugra/ui';
+import { cx, useListMotion } from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
 import { formatRelativeTime } from './lib';
 
@@ -22,6 +22,8 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  useListMotion(listRef, open && items.length > 0);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -142,7 +144,7 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
             <p className="shell-notifications__hint">Уведомлений нет</p>
           )}
 
-          <div className="shell-notifications__list">
+          <div className="shell-notifications__list" ref={listRef}>
             {items.map((notification) => (
               <button
                 type="button"

@@ -1,4 +1,6 @@
 import type { JSX } from 'react';
+import { useEffect, useRef } from 'react';
+import { popSegments } from '../motion';
 import { cx } from '../cx';
 import { TICKET_STAGES, stageSegments } from '../ticket-format';
 
@@ -25,9 +27,14 @@ export function ProgressScale({
   const reached = filled > 0 ? labels[filled - 1] : undefined;
   const summary = reached ? `Этап ${filled} из ${labels.length}: ${reached}` : `Этап 0 из ${labels.length}`;
 
+  const barsRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    popSegments(Array.from(barsRef.current?.querySelectorAll<HTMLElement>('.ugra-scale__seg--on') ?? []));
+  }, [filled]);
+
   return (
     <div className={cx('ugra-scale', className)} role="img" aria-label={summary}>
-      <div className="ugra-scale__bars" aria-hidden="true">
+      <div className="ugra-scale__bars" ref={barsRef} aria-hidden="true">
         {segments.map((on, index) => (
           <span key={index} className={cx('ugra-scale__seg', on && 'ugra-scale__seg--on')} />
         ))}

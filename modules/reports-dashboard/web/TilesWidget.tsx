@@ -85,7 +85,7 @@ export function TilesWidget({
 
   if (!data) {
     return (
-      <div className="rd-placeholder" aria-busy={fetched.loading}>
+      <div className="rd-placeholder" aria-busy={fetched.loading} data-motion="off">
         {fetched.error ?? 'Считаем показатели…'}
       </div>
     );
@@ -95,7 +95,7 @@ export function TilesWidget({
     <div className="rd-tiles">
       {tilesOf(data).map((tile) => (
         <a
-          className="ugra-card ugra-card--interactive rd-tile ugra-rise"
+          className="ugra-card ugra-card--interactive rd-tile"
           key={tile.label}
           href={TILE_QUEUE_HREF}
           title={`${tile.delta.text} · ${tile.hint}. Открыть заявки в очереди`}

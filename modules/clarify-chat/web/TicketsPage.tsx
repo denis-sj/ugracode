@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type {
   MetaResponse,
@@ -17,6 +17,7 @@ import {
   groupHistory,
   ticketStage,
   ticketStatusTone,
+  useListMotion,
 } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { fieldValues, ticketTitle } from './format';
@@ -124,6 +125,8 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
 
   const visible = tab === 'active' ? activeItems : closedItems;
   const awaiting = activeItems.find((item) => item.ticket.status === 'resolved');
+  const listRef = useRef<HTMLElement | null>(null);
+  useListMotion(listRef, visible.length > 0);
 
   const transition = async (ticket: Ticket, to: TicketStatus): Promise<void> => {
     setActing(ticket.id);
@@ -141,7 +144,7 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
 
   return (
     <main className="tickets-page">
-      <div className="tickets-head">
+      <div className="tickets-head" data-reveal>
         <h1 className="ugra-page-title">Мои заявки</h1>
         <div className="tickets-tabs ugra-liquid" role="tablist" aria-label="Мои заявки">
           <button
@@ -248,7 +251,7 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
       )}
 
       {visible.length > 0 && (
-        <section className="tickets-list">
+        <section className="tickets-list" ref={listRef}>
           <div className="tickets-row tickets-row--head" aria-hidden="true">
             <span className="tickets-label">Заявка</span>
             <span className="tickets-label">Ход</span>

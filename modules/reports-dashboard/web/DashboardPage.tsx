@@ -124,7 +124,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
 
   return (
     <div className="rd-page">
-      <div className="rd-head">
+      <div className="rd-head" data-reveal>
         <div className="rd-head__titles">
           <h1 className="ugra-page-title rd-title">Обращения за {periodTitle(days, from, to)}</h1>
           <p className="rd-head__subtitle">

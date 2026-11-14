@@ -11,6 +11,12 @@ import {
 } from '../src/shell/lib';
 
 describe('tabsForRole', () => {
+  it('у каждой вкладки каждой роли есть иконка (вариант E шапки)', () => {
+    for (const role of ['applicant', 'dispatcher', 'engineer', 'manager', 'admin'] as const) {
+      for (const tab of tabsForRole(role)) expect(tab.icon, `${role} ${tab.path}`).toBeTruthy();
+    }
+  });
+
   it('у заявителя две вкладки — обращение и мои заявки', () => {
     expect(tabsForRole('applicant').map((tab) => tab.path)).toEqual(['/chat', '/tickets']);
   });

@@ -8,6 +8,7 @@ import type { HashRoute } from '../router';
 import { toHash } from '../router';
 import { HistoryDrawer } from './HistoryDrawer';
 import { NotificationsButton } from './NotificationsButton';
+import { TabIcon } from './TabIcon';
 import { firstTab, initials, isTabPath, roleLabel, tabTitle, tabsForRole, type TabCounter } from './lib';
 
 export interface AppShellProps {
@@ -149,14 +150,17 @@ export function AppShell({ user, meta, api, route }: AppShellProps): JSX.Element
                   route.navigate(tab.path);
                 }}
               >
-                {tab.label}
-                {count > 0 && (
-                  <span
-                    className={tab.danger ? 'shell-tab__count shell-tab__count--danger' : 'shell-tab__count'}
-                  >
-                    {count}
-                  </span>
-                )}
+                <TabIcon name={tab.icon} />
+                <span className="shell-tab__label">
+                  {tab.label}
+                  {count > 0 && (
+                    <span
+                      className={tab.danger ? 'shell-tab__count shell-tab__count--danger' : 'shell-tab__count'}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </span>
               </a>
             );
           })}

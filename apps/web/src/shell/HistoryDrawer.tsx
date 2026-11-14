@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, Ticket, TicketListResponse } from '@ugra/contracts';
-import { formatDayMonth, formatTicketStatus, groupHistory, ticketStatusTone } from '@ugra/ui';
+import { formatDayMonth, formatTicketStatus, groupHistory, ticketStatusTone, useListMotion } from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
 import { matchesQuery } from './lib';
 
@@ -74,6 +74,8 @@ export function HistoryDrawer({
     matchesQuery(query, ticket.number, categoryLabel(ticket), formatTicketStatus(ticket.status));
   const active = groups.active.filter(filter);
   const closed = groups.closed.filter(filter);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  useListMotion(listRef, open && active.length + closed.length > 0);
 
   if (!open) return null;
 
@@ -131,7 +133,7 @@ export function HistoryDrawer({
           />
         </div>
 
-        <div className="history-drawer__body">
+        <div className="history-drawer__body" ref={listRef}>
           {loading && tickets.length === 0 && <p className="history-drawer__hint">Загружаем…</p>}
           {error && (
             <div className="history-drawer__error">

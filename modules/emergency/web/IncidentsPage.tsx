@@ -8,7 +8,7 @@ import type {
   UsersResponse,
 } from '@ugra/contracts';
 import type { JSX } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -20,7 +20,9 @@ import {
   Toast,
   formatTicketStatus,
   ticketStatusTone,
+  pulse,
   useElapsed,
+  useListMotion,
 } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import type { Place } from './format';
@@ -88,6 +90,14 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
   const [checks, setChecks] = useState<readonly boolean[]>([]);
   const [incident, setIncident] = useState<{ number: string; size: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  const rowsRef = useRef<HTMLDivElement | null>(null);
+  const incidentRef = useRef<HTMLDivElement | null>(null);
+  useListMotion(rowsRef, tickets.length > 0);
+
+  useEffect(() => {
+    if (incident !== null) pulse(incidentRef.current);
+  }, [incident]);
 
   const now = useNow(30_000);
   const selectedTicket = useMemo(
@@ -308,7 +318,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
 
   return (
     <div className="er-page">
-      <header className="er-head">
+      <header className="er-head" data-reveal>
         <div>
           <h1 className="er-title">Аварии и массовость</h1>
           <p className="er-lead">
@@ -365,7 +375,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
               <h2 className="er-card__title">Аварийные заявки</h2>
               <span className="er-list__count">{tickets.length}</span>
             </div>
-            <div className="er-list__rows">
+            <div className="er-list__rows" ref={rowsRef}>
               {tickets.map((ticket) => {
                 const place = places[ticket.id];
                 const active = ticket.id === selectedId;
@@ -610,7 +620,7 @@ export function IncidentsPage({ meta, api, trackAction }: WebPageProps): JSX.Ele
                         </p>
                       </>
                     ) : (
-                      <div className="er-incident">
+                      <div className="er-incident" ref={incidentRef}>
                         <div className="er-incident__title">Инцидент № {incident.number}</div>
                         <p className="er-incident__text">
                           {incident.size} заявителей получили одно сообщение. Новые похожие обращения прикрепляются

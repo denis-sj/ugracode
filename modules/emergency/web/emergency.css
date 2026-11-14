@@ -12,7 +12,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  animation: ugra-rise var(--dur-rise) var(--ease-out) both;
 }
 
 .er-head {
@@ -460,7 +459,6 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-2);
   box-shadow: var(--ring-inset-soft);
-  animation: ugra-rise var(--dur-rise) var(--ease-out) both;
 }
 
 .er-incident__title {
@@ -567,9 +565,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .er-page,
   .er-bar,
-  .er-incident,
   .er-beat {
     animation: none;
   }
