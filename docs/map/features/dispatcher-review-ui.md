@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/007-ui-shell-chat-card.md](../../tasks/007-ui-shell-chat-card.md), [../../tasks/010-dispatcher-review.md](../../tasks/010-dispatcher-review.md), [dispatcher-api.md](dispatcher-api.md), [ui-shell.md](ui-shell.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md), [../../tasks/010-dispatcher-review.md](../../tasks/010-dispatcher-review.md), [dispatcher-api.md](dispatcher-api.md), [ui-shell.md](ui-shell.md)
 
 Веб-часть `dispatcher-review`: очередь заявок и карточка проверки. Серверные маршруты уже есть —
 см. [dispatcher-api.md](dispatcher-api.md). Интерфейс ничего не считает сам, кроме фильтров и группировки.

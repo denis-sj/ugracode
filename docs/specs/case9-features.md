@@ -145,7 +145,7 @@ sequenceDiagram
 
 | Фича | Приоритет | Модуль | Точки расширения | Задача |
 |---|---|---|---|---|
-| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../tasks/007-ui-shell-chat-card.md), [009](../tasks/009-clarify-chat.md) |
+| а1, а2, а3' Чат с вопросами, черновик рядом | MUST | `clarify-chat` | аспект, шаг, маршруты, карточки чата, страница заявителя | [007](../history/2026-11.md), [009](../tasks/009-clarify-chat.md) |
 | Профиль и гость | MUST | `applicant-profile` | шаг, таблицы, сид | [025](../tasks/025-applicant-profile-guest.md) |
 | а4 Голос | MUST | `voice-call` + общий `MicButton` | шаг `enrich`, страница «Входящий звонок» | [019](../tasks/019-voice-call.md) |
 | а5, в8 Ответ заявителю | MUST | `applicant-feedback` | шаг, подписчик на `ticket.confirmed`, виджет | [020](../tasks/020-feedback-sentiment.md) |

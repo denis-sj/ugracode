@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../tasks/007-ui-shell-chat-card.md](../../tasks/007-ui-shell-chat-card.md), [dispatcher-review-ui.md](dispatcher-review-ui.md)
+Связано: [../README.md](../README.md), [../../specs/case9-core.md](../../specs/case9-core.md), [../../specs/case9-features.md](../../specs/case9-features.md), [../../history/2026-11.md](../../history/2026-11.md), [dispatcher-review-ui.md](dispatcher-review-ui.md)
 
 Общая оболочка веб-приложения и дизайн-система. Экран заявителя — `modules/clarify-chat/web`,
 очередь диспетчера — [dispatcher-review-ui.md](dispatcher-review-ui.md).
