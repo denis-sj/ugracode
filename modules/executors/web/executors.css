@@ -118,28 +118,6 @@
 
 /* ---------- Карточка ---------- */
 
-.exec-avatar {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--gradient-avatar);
-  color: var(--color-on-accent);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-black);
-  letter-spacing: 0.02em;
-  box-shadow: var(--shadow-avatar);
-}
-
-.exec-avatar--sm {
-  width: 36px;
-  height: 36px;
-  font-size: var(--text-xs);
-}
-
 .exec-card__top {
   display: flex;
   align-items: center;

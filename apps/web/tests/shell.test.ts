@@ -7,6 +7,7 @@ import {
   isTabPath,
   matchesQuery,
   roleLabel,
+  shortName,
   tabsForRole,
 } from '../src/shell/lib';
 
@@ -46,6 +47,20 @@ describe('tabsForRole', () => {
   it('isTabPath знает только вкладки своей роли', () => {
     expect(isTabPath('applicant', '/chat')).toBe(true);
     expect(isTabPath('applicant', '/queue')).toBe(false);
+  });
+});
+
+describe('shortName', () => {
+  it('сокращает до имени и первой буквы фамилии, как в шапке макета', () => {
+    expect(shortName('Ольга Ветрова')).toBe('Ольга В.');
+    expect(shortName('Анна Петровна Миронова')).toBe('Анна М.');
+    expect(shortName('  Ксения   Нестерова ')).toBe('Ксения Н.');
+  });
+
+  it('одно слово оставляет как есть, пустое имя — понятная подпись', () => {
+    expect(shortName('Гость')).toBe('Гость');
+    expect(shortName('')).toBe('Без имени');
+    expect(shortName(null)).toBe('Без имени');
   });
 });
 

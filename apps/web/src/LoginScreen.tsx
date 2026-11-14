@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import type { Role, User } from '@ugra/contracts';
-import { initials, roleLabel } from './shell/lib';
+import { PersonAvatar } from '@ugra/ui';
+import { roleLabel } from './shell/lib';
 
 const GROUP_ORDER: readonly Role[] = ['applicant', 'dispatcher', 'engineer', 'manager', 'admin'];
 
@@ -80,9 +81,7 @@ export function LoginScreen({
                     onClick={() => onLogin(user.id)}
                     disabled={busyUserId !== null}
                   >
-                    <span className="login-user__avatar" aria-hidden="true">
-                      {initials(user.fullName)}
-                    </span>
+                    <PersonAvatar name={user.fullName} size={44} />
                     <span className="login-user__body">
                       <span className="login-user__name">{user.fullName}</span>
                       <span className="login-user__position">{user.position}</span>

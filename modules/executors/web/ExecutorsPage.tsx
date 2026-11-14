@@ -8,6 +8,7 @@ import {
   Card,
   Chip,
   EmptyState,
+  PersonAvatar,
   PriorityMark,
   SearchField,
   Segmented,
@@ -23,7 +24,6 @@ import {
   departmentLabel,
   filterEngineers,
   gradeLabel,
-  initials,
   loadState,
   skillChips,
   sortEngineers,
@@ -107,9 +107,7 @@ function CurrentTasks({
     <section className="ugra-card exec-panel" data-reveal aria-labelledby="exec-tasks-title">
       <header className="exec-panel__head">
         <div className="exec-panel__who">
-          <span className="exec-avatar exec-avatar--sm" aria-hidden="true">
-            {initials(fullName)}
-          </span>
+          <PersonAvatar name={fullName} size={36} />
           <div>
             <h2 className="exec-panel__title" id="exec-tasks-title">
               Текущие задачи
@@ -365,9 +363,7 @@ export function ExecutorsPage({ api, meta, navigate, trackAction }: WebPageProps
                 }}
               >
                 <span className="exec-card__top">
-                  <span className="exec-avatar" aria-hidden="true">
-                    {initials(engineer.fullName)}
-                  </span>
+                  <PersonAvatar name={engineer.fullName} size={44} />
                   <span className="exec-card__who">
                     <span className="exec-card__name">{engineer.fullName}</span>
                     <span className="exec-card__dep">{departmentOf(engineer.departmentId)}</span>

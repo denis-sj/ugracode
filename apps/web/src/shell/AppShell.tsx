@@ -9,7 +9,7 @@ import { toHash } from '../router';
 import { ProfilePage } from '../screens/ProfilePage';
 import { NotificationsButton } from './NotificationsButton';
 import { TabIcon } from './TabIcon';
-import { firstTab, isTabPath, roleLabel, tabTitle, tabsForRole, type TabCounter } from './lib';
+import { firstTab, isTabPath, roleLabel, shortName, tabTitle, tabsForRole, type TabCounter } from './lib';
 
 export interface AppShellProps {
   user: User;
@@ -119,7 +119,7 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
             <rect width="32" height="32" rx="9" fill="currentColor" />
             <g fill="var(--color-graphite-contrast)">
               <rect x="8" y="8" width="6" height="16" rx="2" />
-              <rect x="18" y="8" width="6" height="6" rx="2" />
+              <rect x="18" y="8" width="6" height="6" rx="2" opacity="0.5" />
               <rect x="18" y="18" width="6" height="6" rx="2" />
             </g>
           </svg>
@@ -161,9 +161,11 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
         </nav>
 
         <div className="shell-actions ugra-liquid">
-          <ThemeToggle />
+          <ThemeToggle className="shell-dock__btn" />
 
           <NotificationsButton api={api} user={user} navigate={route.navigate} />
+
+          <span className="shell-divider" aria-hidden="true" />
 
           <button
             type="button"
@@ -177,7 +179,7 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
           >
             <PersonAvatar name={user.fullName} size={36} />
             <span className="shell-account__text">
-              <strong>{user.fullName}</strong>
+              <strong>{shortName(user.fullName)}</strong>
               <span>{roleLabel(user.role)}</span>
             </span>
           </button>

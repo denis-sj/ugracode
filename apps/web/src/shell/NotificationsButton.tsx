@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { NotificationsResponse, User, UserNotification } from '@ugra/contracts';
-import { cx, useListMotion } from '@ugra/ui';
+import { cx, Icon, useListMotion } from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
 import { formatRelativeTime } from './lib';
 
@@ -102,25 +102,9 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
           if (!open) void load();
         }}
       >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          aria-hidden="true"
-        >
-          <path
-            d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="bell" />
         {unread > 0 && (
-          <span className="shell-icon__badge" aria-hidden="true">
-            {unread}
-          </span>
+          <span className="shell-icon__badge" aria-hidden="true" />
         )}
       </button>
 

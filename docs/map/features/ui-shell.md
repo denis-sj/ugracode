@@ -18,6 +18,7 @@
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/ui/src/tokens.css`                 | единственный источник цветов, отступов, радиусов, теней, типографики и длительностей; светлая тема в `:root`, тёмная — в `html[data-theme="dark"]`; самодостаточный Manrope 400–800 (`fonts/*.woff2`, OFL) без CDN |
 | `packages/ui/src/styles.css`                 | базовые стили и классы компонентов; все цвета — через `var(--…)`, новых хардкод-цветов нет                                                                                       |
+| `packages/ui/src/icons.tsx`                  | двухтоновые иконки из макета (`kit.js`): 12 вкладок + луна/солнце/колокол; заливка `.ugra-icon__du` 0.22 (0.38 у активной) + контур; `Icon({name,size})`, `ICON_NAMES` |
 | `packages/ui/src/components/`                | `Card` (стекло), `Badge`, `Button` (графит/второстепенная), `ConfidenceBar`, `QuoteChip`, `FieldRow`, `StatTile`, `Timeline`, `OriginBadge`, `MicButton`, `PriorityBars`, `Slot`, `ProgressScale`, `DetailRow`, `Modal`, `Toast`, `SearchField`, `EmptyState`, `Timer`, `InsightBlock`, `ActionCounterPill`, `PriorityMark`, `Segmented`, `Chip`, `Sticker`, `StepBlock`, `Checklist` |
 | `packages/ui/src/ticket-format.ts`           | чистые функции статусов, шкалы этапов (`in_review` — 2, `assigned` — 3), `stageSegments`, группировки истории, сроков                                                                 |
 | `packages/ui/src/format.ts`                  | уверенность, тона, счётчик действий, `elapsedMs`/`formatElapsed` для таймеров аварии и SLA                                                                                       |
@@ -28,7 +29,7 @@
 | `apps/web/src/App.tsx`                       | загрузка `/api/meta`, `/api/session`, `/api/users`; вход, экран «API не отвечает»                                                                                                |
 | `apps/web/src/LoginScreen.tsx`               | вход выбором готового пользователя (гость — обычный пользователь из данных)                                                                                                      |
 | `apps/web/src/shell/AppShell.tsx`            | одна шапка на все роли, вкладки по роли, счётчики, отрисовка страниц веб-модулей                                                                                                 |
-| `apps/web/src/shell/NotificationsButton.tsx` | колокольчик с выпадающим блоком, `GET /api/notifications`, «Прочитать все»                                                                                                       |
+| `apps/web/src/shell/NotificationsButton.tsx` | колокольчик с выпадающим блоком, `GET /api/notifications`, «Прочитать все»; непрочитанное — точка, как в макете                                                                   |
 | `apps/web/index.html`                        | inline-скрипт в `<head>`: читает `ugra.theme` и ставит `data-theme="dark"` до рендера — при перезагрузке нет вспышки светлой                                                    |
 | `apps/web/src/App.tsx`                       | плавающий `ThemeToggle` на заставке, ошибке API и экране входа (шапки там нет)                                                                                                   |
 | `apps/web/src/shell/HistoryDrawer.tsx`       | история обращений заявителя выезжающей панелью справа                                                                                                                            |
@@ -38,7 +39,20 @@
 
 ## Шапка и роли (3.1)
 
-Меню — вариант E «Вдавленное стекло с иконками»: иконка над подписью (`apps/web/src/shell/TabIcon.tsx`, имя иконки — поле `icon` вкладки в `lib.ts`), активная вкладка вдавлена (`.shell-tab--on`: внутренняя тень, `--color-accent-strong`), счётчик — круг рядом с подписью. Новая вкладка = новая запись в `TABS` с `icon` + контур в `TabIcon.tsx`.
+Меню — вариант E «Вдавленное стекло с иконками»: иконка 22 px над подписью, активная вкладка вдавлена
+(`.shell-tab--on`: `--nav-active-inset` + `--color-accent`), счётчик — «пилюля» рядом с подписью.
+Рисунок иконки живёт в `packages/ui/src/icons.tsx`; `apps/web/src/shell/TabIcon.tsx` — тонкая обёртка
+над `Icon`, имя берётся из поля `icon` вкладки в `lib.ts`. Новая вкладка = запись в `TABS` с `icon`
+из общего набора; своего SVG в экранах не рисуем.
+
+Геометрия шапки и рабочей области измерена по макетам и вынесена в токены:
+`--shell-pad`, `--radius-capsule`, `--radius-dock`, `--shell-dock-pad`, `--shell-dock-btn`,
+`--shell-divider-h`, `--page-pad`, `--layout-page` (1240). Правила общие для обеих тем: светлых
+оверрайдов `html:not([data-theme='dark']) .shell-*` больше нет.
+
+Аватар в доке — `PersonAvatar` (детерминированная «рожица» из имени, 10 палитр), подпись — «Имя Ф.»
+(`shortName`), роль — подписью 12 px. Держится в одном месте для шапки, экрана входа, журнала,
+исполнителей и комментариев.
 
 Одна шапка: слева «Диспетчерская», по центру капсула-меню, справа единый док с темой, уведомлениями, SVG-аватаром, именем и ролью.
 Вкладки и кнопки зависят от роли:

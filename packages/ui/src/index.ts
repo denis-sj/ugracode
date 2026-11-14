@@ -11,6 +11,8 @@ export * from './motion';
 export * from './useActionCounter';
 export * from './theme';
 export { cx } from './cx';
+export { Icon, ICON_NAMES } from './icons';
+export type { IconName, IconProps } from './icons';
 export { PersonAvatar, avatarVariant } from './components/PersonAvatar';
 export { ThemeToggle } from './components/ThemeToggle';
 export type { ThemeToggleProps } from './components/ThemeToggle';

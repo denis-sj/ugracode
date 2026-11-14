@@ -225,8 +225,9 @@
   --z-overlay: 40;
   --z-toast: 60;
 
-  /* Светлый handoff владельца: 16 экранов, 2026-11-14. */
-  --layout-page: 1160px;
+  /* Светлый handoff владельца: 16 экранов, 2026-11-14.
+     --layout-page — ширина рабочей области под шапкой (измерено по макетам: 1240 px). */
+  --layout-page: 1240px;
   --layout-applicant: 960px;
   --avatar-ink: #202338;
   --avatar-face: #fff4b0;
@@ -241,6 +242,20 @@
   --avatar-orange: #ff9468;
   --avatar-gold: #f8bc35;
   --avatar-white: #ffffff;
+  --avatar-mint: #06d6a0;
+  --avatar-blue: #4d96ff;
+  --avatar-blush: #ffe3e3;
+
+  /* Геометрия шапки и страницы — измерена по макетам (sources/kit.js, sources/base.css).
+     Одна точка правды: экраны не пишут эти числа у себя. */
+  --text-brand: 17px;
+  --radius-capsule: 26px;
+  --radius-dock: 30px;
+  --shell-pad: 24px 44px 0;
+  --shell-dock-pad: 5px;
+  --shell-dock-btn: 40px;
+  --shell-divider-h: 22px;
+  --page-pad: 44px 48px 64px;
 }
 
 /* ---------- Тёмная тема (второй режим) ----------

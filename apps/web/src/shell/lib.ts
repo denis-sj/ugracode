@@ -11,7 +11,8 @@ export type TabIconName =
   | 'chat'
   | 'tickets'
   | 'tasks'
-  | 'knowledge'
+  | 'kb'
+  | 'measure'
   | 'dashboard'
   | 'reports'
   | 'quality';
@@ -37,11 +38,11 @@ const TABS: Record<Role, readonly ShellTab[]> = {
     { path: '/incidents', label: 'Аварии', icon: 'incidents', counter: 'incidents', danger: true },
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
-    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'reports' },
+    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'measure' },
   ],
   engineer: [
     { path: '/tasks', label: 'Мои задачи', icon: 'tasks', counter: 'tasks' },
-    { path: '/knowledge', label: 'База знаний', icon: 'knowledge' },
+    { path: '/knowledge', label: 'База знаний', icon: 'kb' },
   ],
   manager: [
     { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
@@ -54,7 +55,7 @@ const TABS: Record<Role, readonly ShellTab[]> = {
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
     { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
-    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'reports' },
+    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'measure' },
   ],
 };
 
@@ -85,6 +86,19 @@ const ROLE_LABEL: Record<Role, string> = {
 
 export function roleLabel(role: Role): string {
   return ROLE_LABEL[role];
+}
+
+/** Короткая подпись в шапке: «Ольга Ветрова» → «Ольга В.» (как в макете). */
+export function shortName(fullName: string | null | undefined): string {
+  const words = (fullName ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word !== '');
+  if (words.length === 0) return 'Без имени';
+  const [first = ''] = words;
+  if (words.length === 1) return first;
+  const last = words[words.length - 1] ?? '';
+  return `${first} ${last.charAt(0).toUpperCase()}.`;
 }
 
 /** Инициалы для круглого аватара: «Денис Соколов» → «ДС», «Роман» → «РО», пусто → «?». */

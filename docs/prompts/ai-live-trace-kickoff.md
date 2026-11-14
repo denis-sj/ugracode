@@ -2,7 +2,7 @@
 
 Статус: active
 Дата: 2026-11-14
-Связано: [../../AGENTS.md](../../AGENTS.md), [../tasks/035-ai-live-trace.md](../tasks/035-ai-live-trace.md), [../specs/case9-ui-design.md](../specs/case9-ui-design.md), [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../rules/animations.md](../rules/animations.md), [frontend-kickoff.md](frontend-kickoff.md)
+Связано: [../../AGENTS.md](../../AGENTS.md), [../history/2026-11.md](../history/2026-11.md#035-журнал-работы-ии-в-чате--2026-11-14), [../specs/case9-ui-design.md](../specs/case9-ui-design.md), [../specs/case9-agent-harness.md](../specs/case9-agent-harness.md), [../rules/animations.md](../rules/animations.md), [frontend-kickoff.md](frontend-kickoff.md)
 
 Как использовать: открыть новую сессию в папке репозитория и написать: «ты Семён, выполни docs/prompts/ai-live-trace-kickoff.md».
 Блок ниже можно также вставить целиком.
@@ -18,7 +18,7 @@
 
 ЧТО ПРОЧИТАТЬ (только MD; .pptx и .pdf в docs/hackathon/files/ не открывать)
 1. AGENTS.md — роли и критерии готовности.
-2. docs/tasks/035-ai-live-trace.md — полная задача: интерфейс, сервер, тесты, критерии. Это главный документ.
+2. docs/history/2026-11.md, раздел 035 — итог задачи: интерфейс, сервер, тесты, критерии. Задача закрыта, файл задачи удалён.
 3. docs/specs/case9-ui-design.md, раздел 4.1 «Обращение» и разделы 1–2 (что запрещено, светлая и тёмная темы, токены).
 4. docs/specs/case9-agent-harness.md — как агент вызывает инструменты и что он записывает (AgentStep).
 5. docs/rules/animations.md — анимации списков и блоков (только по правилам, без своих библиотек).

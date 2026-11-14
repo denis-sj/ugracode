@@ -30,7 +30,9 @@ describe('ThemeToggle', () => {
     document.documentElement.setAttribute(THEME_ATTRIBUTE, 'dark');
     const markup = renderToStaticMarkup(createElement(ThemeToggle));
     expect(markup).toContain('aria-pressed="true"');
-    expect(markup).toContain('<circle cx="12" cy="12" r="4.2"');
+    // Солнце из набора макета: двухтоновый слой + круг радиусом 4.5.
+    expect(markup).toContain('ugra-icon__du');
+    expect(markup).toContain('<circle cx="12" cy="12" r="4.5"');
   });
 
   it('клик переключает тему, сохраняет выбор и обновляет aria-pressed', async () => {

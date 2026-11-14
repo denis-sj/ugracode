@@ -235,6 +235,27 @@ kbd {
   box-shadow: var(--glass-inset-liquid), var(--shadow-liquid);
 }
 
+/* ---------- Иконки (двухтоновые, из макета) ---------- */
+
+.ugra-icon {
+  flex: none;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* Заливка «стеклянного» слоя: та же фигура, но прозрачная. */
+.ugra-icon__du {
+  fill: currentColor;
+  stroke: none;
+  opacity: 0.22;
+}
+
+.ugra-icon--active .ugra-icon__du,
+.shell-tab--on .ugra-icon__du {
+  opacity: 0.38;
+}
+
 /* ---------- Card ---------- */
 
 .ugra-card {
@@ -1922,29 +1943,45 @@ kbd {
   flex: none;
   border-radius: var(--radius-pill);
 }
-.ugra-person--1,
-.ugra-person--6 {
+/* 10 палитр «фона и лица» из макета: пара всегда одна и та же для имени.
+   Лицо всегда светлое — аватар читается и в светлой, и в тёмной теме. */
+.ugra-person--0 {
   --avatar-hair: var(--avatar-purple);
   --avatar-face: var(--avatar-peach);
 }
-.ugra-person--2,
-.ugra-person--7 {
+.ugra-person--1 {
+  --avatar-hair: var(--avatar-mint);
+  --avatar-face: var(--avatar-cream);
+}
+.ugra-person--2 {
+  --avatar-hair: var(--avatar-orange);
+  --avatar-face: var(--avatar-cream);
+}
+.ugra-person--3 {
+  --avatar-hair: var(--avatar-blue);
+  --avatar-face: var(--avatar-blush);
+}
+.ugra-person--4 {
+  --avatar-hair: var(--avatar-gold);
+  --avatar-face: var(--avatar-cream);
+}
+.ugra-person--5 {
   --avatar-hair: var(--avatar-pink);
   --avatar-face: var(--avatar-cream);
 }
-.ugra-person--3,
-.ugra-person--8 {
+.ugra-person--6 {
+  --avatar-hair: var(--avatar-teal);
+  --avatar-face: var(--avatar-peach);
+}
+.ugra-person--7 {
   --avatar-hair: var(--avatar-purple);
   --avatar-face: var(--avatar-lilac);
 }
-.ugra-person--4,
+.ugra-person--8 {
+  --avatar-hair: var(--avatar-teal);
+  --avatar-face: var(--avatar-gold);
+}
 .ugra-person--9 {
   --avatar-hair: var(--avatar-orange);
-  --avatar-face: var(--avatar-navy);
-  --avatar-ink: var(--avatar-white);
-}
-.ugra-person--5 {
-  --avatar-hair: var(--avatar-gold);
-  --avatar-face: var(--avatar-purple);
-  --avatar-ink: var(--avatar-white);
+  --avatar-face: var(--avatar-blush);
 }
