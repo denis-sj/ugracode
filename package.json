@@ -19,6 +19,7 @@
     "migrate": "tsx packages/db/src/migrate.ts",
     "seed": "tsx packages/db/src/seed/index.ts",
     "check:polza": "tsx scripts/check-polza.ts",
+    "eval": "tsx scripts/eval.ts",
     "demo:reset": "tsx packages/db/src/seed/index.ts --reset"
   },
   "dependencies": {
