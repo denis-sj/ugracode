@@ -65,6 +65,7 @@ pnpm demo:reset       # пересеять демо-данные
 pnpm dev:api          # API на http://localhost:3001
 pnpm dev:web          # веб на http://localhost:5173
 pnpm check:polza      # проверка API Polza (нужен POLZA_API_KEY)
+pnpm eval             # прогон контрольного набора → reports/quality.md
 docker compose up --build   # db + api + web одной командой
 docker compose --profile sonar up -d sonar   # SonarQube, http://localhost:9000
 python3 -m unittest discover -s tests   # проверка ссылок документации
@@ -105,3 +106,26 @@ python3 -m unittest discover -s tests   # проверка ссылок доку
 - **База в тестах — `MemoryStore`** (решение 005): быстрые тесты без Docker. PostgreSQL проверяется через Compose и `PgStore`.
 - **Модуль-образец `example` включён по умолчанию** и даёт поля в сквозном тесте; предметное извлечение придёт в `modules/extraction` (задача 006).
 - **`event_log` только на добавление**: триггер базы запрещает `UPDATE`/`DELETE`, поэтому `--reset` его не чистит.
+
+## Что дальше
+
+Очередь задач — в `docs/tasks/`. Сделано ядро, разбор, приоритет, маршрутизация, авария, база
+знаний, проверка диспетчером, рабочее место инженера, дашборд и качество. Осталось:
+
+| Задача | Что доделать | Куда смотреть |
+|---|---|---|
+| 009 | уточнения в чате: серверная часть вопросов-карточек и повторный разбор (веб-часть готова) | `modules/clarify-chat`, `docs/map/features/clarify-chat-ui.md` |
+| 016 | массовость: склейка похожих обращений в серверный инцидент (сейчас локальная имитация на экране) | `modules/emergency` |
+| 017 | замер «с ИИ / без ИИ»: счётчик действий диспетчера и экран сравнения | `packages/ui`, [раздел 8 спецификации](../specs/case9-core.md#8) |
+| 019 | звонок: голос → текст → тот же пайплайн (мешает 403 на моделях речи) | `packages/adapters/src/speech` |
+| 020 | обратная связь заявителю и метка тональности | `docs/tasks/020-feedback-sentiment.md` |
+| 021 | отчёты О2, О1, О5 с выводами (О0 и горячие точки уже есть) | `modules/reports-dashboard` |
+| 022 | стабильное демо: кэш, офлайн-режим, сброс, запасная копия | `docs/hackathon/demo-script.md` |
+| 026 | скриншот и фото шильдика | `packages/adapters/src/vision` |
+| 027 | отчёты О3 «Сроки» и О4 «Нагрузка инженеров» | `modules/reports-dashboard` |
+| 028 | отчёты О6 «Каких статей не хватает» и О7 «Хронология аварии» | `modules/reports-dashboard`, `modules/emergency` |
+| 029 | база знаний: шаги чек-листом и вопрос базе | `modules/knowledge` |
+| 030 | история настройки: точность от прогона к прогону | `modules/quality`, `testset/dev/` |
+
+Порядок и блокеры — в файлах задач. Перед PR: `pnpm check`, затем `python3 -m unittest discover -s tests`;
+после изменений разбора — `pnpm eval` и обновить `reports/quality.md`.
