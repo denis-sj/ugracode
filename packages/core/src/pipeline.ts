@@ -137,6 +137,8 @@ export class PipelineEngine {
       appealId: appeal.id,
       fields: Object.keys(draft.fields),
       status: failed ? 'failed' : 'ok',
+      // Черновик целиком — чтобы карточка заявки показала аварию, вопросы и «почему».
+      draft,
     });
     this.report(options, { stepId: 'run', status: failed ? 'failed' : 'completed', runId, appealId: appeal.id });
     return { runId, draft, steps: results, status: failed ? 'failed' : 'ok' };

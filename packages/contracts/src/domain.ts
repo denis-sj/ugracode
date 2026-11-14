@@ -115,6 +115,7 @@ export const TRANSITIONS: readonly StatusTransition[] = [
   { from: 'waiting_applicant', to: 'in_review', roles: ['dispatcher', 'admin'], permission: 'tickets.transition' },
   { from: 'in_review', to: 'assigned', roles: ['dispatcher', 'admin'], permission: 'tickets.confirm' },
   { from: 'in_review', to: 'cancelled', roles: ['dispatcher', 'admin'], permission: 'tickets.transition' },
+  { from: 'in_review', to: 'waiting_applicant', roles: ['dispatcher', 'admin'], permission: 'tickets.transition' },
   { from: 'assigned', to: 'in_review', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
   { from: 'in_progress', to: 'in_review', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
   { from: 'assigned', to: 'in_progress', roles: ['engineer', 'admin'], permission: 'tickets.transition' },
@@ -340,6 +341,9 @@ export const Ticket = z.object({
   locationId: z.string().nullable().default(null),
   confirmedBy: z.string().nullable(),
   confirmedAt: z.string().nullable(),
+  /** Что сделал инженер (результат работ). */
+  resolution: z.string().nullable().optional(),
+  resolvedAt: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

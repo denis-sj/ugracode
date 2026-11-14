@@ -4,14 +4,17 @@ import type { z } from 'zod';
 import {
   ConfirmTicketInput,
   CreateAppealInput,
+  DeadlineInput,
   HealthResponse,
   NotificationsResponse,
   PriorityLevel,
   ReanalyzeResponse,
+  ResolutionInput,
   Role,
   SessionInput,
   SessionResponse,
   SettingsResponse,
+  TicketAnalysisResponse,
   TicketField,
   TicketListQuery,
   TicketResponse,
@@ -436,6 +439,62 @@ function registerCoreRoutes(
       const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'user', id: actor.id } });
       await tickets.applyAnalysis(ticket.id, run.draft, { kind: 'user', id: actor.id });
       return { runId: run.runId, ticketId: ticket.id };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/tickets/:id/analysis',
+    access: 'tickets.read',
+    response: TicketAnalysisResponse,
+    handler: async ({ params, user }) => {
+      const ticket = await store.getTicket(params.id ?? '');
+      if (!ticket) throw httpError('Заявка не найдена', 404);
+      const appeal = await store.getAppeal(ticket.appealId);
+      if (user?.role === 'applicant' && appeal?.authorId !== user.id) {
+        throw httpError('Чужая заявка', 403);
+      }
+      const events = await store.listEvents({ ticketId: ticket.id, type: 'analysis.completed', limit: 20 });
+      const last = events.at(-1);
+      const payload = asRecord(last?.payload);
+      const analysis = asRecord(payload.draft);
+      if (!last || Object.keys(analysis).length === 0) throw httpError('Разбор не найден', 404);
+      return {
+        ticketId: ticket.id,
+        runId: typeof payload.runId === 'string' ? payload.runId : '',
+        analysis,
+      };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/deadline',
+    access: 'tickets.edit',
+    body: DeadlineInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { slaDueAt: string; reason: string };
+      return tickets.extendDeadline(params.id ?? '', input.slaDueAt, input.reason, {
+        kind: 'user',
+        id: actor.id,
+      });
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/tickets/:id/resolution',
+    access: 'tickets.transition',
+    body: ResolutionInput,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const input = body as { text: string };
+      try {
+        return await tickets.resolve(params.id ?? '', input.text, { kind: 'user', id: actor.id }, actor.role);
+      } catch (error) {
+        throw httpError(error instanceof Error ? error.message : 'Не удалось сохранить результат', 403);
+      }
     },
   });
 

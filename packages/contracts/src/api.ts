@@ -41,10 +41,15 @@ export const CreateAppealResponse = z.object({
 });
 export type CreateAppealResponse = z.infer<typeof CreateAppealResponse>;
 
+export const BooleanQuery = z.preprocess(
+  (value) => (value === 'true' ? true : value === 'false' ? false : value),
+  z.boolean().optional(),
+);
+
 export const TicketListQuery = z.object({
   status: TicketStatus.optional(),
   assigneeId: z.string().optional(),
-  isEmergency: z.coerce.boolean().optional(),
+  isEmergency: BooleanQuery,
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
 export type TicketListQuery = z.infer<typeof TicketListQuery>;
@@ -94,6 +99,22 @@ export const TranscribeResponse = z.object({
   confidence: z.number().min(0).max(1).optional(),
 });
 export type TranscribeResponse = z.infer<typeof TranscribeResponse>;
+
+export const DeadlineInput = z.object({
+  slaDueAt: z.string().min(1),
+  reason: z.string().min(1),
+});
+export type DeadlineInput = z.infer<typeof DeadlineInput>;
+
+export const ResolutionInput = z.object({ text: z.string().min(1) });
+export type ResolutionInput = z.infer<typeof ResolutionInput>;
+
+export const TicketAnalysisResponse = z.object({
+  ticketId: z.string(),
+  runId: z.string(),
+  analysis: z.record(z.string(), z.unknown()),
+});
+export type TicketAnalysisResponse = z.infer<typeof TicketAnalysisResponse>;
 
 export const UpdateSettingInput = z.object({ value: z.unknown() });
 export type UpdateSettingInput = z.infer<typeof UpdateSettingInput>;

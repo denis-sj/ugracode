@@ -66,6 +66,8 @@ export const ticketTable = pgTable(
     locationId: text('location_id'),
     confirmedBy: text('confirmed_by'),
     confirmedAt: tstz('confirmed_at'),
+    resolution: text('resolution'),
+    resolvedAt: tstz('resolved_at'),
     createdAt: tstz('created_at').notNull(),
     updatedAt: tstz('updated_at').notNull(),
   },

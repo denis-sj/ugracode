@@ -78,6 +78,8 @@ function ticketToInsert(ticket: Ticket): TicketInsert {
     locationId: ticket.locationId,
     confirmedBy: ticket.confirmedBy,
     confirmedAt: ticket.confirmedAt,
+    resolution: ticket.resolution,
+    resolvedAt: ticket.resolvedAt,
     createdAt: ticket.createdAt,
     updatedAt: ticket.updatedAt,
   };
@@ -101,6 +103,8 @@ function ticketToPatch(patch: Partial<Ticket>): Partial<TicketInsert> {
   if (patch.locationId !== undefined) row.locationId = patch.locationId;
   if (patch.confirmedBy !== undefined) row.confirmedBy = patch.confirmedBy;
   if (patch.confirmedAt !== undefined) row.confirmedAt = patch.confirmedAt;
+  if (patch.resolution !== undefined) row.resolution = patch.resolution;
+  if (patch.resolvedAt !== undefined) row.resolvedAt = patch.resolvedAt;
   if (patch.createdAt !== undefined) row.createdAt = patch.createdAt;
   if (patch.updatedAt !== undefined) row.updatedAt = patch.updatedAt;
   return row;

@@ -19,6 +19,8 @@ const ticketRow: TicketRow = {
   locationId: null,
   confirmedBy: null,
   confirmedAt: null,
+  resolution: null,
+  resolvedAt: null,
   createdAt: '2026-11-14T10:00:00.000Z',
   updatedAt: '2026-11-14T10:05:00.000Z',
 };
@@ -42,6 +44,8 @@ describe('mapTicketRow', () => {
       locationId: null,
       confirmedBy: null,
       confirmedAt: null,
+      resolution: null,
+      resolvedAt: null,
       createdAt: '2026-11-14T10:00:00.000Z',
       updatedAt: '2026-11-14T10:05:00.000Z',
     });

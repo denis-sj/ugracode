@@ -92,6 +92,8 @@ export function mapTicketRow(row: TicketRow): Ticket {
     locationId: row.locationId,
     confirmedBy: row.confirmedBy,
     confirmedAt: toIsoOrNull(row.confirmedAt),
+    resolution: row.resolution,
+    resolvedAt: toIsoOrNull(row.resolvedAt),
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
   };

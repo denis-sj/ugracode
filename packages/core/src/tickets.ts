@@ -54,6 +54,8 @@ export class TicketService {
       locationId: null,
       confirmedBy: null,
       confirmedAt: null,
+      resolution: null,
+      resolvedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -123,9 +125,11 @@ export class TicketService {
       if (!transition.roles.includes(role)) throw new Error(`Роль ${role} не может выполнить переход ${ticket.status} → ${to}`);
       if (!hasPermission(role, transition.permission)) throw new Error(`Нет права ${transition.permission}`);
     }
+    const now = this.deps.clock.now().toISOString();
     const updated = await this.deps.store.updateTicket(ticketId, {
       status: to,
-      updatedAt: this.deps.clock.now().toISOString(),
+      resolvedAt: to === 'resolved' ? now : ticket.resolvedAt,
+      updatedAt: now,
     });
     if (!updated) throw new Error(`Заявка ${ticketId} не найдена`);
     await this.publish('ticket.status.changed', actor, ticketId, { from: ticket.status, to, reason });
@@ -133,6 +137,21 @@ export class TicketService {
       await this.publish('ticket.returned', actor, ticketId, { from: ticket.status, reason });
     }
     return updated;
+  }
+
+  /** Результат работ инженера и перевод в `resolved` (одним действием). */
+  async resolve(
+    ticketId: string,
+    resolution: string,
+    actor: Actor,
+    role?: Role,
+  ): Promise<Ticket> {
+    await this.requireTicket(ticketId);
+    await this.deps.store.updateTicket(ticketId, {
+      resolution,
+      updatedAt: this.deps.clock.now().toISOString(),
+    });
+    return this.transition(ticketId, 'resolved', actor, role);
   }
 
   /** Продление срока решения с причиной: событие `ticket.deadline.extended`. */
