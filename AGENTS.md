@@ -95,7 +95,8 @@ AGENTS.md  (ты здесь)
 [environments](docs/knowledge/environments.md) ·
 [tasks](docs/tasks/README.md) · [specs](docs/specs/README.md) · [plans](docs/plans/README.md) ·
 [history](docs/history/2026-11.md) · [sessions](docs/sessions/2026-11-14-kickoff.md) ·
-[последняя сессия](docs/sessions/2026-11-14-feature-intake.md) ·
+[последняя сессия](docs/sessions/2026-11-14-agent-harness.md) ·
+[**агентный харнесс и проверки**](docs/specs/case9-agent-harness.md) ·
 [**фичи в архитектуре**](docs/specs/case9-features.md) ·
 [**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
 [ideas](docs/ideas/README.md)
@@ -111,7 +112,8 @@ AGENTS.md  (ты здесь)
 2a. [docs/hackathon/case9-brief.md](docs/hackathon/case9-brief.md) — **что строим** по выбранному кейсу 9 и как закрываем его критерии.
 2b. [docs/specs/case9-core.md](docs/specs/case9-core.md) — **как строим**: ядро, модули, точки расширения, «как добавить фичу».
 2c. [docs/specs/case9-features.md](docs/specs/case9-features.md) — **что изменил брейншторм**: при расхождении с ядром прав этот файл.
-3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-feature-intake.md) — что решили в прошлый раз.
+2d. [docs/specs/case9-agent-harness.md](docs/specs/case9-agent-harness.md) — **как работает ИИ**: агент с инструментами вместо RAG, проверки настройки. Важнее 2b и 2c.
+3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-agent-harness.md) — что решили в прошлый раз.
 
 ## Сохранение материалов владельца
 
