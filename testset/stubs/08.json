@@ -1,0 +1,20 @@
+{
+  "fields": [
+    { "key": "object", "value": "1С", "quote": "1С", "confidence": 0.93 },
+    { "key": "building", "value": "А", "quote": "корпусе А", "confidence": 0.95 },
+    { "key": "category", "value": "software", "quote": "1С", "confidence": 0.93 },
+    { "key": "department", "value": "dep-software", "quote": null, "confidence": 0.75 },
+    { "key": "impact", "value": "group", "quote": "у всего отдела", "confidence": 0.9 },
+    { "key": "urgency", "value": "down", "quote": "не открывается 1С", "confidence": 0.88 },
+    {
+      "key": "symptoms",
+      "value": "после обновления не открывается 1С",
+      "quote": "после обновления не открывается 1С",
+      "confidence": 0.9
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.1 },
+    "summary": { "text": "У всего отдела в корпусе А после обновления не открывается 1С." }
+  }
+}

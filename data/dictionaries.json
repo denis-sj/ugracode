@@ -5,11 +5,105 @@
     { "dictionary": "building", "code": "В", "label": "Корпус В" },
     { "dictionary": "building", "code": "ПРОМ", "label": "Промплощадка" },
 
-    { "dictionary": "category", "code": "printer", "label": "Принтер" },
+    { "dictionary": "category", "code": "printer", "label": "Принтер и печать" },
     { "dictionary": "category", "code": "pc", "label": "Компьютер" },
-    { "dictionary": "category", "code": "network", "label": "Сеть" },
+    { "dictionary": "category", "code": "network", "label": "Сеть и связь" },
     { "dictionary": "category", "code": "software", "label": "Программное обеспечение" },
-    { "dictionary": "category", "code": "server", "label": "Сервер" },
+    { "dictionary": "category", "code": "server", "label": "Серверы и инфраструктура" },
+    { "dictionary": "category", "code": "peripheral", "label": "Периферия" },
+
+    { "dictionary": "serviceType", "code": "repair", "label": "Ремонт и восстановление" },
+    { "dictionary": "serviceType", "code": "setup", "label": "Настройка" },
+    { "dictionary": "serviceType", "code": "install", "label": "Установка" },
+    { "dictionary": "serviceType", "code": "access", "label": "Доступы и учётные записи" },
+    { "dictionary": "serviceType", "code": "consult", "label": "Консультация" },
+    { "dictionary": "serviceType", "code": "maintenance", "label": "Обслуживание" },
+    { "dictionary": "serviceType", "code": "replacement", "label": "Замена оборудования" },
+
+    {
+      "dictionary": "department",
+      "code": "dep-service",
+      "label": "Служба поддержки (1-я линия)",
+      "meta": { "kind": "it", "line": 1 }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-it",
+      "label": "Рабочие места и периферия",
+      "meta": { "kind": "it", "line": 2 }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-network",
+      "label": "Сети и связь",
+      "meta": { "kind": "it", "line": 2 }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-server",
+      "label": "Серверы и инфраструктура",
+      "meta": { "kind": "it", "line": 2 }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-software",
+      "label": "Прикладное ПО и доступы",
+      "meta": { "kind": "it", "line": 2 }
+    },
+
+    {
+      "dictionary": "department",
+      "code": "dep-accounting",
+      "label": "Бухгалтерия",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-hr",
+      "label": "Отдел кадров",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-production",
+      "label": "Производственно-технический отдел",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-transport",
+      "label": "Транспортный отдел",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-finance",
+      "label": "Финансовый отдел",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-legal",
+      "label": "Юридический отдел",
+      "meta": { "kind": "business" }
+    },
+    {
+      "dictionary": "department",
+      "code": "dep-supply",
+      "label": "Отдел снабжения",
+      "meta": { "kind": "business" }
+    },
+
+    { "dictionary": "priority", "code": "low", "label": "Низкий", "meta": { "order": 4 } },
+    { "dictionary": "priority", "code": "medium", "label": "Средний", "meta": { "order": 3 } },
+    { "dictionary": "priority", "code": "high", "label": "Высокий", "meta": { "order": 2 } },
+    { "dictionary": "priority", "code": "critical", "label": "Критический", "meta": { "order": 1 } },
+    {
+      "dictionary": "priority",
+      "code": "emergency",
+      "label": "Авария",
+      "meta": { "order": 0, "computed": true }
+    },
 
     { "dictionary": "impact", "code": "one", "label": "Один сотрудник" },
     { "dictionary": "impact", "code": "group", "label": "Группа сотрудников" },
@@ -22,6 +116,27 @@
 
     { "dictionary": "channel", "code": "chat", "label": "Чат" },
     { "dictionary": "channel", "code": "phone", "label": "Телефон" },
-    { "dictionary": "channel", "code": "screenshot", "label": "Скриншот" }
+    { "dictionary": "channel", "code": "screenshot", "label": "Скриншот" },
+    { "dictionary": "channel", "code": "email", "label": "Электронная почта" },
+
+    { "dictionary": "equipmentType", "code": "printer", "label": "Принтер" },
+    { "dictionary": "equipmentType", "code": "mfu", "label": "МФУ" },
+    { "dictionary": "equipmentType", "code": "pc", "label": "Компьютер" },
+    { "dictionary": "equipmentType", "code": "monitor", "label": "Монитор" },
+    { "dictionary": "equipmentType", "code": "network", "label": "Сетевое оборудование" },
+    { "dictionary": "equipmentType", "code": "server", "label": "Сервер" },
+    { "dictionary": "equipmentType", "code": "ups", "label": "ИБП" },
+    { "dictionary": "equipmentType", "code": "scanner", "label": "Сканер" },
+    { "dictionary": "equipmentType", "code": "phone", "label": "Телефон" },
+    { "dictionary": "equipmentType", "code": "peripheral", "label": "Периферия" },
+
+    { "dictionary": "criticality", "code": "critical", "label": "Критичная" },
+    { "dictionary": "criticality", "code": "high", "label": "Высокая" },
+    { "dictionary": "criticality", "code": "medium", "label": "Средняя" },
+    { "dictionary": "criticality", "code": "low", "label": "Низкая" },
+
+    { "dictionary": "level", "code": "first_line", "label": "1-я линия" },
+    { "dictionary": "level", "code": "second_line", "label": "2-я линия" },
+    { "dictionary": "level", "code": "lead", "label": "Ведущий специалист" }
   ]
 }

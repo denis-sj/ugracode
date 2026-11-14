@@ -2,6 +2,8 @@
   "settings": {
     "confidenceThreshold": 0.75,
     "massWindowMinutes": 15,
-    "massThreshold": 5
+    "massThreshold": 5,
+    "answerTimeoutMinutes": 30,
+    "maxClarifyRounds": 2
   }
 }

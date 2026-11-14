@@ -1,0 +1,22 @@
+{
+  "id": "case-07",
+  "channel": "chat",
+  "text": "Третий раз пишу, сколько можно! Опять не работает мышь на моём компьютере. Никто не реагирует, это уже невозможно терпеть!",
+  "expected": {
+    "fields": {
+      "object": "мышь",
+      "building": null,
+      "cabinet": null,
+      "equipment": null,
+      "category": "peripheral",
+      "department": "dep-it",
+      "impact": "one",
+      "urgency": "workaround",
+      "symptoms": "не работает мышь на моём компьютере"
+    },
+    "priority": "medium",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-2", "u-engineer-1", "u-engineer-3"],
+    "kbArticle": "kb-peripheral-input"
+  }
+}

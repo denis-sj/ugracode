@@ -1,0 +1,22 @@
+{
+  "fields": [
+    { "key": "object", "value": "свитч", "quote": "свитч", "confidence": 0.9 },
+    { "key": "building", "value": "Б", "quote": "в Б", "confidence": 0.9 },
+    { "key": "floor", "value": "3", "quote": "3 этаже", "confidence": 0.92 },
+    { "key": "cabinet", "value": "314", "quote": "каб 314", "confidence": 0.93 },
+    { "key": "category", "value": "network", "quote": "сеть", "confidence": 0.92 },
+    { "key": "department", "value": "dep-network", "quote": null, "confidence": 0.72 },
+    { "key": "impact", "value": "group", "quote": null, "confidence": 0.7 },
+    { "key": "urgency", "value": "down", "quote": "не пашет сеть", "confidence": 0.88 },
+    {
+      "key": "symptoms",
+      "value": "не пашет сеть, свитч моргает, инет отвалился",
+      "quote": "не пашет сеть, свитч моргает, инет отвалился",
+      "confidence": 0.9
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.12 },
+    "summary": { "text": "На 3 этаже корпуса Б не работает сеть, свитч моргает." }
+  }
+}

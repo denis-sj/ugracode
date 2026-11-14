@@ -1,0 +1,34 @@
+{
+  "fields": [
+    { "key": "object", "value": "принтер", "quote": "принтер", "confidence": 0.96 },
+    { "key": "building", "value": "Б", "quote": "корпусе Б", "confidence": 0.98 },
+    { "key": "cabinet", "value": "312", "quote": "кабинет 312", "confidence": 0.98 },
+    {
+      "key": "equipment",
+      "value": "HP LaserJet Pro M404dn",
+      "quote": "принтер HP LaserJet Pro M404dn",
+      "confidence": 0.95
+    },
+    {
+      "key": "model",
+      "value": "HP LaserJet Pro M404dn",
+      "quote": "HP LaserJet Pro M404dn",
+      "confidence": 0.95
+    },
+    { "key": "category", "value": "printer", "quote": "принтер", "confidence": 0.97 },
+    { "key": "serviceType", "value": "repair", "quote": "ничего не печатает", "confidence": 0.8 },
+    { "key": "department", "value": "dep-it", "quote": null, "confidence": 0.7 },
+    { "key": "impact", "value": "one", "quote": null, "confidence": 0.75 },
+    { "key": "urgency", "value": "down", "quote": "Нужно срочно", "confidence": 0.9 },
+    {
+      "key": "symptoms",
+      "value": "мигает красный индикатор и ничего не печатает",
+      "quote": "мигает красный индикатор и ничего не печатает",
+      "confidence": 0.94
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.08 },
+    "summary": { "text": "Принтер HP в кабинете 312 не печатает, мигает красный индикатор." }
+  }
+}

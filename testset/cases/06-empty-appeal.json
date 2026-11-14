@@ -1,0 +1,20 @@
+{
+  "id": "case-06",
+  "channel": "chat",
+  "text": "опять ничего не работает",
+  "expected": {
+    "fields": {
+      "object": null,
+      "building": null,
+      "cabinet": null,
+      "equipment": null,
+      "category": null,
+      "impact": null,
+      "urgency": null,
+      "symptoms": null
+    },
+    "priority": "medium",
+    "emergency": false,
+    "assigneeTop3": []
+  }
+}

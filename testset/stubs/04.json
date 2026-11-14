@@ -1,0 +1,24 @@
+{
+  "fields": [
+    { "key": "object", "value": "сеть", "quote": "пропала сеть", "confidence": 0.95 },
+    { "key": "building", "value": "В", "quote": "корпусе В", "confidence": 0.97 },
+    { "key": "category", "value": "network", "quote": "сеть", "confidence": 0.97 },
+    { "key": "department", "value": "dep-network", "quote": null, "confidence": 0.75 },
+    { "key": "impact", "value": "building", "quote": "Во всём корпусе В", "confidence": 0.94 },
+    { "key": "urgency", "value": "down", "quote": "Весь этаж не работает", "confidence": 0.93 },
+    {
+      "key": "symptoms",
+      "value": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта",
+      "quote": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта",
+      "confidence": 0.94
+    }
+  ],
+  "aspects": {
+    "emergency": {
+      "suspected": true,
+      "signs": [{ "sign": "network_outage", "quote": "Во всём корпусе В пропала сеть и интернет" }],
+      "confidence": 0.9
+    },
+    "summary": { "text": "Во всём корпусе В нет сети и интернета, работа остановлена." }
+  }
+}

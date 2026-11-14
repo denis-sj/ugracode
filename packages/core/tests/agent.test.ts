@@ -411,3 +411,22 @@ describe('реестры инструментов и агентов', () => {
     expect(() => buildRegistries([module])).toThrow(/Агент test зарегистрирован дважды/);
   });
 });
+
+describe('промпт агента', () => {
+  it('подставляет текст файла промпта в системный промпт', async () => {
+    const { writeFile, mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'ugra-prompt-'));
+    const file = join(dir, 'agent.v1.md');
+    await writeFile(file, 'Ты — тестовый агент с маркером ПРОМПТ-МАРКЕР.', 'utf8');
+    const profile = { ...makeProfile(), promptId: file };
+    const prompt = assembleSystemPrompt(profile, [], {});
+    expect(prompt).toContain('ПРОМПТ-МАРКЕР');
+  });
+
+  it('работает без файла промпта', () => {
+    const prompt = assembleSystemPrompt({ ...makeProfile(), promptId: 'нет-такого-файла' }, [], {});
+    expect(prompt).toContain('test');
+  });
+});

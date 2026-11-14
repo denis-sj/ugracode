@@ -1,0 +1,300 @@
+{
+  "users": [
+    {
+      "id": "u-applicant-1",
+      "fullName": "Денис Соколов",
+      "role": "applicant",
+      "departmentId": "dep-production",
+      "position": "Инженер-технолог",
+      "profile": { "building": "Б", "floor": "3", "cabinet": "311", "equipmentId": "eq-pc-b311" }
+    },
+    {
+      "id": "u-applicant-2",
+      "fullName": "Ирина Волкова",
+      "role": "applicant",
+      "departmentId": "dep-accounting",
+      "position": "Бухгалтер",
+      "profile": { "building": "А", "floor": "1", "cabinet": "101", "equipmentId": "eq-a101-pc1" }
+    },
+    {
+      "id": "u-applicant-3",
+      "fullName": "Пётр Ковальчук",
+      "role": "applicant",
+      "departmentId": "dep-transport",
+      "position": "Начальник участка",
+      "profile": { "building": "А", "floor": "1", "cabinet": "102", "equipmentId": "eq-a102-pc1" }
+    },
+    {
+      "id": "u-applicant-4",
+      "fullName": "Светлана Морозова",
+      "role": "applicant",
+      "departmentId": "dep-hr",
+      "position": "Специалист по кадрам",
+      "profile": { "building": "А", "floor": "1", "cabinet": "104", "equipmentId": "eq-a104-pc1" }
+    },
+    {
+      "id": "u-applicant-5",
+      "fullName": "Антон Гриценко",
+      "role": "applicant",
+      "departmentId": "dep-finance",
+      "position": "Экономист",
+      "profile": { "building": "А", "floor": "2", "cabinet": "201", "equipmentId": "eq-a201-pc1" }
+    },
+    {
+      "id": "u-applicant-6",
+      "fullName": "Елена Романова",
+      "role": "applicant",
+      "departmentId": "dep-legal",
+      "position": "Юрисконсульт",
+      "profile": { "building": "А", "floor": "2", "cabinet": "205", "equipmentId": "eq-a205-pc1" }
+    },
+    {
+      "id": "u-applicant-7",
+      "fullName": "Виталий Сорокин",
+      "role": "applicant",
+      "departmentId": "dep-production",
+      "position": "Мастер участка",
+      "profile": { "building": "А", "floor": "2", "cabinet": "210", "equipmentId": "eq-a210-pc1" }
+    },
+    {
+      "id": "u-applicant-8",
+      "fullName": "Юлия Павлова",
+      "role": "applicant",
+      "departmentId": "dep-accounting",
+      "position": "Бухгалтер",
+      "profile": { "building": "А", "floor": "3", "cabinet": "301", "equipmentId": "eq-a301-pc1" }
+    },
+    {
+      "id": "u-applicant-9",
+      "fullName": "Николай Фомин",
+      "role": "applicant",
+      "departmentId": "dep-supply",
+      "position": "Специалист по снабжению",
+      "profile": { "building": "А", "floor": "3", "cabinet": "305", "equipmentId": "eq-a305-pc1" }
+    },
+    {
+      "id": "u-applicant-10",
+      "fullName": "Татьяна Крылова",
+      "role": "applicant",
+      "departmentId": "dep-hr",
+      "position": "Начальник отдела кадров",
+      "profile": { "building": "Б", "floor": "1", "cabinet": "110", "equipmentId": "eq-b110-pc1" }
+    },
+    {
+      "id": "u-applicant-11",
+      "fullName": "Андрей Мещеряков",
+      "role": "applicant",
+      "departmentId": "dep-production",
+      "position": "Инженер по КИПиА",
+      "profile": { "building": "Б", "floor": "1", "cabinet": "115", "equipmentId": "eq-b115-pc1" }
+    },
+    {
+      "id": "u-applicant-12",
+      "fullName": "Мария Гусева",
+      "role": "applicant",
+      "departmentId": "dep-finance",
+      "position": "Ведущий экономист",
+      "profile": { "building": "Б", "floor": "2", "cabinet": "208", "equipmentId": "eq-b208-pc1" }
+    },
+    {
+      "id": "u-applicant-13",
+      "fullName": "Олег Данилов",
+      "role": "applicant",
+      "departmentId": "dep-transport",
+      "position": "Диспетчер транспорта",
+      "profile": { "building": "Б", "floor": "2", "cabinet": "214", "equipmentId": "eq-b214-pc1" }
+    },
+    {
+      "id": "u-applicant-14",
+      "fullName": "Людмила Комарова",
+      "role": "applicant",
+      "departmentId": "dep-accounting",
+      "position": "Бухгалтер по расчётам",
+      "profile": { "building": "Б", "floor": "3", "cabinet": "312", "equipmentId": "eq-b312-pc1" }
+    },
+    {
+      "id": "u-applicant-15",
+      "fullName": "Владислав Орлов",
+      "role": "applicant",
+      "departmentId": "dep-production",
+      "position": "Инженер-энергетик",
+      "profile": { "building": "Б", "floor": "3", "cabinet": "314", "equipmentId": "eq-b314-pc1" }
+    },
+    {
+      "id": "u-applicant-16",
+      "fullName": "Надежда Титова",
+      "role": "applicant",
+      "departmentId": "dep-legal",
+      "position": "Юрист",
+      "profile": { "building": "Б", "floor": "4", "cabinet": "405", "equipmentId": "eq-b405-pc1" }
+    },
+    {
+      "id": "u-applicant-17",
+      "fullName": "Алексей Бондаренко",
+      "role": "applicant",
+      "departmentId": "dep-supply",
+      "position": "Заведующий складом",
+      "profile": { "building": "В", "floor": "1", "cabinet": "105", "equipmentId": "eq-v105-pc1" }
+    },
+    {
+      "id": "u-applicant-18",
+      "fullName": "Ксения Дроздова",
+      "role": "applicant",
+      "departmentId": "dep-hr",
+      "position": "Инспектор по кадрам",
+      "profile": { "building": "В", "floor": "1", "cabinet": "110", "equipmentId": "eq-v110-pc1" }
+    },
+    {
+      "id": "u-applicant-19",
+      "fullName": "Максим Кравцов",
+      "role": "applicant",
+      "departmentId": "dep-production",
+      "position": "Оператор установки",
+      "profile": { "building": "В", "floor": "2", "cabinet": "205", "equipmentId": "eq-pc-v205" }
+    },
+    {
+      "id": "u-applicant-20",
+      "fullName": "Оксана Лебедева",
+      "role": "applicant",
+      "departmentId": "dep-finance",
+      "position": "Бухгалтер материального стола",
+      "profile": { "building": "В", "floor": "2", "cabinet": "210", "equipmentId": "eq-v210-pc1" }
+    },
+
+    {
+      "id": "u-dispatcher-1",
+      "fullName": "Анна Миронова",
+      "role": "dispatcher",
+      "departmentId": "dep-service",
+      "position": "Диспетчер службы поддержки"
+    },
+    {
+      "id": "u-dispatcher-2",
+      "fullName": "Кирилл Наумов",
+      "role": "dispatcher",
+      "departmentId": "dep-service",
+      "position": "Диспетчер службы поддержки"
+    },
+
+    {
+      "id": "u-engineer-1",
+      "fullName": "Игорь Лебедев",
+      "role": "engineer",
+      "departmentId": "dep-service",
+      "position": "Инженер 1-й линии"
+    },
+    {
+      "id": "u-engineer-2",
+      "fullName": "Артём Кузнецов",
+      "role": "engineer",
+      "departmentId": "dep-it",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-3",
+      "fullName": "Марина Соловьёва",
+      "role": "engineer",
+      "departmentId": "dep-it",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-4",
+      "fullName": "Павел Дорохов",
+      "role": "engineer",
+      "departmentId": "dep-it",
+      "position": "Ведущий инженер"
+    },
+    {
+      "id": "u-engineer-5",
+      "fullName": "Сергей Гаврилов",
+      "role": "engineer",
+      "departmentId": "dep-service",
+      "position": "Инженер 1-й линии"
+    },
+    {
+      "id": "u-engineer-6",
+      "fullName": "Ольга Тимченко",
+      "role": "engineer",
+      "departmentId": "dep-service",
+      "position": "Инженер 1-й линии"
+    },
+    {
+      "id": "u-engineer-7",
+      "fullName": "Дмитрий Ковалёв",
+      "role": "engineer",
+      "departmentId": "dep-network",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-8",
+      "fullName": "Алина Фадеева",
+      "role": "engineer",
+      "departmentId": "dep-network",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-9",
+      "fullName": "Роман Беляев",
+      "role": "engineer",
+      "departmentId": "dep-network",
+      "position": "Ведущий инженер"
+    },
+    {
+      "id": "u-engineer-10",
+      "fullName": "Екатерина Лаврова",
+      "role": "engineer",
+      "departmentId": "dep-software",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-11",
+      "fullName": "Максим Ершов",
+      "role": "engineer",
+      "departmentId": "dep-software",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-12",
+      "fullName": "Виктор Самойлов",
+      "role": "engineer",
+      "departmentId": "dep-server",
+      "position": "Ведущий инженер"
+    },
+    {
+      "id": "u-engineer-13",
+      "fullName": "Наталья Крылова",
+      "role": "engineer",
+      "departmentId": "dep-server",
+      "position": "Инженер 2-й линии"
+    },
+    {
+      "id": "u-engineer-14",
+      "fullName": "Григорий Мельник",
+      "role": "engineer",
+      "departmentId": "dep-software",
+      "position": "Инженер 1-й линии"
+    },
+
+    {
+      "id": "u-manager-1",
+      "fullName": "Ольга Ветрова",
+      "role": "manager",
+      "departmentId": "dep-service",
+      "position": "Руководитель ИТ-службы"
+    },
+    {
+      "id": "u-admin-1",
+      "fullName": "Роман Щербаков",
+      "role": "admin",
+      "departmentId": "dep-service",
+      "position": "Администратор системы"
+    },
+    {
+      "id": "guest",
+      "fullName": "Гость",
+      "role": "applicant",
+      "departmentId": null,
+      "position": "Гость (без профиля)"
+    }
+  ]
+}

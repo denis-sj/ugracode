@@ -1,0 +1,20 @@
+{
+  "id": "case-04",
+  "channel": "chat",
+  "text": "Во всём корпусе В пропала сеть и интернет: ни у кого не открываются сайты, не работает почта. Весь этаж не работает, люди не могут отправить документы.",
+  "expected": {
+    "fields": {
+      "object": "сеть",
+      "building": "В",
+      "category": "network",
+      "department": "dep-network",
+      "impact": "building",
+      "urgency": "down",
+      "symptoms": "пропала сеть и интернет: ни у кого не открываются сайты, не работает почта"
+    },
+    "priority": "emergency",
+    "emergency": true,
+    "assigneeTop3": ["u-engineer-7", "u-engineer-8", "u-engineer-9"],
+    "kbArticle": "kb-network-outage"
+  }
+}

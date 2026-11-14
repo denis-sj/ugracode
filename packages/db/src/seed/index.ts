@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import type { User } from '@ugra/contracts';
 import {
   createReferenceData,
   resolveEnabledModules,
@@ -15,43 +15,16 @@ import {
   cmdbEquipmentTable,
   cmdbLocationTable,
   dictionaryItemTable,
+  dutyShiftTable,
+  engineerProfileTable,
+  engineerSkillTable,
   fieldDefTable,
+  kbArticleTable,
   schema,
   settingTable,
   userTable,
 } from '../schema';
 import { loadSeedData, mergeLocations } from './load-data';
-
-const DEMO_USERS: User[] = [
-  {
-    id: 'u-applicant-1',
-    fullName: 'Денис Соколов',
-    role: 'applicant',
-    departmentId: 'dep-2',
-    position: 'Инженер-технолог',
-  },
-  {
-    id: 'u-dispatcher-1',
-    fullName: 'Анна Миронова',
-    role: 'dispatcher',
-    departmentId: 'dep-it',
-    position: 'Диспетчер службы поддержки',
-  },
-  {
-    id: 'u-engineer-1',
-    fullName: 'Игорь Лебедев',
-    role: 'engineer',
-    departmentId: 'dep-it',
-    position: 'Инженер технической поддержки',
-  },
-  {
-    id: 'u-manager-1',
-    fullName: 'Ольга Ветрова',
-    role: 'manager',
-    departmentId: 'dep-it',
-    position: 'Руководитель отдела ИТ',
-  },
-];
 
 /** Демо-таблицы для `--reset`. `event_log` не трогаем: журнал только на добавление. */
 const RESET_TABLES = [
@@ -128,19 +101,18 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
       console.log('Демо-таблицы очищены, event_log сохранён');
     }
 
-    for (const user of DEMO_USERS) {
+    // Пользователей из data/users.json не перезаписываем: правки в интерфейсе важнее сида.
+    for (const user of data.users) {
       await db
         .insert(userTable)
-        .values(user)
-        .onConflictDoUpdate({
-          target: userTable.id,
-          set: {
-            fullName: user.fullName,
-            role: user.role,
-            departmentId: user.departmentId,
-            position: user.position,
-          },
-        });
+        .values({
+          id: user.id,
+          fullName: user.fullName,
+          role: user.role,
+          departmentId: user.departmentId,
+          position: user.position,
+        })
+        .onConflictDoNothing({ target: userTable.id });
     }
 
     for (const field of data.fields) {
@@ -220,9 +192,72 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
         });
     }
 
+    for (const engineer of data.engineers) {
+      const profile = {
+        userId: engineer.id,
+        department: engineer.departmentId,
+        level: engineer.level,
+        buildings: engineer.buildings,
+        onDuty: engineer.onShift,
+        status: engineer.onShift ? 'available' : 'off_shift',
+      };
+      await db
+        .insert(engineerProfileTable)
+        .values(profile)
+        .onConflictDoUpdate({
+          target: engineerProfileTable.userId,
+          set: {
+            department: profile.department,
+            level: profile.level,
+            buildings: profile.buildings,
+            onDuty: profile.onDuty,
+            status: profile.status,
+          },
+        });
+
+      for (const skill of engineer.skills) {
+        await db
+          .insert(engineerSkillTable)
+          .values({ userId: engineer.id, skill: skill.skill, level: skill.level })
+          .onConflictDoUpdate({
+            target: [engineerSkillTable.userId, engineerSkillTable.skill],
+            set: { level: skill.level },
+          });
+      }
+
+      // Смены не имеют бизнес-ключа: пересоздаём смену инженера, чтобы повторный сид не дублировал.
+      await db.delete(dutyShiftTable).where(eq(dutyShiftTable.userId, engineer.id));
+      if (engineer.onShift) {
+        await db.insert(dutyShiftTable).values({
+          userId: engineer.id,
+          kind: 'shift',
+          startsAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          endsAt: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
+        });
+      }
+    }
+
+    for (const article of data.kbArticles) {
+      const row = {
+        id: article.id,
+        title: article.title,
+        symptoms: article.symptoms,
+        steps: article.steps,
+        solution: article.solution,
+        category: article.category,
+      };
+      await db
+        .insert(kbArticleTable)
+        .values({ ...row, embedding: null })
+        // Эмбеддинг не трогаем: он может быть посчитан при старте.
+        .onConflictDoUpdate({ target: kbArticleTable.id, set: row });
+    }
+
+    const onShift = data.engineers.filter((engineer) => engineer.onShift).length;
     console.log(
-      `Базовые данные: ${DEMO_USERS.length} пользователя, ${data.fields.length} полей, ` +
-        `${data.dictionaries.length} справочников, ${data.cmdb.equipment.length} единиц оборудования`,
+      `Базовые данные: ${data.users.length} пользователей, ${data.engineers.length} инженеров ` +
+        `(${onShift} на смене), ${data.fields.length} полей, ${data.dictionaries.length} справочников, ` +
+        `${data.cmdb.equipment.length} единиц оборудования, ${data.kbArticles.length} статей`,
     );
   } finally {
     await pool.end();
@@ -239,7 +274,11 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
         fields: data.fields,
         dictionaries: data.dictionaries,
         settings: data.settings,
-        extra: { cmdb: data.cmdb },
+        extra: {
+          cmdb: data.cmdb,
+          priorityMatrix: data.priorityMatrix,
+          emergencyRules: data.emergencyRules,
+        },
       }),
       clock: { now: () => new Date() },
     };

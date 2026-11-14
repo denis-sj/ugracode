@@ -1,0 +1,22 @@
+{
+  "fields": [
+    { "key": "object", "value": "почта", "quote": "корпоративную почту", "confidence": 0.93 },
+    { "key": "building", "value": "Б", "quote": "корпусе Б", "confidence": 0.96 },
+    { "key": "cabinet", "value": "208", "quote": "кабинет 208", "confidence": 0.96 },
+    { "key": "category", "value": "software", "quote": "почту", "confidence": 0.92 },
+    { "key": "serviceType", "value": "access", "quote": "заблокирована", "confidence": 0.85 },
+    { "key": "department", "value": "dep-software", "quote": null, "confidence": 0.7 },
+    { "key": "impact", "value": "one", "quote": null, "confidence": 0.8 },
+    { "key": "urgency", "value": "workaround", "quote": "пишу с телефона", "confidence": 0.82 },
+    {
+      "key": "symptoms",
+      "value": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+      "quote": "после ввода пароля появляется сообщение «Учётная запись заблокирована»",
+      "confidence": 0.93
+    }
+  ],
+  "aspects": {
+    "emergency": { "suspected": false, "signs": [], "confidence": 0.05 },
+    "summary": { "text": "Учётная запись заблокирована, войти в корпоративную почту не удаётся." }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "case-01",
+  "channel": "chat",
+  "text": "Здравствуйте! В корпусе Б, кабинет 312, принтер HP LaserJet Pro M404dn мигает красный индикатор и ничего не печатает. Нужно срочно, до конца дня сдавать отчёт.",
+  "expected": {
+    "fields": {
+      "object": "принтер",
+      "building": "Б",
+      "cabinet": "312",
+      "equipment": "HP LaserJet Pro M404dn",
+      "model": "HP LaserJet Pro M404dn",
+      "category": "printer",
+      "serviceType": "repair",
+      "department": "dep-it",
+      "impact": "one",
+      "urgency": "down",
+      "symptoms": "мигает красный индикатор и ничего не печатает"
+    },
+    "priority": "high",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-2", "u-engineer-4", "u-engineer-3"],
+    "kbArticle": "kb-print-red-indicator"
+  }
+}

@@ -6,7 +6,11 @@
       "group": "location",
       "type": "string",
       "required": true,
-      "extractHint": "Что именно сломалось или не работает: принтер, компьютер, сеть, программа.",
+      "extractHint": "Что именно не работает: принтер, компьютер, мышь, сеть, программа, сервер. Бери слова заявителя, не придумывай модель.",
+      "ask": {
+        "question": "Что именно не работает?",
+        "widget": "text"
+      },
       "evalMode": "normalized"
     },
     {
@@ -16,7 +20,7 @@
       "type": "dictionary",
       "dictionary": "building",
       "required": true,
-      "extractHint": "Корпус, в котором находится объект: А, Б, В или ПРОМ.",
+      "extractHint": "Корпус, где находится объект: А, Б, В или ПРОМ (промплощадка). Ищи слова «корпус», «здание», «площадка».",
       "ask": {
         "question": "В каком корпусе это находится?",
         "widget": "buttons",
@@ -25,12 +29,22 @@
       "evalMode": "normalized"
     },
     {
+      "key": "floor",
+      "label": "Этаж",
+      "group": "location",
+      "type": "string",
+      "required": false,
+      "extractHint": "Номер этажа, если заявитель его назвал: «на третьем этаже», «3 этаж». Не выводи этаж из номера кабинета.",
+      "pattern": "^[0-9]{1,2}$",
+      "evalMode": "normalized"
+    },
+    {
       "key": "cabinet",
       "label": "Кабинет",
       "group": "location",
       "type": "string",
       "required": true,
-      "extractHint": "Номер кабинета: от одной до четырёх цифр, например 312.",
+      "extractHint": "Номер кабинета: от одной до четырёх цифр, например 312. Ищи слова «кабинет», «каб.», «каб».",
       "pattern": "^[0-9]{1,4}$",
       "ask": {
         "question": "Укажите номер кабинета.",
@@ -42,13 +56,74 @@
       "key": "equipment",
       "label": "Оборудование",
       "group": "equipment",
-      "type": "string",
+      "type": "cmdbRef",
       "required": true,
-      "extractHint": "Модель или инвентарный номер оборудования, если он назван.",
+      "extractHint": "Название или модель оборудования, если заявитель его назвал: «принтер HP LaserJet», «МФУ Kyocera». Инвентарный номер и IP подставляет код из CMDB.",
       "ask": {
         "question": "Какое оборудование используется?",
         "widget": "select",
         "optionsFrom": "equipment"
+      },
+      "evalMode": "normalized"
+    },
+    {
+      "key": "model",
+      "label": "Модель",
+      "group": "equipment",
+      "type": "string",
+      "required": false,
+      "extractHint": "Точная модель устройства, если она есть в тексте: HP LaserJet Pro M404dn, Dell OptiPlex 7010, Cisco Catalyst 2960.",
+      "evalMode": "normalized"
+    },
+    {
+      "key": "serial",
+      "label": "Серийный номер",
+      "group": "equipment",
+      "type": "string",
+      "required": false,
+      "extractHint": "Серийный номер устройства, если заявитель его продиктовал. Обычно 4–24 латинских символа, цифр и дефисов.",
+      "pattern": "^[A-Za-z0-9-]{4,24}$",
+      "evalMode": "exact"
+    },
+    {
+      "key": "inventoryNo",
+      "label": "Инвентарный номер",
+      "group": "equipment",
+      "type": "string",
+      "required": false,
+      "extractHint": "Инвентарный номер вида INV-000312, если он назван. Не путать с номером заявки.",
+      "pattern": "^[A-Z]{2,4}-[0-9]{4,8}$",
+      "evalMode": "exact"
+    },
+    {
+      "key": "ip",
+      "label": "IP-адрес",
+      "group": "technical",
+      "type": "ip",
+      "required": false,
+      "extractHint": "IPv4-адрес устройства, если заявитель его назвал: например 10.10.2.214. Не придумывай адрес по кабинету.",
+      "pattern": "^[0-9]{1,3}(\\.[0-9]{1,3}){3}$",
+      "evalMode": "exact"
+    },
+    {
+      "key": "errorCode",
+      "label": "Код ошибки",
+      "group": "technical",
+      "type": "string",
+      "required": false,
+      "extractHint": "Код или текст ошибки с экрана или панели устройства: 0x80004005, E-05, «красный индикатор». Только дословно из обращения.",
+      "evalMode": "exact"
+    },
+    {
+      "key": "symptoms",
+      "label": "Симптомы",
+      "group": "symptoms",
+      "type": "text",
+      "required": true,
+      "extractHint": "Что происходит с устройством словами заявителя: мигает индикатор, не печатает, выдаёт ошибку, не открывается программа.",
+      "ask": {
+        "question": "Опишите, что происходит с устройством или программой.",
+        "widget": "text"
       },
       "evalMode": "normalized"
     },
@@ -59,12 +134,37 @@
       "type": "dictionary",
       "dictionary": "category",
       "required": true,
-      "extractHint": "Категория проблемы: printer, pc, network, software или server.",
+      "extractHint": "Категория проблемы: printer (принтер, МФУ, печать), pc (компьютер), network (сеть, интернет, Wi-Fi), software (почта, 1С, программы, доступы), server (серверы), peripheral (мышь, клавиатура, монитор).",
       "ask": {
         "question": "К какой категории относится проблема?",
         "widget": "select",
         "optionsFrom": "category"
       },
+      "evalMode": "exact"
+    },
+    {
+      "key": "serviceType",
+      "label": "Тип услуги",
+      "group": "classification",
+      "type": "dictionary",
+      "dictionary": "serviceType",
+      "required": false,
+      "extractHint": "Что нужно сделать: repair (починить), setup (настроить), install (установить), access (выдать доступ), consult (объяснить), maintenance (обслужить), replacement (заменить).",
+      "ask": {
+        "question": "Какая услуга нужна?",
+        "widget": "select",
+        "optionsFrom": "serviceType"
+      },
+      "evalMode": "exact"
+    },
+    {
+      "key": "department",
+      "label": "Подразделение",
+      "group": "classification",
+      "type": "dictionary",
+      "dictionary": "department",
+      "required": false,
+      "extractHint": "Подразделение ИТ-службы, которое решает такую проблему. Обычно вычисляется по категории, из текста не извлекается.",
       "evalMode": "exact"
     },
     {
@@ -74,7 +174,12 @@
       "type": "dictionary",
       "dictionary": "impact",
       "required": false,
-      "extractHint": "Сколько людей затронуто: один, группа, корпус или предприятие.",
+      "extractHint": "Сколько людей затронуто: one (один сотрудник), group (отдел, кабинет, несколько человек), building (весь корпус), enterprise (всё предприятие).",
+      "ask": {
+        "question": "Сколько сотрудников затронуто?",
+        "widget": "buttons",
+        "optionsFrom": "impact"
+      },
       "evalMode": "exact"
     },
     {
@@ -84,7 +189,12 @@
       "type": "dictionary",
       "dictionary": "urgency",
       "required": false,
-      "extractHint": "Насколько срочно: работа стоит, есть обходной путь или можно подождать.",
+      "extractHint": "Насколько срочно: down (работа полностью стоит), workaround (есть обходной путь), planned (можно подождать, плановое).",
+      "ask": {
+        "question": "Работа остановлена или есть обходной путь?",
+        "widget": "buttons",
+        "optionsFrom": "urgency"
+      },
       "evalMode": "exact"
     }
   ]

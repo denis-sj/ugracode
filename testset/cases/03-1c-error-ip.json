@@ -1,0 +1,25 @@
+{
+  "id": "case-03",
+  "channel": "screenshot",
+  "imageFile": "testset/images/case-03-1c-error.png",
+  "text": "Компьютер в кабинете 214 корпуса Б не открывает 1С: Предприятие. Выдаёт ошибку 0x80004005 и закрывается. IP компьютера 10.10.2.214. Работа стоит, не могу провести накладные.",
+  "expected": {
+    "fields": {
+      "object": "компьютер",
+      "building": "Б",
+      "cabinet": "214",
+      "category": "software",
+      "serviceType": "repair",
+      "department": "dep-software",
+      "errorCode": "0x80004005",
+      "ip": "10.10.2.214",
+      "impact": "one",
+      "urgency": "down",
+      "symptoms": "Выдаёт ошибку 0x80004005 и закрывается"
+    },
+    "priority": "high",
+    "emergency": false,
+    "assigneeTop3": ["u-engineer-10", "u-engineer-11", "u-engineer-3"],
+    "kbArticle": "kb-1c-access"
+  }
+}

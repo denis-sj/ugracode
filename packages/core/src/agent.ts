@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import type { z } from 'zod';
 import type {
   Appeal,
@@ -173,6 +174,7 @@ export function assembleSystemPrompt<S>(
   const toolsSection = toolBlocks.length > 0 ? toolBlocks.join('\n\n') : 'Инструментов нет: сразу вызывай submit.';
 
   return [
+    loadPromptText(profile.promptId),
     `Ты — агент «${profile.id}» диспетчерской ИИ. Версия промпта: ${profile.promptId}.`,
     'Работай по шагам: сначала собери факты инструментами, затем сдай результат.',
     '',
@@ -495,4 +497,16 @@ export async function runAgent<S>(
   }
 
   return finish({ status: 'failed', error: `агент не сдал результат за ${maxSteps} шагов` });
+}
+
+/** Текст промпта из файла (`promptId` может быть путём). Файла нет — работаем без него. */
+export function loadPromptText(promptId: string): string {
+  try {
+    if (/(^|\/)[\w.-]+\.md$/.test(promptId) && existsSync(promptId)) {
+      return readFileSync(promptId, 'utf8').trim();
+    }
+  } catch {
+    // промпт не обязателен для работы цикла
+  }
+  return '';
 }
