@@ -64,7 +64,6 @@ PR: —
 
 **Код, до чекпоинта 1** (порядок и потоки — [../plans/case9-core.md](../plans/case9-core.md)):
 
-- [005-skeleton.md](005-skeleton.md) — **первая, блокирует остальные**: каркас, контракты, ядро, сквозной срез
 - [006-extraction-priority.md](006-extraction-priority.md) — поток А: извлечение полей и приоритет
 - [007-ui-shell-chat-card.md](007-ui-shell-chat-card.md) — поток Б: дизайн-система, чат заявителя, карточка заявки
 - [008-data-testset.md](008-data-testset.md) — поток В: данные и тестовый набор

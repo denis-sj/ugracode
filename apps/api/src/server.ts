@@ -157,7 +157,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
     });
   };
 
-  registerCoreRoutes(addRoute, options.store, ctx, data);
+  registerCoreRoutes(addRoute, options.store, ctx, data, env);
 
   for (const mounted of collectRoutes(enabled, deps)) {
     for (const route of mounted.routes) {
@@ -190,6 +190,7 @@ function registerCoreRoutes(
   store: KernelStore,
   ctx: AppContext,
   data: ReferenceData,
+  env: Record<string, string | undefined>,
 ): void {
   const { tickets, engine } = ctx;
   addRoute({
@@ -208,7 +209,7 @@ function registerCoreRoutes(
       modules: ctx.modules.map((module) => ({ id: module.id, title: module.title })),
       fields: data.fields,
       dictionaries: data.dictionaries as DictionaryItem[],
-      aiMode: (process.env.AI_MODE ?? 'stub') as 'stub' | 'cloud' | 'cache-only',
+      aiMode: (env.AI_MODE ?? 'stub') as 'stub' | 'cloud' | 'cache-only',
       roles: [...Role.options],
       priorities: [...PriorityLevel.options],
     }),
