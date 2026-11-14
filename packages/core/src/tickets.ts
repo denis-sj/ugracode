@@ -102,6 +102,8 @@ export class TicketService {
     await this.deps.store.updateTicket(ticketId, patch);
     let current = ticket;
     if (current.status === 'new') current = await this.transition(ticketId, 'ai_draft', actor);
+    // Есть вопросы к заявителю — заявка ждёт ответа, диспетчеру она пока не нужна.
+    if (current.status === 'waiting_applicant' && draft.missing.length > 0) return current;
     if (['ai_draft', 'waiting_applicant'].includes(current.status)) {
       return this.transition(ticketId, 'in_review', { kind: 'system' });
     }

@@ -11,6 +11,7 @@ import {
   uuid,
   vector,
 } from 'drizzle-orm/pg-core';
+import type { ChatCard } from '@ugra/contracts';
 
 const tstz = (name: string) => timestamp(name, { withTimezone: true, mode: 'string' });
 
@@ -34,15 +35,21 @@ export const appealTable = pgTable('appeal', {
 });
 
 /** Чат заявителя с системой: вопросы-карточки, ответы, системные сообщения. */
-export const appealMessageTable = pgTable('appeal_message', {
-  id: text('id').primaryKey(),
-  appealId: text('appeal_id').notNull(),
-  direction: text('direction').notNull(),
-  kind: text('kind').notNull(),
-  body: text('body').notNull(),
-  fieldKey: text('field_key'),
-  createdAt: tstz('created_at').notNull().defaultNow(),
-});
+export const appealMessageTable = pgTable(
+  'appeal_message',
+  {
+    id: text('id').primaryKey(),
+    appealId: text('appeal_id').notNull(),
+    direction: text('direction').notNull(),
+    kind: text('kind').notNull(),
+    body: text('body').notNull(),
+    fieldKey: text('field_key'),
+    /** Карточка сообщения (`cardType` + `payload`): вопрос по полю, «Проблема решена?» и будущие. */
+    card: jsonb('card').$type<ChatCard | null>(),
+    createdAt: tstz('created_at').notNull().defaultNow(),
+  },
+  (table) => [index('appeal_message_appeal_created_idx').on(table.appealId, table.createdAt)],
+);
 
 /**
  * Заявка. Колонки priority…confirmed_at — копия полей для быстрых отчётов.
@@ -287,6 +294,24 @@ export const notificationTable = pgTable('notification', {
 });
 
 
+/** Инцидент массовости: склейка похожих обращений (модуль `mass-incident`). */
+export const incidentTable = pgTable(
+  'incident',
+  {
+    id: text('id').primaryKey(),
+    number: text('number').notNull(),
+    status: text('status').notNull(),
+    category: text('category'),
+    building: text('building'),
+    system: text('system'),
+    size: integer('size').notNull().default(0),
+    priority: text('priority'),
+    openedAt: tstz('opened_at').notNull(),
+    closedAt: tstz('closed_at'),
+  },
+  (table) => [index('incident_status_opened_at_idx').on(table.status, table.openedAt)],
+);
+
 export const schema = {
   userTable,
   appealTable,
@@ -309,10 +334,12 @@ export const schema = {
   dutyShiftTable,
   kbArticleTable,
   notificationTable,
+  incidentTable,
 };
 
 export type UserRow = typeof userTable.$inferSelect;
 export type AppealRow = typeof appealTable.$inferSelect;
+export type AppealMessageRow = typeof appealMessageTable.$inferSelect;
 export type TicketRow = typeof ticketTable.$inferSelect;
 export type TicketFieldRow = typeof ticketFieldTable.$inferSelect;
 export type PipelineRunRow = typeof pipelineRunTable.$inferSelect;
@@ -322,3 +349,4 @@ export type EventLogRow = typeof eventLogTable.$inferSelect;
 export type KbArticleRow = typeof kbArticleTable.$inferSelect;
 export type ApplicantProfileRow = typeof applicantProfileTable.$inferSelect;
 export type ApplicantEquipmentRow = typeof applicantEquipmentTable.$inferSelect;
+export type IncidentRow = typeof incidentTable.$inferSelect;

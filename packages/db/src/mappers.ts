@@ -1,5 +1,6 @@
 import type {
   Appeal,
+  AppealMessage,
   Channel,
   DomainEvent,
   FieldOrigin,
@@ -14,13 +15,15 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
-import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, KnowledgeArticle } from '@ugra/core';
+import type { AgentStepRecord, ApplicantEquipment, ApplicantProfile, Incident, KnowledgeArticle } from '@ugra/core';
 import type {
+  AppealMessageRow,
   AppealRow,
   ApplicantEquipmentRow,
   ApplicantProfileRow,
   EventLogRow,
   AgentStepRow,
+  IncidentRow,
   KbArticleRow,
   PipelineRunRow,
   PipelineStepRow,
@@ -69,6 +72,20 @@ export function mapAppealRow(row: AppealRow): Appeal {
     authorId: row.authorId,
     originalText: row.originalText,
     attachments: row.attachments ?? [],
+    createdAt: toIso(row.createdAt),
+  };
+}
+
+/** Строка БД → сообщение чата обращения. */
+export function mapAppealMessageRow(row: AppealMessageRow): AppealMessage {
+  return {
+    id: row.id,
+    appealId: row.appealId,
+    direction: row.direction as AppealMessage['direction'],
+    kind: row.kind as AppealMessage['kind'],
+    body: row.body,
+    fieldKey: row.fieldKey ?? null,
+    ...(row.card ? { card: row.card } : {}),
     createdAt: toIso(row.createdAt),
   };
 }
@@ -192,6 +209,22 @@ export function mapApplicantEquipmentRow(row: ApplicantEquipmentRow): ApplicantE
     userId: row.userId,
     equipmentId: row.equipmentId,
     note: row.note,
+  };
+}
+
+/** Строка БД → инцидент массовости. */
+export function mapIncidentRow(row: IncidentRow): Incident {
+  return {
+    id: row.id,
+    number: row.number,
+    status: row.status as Incident['status'],
+    category: row.category,
+    building: row.building,
+    system: row.system,
+    size: row.size,
+    priority: row.priority as Incident['priority'],
+    openedAt: toIso(row.openedAt),
+    closedAt: toIsoOrNull(row.closedAt),
   };
 }
 

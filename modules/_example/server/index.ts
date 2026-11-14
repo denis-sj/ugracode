@@ -56,6 +56,19 @@ const extractStep = {
       fields.equipment = field('equipment', equipment[1].trim(), equipment[1], 0.7, at);
       ctx.progress({ stepId: 'example.extract', status: 'progress', fields: ['equipment'] });
     }
+    const category = /(принтер|мфу)/i.exec(text)
+      ? { value: 'printer', quote: /(принтер|мфу)[^,.;]*/i.exec(text)?.[0] ?? 'принтер' }
+      : /(свитч|сеть|интернет|вай-?фай|wi-?fi)/i.exec(text)
+        ? { value: 'network', quote: /(свитч|сеть|интернет|вай-?фай|wi-?fi)[^,.;]*/i.exec(text)?.[0] ?? 'сеть' }
+        : /(компьютер|пк|ноутбук)/i.exec(text)
+          ? { value: 'pc', quote: /(компьютер|пк|ноутбук)[^,.;]*/i.exec(text)?.[0] ?? 'компьютер' }
+          : /(1с|программ)/i.exec(text)
+            ? { value: 'software', quote: /(1с|программ)[^,.;]*/i.exec(text)?.[0] ?? 'программа' }
+            : null;
+    if (category) {
+      fields.category = field('category', category.value, category.quote, 0.85, at);
+      ctx.progress({ stepId: 'example.extract', status: 'progress', fields: ['category'] });
+    }
     return { fields };
   },
   async fallback() {

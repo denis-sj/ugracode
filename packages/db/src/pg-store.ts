@@ -3,6 +3,7 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import type {
   Appeal,
+  AppealMessage,
   DomainEvent,
   PipelineRun,
   SettingRecord,
@@ -17,6 +18,8 @@ import type { AgentStepRecord } from '@ugra/core';
 import type {
   ApplicantEquipment,
   ApplicantProfile,
+  Incident,
+  IncidentFilter,
   KnowledgeArticle,
   KnowledgeSearchQuery,
   KnowledgeSimilarTicket,
@@ -25,10 +28,12 @@ import type {
 import { DEFAULT_KNOWLEDGE_LIMIT } from '@ugra/core';
 import {
   mapAgentStepRow,
+  mapAppealMessageRow,
   mapAppealRow,
   mapApplicantEquipmentRow,
   mapApplicantProfileRow,
   mapEventLogRow,
+  mapIncidentRow,
   mapKbArticleRow,
   mapPipelineStepRow,
   mapTicketFieldRow,
@@ -39,10 +44,12 @@ import {
 } from './mappers';
 import {
   agentStepTable,
+  appealMessageTable,
   applicantEquipmentTable,
   applicantProfileTable,
   appealTable,
   eventLogTable,
+  incidentTable,
   kbArticleTable,
   notificationTable,
   settingTable,
@@ -59,6 +66,7 @@ export const DEFAULT_DATABASE_URL = 'postgres://ugra:ugra@localhost:5432/ugra';
 type Database = NodePgDatabase<typeof schema>;
 type TicketInsert = typeof ticketTable.$inferInsert;
 type TicketFieldInsert = typeof ticketFieldTable.$inferInsert;
+type IncidentInsert = typeof incidentTable.$inferInsert;
 
 function ticketToInsert(ticket: Ticket): TicketInsert {
   return {
@@ -133,6 +141,35 @@ function ticketFieldToPatch(patch: Partial<TicketField>): Partial<TicketFieldIns
   if (patch.needsReview !== undefined) row.needsReview = patch.needsReview;
   if (patch.trace !== undefined) row.trace = patch.trace;
   if (patch.aiValue !== undefined) row.aiValue = patch.aiValue;
+  return row;
+}
+
+function incidentToInsert(incident: Incident): IncidentInsert {
+  return {
+    id: incident.id,
+    number: incident.number,
+    status: incident.status,
+    category: incident.category,
+    building: incident.building,
+    system: incident.system,
+    size: incident.size,
+    priority: incident.priority,
+    openedAt: incident.openedAt,
+    closedAt: incident.closedAt,
+  };
+}
+
+function incidentToPatch(patch: Partial<Incident>): Partial<IncidentInsert> {
+  const row: Partial<IncidentInsert> = {};
+  if (patch.number !== undefined) row.number = patch.number;
+  if (patch.status !== undefined) row.status = patch.status;
+  if (patch.category !== undefined) row.category = patch.category;
+  if (patch.building !== undefined) row.building = patch.building;
+  if (patch.system !== undefined) row.system = patch.system;
+  if (patch.size !== undefined) row.size = patch.size;
+  if (patch.priority !== undefined) row.priority = patch.priority;
+  if (patch.openedAt !== undefined) row.openedAt = patch.openedAt;
+  if (patch.closedAt !== undefined) row.closedAt = patch.closedAt;
   return row;
 }
 
@@ -282,6 +319,34 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
     return row ? mapAppealRow(row) : null;
   }
 
+  /** Сообщение чата: повторная запись с тем же id обновляет текст и карточку. */
+  async saveAppealMessage(message: AppealMessage): Promise<void> {
+    const values = {
+      id: message.id,
+      appealId: message.appealId,
+      direction: message.direction,
+      kind: message.kind,
+      body: message.body,
+      fieldKey: message.fieldKey,
+      card: message.card ?? null,
+      createdAt: message.createdAt,
+    };
+    const { id: _id, ...rest } = values;
+    await this.db
+      .insert(appealMessageTable)
+      .values(values)
+      .onConflictDoUpdate({ target: appealMessageTable.id, set: rest });
+  }
+
+  async listAppealMessages(appealId: string): Promise<AppealMessage[]> {
+    const rows = await this.db
+      .select()
+      .from(appealMessageTable)
+      .where(eq(appealMessageTable.appealId, appealId))
+      .orderBy(asc(appealMessageTable.createdAt), asc(appealMessageTable.id));
+    return rows.map(mapAppealMessageRow);
+  }
+
   async saveTicket(ticket: Ticket): Promise<void> {
     const insert = ticketToInsert(ticket);
     const { id: _id, ...rest } = insert;
@@ -355,6 +420,45 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
       .where(eq(ticketFieldTable.ticketId, ticketId))
       .orderBy(asc(ticketFieldTable.fieldKey));
     return rows.map(mapTicketFieldRow);
+  }
+
+  async saveIncident(incident: Incident): Promise<void> {
+    const insert = incidentToInsert(incident);
+    const { id: _id, ...rest } = insert;
+    await this.db
+      .insert(incidentTable)
+      .values(insert)
+      .onConflictDoUpdate({ target: incidentTable.id, set: rest });
+  }
+
+  async getIncident(id: string): Promise<Incident | null> {
+    const rows = await this.db.select().from(incidentTable).where(eq(incidentTable.id, id)).limit(1);
+    const row = rows[0];
+    return row ? mapIncidentRow(row) : null;
+  }
+
+  async listIncidents(filter: IncidentFilter = {}): Promise<Incident[]> {
+    const conditions: SQL[] = [];
+    if (filter.status) conditions.push(eq(incidentTable.status, filter.status));
+    const rows = await this.db
+      .select()
+      .from(incidentTable)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(incidentTable.openedAt))
+      .limit(filter.limit ?? 50);
+    return rows.map(mapIncidentRow);
+  }
+
+  async updateIncident(id: string, patch: Partial<Incident>): Promise<Incident | null> {
+    const row = incidentToPatch(patch);
+    if (Object.keys(row).length === 0) return this.getIncident(id);
+    const updated = await this.db
+      .update(incidentTable)
+      .set(row)
+      .where(eq(incidentTable.id, id))
+      .returning();
+    const first = updated[0];
+    return first ? mapIncidentRow(first) : null;
   }
 
   async savePipelineRun(run: PipelineRun): Promise<void> {

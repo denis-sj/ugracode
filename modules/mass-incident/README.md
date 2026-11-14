@@ -1,0 +1,6 @@
+# Модуль `mass-incident`
+
+Что делает: шаг `mass-incident.detect` (стадия `assess`, `order 150`, читает `fields` и `incident`, пишет `incident`) считает кодом похожие обращения за окно и при пороге создаёт инцидент, привязывает заявки и публикует `mass-incident.opened`; без эмбеддингов — та же категория и корпус, одна система (принтер и МФУ) или разные категории в одном месте («вероятно, сеть или сервер»). Порог `massThreshold` (5) и окно `massWindowMinutes` (15) берутся из `data/settings.json`.
+Флаг фичи: `enabledByDefault: true`; выключение — `FEATURES_OFF=mass-incident`.
+Точки расширения: `steps` (правило похожести — `server/place.ts`, склейка — `server/detect.ts`), `events` (`mass-incident.opened`: номер, размер, категория, корпус), `routes` — демо-всплеск `POST /api/m/mass-incident/demo` (право `admin`), список `GET /api/m/mass-incident/incidents` и карточка `GET /api/m/mass-incident/incidents/:id` (право `tickets.read`); уведомления дежурным — `ctx.ports.notifications.send`, ошибки доставки шаг не валят.
+Момент демо: нажать «всплеск» — шесть обращений «принтер, корпус Б, каб. 312» склеиваются в инцидент `И-YYYYMMDD-NNNN`, в журнале `mass-incident.opened`, дежурный получает уведомление; новые похожие обращения прикрепляются к открытому инциденту, второй не создаётся.

@@ -2,11 +2,14 @@ import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { z } from 'zod';
 import {
+  AppealMessagesResponse,
   ConfirmTicketInput,
   CreateAppealInput,
   DeadlineInput,
   HealthResponse,
   NotificationsResponse,
+  PostAppealMessageInput,
+  PostAppealMessageResponse,
   PriorityLevel,
   ReanalyzeResponse,
   ResolutionInput,
@@ -24,9 +27,12 @@ import {
   UpdateFieldInput,
   UpdateSettingInput,
   type Appeal,
+  type AppealMessage,
   type DictionaryItem,
   type Permission,
   type RunStreamEvent,
+  type Ticket,
+  type TicketStatus,
   type User,
 } from '@ugra/contracts';
 import { hasPermission } from '@ugra/contracts';
@@ -38,6 +44,8 @@ import {
   collectRoutes,
   coreSteps,
   createSettingsService,
+  findField,
+  missingFields,
   resolveEnabledModules,
   subscribeModules,
   type KernelStore,
@@ -109,6 +117,117 @@ function httpError(message: string, statusCode: number): Error {
 function requireUser(user: User | null): User {
   if (!user) throw httpError('Нужен вход', 401);
   return user;
+}
+
+/** Шаг, который пишет след ответа в поле: видно, откуда значение. */
+const ANSWER_STEP = 'clarify-chat.answer';
+
+async function requireAppeal(store: KernelStore, id: string | undefined): Promise<Appeal> {
+  const appeal = await store.getAppeal(id ?? '');
+  if (!appeal) throw httpError('Обращение не найдено', 404);
+  return appeal;
+}
+
+/** Чат обращения видят автор и диспетчер (админ — как диспетчер), остальным — 403. */
+function assertAppealAccess(actor: User, appeal: Appeal): void {
+  if (actor.role === 'dispatcher' || actor.role === 'admin') return;
+  if (appeal.authorId !== actor.id) throw httpError('Чужое обращение', 403);
+}
+
+async function ticketOfAppeal(store: KernelStore, appealId: string): Promise<Ticket | null> {
+  const tickets = await store.listTickets({ limit: 1000 });
+  return tickets.find((ticket) => ticket.appealId === appealId) ?? null;
+}
+
+/** «Не знаю» в любом виде: `unknown` или текст, начинающийся с «не знаю». */
+function isUnknownAnswer(body: string): boolean {
+  const normalized = body.trim().toLowerCase();
+  return normalized === 'unknown' || normalized.startsWith('не знаю') || normalized.startsWith('незнаю');
+}
+
+/** Поля, которые заявка уже знала: рерун с `validate` не должен их потерять. */
+function restoreFields(current: readonly TicketField[], previous: readonly TicketField[]): TicketField[] {
+  const byKey = new Map(current.map((field) => [field.fieldKey, field]));
+  for (const field of previous) byKey.set(field.fieldKey, field);
+  return [...byKey.values()];
+}
+
+/** Статус из цепочки разбора; закрытую или назначенную заявку не трогаем. */
+async function setAnalysisStatus(
+  store: KernelStore,
+  ticketId: string,
+  to: TicketStatus,
+  at: string,
+): Promise<void> {
+  const ticket = await store.getTicket(ticketId);
+  if (!ticket || ticket.status === to) return;
+  if (!['new', 'ai_draft', 'waiting_applicant', 'in_review'].includes(ticket.status)) return;
+  await store.updateTicket(ticketId, { status: to, updatedAt: at });
+}
+
+interface AnswerInput {
+  ctx: AppContext;
+  store: KernelStore;
+  data: ReferenceData;
+  appeal: Appeal;
+  ticket: Ticket;
+  message: AppealMessage;
+  actor: User;
+  at: string;
+}
+
+/**
+ * Ответ на карточку: поле с `origin: asked` и следом «спросили → ответил» (или `no_answer`),
+ * повторный разбор с `validate` и перенос итога в заявку. Возвращает id прогона.
+ */
+async function applyAnswer(input: AnswerInput): Promise<string> {
+  const { ctx, store, data, appeal, ticket, message, actor, at } = input;
+  const fieldKey = message.fieldKey ?? '';
+  const unknown = isUnknownAnswer(message.body);
+  const topic = { kind: 'user' as const, id: actor.id };
+  const before = await store.getTicketFields(ticket.id);
+  const previous = before.find((field) => field.fieldKey === fieldKey);
+  const answered: TicketField = {
+    ticketId: ticket.id,
+    fieldKey,
+    value: unknown ? null : message.body,
+    confidence: unknown ? 0 : 1,
+    quote: null,
+    origin: 'asked',
+    needsReview: unknown,
+    trace: [
+      ...(previous?.trace ?? []),
+      { kind: 'asked', step: ANSWER_STEP, at, note: message.body },
+      { kind: unknown ? 'no_answer' : 'answered', step: ANSWER_STEP, at, note: message.body },
+    ],
+    aiValue: previous?.aiValue ?? previous?.value ?? null,
+  };
+  const answeredFields = [...before.filter((field) => field.fieldKey !== fieldKey), answered];
+  await store.saveTicketFields(ticket.id, answeredFields);
+  await ctx.bus.publish({
+    type: 'ticket.field.set',
+    actor: topic,
+    ticketId: ticket.id,
+    payload: { fieldKey, value: answered.value, origin: answered.origin, needsReview: answered.needsReview },
+  });
+
+  const run = await ctx.engine.rerun(appeal, 'validate', { ticketId: ticket.id, actor: topic });
+  await ctx.tickets.applyAnalysis(ticket.id, run.draft, topic);
+  // Рерун начинается с пустого черновика и перезаписывает поля заявки — возвращаем ответы на место.
+  const after = await store.getTicketFields(ticket.id);
+  const restored = restoreFields(after, answeredFields);
+  await store.saveTicketFields(ticket.id, restored);
+
+  if (unknown) {
+    await setAnalysisStatus(store, ticket.id, 'in_review', at);
+    return run.runId;
+  }
+  const values: Record<string, { value: unknown }> = {};
+  for (const field of restored) values[field.fieldKey] = { value: field.value };
+  if (missingFields(data.fields, values).length > 0) {
+    await setAnalysisStatus(store, ticket.id, 'waiting_applicant', at);
+  }
+  return run.runId;
 }
 
 export async function buildServer(options: BuildServerOptions): Promise<AppContext> {
@@ -327,6 +446,70 @@ function registerCoreRoutes(
       const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' } });
       await tickets.applyAnalysis(ticket.id, run.draft);
       return { appealId: appeal.id, ticketId: ticket.id, runId: run.runId };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/appeals/:id/messages',
+    access: 'appeal.answer',
+    response: AppealMessagesResponse,
+    handler: async ({ params, user }) => {
+      const actor = requireUser(user);
+      const appeal = await requireAppeal(store, params.id);
+      assertAppealAccess(actor, appeal);
+      return { messages: await store.listAppealMessages(appeal.id) };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/appeals/:id/messages',
+    access: 'appeal.answer',
+    body: PostAppealMessageInput,
+    response: PostAppealMessageResponse,
+    handler: async ({ params, body, user }) => {
+      const actor = requireUser(user);
+      const appeal = await requireAppeal(store, params.id);
+      assertAppealAccess(actor, appeal);
+      const input = body as PostAppealMessageInput;
+      const text = input.body.trim();
+      if (text === '') throw httpError('Пустое сообщение', 400);
+      if (input.fieldKey && !findField(data, input.fieldKey)) {
+        throw httpError(`Поле «${input.fieldKey}» не найдено в реестре`, 400);
+      }
+      const ticket = await ticketOfAppeal(store, appeal.id);
+      if (!ticket) throw httpError('Заявка не найдена', 404);
+
+      const at = ports.clock.now().toISOString();
+      const message: AppealMessage = {
+        id: randomUUID(),
+        appealId: appeal.id,
+        direction: 'in',
+        kind: input.kind,
+        body: text,
+        fieldKey: input.fieldKey ?? null,
+        ...(input.card ? { card: input.card } : {}),
+        createdAt: at,
+      };
+      await store.saveAppealMessage(message);
+      await ctx.bus.publish({
+        type: 'message.sent',
+        actor: { kind: 'user', id: actor.id },
+        ticketId: ticket.id,
+        payload: {
+          appealId: appeal.id,
+          messageId: message.id,
+          kind: message.kind,
+          fieldKey: message.fieldKey,
+        },
+      });
+
+      const runId =
+        message.kind === 'answer' && message.fieldKey
+          ? await applyAnswer({ ctx, store, data, appeal, ticket, message, actor, at })
+          : null;
+      return { message, ticketId: ticket.id, runId };
     },
   });
 

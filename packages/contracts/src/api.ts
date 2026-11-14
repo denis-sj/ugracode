@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import {
   Appeal,
+  AppealMessage,
   Channel,
+  ChatCard,
   PriorityLevel,
   Role,
   SettingRecord,
@@ -40,6 +42,31 @@ export const CreateAppealResponse = z.object({
   runId: z.string(),
 });
 export type CreateAppealResponse = z.infer<typeof CreateAppealResponse>;
+
+/**
+ * Сообщение в чате обращения: текст заявителя, ответ на карточку-вопрос,
+ * карточка от системы или системная запись (раздел 3.1 спецификации фич).
+ */
+export const PostAppealMessageInput = z.object({
+  kind: z.enum(['text', 'question_card', 'answer', 'system', 'card']).default('text'),
+  body: z.string().min(1).max(4000),
+  /** Поле, к которому относится вопрос или ответ. */
+  fieldKey: z.string().min(1).optional(),
+  card: ChatCard.optional(),
+});
+export type PostAppealMessageInput = z.infer<typeof PostAppealMessageInput>;
+
+/** История чата обращения в порядке отправки. */
+export const AppealMessagesResponse = z.object({ messages: z.array(AppealMessage) });
+export type AppealMessagesResponse = z.infer<typeof AppealMessagesResponse>;
+
+/** Ответ на сообщение: что сохранили, к какой заявке и запускался ли повторный разбор. */
+export const PostAppealMessageResponse = z.object({
+  message: AppealMessage,
+  ticketId: z.string(),
+  runId: z.string().nullable(),
+});
+export type PostAppealMessageResponse = z.infer<typeof PostAppealMessageResponse>;
 
 export const BooleanQuery = z.preprocess(
   (value) => (value === 'true' ? true : value === 'false' ? false : value),

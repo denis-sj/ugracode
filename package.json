@@ -45,6 +45,7 @@
     "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.4",
     "eslint": "^9.39.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",

@@ -1,7 +1,9 @@
 import type {
   Appeal,
+  AppealMessage,
   DomainEvent,
   PipelineRun,
+  PriorityLevel,
   SettingRecord,
   StepRun,
   Ticket,
@@ -29,6 +31,32 @@ export interface TicketFilter {
 export interface EventFilter {
   ticketId?: string;
   type?: string;
+  limit?: number;
+}
+
+/** Статус инцидента массовости: открыт, пока диспетчер не закроет. */
+export type IncidentStatus = 'open' | 'closed';
+
+/**
+ * Инцидент массовости: одна карточка для похожих обращений (таблица `incident`).
+ * Живёт в ядре, потому что заявка ссылается на него полем `incidentId`.
+ */
+export interface Incident {
+  id: string;
+  number: string;
+  status: IncidentStatus;
+  category: string | null;
+  building: string | null;
+  system: string | null;
+  /** Сколько заявок привязано к инциденту. */
+  size: number;
+  priority: PriorityLevel | null;
+  openedAt: string;
+  closedAt: string | null;
+}
+
+export interface IncidentFilter {
+  status?: IncidentStatus;
   limit?: number;
 }
 
@@ -70,6 +98,11 @@ export interface KernelStore {
   saveAppeal(appeal: Appeal): Promise<void>;
   getAppeal(id: string): Promise<Appeal | null>;
 
+  /** Сообщение чата обращения: вопрос-карточка, ответ, системная запись (`appeal_message`). */
+  saveAppealMessage(message: AppealMessage): Promise<void>;
+  /** История чата обращения в порядке отправки. */
+  listAppealMessages(appealId: string): Promise<AppealMessage[]>;
+
   saveTicket(ticket: Ticket): Promise<void>;
   updateTicket(id: string, patch: Partial<Ticket>): Promise<Ticket | null>;
   getTicket(id: string): Promise<Ticket | null>;
@@ -78,6 +111,12 @@ export interface KernelStore {
   saveTicketFields(ticketId: string, fields: TicketField[]): Promise<void>;
   updateTicketField(ticketId: string, fieldKey: string, patch: Partial<TicketField>): Promise<TicketField | null>;
   getTicketFields(ticketId: string): Promise<TicketField[]>;
+
+  /** Инцидент массовости: создание или полная запись (повторная запись обновляет). */
+  saveIncident(incident: Incident): Promise<void>;
+  getIncident(id: string): Promise<Incident | null>;
+  listIncidents(filter?: IncidentFilter): Promise<Incident[]>;
+  updateIncident(id: string, patch: Partial<Incident>): Promise<Incident | null>;
 
   savePipelineRun(run: PipelineRun): Promise<void>;
   savePipelineStep(step: StepRun): Promise<void>;
@@ -111,8 +150,10 @@ export interface KernelStore {
 export class MemoryStore implements KernelStore {
   private readonly users = new Map<string, User>();
   private readonly appeals = new Map<string, Appeal>();
+  private readonly appealMessages = new Map<string, AppealMessage>();
   private readonly tickets = new Map<string, Ticket>();
   private readonly fields = new Map<string, TicketField[]>();
+  private readonly incidents = new Map<string, Incident>();
   private readonly runs = new Map<string, PipelineRun>();
   private readonly steps: StepRun[] = [];
   private readonly agentSteps: AgentStepRecord[] = [];
@@ -141,6 +182,17 @@ export class MemoryStore implements KernelStore {
 
   async getAppeal(id: string): Promise<Appeal | null> {
     return this.appeals.get(id) ?? null;
+  }
+
+  async saveAppealMessage(message: AppealMessage): Promise<void> {
+    this.appealMessages.set(message.id, { ...message });
+  }
+
+  async listAppealMessages(appealId: string): Promise<AppealMessage[]> {
+    return [...this.appealMessages.values()]
+      .filter((message) => message.appealId === appealId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+      .map((message) => ({ ...message }));
   }
 
   async saveTicket(ticket: Ticket): Promise<void> {
@@ -188,6 +240,31 @@ export class MemoryStore implements KernelStore {
 
   async getTicketFields(ticketId: string): Promise<TicketField[]> {
     return this.fields.get(ticketId) ?? [];
+  }
+
+  async saveIncident(incident: Incident): Promise<void> {
+    this.incidents.set(incident.id, { ...incident });
+  }
+
+  async getIncident(id: string): Promise<Incident | null> {
+    const incident = this.incidents.get(id);
+    return incident ? { ...incident } : null;
+  }
+
+  async listIncidents(filter: IncidentFilter = {}): Promise<Incident[]> {
+    return [...this.incidents.values()]
+      .filter((incident) => !filter.status || incident.status === filter.status)
+      .sort((a, b) => b.openedAt.localeCompare(a.openedAt) || a.number.localeCompare(b.number))
+      .slice(0, filter.limit ?? 50)
+      .map((incident) => ({ ...incident }));
+  }
+
+  async updateIncident(id: string, patch: Partial<Incident>): Promise<Incident | null> {
+    const current = this.incidents.get(id);
+    if (!current) return null;
+    const next = { ...current, ...patch, id };
+    this.incidents.set(id, next);
+    return { ...next };
   }
 
   async savePipelineRun(run: PipelineRun): Promise<void> {
