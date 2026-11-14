@@ -235,6 +235,8 @@ export const StepRun = z.object({
   stage: Stage,
   status: StepStatus,
   durationMs: z.number().nonnegative(),
+  /** Заявка, к которой относится шаг (заполняется, если она уже создана). */
+  ticketId: z.string().nullable().optional(),
   input: z.unknown().optional(),
   output: z.unknown().optional(),
   error: z.string().optional(),

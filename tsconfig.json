@@ -19,6 +19,7 @@
     "paths": {
       "@ugra/contracts": ["packages/contracts/src/index.ts"],
       "@ugra/core": ["packages/core/src/index.ts"],
+      "@ugra/core/web": ["packages/core/src/web.ts"],
       "@ugra/adapters": ["packages/adapters/src/index.ts"],
       "@ugra/db": ["packages/db/src/index.ts"],
       "@ugra/testkit": ["packages/testkit/src/index.ts"],

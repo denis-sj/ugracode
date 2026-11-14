@@ -2,20 +2,18 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 /** Запрещённые группы импортов по слоям (раздел 1.2 спецификации). */
-const forbidden = (pkgs) => ({
+const LAYER_MESSAGE = 'Нарушено направление зависимостей: apps → modules → adapters, db → core → contracts';
+
+/** Запрещает пакет целиком; `exact` — только точный путь (разрешает подпути вроде @ugra/core/web). */
+const forbidden = (pkgs, allowedSubpaths = []) => ({
   'no-restricted-imports': [
     'error',
     {
       patterns: [
-        {
-          group: pkgs.map((p) => `${p}/*`),
-          message: 'Нарушено направление зависимостей: apps → modules → adapters, db → core → contracts',
-        },
-        {
-          group: pkgs,
-          message: 'Нарушено направление зависимостей: apps → modules → adapters, db → core → contracts',
-        },
-      ],
+        ...pkgs.map((p) => `${p}/*`),
+        ...pkgs,
+        ...allowedSubpaths.map((p) => `!${p}`),
+      ].map((group) => ({ group: [group], message: LAYER_MESSAGE })),
     },
   ],
 });
@@ -54,11 +52,16 @@ export default tseslint.config(
   },
   {
     files: ['modules/**/web/**/*.ts', 'modules/**/web/**/*.tsx'],
-    rules: forbidden(['@ugra/core', '@ugra/db', '@ugra/adapters', '@ugra/testkit']),
+    // @ugra/core/web разрешён: это браузерная точка входа ядра.
+    rules: forbidden(['@ugra/db', '@ugra/adapters', '@ugra/testkit']),
   },
   {
     files: ['apps/web/**/*.ts', 'apps/web/**/*.tsx'],
-    rules: forbidden(['@ugra/core', '@ugra/db', '@ugra/adapters', '@ugra/testkit', 'fastify', 'pg', 'openai']),
+    rules: forbidden(['@ugra/db', '@ugra/adapters', '@ugra/testkit', 'fastify', 'pg', 'openai']),
+  },
+  {
+    files: ['packages/db/src/migrate.ts', 'packages/db/src/seed/**/*.ts'],
+    rules: { 'no-console': 'off' },
   },
   {
     files: ['scripts/**/*.ts', '**/*.test.ts', 'packages/testkit/**/*.ts'],

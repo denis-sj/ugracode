@@ -1,0 +1,27 @@
+{
+  "items": [
+    { "dictionary": "building", "code": "А", "label": "Корпус А" },
+    { "dictionary": "building", "code": "Б", "label": "Корпус Б" },
+    { "dictionary": "building", "code": "В", "label": "Корпус В" },
+    { "dictionary": "building", "code": "ПРОМ", "label": "Промплощадка" },
+
+    { "dictionary": "category", "code": "printer", "label": "Принтер" },
+    { "dictionary": "category", "code": "pc", "label": "Компьютер" },
+    { "dictionary": "category", "code": "network", "label": "Сеть" },
+    { "dictionary": "category", "code": "software", "label": "Программное обеспечение" },
+    { "dictionary": "category", "code": "server", "label": "Сервер" },
+
+    { "dictionary": "impact", "code": "one", "label": "Один сотрудник" },
+    { "dictionary": "impact", "code": "group", "label": "Группа сотрудников" },
+    { "dictionary": "impact", "code": "building", "label": "Корпус" },
+    { "dictionary": "impact", "code": "enterprise", "label": "Предприятие" },
+
+    { "dictionary": "urgency", "code": "down", "label": "Работа остановлена" },
+    { "dictionary": "urgency", "code": "workaround", "label": "Есть обходной путь" },
+    { "dictionary": "urgency", "code": "planned", "label": "Плановое обращение" },
+
+    { "dictionary": "channel", "code": "chat", "label": "Чат" },
+    { "dictionary": "channel", "code": "phone", "label": "Телефон" },
+    { "dictionary": "channel", "code": "screenshot", "label": "Скриншот" }
+  ]
+}

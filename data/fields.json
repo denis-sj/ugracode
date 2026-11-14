@@ -1,0 +1,91 @@
+{
+  "fields": [
+    {
+      "key": "object",
+      "label": "Объект",
+      "group": "location",
+      "type": "string",
+      "required": true,
+      "extractHint": "Что именно сломалось или не работает: принтер, компьютер, сеть, программа.",
+      "evalMode": "normalized"
+    },
+    {
+      "key": "building",
+      "label": "Корпус",
+      "group": "location",
+      "type": "dictionary",
+      "dictionary": "building",
+      "required": true,
+      "extractHint": "Корпус, в котором находится объект: А, Б, В или ПРОМ.",
+      "ask": {
+        "question": "В каком корпусе это находится?",
+        "widget": "buttons",
+        "optionsFrom": "building"
+      },
+      "evalMode": "normalized"
+    },
+    {
+      "key": "cabinet",
+      "label": "Кабинет",
+      "group": "location",
+      "type": "string",
+      "required": true,
+      "extractHint": "Номер кабинета: от одной до четырёх цифр, например 312.",
+      "pattern": "^[0-9]{1,4}$",
+      "ask": {
+        "question": "Укажите номер кабинета.",
+        "widget": "text"
+      },
+      "evalMode": "normalized"
+    },
+    {
+      "key": "equipment",
+      "label": "Оборудование",
+      "group": "equipment",
+      "type": "string",
+      "required": true,
+      "extractHint": "Модель или инвентарный номер оборудования, если он назван.",
+      "ask": {
+        "question": "Какое оборудование используется?",
+        "widget": "select",
+        "optionsFrom": "equipment"
+      },
+      "evalMode": "normalized"
+    },
+    {
+      "key": "category",
+      "label": "Категория",
+      "group": "classification",
+      "type": "dictionary",
+      "dictionary": "category",
+      "required": true,
+      "extractHint": "Категория проблемы: printer, pc, network, software или server.",
+      "ask": {
+        "question": "К какой категории относится проблема?",
+        "widget": "select",
+        "optionsFrom": "category"
+      },
+      "evalMode": "exact"
+    },
+    {
+      "key": "impact",
+      "label": "Влияние",
+      "group": "classification",
+      "type": "dictionary",
+      "dictionary": "impact",
+      "required": false,
+      "extractHint": "Сколько людей затронуто: один, группа, корпус или предприятие.",
+      "evalMode": "exact"
+    },
+    {
+      "key": "urgency",
+      "label": "Срочность",
+      "group": "classification",
+      "type": "dictionary",
+      "dictionary": "urgency",
+      "required": false,
+      "extractHint": "Насколько срочно: работа стоит, есть обходной путь или можно подождать.",
+      "evalMode": "exact"
+    }
+  ]
+}
