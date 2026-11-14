@@ -358,7 +358,10 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
       recognition.start();
       armSilence();
     } catch {
-      /* распознавание уже идёт: дожмём его onend */
+      // iOS иногда не даёт начать распознавание без нового жеста — не подвешиваем разговор.
+      recognitionRef.current = null;
+      setMode('text');
+      go('waiting_input');
     }
   };
   listenRef.current = startListening;

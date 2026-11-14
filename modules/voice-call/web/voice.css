@@ -804,7 +804,7 @@
 /* ---------- QR на экране диспетчера и плашка «входящий» ---------- */
 
 .voice-layout--calls {
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 340px;
 }
 
 .voice-layout__main {
@@ -833,7 +833,7 @@
 }
 
 .voice-qr__image {
-  width: min(236px, 60vw);
+  width: min(320px, 68vw);
   height: auto;
   padding: var(--space-2);
   border-radius: var(--radius-md);
@@ -843,8 +843,8 @@
 .voice-qr__empty {
   display: grid;
   place-items: center;
-  width: min(236px, 60vw);
-  height: min(236px, 60vw);
+  width: min(320px, 68vw);
+  height: min(320px, 68vw);
   border: 2px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
   color: var(--color-text-dim);
