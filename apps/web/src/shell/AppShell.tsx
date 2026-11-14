@@ -6,6 +6,7 @@ import type { ApiClient, WebPageProps } from '@ugra/ui';
 import { webModules } from '../web-modules';
 import type { HashRoute } from '../router';
 import { toHash } from '../router';
+import { ProfilePage } from '../screens/ProfilePage';
 import { HistoryDrawer } from './HistoryDrawer';
 import { NotificationsButton } from './NotificationsButton';
 import { TabIcon } from './TabIcon';
@@ -16,6 +17,7 @@ export interface AppShellProps {
   meta: MetaResponse;
   api: ApiClient;
   route: HashRoute;
+  onLogout: () => void;
 }
 
 function Placeholder({ title }: { title: string }): JSX.Element {
@@ -28,27 +30,13 @@ function Placeholder({ title }: { title: string }): JSX.Element {
   );
 }
 
-function ProfileCard({ user }: { user: User }): JSX.Element {
-  return (
-    <section className="shell-profile ugra-card">
-      <span className="shell-avatar shell-avatar--large" aria-hidden="true">
-        {initials(user.fullName)}
-      </span>
-      <div>
-        <h2>{user.fullName}</h2>
-        <p className="ugra-muted">{user.position}</p>
-        <p className="ugra-dim">{roleLabel(user.role)}</p>
-      </div>
-    </section>
-  );
-}
 
 function emptyCounts(): Record<TabCounter, number> {
   return { queue: 0, incidents: 0, tasks: 0 };
 }
 
 /** Одна шапка на все роли (3.1) и отрисовка страницы текущего модуля. */
-export function AppShell({ user, meta, api, route }: AppShellProps): JSX.Element {
+export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): JSX.Element {
   const { track } = useActionCounter();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -215,7 +203,7 @@ export function AppShell({ user, meta, api, route }: AppShellProps): JSX.Element
         {PageComponent ? (
           createElement(PageComponent, { key: route.path, ...pageProps })
         ) : route.path === '/profile' ? (
-          <ProfileCard user={user} />
+          <ProfilePage user={user} meta={meta} api={api} onLogout={onLogout} />
         ) : (
           <Placeholder title={title} />
         )}

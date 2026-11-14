@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { DomainEvent } from './events';
 import {
   Appeal,
   AppealMessage,
@@ -94,6 +95,55 @@ export const TicketResponse = z.object({
 export type TicketResponse = z.infer<typeof TicketResponse>;
 
 export type { TicketDetail };
+
+export const ProfileEquipment = z.object({
+  id: z.string(),
+  equipmentId: z.string(),
+  note: z.string().nullable(),
+  /** Человекочитаемая подпись из CMDB (тип и модель). */
+  label: z.string().optional(),
+});
+export type ProfileEquipment = z.infer<typeof ProfileEquipment>;
+
+export const ProfileResponse = z.object({
+  user: User,
+  profile: z
+    .object({
+      userId: z.string(),
+      building: z.string().nullable(),
+      floor: z.string().nullable(),
+      cabinet: z.string().nullable(),
+      equipmentId: z.string().nullable(),
+      updatedAt: z.string().optional(),
+    })
+    .nullable(),
+  equipment: z.array(ProfileEquipment),
+});
+export type ProfileResponse = z.infer<typeof ProfileResponse>;
+
+export const EventsResponse = z.object({ events: z.array(z.unknown()) });
+export type EventsResponse = { events: DomainEvent[] };
+
+export const EngineerSkillInfo = z.object({
+  skill: z.string(),
+  level: z.number(),
+});
+export const EngineerInfo = z.object({
+  id: z.string(),
+  fullName: z.string(),
+  departmentId: z.string().nullable(),
+  position: z.string().nullable(),
+  level: z.union([z.number(), z.string()]).optional(),
+  skills: z.array(EngineerSkillInfo).default([]),
+  buildings: z.array(z.string()).default([]),
+  onShift: z.boolean().default(false),
+  openTickets: z.number().int().nonnegative().default(0),
+  resolvedSimilar: z.number().int().nonnegative().default(0),
+});
+export type EngineerInfo = z.infer<typeof EngineerInfo>;
+
+export const EngineersResponse = z.object({ engineers: z.array(EngineerInfo) });
+export type EngineersResponse = z.infer<typeof EngineersResponse>;
 
 export const NotificationsResponse = z.object({ notifications: z.array(UserNotification) });
 export type NotificationsResponse = z.infer<typeof NotificationsResponse>;

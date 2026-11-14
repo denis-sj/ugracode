@@ -6,11 +6,15 @@ import {
   ConfirmTicketInput,
   CreateAppealInput,
   DeadlineInput,
+  EngineerInfo,
+  EngineersResponse,
+  EventsResponse,
   HealthResponse,
   NotificationsResponse,
   PostAppealMessageInput,
   PostAppealMessageResponse,
   PriorityLevel,
+  ProfileResponse,
   ReanalyzeResponse,
   ResolutionInput,
   Role,
@@ -384,6 +388,58 @@ function registerCoreRoutes(
   });
 
   addRoute({
+    method: 'GET',
+    url: '/api/profile',
+    access: 'any',
+    response: ProfileResponse,
+    handler: async ({ user }) => {
+      const actor = requireUser(user);
+      const [profile, equipment] = await Promise.all([
+        store.getApplicantProfile(actor.id),
+        store.listApplicantEquipment(actor.id),
+      ]);
+      const cmdb = asRecord(data.extra.cmdb);
+      const equipmentList = Array.isArray(cmdb.equipment)
+        ? (cmdb.equipment as { id?: string; type?: string; model?: string }[])
+        : [];
+      const labelById = new Map(
+        equipmentList
+          .filter((item): item is { id: string; type?: string; model?: string } => typeof item.id === 'string')
+          .map((item) => [item.id, [item.type, item.model].filter(Boolean).join(' ')]),
+      );
+      return {
+        user: actor,
+        profile: profile
+          ? {
+              userId: profile.userId,
+              building: profile.building,
+              floor: profile.floor,
+              cabinet: profile.cabinet,
+              equipmentId: profile.equipmentId,
+              updatedAt: profile.updatedAt,
+            }
+          : null,
+        equipment: equipment.map((item) => ({
+          id: item.id,
+          equipmentId: item.equipmentId,
+          note: item.note,
+          label: labelById.get(item.equipmentId) || item.equipmentId,
+        })),
+      };
+    },
+  });
+
+  addRoute({
+    method: 'POST',
+    url: '/api/logout',
+    access: 'any',
+    handler: async ({ setCookie }) => {
+      setCookie('ugra_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+      return { ok: true };
+    },
+  });
+
+  addRoute({
     method: 'POST',
     url: '/api/transcribe',
     access: 'any',
@@ -729,6 +785,64 @@ function registerCoreRoutes(
       } catch (error) {
         throw httpError(error instanceof Error ? error.message : 'Не удалось сохранить результат', 403);
       }
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/events',
+    access: 'tickets.events',
+    handler: async ({ query }) => {
+      const limit = Math.min(Number(query.limit ?? 200) || 200, 500);
+      return { events: await store.listEvents({ limit }) };
+    },
+  });
+
+  addRoute({
+    method: 'GET',
+    url: '/api/engineers',
+    access: 'tickets.read',
+    response: EngineersResponse,
+    handler: async () => {
+      const raw = asRecord(data.extra.engineers);
+      const rows = Array.isArray(raw.engineers) ? raw.engineers : [];
+      const users = await store.listUsers();
+      const tickets = await store.listTickets({ limit: 1000 });
+      const openByUser = new Map<string, number>();
+      for (const ticket of tickets) {
+        if (!ticket.assigneeId) continue;
+        if (['closed', 'cancelled', 'resolved'].includes(ticket.status)) continue;
+        openByUser.set(ticket.assigneeId, (openByUser.get(ticket.assigneeId) ?? 0) + 1);
+      }
+      const engineers: EngineerInfo[] = rows.map((row) => {
+        const item = asRecord(row);
+        const id = typeof item.id === 'string' ? item.id : '';
+        const user = users.find((candidate) => candidate.id === id);
+        const skills = Array.isArray(item.skills)
+          ? item.skills
+              .map((skill) => asRecord(skill))
+              .filter((skill) => typeof skill.skill === 'string' && typeof skill.level === 'number')
+              .map((skill) => ({ skill: skill.skill as string, level: skill.level as number }))
+          : [];
+        return {
+          id,
+          fullName: typeof item.fullName === 'string' ? item.fullName : (user?.fullName ?? id),
+          departmentId: typeof item.departmentId === 'string' ? item.departmentId : (user?.departmentId ?? null),
+          position: user?.position ?? null,
+          level: typeof item.level === 'string' || typeof item.level === 'number' ? item.level : undefined,
+          skills,
+          buildings: Array.isArray(item.buildings)
+            ? item.buildings.filter((value): value is string => typeof value === 'string')
+            : [],
+          onShift: item.onShift === true,
+          openTickets: Math.max(
+            typeof item.openTickets === 'number' ? item.openTickets : 0,
+            openByUser.get(id) ?? 0,
+          ),
+          resolvedSimilar: typeof item.resolvedSimilar === 'number' ? item.resolvedSimilar : 0,
+        };
+      });
+      return { engineers };
     },
   });
 

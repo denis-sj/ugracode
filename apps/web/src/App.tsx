@@ -55,6 +55,14 @@ export function App(): JSX.Element {
     void bootLoad();
   }, [bootLoad]);
 
+  const logout = useCallback(async (): Promise<void> => {
+    try {
+      await api.post('/api/logout', {});
+    } finally {
+      setBoot((previous) => (previous.status === 'ready' ? { ...previous, user: null } : previous));
+    }
+  }, []);
+
   const login = useCallback(async (userId: string): Promise<void> => {
     setBusyUserId(userId);
     setLoginError(null);
@@ -117,7 +125,7 @@ export function App(): JSX.Element {
         )}
 
         {boot.status === 'ready' && boot.user !== null && (
-          <AppShell user={boot.user} meta={boot.meta} api={api} route={route} />
+          <AppShell user={boot.user} meta={boot.meta} api={api} route={route} onLogout={() => void logout()} />
         )}
       </div>
     </div>
