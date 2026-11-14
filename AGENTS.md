@@ -15,10 +15,19 @@ PR: —
 Владелец — Денис, **единственный участник** команды «1+∞» (номинация **Pro**) на хакатоне
 на платформе event.edro.su (Сургут / Югра). Формат — ~24 часа. На выбор 9 кейсов от
 реальных заказчиков (Газпром трансгаз Сургут, Сургутнефтегаз, СургутИнформТВ, Администрация
-Сургута и др.). **Кейс ещё не выбран** (❓ уточнить), рекомендация — кейс 9 «Диспетчерская с ИИ»,
-см. [docs/hackathon/case-analysis.md](docs/hackathon/case-analysis.md). Требования владельца
+Сургута и др.). ✅ **Выбран кейс 9 «Диспетчерская с ИИ»** (Газпром трансгаз Сургут) —
+окончательно, 2026-11-14. **Главный документ по кейсу — [docs/hackathon/case9-brief.md](docs/hackathon/case9-brief.md)**:
+критерии кейса и как их закрываем (приоритет № 1), ядро, данные, тестовый набор, риски, что нужно бэкенду.
+История выбора — [docs/hackathon/case-analysis.md](docs/hackathon/case-analysis.md). Требования владельца
 к проекту: сложный (не тривиальный CRUD), очень красивый визуально (анимации, «вау» на защите)
 и с потенциалом развиваться после хакатона в реальный продукт.
+Архитектуру и оркестрацию агентов ведёт отдельная модель-оркестратор владельца; она опирается на эти документы.
+**Ответы ментора (2026-11-14) — [docs/hackathon/mentor-notes.md](docs/hackathon/mentor-notes.md); выводы — раздел 1а брифа.**
+**Стек: TypeScript + Node.js. Модель ИИ: провайдер Polza, только облако — локальные модели не разворачиваем (владелец, 2026-11-14). Демо: ноутбук владельца + запасная копия на его сервере.**
+**Требования заказчика читать только из MD** ([case9-presentation.md](docs/hackathon/cases/case9-presentation.md)); `.pptx`/`.pdf` в `docs/hackathon/files/` не открывать.
+**Весь код пишут ИИ-агенты, несколько потоков идут параллельно** — правила в
+[docs/hackathon/winning-strategy.md](docs/hackathon/winning-strategy.md#работа-параллельными-агентами):
+сначала общие контракты, у каждой задачи свои файлы, маленькие PR.
 
 ## Кто ты (Who You Are)
 
@@ -42,14 +51,20 @@ AGENTS.md  (ты здесь)
 ├── Хакатон ──────────── docs/hackathon/
 │   ├── README.md           мероприятие, команда, сроки, ссылки
 │   ├── regulations.md      положение о мероприятии (что прислал владелец)
-│   ├── criteria.md         критерии оценки (общие + по кейсу)
+│   ├── criteria.md         критерии оценки (менторы, эксперты, код SonarQube + по кейсу)
+│   ├── files/criteria-slides/  фото слайдов организаторов с критериями
 │   ├── cases/README.md     все 9 кейсов кратко
 │   ├── cases/raw-cases.md  полный текст кейсов с платформы (дословно)
-│   ├── case-analysis.md    анализ и выбор кейса
+│   ├── cases/case9-presentation.md  текст презентации заказчика кейса 9 (дословно)
+│   ├── case9-brief.md      ★ ВЫБРАННЫЙ КЕЙС 9: критерии → решения, ядро, данные, риски, бэкенд
+│   ├── files/case-2|8|9/   презентации кейсов (оригиналы; агенты их НЕ открывают — читают MD)
+│   ├── mentor-notes.md     вопросы ментору кейса 9 и его ответы
+│   ├── case-analysis.md    анализ и выбор кейса (история)
 │   └── winning-strategy.md как побеждаем: демо, презентация, тайминг
 ├── Правила ──────────── docs/rules/
 │   ├── git-and-deploy.md
 │   ├── testing.md
+│   ├── code-quality.md     качество кода под проверку SonarQube (влияет на баллы)
 │   └── secrets-and-data.md
 ├── Архитектура и код ── docs/map/
 │   ├── README.md           слои, точки входа (заполняется по мере появления кода)
@@ -60,6 +75,7 @@ AGENTS.md  (ты здесь)
 │   ├── project.md
 │   └── environments.md
 ├── Работа ───────────── docs/tasks/ · docs/specs/ · docs/plans/ · docs/history/ · docs/sessions/ · docs/ideas/
+├── Промпты ──────────── docs/prompts/: brainstorm-kickoff.md ∥ architect-kickoff.md (параллельно) → feature-intake.md (каждая новая фича) · frontend-kickoff.md (интерфейс)
 └── Проверки ─────────── scripts/check_doc_links.py · tests/docs/ · .github/
 ```
 
@@ -67,14 +83,20 @@ AGENTS.md  (ты здесь)
 [hackathon](docs/hackathon/README.md) · [regulations](docs/hackathon/regulations.md) ·
 [criteria](docs/hackathon/criteria.md) · [cases](docs/hackathon/cases/README.md) ·
 [raw-cases](docs/hackathon/cases/raw-cases.md) · [case-analysis](docs/hackathon/case-analysis.md) ·
+[**case9-brief**](docs/hackathon/case9-brief.md) · [case9-presentation](docs/hackathon/cases/case9-presentation.md) ·
+[mentor-notes](docs/hackathon/mentor-notes.md) · [промпт брейншторма](docs/prompts/brainstorm-kickoff.md) · [промпт архитектора](docs/prompts/architect-kickoff.md) · [промпт новой фичи](docs/prompts/feature-intake.md) · [промпт фронтенда](docs/prompts/frontend-kickoff.md) ·
 [winning-strategy](docs/hackathon/winning-strategy.md) ·
 [git-and-deploy](docs/rules/git-and-deploy.md) · [testing](docs/rules/testing.md) ·
+[code-quality](docs/rules/code-quality.md) · [банк фич](docs/ideas/case9-features.md) ·
+[сценка](docs/ideas/pitch-scene.md) ·
 [secrets-and-data](docs/rules/secrets-and-data.md) ·
 [map](docs/map/README.md) · [recipes](docs/map/recipes.md) ·
 [people](docs/knowledge/people.md) · [project](docs/knowledge/project.md) ·
 [environments](docs/knowledge/environments.md) ·
 [tasks](docs/tasks/README.md) · [specs](docs/specs/README.md) · [plans](docs/plans/README.md) ·
 [history](docs/history/2026-11.md) · [sessions](docs/sessions/2026-11-14-kickoff.md) ·
+[последняя сессия](docs/sessions/2026-11-14-architecture.md) ·
+[**спецификация ядра**](docs/specs/case9-core.md) · [шаблон фичи](docs/specs/feature-template.md) · [план ядра](docs/plans/case9-core.md) ·
 [ideas](docs/ideas/README.md)
 
 Правило: новый файл в `docs/rules/`, `docs/map/`, `docs/knowledge/` или `docs/hackathon/`
@@ -85,7 +107,9 @@ AGENTS.md  (ты здесь)
 0. [docs/README.md](docs/README.md) и свою ветку дерева выше.
 1. [docs/hackathon/README.md](docs/hackathon/README.md) — сроки и что сдаём.
 2. [docs/hackathon/criteria.md](docs/hackathon/criteria.md) — **за что дают баллы**. Всё, что не влияет на баллы, — во вторую очередь.
-3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-kickoff.md) — что решили в прошлый раз.
+2a. [docs/hackathon/case9-brief.md](docs/hackathon/case9-brief.md) — **что строим** по выбранному кейсу 9 и как закрываем его критерии.
+2b. [docs/specs/case9-core.md](docs/specs/case9-core.md) — **как строим**: ядро, модули, точки расширения, «как добавить фичу».
+3. Последний файл в [docs/sessions/](docs/sessions/2026-11-14-architecture.md) — что решили в прошлый раз.
 
 ## Сохранение материалов владельца
 
@@ -107,4 +131,5 @@ AGENTS.md  (ты здесь)
 - В плане проставлены SHA выполненных шагов.
 - Задача закрыта записью в `docs/history/` и удалением файла задачи в том же PR.
 - Проверка ссылок проходит: `python3 -m unittest discover -s tests`.
+- Нет новых замечаний SonarQube уровня Blocker/Critical/Major ([code-quality](docs/rules/code-quality.md)): код оценивает машина, это баллы.
 - Фича **работает в демо-сценарии**: то, что нельзя показать на защите, не считается сделанным.

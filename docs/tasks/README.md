@@ -4,7 +4,7 @@
 Дата: 2026-11-14
 Связано: [../history/2026-11.md](../history/2026-11.md), [../plans/README.md](../plans/README.md)
 
-**Следующий свободный номер: 004.** Номера идут подряд и не переиспользуются.
+**Следующий свободный номер: 024.** Номера идут подряд и не переиспользуются.
 
 ## Как взять задачу
 
@@ -16,6 +16,23 @@
 
 1. Добавь запись в `docs/history/<ГГГГ-ММ>.md` по шаблону ниже.
 2. Удали файл задачи **в том же PR**.
+
+## Скиллы superpowers для Семёна
+
+Решение владельца (2026-11-14): агент-кодер подключает нужный скилл superpowers сам, по ситуации.
+
+| Когда | Скилл |
+|---|---|
+| Старт задачи (несколько агентов работают в одном репозитории) | `superpowers:using-git-worktrees` — своя рабочая копия, чтобы не мешать соседям |
+| Пишешь любую функцию или чинишь баг | `superpowers:test-driven-development` |
+| Упал тест, непонятное поведение | `superpowers:systematic-debugging` |
+| В задаче несколько независимых кусков | `superpowers:dispatching-parallel-agents` или `superpowers:subagent-driven-development` |
+| Перед словами «готово» и перед PR | `superpowers:verification-before-completion`, затем `superpowers:requesting-code-review` |
+| Задача закончена, нужно оформить ветку и PR | `superpowers:finishing-a-development-branch` |
+
+**Не запускать** `superpowers:brainstorming` и `superpowers:writing-plans` для задач из этой очереди: спецификация и
+план уже есть ([../specs/case9-core.md](../specs/case9-core.md), [../plans/case9-core.md](../plans/case9-core.md)),
+повторное обсуждение съест время. Вопрос по спецификации — коротко владельцу.
 
 ## Шаблон задачи (`docs/tasks/NNN-кратко.md`)
 
@@ -45,6 +62,33 @@ PR: —
 
 ## Открытые задачи
 
-- [001-choose-case.md](001-choose-case.md) — выбрать кейс (нужно ок владельца)
+**Код, до чекпоинта 1** (порядок и потоки — [../plans/case9-core.md](../plans/case9-core.md)):
+
+- [005-skeleton.md](005-skeleton.md) — **первая, блокирует остальные**: каркас, контракты, ядро, сквозной срез
+- [006-extraction-priority.md](006-extraction-priority.md) — поток А: извлечение полей и приоритет
+- [007-ui-shell-chat-card.md](007-ui-shell-chat-card.md) — поток Б: дизайн-система, чат заявителя, карточка заявки
+- [008-data-testset.md](008-data-testset.md) — поток В: данные и тестовый набор
+
+**Код, после чекпоинта 1:**
+
+- [009-clarify-chat.md](009-clarify-chat.md) — поток А: уточнения в чате: вопросы-карточки и повторный разбор
+- [010-dispatcher-review.md](010-dispatcher-review.md) — поток Б: проверка диспетчером: очередь, правка, подтверждение, журнал
+- [011-emergency.md](011-emergency.md) — поток А: авария: правила + модель, уведомление дежурному, красный режим
+- [012-routing.md](012-routing.md) — поток В: исполнитель: топ-3 с объяснением
+- [013-knowledge.md](013-knowledge.md) — поток В: база знаний: поиск по смыслу, статьи и похожие заявки
+- [014-quality.md](014-quality.md) — поток В: оценщик и экран «Качество»
+- [015-history-dashboard.md](015-history-dashboard.md) — поток Г: история заявок за 6 месяцев и дашборд О0
+- [016-mass-incident.md](016-mass-incident.md) — поток А: массовость: склейка похожих обращений в инцидент
+- [017-ai-vs-manual.md](017-ai-vs-manual.md) — поток Б: замер «с ИИ / без ИИ»
+- [018-engineer-desk.md](018-engineer-desk.md) — поток Б: рабочее место инженера и замыкание цикла
+- [019-voice-call.md](019-voice-call.md) — поток А: звонок: голос → текст → тот же пайплайн
+- [020-feedback-sentiment.md](020-feedback-sentiment.md) — поток А: обратная связь заявителю и метка тональности
+- [021-reports-insights.md](021-reports-insights.md) — поток Г: отчёты О2, О1, О5 с выводами
+- [022-demo-hardening.md](022-demo-hardening.md) — поток В: стабильное демо: кэш, офлайн-режим, сброс, запасная копия
+- [023-delivery.md](023-delivery.md) — поток Г: сдача: README, отчёт о качестве и ограничениях, план внедрения, SonarQube
+
+**Организационные:**
+
+- [001-choose-case.md](001-choose-case.md) — кейс 9 выбран; осталось подтвердить на платформе и записать ментора
 - [002-save-regulations.md](002-save-regulations.md) — сохранить положение и критерии
 - [003-download-case-files.md](003-download-case-files.md) — скачать приложенные файлы кейсов
