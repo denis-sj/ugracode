@@ -11,6 +11,13 @@ import type {
   UserNotification,
 } from '@ugra/contracts';
 import type { AgentStepRecord } from './agent';
+import type {
+  KnowledgeArticle,
+  KnowledgeSearchQuery,
+  SimilarTicket,
+  SimilarTicketQuery,
+} from './knowledge';
+import { DEFAULT_KNOWLEDGE_LIMIT, articleText, knowledgeWords, matchScore } from './knowledge';
 
 export interface TicketFilter {
   status?: TicketStatus;
@@ -60,6 +67,15 @@ export interface KernelStore {
 
   listSettings(): Promise<SettingRecord[]>;
   setSetting(key: string, value: unknown, updatedBy: string | null): Promise<SettingRecord>;
+
+  /** Статья базы знаний по id (инструмент `kb_get_article`). */
+  getKnowledgeArticle(id: string): Promise<KnowledgeArticle | null>;
+  /** Поиск статей по словам без эмбеддингов (инструмент `kb_search`). */
+  searchKnowledge(query: KnowledgeSearchQuery): Promise<KnowledgeArticle[]>;
+  /** Похожие заявки по словам, категории и корпусу (инструмент `tickets_find_similar`). */
+  findSimilarTickets(query: SimilarTicketQuery): Promise<SimilarTicket[]>;
+  /** Наполнение базы знаний в памяти: тесты и демо без базы. */
+  saveKnowledgeArticle(article: KnowledgeArticle): Promise<void>;
 }
 
 /** Хранилище в памяти: тесты, тест-контракт и демо без базы. */
@@ -74,6 +90,7 @@ export class MemoryStore implements KernelStore {
   private readonly events: DomainEvent[] = [];
   private readonly notifications = new Map<string, UserNotification>();
   private readonly settings = new Map<string, SettingRecord>();
+  private readonly knowledge = new Map<string, KnowledgeArticle>();
 
   async listUsers(): Promise<User[]> {
     return [...this.users.values()];
@@ -205,4 +222,82 @@ export class MemoryStore implements KernelStore {
     this.settings.set(key, record);
     return record;
   }
+
+  async saveKnowledgeArticle(article: KnowledgeArticle): Promise<void> {
+    this.knowledge.set(article.id, {
+      ...article,
+      symptoms: [...article.symptoms],
+      steps: [...article.steps],
+    });
+  }
+
+  async getKnowledgeArticle(id: string): Promise<KnowledgeArticle | null> {
+    return this.knowledge.get(id) ?? null;
+  }
+
+  async searchKnowledge(query: KnowledgeSearchQuery): Promise<KnowledgeArticle[]> {
+    const words = knowledgeWords(query.text);
+    if (words.length === 0) return [];
+    const limit = query.limit ?? DEFAULT_KNOWLEDGE_LIMIT;
+    if (limit <= 0) return [];
+
+    const category = normalizeCategory(query.category);
+    const hits: KnowledgeArticle[] = [];
+    for (const article of this.knowledge.values()) {
+      if (category && normalizeCategory(article.category) !== category) continue;
+      const score = matchScore(words, articleText(article));
+      if (score === 0) continue;
+      hits.push({
+        ...article,
+        symptoms: [...article.symptoms],
+        steps: [...article.steps],
+        score,
+      });
+    }
+    return hits
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || a.id.localeCompare(b.id))
+      .slice(0, limit);
+  }
+
+  async findSimilarTickets(query: SimilarTicketQuery): Promise<SimilarTicket[]> {
+    const words = knowledgeWords(query.text ?? '');
+    const category = normalizeCategory(query.category);
+    const building = query.building?.trim().toLowerCase();
+    const limit = query.limit ?? DEFAULT_KNOWLEDGE_LIMIT;
+    // Без слов и фильтров «похожие» не определены: не отдаём всю базу.
+    if (limit <= 0 || (words.length === 0 && !category && !building)) return [];
+
+    const hits: SimilarTicket[] = [];
+    for (const ticket of this.tickets.values()) {
+      if (category && normalizeCategory(ticket.category) !== category) continue;
+      const fields = this.fields.get(ticket.id) ?? [];
+      const valueOf = (key: string): string => {
+        const value = fields.find((field) => field.fieldKey === key)?.value;
+        return value === null || value === undefined ? '' : String(value);
+      };
+      const ticketBuilding = valueOf('building');
+      if (building && !ticketBuilding.toLowerCase().includes(building)) continue;
+
+      const symptoms = valueOf('symptoms');
+      const object = valueOf('object');
+      const score = matchScore(words, [symptoms, object, ticket.category ?? ''].join(' '));
+      if (words.length > 0 && score === 0) continue;
+
+      hits.push({
+        ticketId: ticket.id,
+        number: ticket.number,
+        status: ticket.status,
+        title: symptoms || object || `Заявка ${ticket.number}`,
+        score,
+      });
+    }
+    return hits
+      .sort((a, b) => b.score - a.score || a.number.localeCompare(b.number))
+      .slice(0, limit);
+  }
+}
+
+/** Категории сравниваем без регистра и пробелов по краям. */
+function normalizeCategory(category: string | null | undefined): string {
+  return (category ?? '').trim().toLowerCase();
 }

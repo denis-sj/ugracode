@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import type {
@@ -14,10 +14,18 @@ import type {
 } from '@ugra/contracts';
 import type { EventFilter, KernelStore, TicketFilter } from '@ugra/core';
 import type { AgentStepRecord } from '@ugra/core';
+import type {
+  KnowledgeArticle,
+  KnowledgeSearchQuery,
+  KnowledgeSimilarTicket,
+  SimilarTicketQuery,
+} from '@ugra/core';
+import { DEFAULT_KNOWLEDGE_LIMIT } from '@ugra/core';
 import {
   mapAgentStepRow,
   mapAppealRow,
   mapEventLogRow,
+  mapKbArticleRow,
   mapPipelineStepRow,
   mapTicketFieldRow,
   mapTicketRow,
@@ -29,6 +37,7 @@ import {
   agentStepTable,
   appealTable,
   eventLogTable,
+  kbArticleTable,
   notificationTable,
   settingTable,
   pipelineRunTable,
@@ -117,9 +126,55 @@ function ticketFieldToPatch(patch: Partial<TicketField>): Partial<TicketFieldIns
   return row;
 }
 
+/** jsonb-массив из базы → строки: `pg` может вернуть и массив, и JSON-строку. */
+function toTextArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return Array.isArray(parsed)
+        ? parsed.filter((item): item is string => typeof item === 'string')
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/** `ts_rank` приходит числом или строкой — приводим к числу с тремя знаками. */
+function toScore(value: unknown): number {
+  const parsed = typeof value === 'string' ? Number(value) : value;
+  if (typeof parsed !== 'number' || Number.isNaN(parsed)) return 0;
+  return Math.round(parsed * 1000) / 1000;
+}
+
+function normalizeLimit(limit: number | undefined): number {
+  return Math.max(1, Math.min(limit ?? DEFAULT_KNOWLEDGE_LIMIT, 50));
+}
+
+type KbSearchRow = {
+  id: string;
+  title: string;
+  symptoms: unknown;
+  steps: unknown;
+  solution: string;
+  category: string | null;
+  score: unknown;
+};
+
+type SimilarTicketRow = {
+  id: string;
+  number: string;
+  status: string;
+  title: string;
+  score: unknown;
+};
+
 /** PostgreSQL-хранилище ядра. */
-export class PgStore implements KernelStore {
-  constructor(private readonly db: Database) {}
+export class PgStore implements KernelStore {  constructor(private readonly db: Database) {}
 
   async listUsers(): Promise<User[]> {
     const rows = await this.db.select().from(userTable).orderBy(asc(userTable.fullName));
@@ -454,6 +509,137 @@ export class PgStore implements KernelStore {
       updatedBy: row.updatedBy,
       updatedAt: toIso(row.updatedAt),
     };
+  }
+
+  async saveKnowledgeArticle(article: KnowledgeArticle): Promise<void> {
+    const row = {
+      title: article.title,
+      symptoms: article.symptoms,
+      steps: article.steps,
+      solution: article.solution,
+      category: article.category,
+    };
+    await this.db
+      .insert(kbArticleTable)
+      .values({ id: article.id, ...row, embedding: null })
+      // Эмбеддинг не трогаем: поиск идёт по словам и полнотекстовому индексу.
+      .onConflictDoUpdate({ target: kbArticleTable.id, set: row });
+  }
+
+  async getKnowledgeArticle(id: string): Promise<KnowledgeArticle | null> {
+    const rows = await this.db
+      .select()
+      .from(kbArticleTable)
+      .where(eq(kbArticleTable.id, id))
+      .limit(1);
+    const row = rows[0];
+    return row ? mapKbArticleRow(row) : null;
+  }
+
+  /** Полнотекстовый поиск Postgres с русской морфологией + ILIKE как запасной путь. */
+  async searchKnowledge(query: KnowledgeSearchQuery): Promise<KnowledgeArticle[]> {
+    const text = query.text.trim();
+    if (text === '') return [];
+    const category = query.category?.trim() || null;
+    const limit = normalizeLimit(query.limit);
+    const pattern = `%${text}%`;
+    const document = sql`to_tsvector('russian', coalesce(title, '') || ' ' || coalesce(symptoms::text, '') || ' ' || coalesce(solution, ''))`;
+    const tsQuery = sql`plainto_tsquery('russian', ${text})`;
+
+    const result = await this.db.execute<KbSearchRow>(sql`
+      SELECT
+        id,
+        title,
+        symptoms,
+        steps,
+        solution,
+        category,
+        ts_rank(${document}, ${tsQuery})
+          + CASE
+              WHEN title ILIKE ${pattern} THEN 0.5
+              WHEN symptoms::text ILIKE ${pattern} THEN 0.3
+              WHEN solution ILIKE ${pattern} THEN 0.2
+              ELSE 0
+            END AS score
+      FROM kb_article
+      WHERE (${category}::text IS NULL OR lower(category) = lower(${category}))
+        AND (
+          ${document} @@ ${tsQuery}
+          OR title ILIKE ${pattern}
+          OR symptoms::text ILIKE ${pattern}
+          OR solution ILIKE ${pattern}
+        )
+      ORDER BY score DESC, title ASC
+      LIMIT ${limit}
+    `);
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      symptoms: toTextArray(row.symptoms),
+      steps: toTextArray(row.steps),
+      solution: row.solution,
+      category: row.category,
+      score: toScore(row.score),
+    }));
+  }
+
+  /** Похожие заявки: слова в симптомах и объекте, фильтры по категории и корпусу. */
+  async findSimilarTickets(query: SimilarTicketQuery): Promise<KnowledgeSimilarTicket[]> {
+    const text = query.text?.trim() ?? '';
+    const category = query.category?.trim() || null;
+    const building = query.building?.trim() || null;
+    // Без слов и фильтров «похожие» не определены: не отдаём всю базу.
+    if (text === '' && category === null && building === null) return [];
+    const limit = normalizeLimit(query.limit);
+    const textPattern = `%${text}%`;
+    const buildingPattern = building === null ? '%' : `%${building}%`;
+    const symptoms = sql`coalesce((SELECT f.value #>> '{}' FROM ticket_field f WHERE f.ticket_id = tk.id AND f.field_key = 'symptoms' LIMIT 1), '')`;
+    const object = sql`coalesce((SELECT f.value #>> '{}' FROM ticket_field f WHERE f.ticket_id = tk.id AND f.field_key = 'object' LIMIT 1), '')`;
+    const document = sql`to_tsvector('russian', ${symptoms} || ' ' || ${object} || ' ' || coalesce(tk.category, ''))`;
+    const tsQuery = sql`plainto_tsquery('russian', ${text})`;
+
+    const result = await this.db.execute<SimilarTicketRow>(sql`
+      SELECT
+        tk.id,
+        tk.number,
+        tk.status,
+        coalesce(nullif(${symptoms}, ''), nullif(${object}, ''), 'Заявка ' || tk.number) AS title,
+        ts_rank(${document}, ${tsQuery})
+          + CASE
+              WHEN ${symptoms} ILIKE ${textPattern} THEN 0.3
+              WHEN ${object} ILIKE ${textPattern} THEN 0.2
+              ELSE 0
+            END AS score
+      FROM ticket tk
+      WHERE (${category}::text IS NULL OR lower(tk.category) = lower(${category}))
+        AND (
+          ${building}::text IS NULL
+          OR EXISTS (
+            SELECT 1 FROM ticket_field bf
+            WHERE bf.ticket_id = tk.id
+              AND bf.field_key = 'building'
+              AND bf.value #>> '{}' ILIKE ${buildingPattern}
+          )
+        )
+        AND (
+          ${text}::text = ''
+          OR ${document} @@ ${tsQuery}
+          OR ${symptoms} ILIKE ${textPattern}
+          OR ${object} ILIKE ${textPattern}
+          OR coalesce(tk.category, '') ILIKE ${textPattern}
+        )
+      ORDER BY score DESC, tk.updated_at DESC
+      LIMIT ${limit}
+    `);
+
+    return result.rows.map((row) => ({
+      ticketId: row.id,
+      number: row.number,
+      status: row.status as KnowledgeSimilarTicket['status'],
+      title: row.title,
+      score: toScore(row.score),
+    }));
   }
 }
 

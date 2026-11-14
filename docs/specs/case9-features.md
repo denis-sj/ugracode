@@ -157,7 +157,7 @@ sequenceDiagram
 | б5, в7 Массовость | MUST | `mass-incident` | шаг, таблицы, страница инцидента | [016](../tasks/016-mass-incident.md) |
 | в1–в3, в5 Очередь, проверка, журнал | MUST | `dispatcher-review` | страницы, маршруты ядра | [010](../tasks/010-dispatcher-review.md) |
 | в4 Топ-3 инженера | MUST | `routing` | шаг, виджет | [012](../history/2026-11.md) |
-| г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../tasks/013-knowledge.md) |
+| г2, г3 База знаний и похожие заявки; время ремонта | MUST / SHOULD | `knowledge` | шаг, виджеты, данные | [013](../history/2026-11.md) |
 | г1, г5, г8 Инженер | MUST / SHOULD | `engineer-desk` (+ виджет `knowledge`) | страницы, свой слот, события | [018](../tasks/018-engineer-desk.md) |
 | г7 История оборудования | SHOULD | `report-hotspots` | виджет на карточке + отчёт О2 | [021](../tasks/021-reports-insights.md) |
 | г4, г6 Чек-лист шагов, вопрос базе знаний | COULD | `knowledge` | виджеты, маршрут | [029](../tasks/029-knowledge-extras.md) |

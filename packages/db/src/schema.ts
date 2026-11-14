@@ -293,3 +293,4 @@ export type PipelineRunRow = typeof pipelineRunTable.$inferSelect;
 export type PipelineStepRow = typeof pipelineStepTable.$inferSelect;
 export type AgentStepRow = typeof agentStepTable.$inferSelect;
 export type EventLogRow = typeof eventLogTable.$inferSelect;
+export type KbArticleRow = typeof kbArticleTable.$inferSelect;

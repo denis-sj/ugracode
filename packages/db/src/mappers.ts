@@ -14,11 +14,12 @@ import type {
   TicketStatus,
   User,
 } from '@ugra/contracts';
-import type { AgentStepRecord } from '@ugra/core';
+import type { AgentStepRecord, KnowledgeArticle } from '@ugra/core';
 import type {
   AppealRow,
   EventLogRow,
   AgentStepRow,
+  KbArticleRow,
   PipelineRunRow,
   PipelineStepRow,
   TicketFieldRow,
@@ -153,6 +154,18 @@ export function mapAgentStepRow(row: AgentStepRow): AgentStepRecord {
     error: row.error ?? undefined,
     tokensIn: row.tokensIn ?? undefined,
     tokensOut: row.tokensOut ?? undefined,
+  };
+}
+
+/** Строка БД → статья базы знаний (эмбеддинг не читаем: поиск по словам). */
+export function mapKbArticleRow(row: KbArticleRow): KnowledgeArticle {
+  return {
+    id: row.id,
+    title: row.title,
+    symptoms: row.symptoms ?? [],
+    steps: row.steps ?? [],
+    solution: row.solution,
+    category: row.category,
   };
 }
 

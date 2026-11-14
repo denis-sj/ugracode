@@ -49,6 +49,7 @@ apps (api, web) → modules → adapters, db → core → contracts
 | Сид | `packages/db/src/seed/index.ts` (`pnpm seed`) |
 | Проверка Polza | `scripts/check-polza.ts` (`pnpm check:polza`) |
 | Речь → текст | `POST /api/transcribe` → `SpeechPort` (`packages/adapters/src/speech/`) |
+| База знаний | `modules/knowledge` → `GET /api/m/knowledge/search`, инструменты агента `kb_search`/`kb_get_article`/`tickets_find_similar` |
 
 ## Команды
 
