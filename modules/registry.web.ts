@@ -11,6 +11,7 @@ import journalWeb from './journal/web';
 import knowledgeWeb from './knowledge/web';
 import qualityWeb from './quality/web';
 import reportsDashboardWeb from './reports-dashboard/web';
+import reportsHubWeb from './reports-hub/web';
 import screenshotWeb from './screenshot/web';
 
 /** Манифест веб-частей модулей: одна строка на модуль, порядок алфавитный. */
@@ -27,6 +28,7 @@ export const webModules: WebModule[] = [
   knowledgeWeb,
   qualityWeb,
   reportsDashboardWeb,
+  reportsHubWeb,
   screenshotWeb,
 ];
 
@@ -43,5 +45,6 @@ export {
   knowledgeWeb,
   qualityWeb,
   reportsDashboardWeb,
+  reportsHubWeb,
   screenshotWeb,
 };
