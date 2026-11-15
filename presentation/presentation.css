@@ -866,6 +866,126 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
   padding: 0 28px;
 }
 
+/* ---------- 4. Стек: живой граф ---------- */
+
+.stack {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+  width: 1728px;
+  height: 580px;
+}
+.stack-svg { width: 1728px; height: 580px; overflow: visible; }
+.stack-svg .n-head { font-family: Manrope, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.14em; fill: var(--dim); }
+.stack-svg .box {
+  fill: #fff;
+  stroke: rgba(15, 18, 34, 0.12);
+  stroke-width: 1.5px;
+}
+.stack-svg .box-core { fill: rgba(90, 73, 224, 0.04); stroke: rgba(90, 73, 224, 0.55); stroke-width: 2px; }
+.stack-svg .box-local { stroke: var(--accent); stroke-width: 2.5px; }
+.stack-svg .n-title { font-family: Manrope, sans-serif; font-weight: 700; font-size: 28px; fill: var(--ink); }
+.stack-svg .n-sub { font-family: Manrope, sans-serif; font-weight: 500; font-size: 19px; fill: var(--mute); }
+.stack-svg .e-label { font-family: Manrope, sans-serif; font-weight: 600; font-size: 15px; fill: var(--dim); }
+.stack-svg .edge {
+  fill: none;
+  stroke: rgba(15, 18, 34, 0.24);
+  stroke-width: 2.5px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+/* модули внутри ядра */
+.stack-svg .pill-bg { fill: #fff; stroke: rgba(15, 18, 34, 0.1); stroke-width: 1.5px; }
+.stack-svg .pill-hot { fill: rgba(90, 73, 224, 0.12); stroke: var(--accent); stroke-width: 2px; opacity: 0; }
+.stack-svg .pill-alarm .pill-hot { fill: rgba(212, 56, 13, 0.1); stroke: var(--alarm); }
+.stack-svg .pill-t { font-family: Manrope, sans-serif; font-weight: 600; font-size: 21px; fill: var(--ink); }
+/* путь обращения: подсветка проводов, рамки узлов, точка-пакет */
+.stack-svg .hot {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.stack-svg .glow { fill: none; stroke: var(--accent); stroke-width: 3px; opacity: 0; }
+.stack-svg .packet { opacity: 0; }
+.stack-svg .packet-dot { fill: var(--accent); }
+.stack-svg .packet-halo { fill: var(--accent); opacity: 0.18; }
+.stack-svg .ai-local { opacity: 0; }
+.stack-tech {
+  position: absolute;
+  left: 96px;
+  bottom: 92px;
+  margin: 0;
+  font-size: 20px;
+  color: var(--dim);
+  letter-spacing: 0.01em;
+}
+.stack-swap {
+  position: absolute;
+  right: 96px;
+  bottom: 84px;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.is-print .stack-svg .hot, .is-print .stack-svg .packet { opacity: 0; }
+
+/* ---------- 10. Команда и внедрение ---------- */
+
+.team-col {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+  width: 760px;
+}
+.person {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.person b {
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.person span {
+  font-size: 26px;
+  color: var(--mute);
+}
+
+.stg {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.stg b { font-size: 34px; font-weight: 600; }
+.stg span { font-size: 26px; color: var(--mute); white-space: nowrap; }
+.limits {
+  position: absolute;
+  left: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--dim);
+}
+
+/* ---------- 7. Время на заявку: одна строка без выхода за край ---------- */
+.s-act .big-wrap-md { font-size: 230px; }
+
+/* ---------- фон: спокойные «невидимые» блоки под содержимым ---------- */
+
+.tasks, .acc-side, .save-table, .team-col, .stages-col {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 0 28px;
+}
+
 /* ---------- 3. Стек: граф компонентов ---------- */
 
 .stack {
@@ -1000,3 +1120,254 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 .stack-svg .edge { stroke: rgba(15, 18, 34, 0.35); stroke-width: 2px; stroke-linecap: round; }
 .stack-svg .edge-soft { opacity: 0.5; }
 .stack-svg .box-dash { stroke: rgba(15, 18, 34, 0.25); }
+
+/* =====================================================================
+   Режиссура слайдов (data-fx). Здесь — ФИНАЛЬНОЕ состояние каждого элемента:
+   его видят печать (?print), «уменьшить движение» и переход без анимации.
+   Анимация из начального состояния — в FX в presentation.js.
+   ===================================================================== */
+
+.w { display: inline-block; white-space: nowrap; }
+.ch { display: inline-block; white-space: pre; }
+
+/* волны вокруг точки (рябь) */
+.rip { position: absolute; inset: 0; pointer-events: none; }
+.rip i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+}
+
+/* ---------- 1. Титул ---------- */
+.s-title .title-block { z-index: 1; }
+.inf {
+  position: absolute;
+  right: 40px;
+  bottom: 120px;
+  width: 900px;
+  height: 460px;
+  overflow: visible;
+}
+.inf path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 14px;
+  stroke-linecap: round;
+  opacity: 0.12;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.dot-pop { position: relative; display: inline-block; }
+.splash {
+  position: absolute;
+  left: 50%;
+  bottom: 0.14em;
+  width: 0.16em;
+  height: 0.16em;
+  margin-left: -0.08em;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+}
+.arrow-fly { display: inline-block; color: var(--accent); }
+
+/* ---------- 2. Боль ---------- */
+.roll {
+  display: inline-block;
+  height: 1.2em;
+  line-height: 1.2em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.roll-in { display: block; transform: translateY(-50%); }
+.roll-in span { display: block; }
+.tasks-alarm { display: flex; align-items: center; gap: 22px; }
+.adot {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--alarm);
+  color: var(--alarm);
+}
+.tasks-alarm .sketch path { stroke: var(--alarm); }
+
+/* ---------- 3. Решение ---------- */
+.flow { align-items: stretch; gap: 20px; }
+.flow-node { position: relative; display: flex; flex-direction: column; }
+.flow-arr { align-self: center; flex: none; width: 64px; height: 28px; overflow: visible; }
+.flow-arr .edge {
+  fill: none;
+  stroke: var(--dim);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.mini {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 32px;
+  min-height: 52px;
+}
+.mini i {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(90, 73, 224, 0.08);
+  border: 1.5px solid rgba(90, 73, 224, 0.3);
+}
+.mini .mini-msg { color: var(--ink); background: #fff; border-color: var(--line); font-weight: 500; }
+.kbd-big {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  border-bottom-width: 5px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.chk { width: 40px; height: 32px; overflow: visible; }
+.chk path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.nglow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 24px;
+  border: 3px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.token {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 10px rgba(90, 73, 224, 0.18);
+  opacity: 0;
+}
+.alarm-dot { position: relative; color: var(--alarm); }
+
+/* ---------- 5. Авария ---------- */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 40%, rgba(212, 56, 13, 0.16), rgba(212, 56, 13, 0) 65%);
+  opacity: 0;
+  pointer-events: none;
+}
+.alarm-big { color: var(--alarm); }
+.duty { display: flex; gap: 14px; margin-top: 28px; }
+.duty i { display: block; width: 52px; height: 52px; }
+.duty svg { width: 100%; height: 100%; fill: var(--alarm); }
+.tl-dot { color: var(--alarm); }
+.tl-tag {
+  position: absolute;
+  right: 0;
+  bottom: 26px;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--alarm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 6. Разбор ---------- */
+.s-act .strike path { stroke: var(--alarm); stroke-width: 3.5px; vector-effect: none; }
+.act-old .big { opacity: 0.4; }
+.act-arrow { display: inline-block; color: var(--accent); }
+.big-wrap .oval-act { width: 1.95em; height: 1.2em; left: 52%; }
+.big-wrap .oval-act path { vector-effect: none; stroke-width: 2.6px; }
+.big-wrap .oval-save path { vector-effect: none; stroke-width: 2px; }
+
+/* ---------- 7. Экономия ---------- */
+.big-wrap .oval-save { width: 2.95em; height: 1.22em; left: 50%; }
+.col-hl {
+  position: absolute;
+  left: 846px;
+  top: 0;
+  bottom: -1px;
+  width: 436px;
+  border-radius: 16px;
+  background: rgba(90, 73, 224, 0.07);
+  transform-origin: 50% 0;
+}
+.save-table .st-row { position: relative; }
+.st-hot { color: var(--accent); font-weight: 700; }
+
+/* ---------- 8. Команда ---------- */
+.team-photo { background: #E6E8F2; }
+.photo-img {
+  position: absolute;
+  inset: 0;
+  background: url('media/team.jpg') center / cover no-repeat;
+}
+.curtain {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+}
+.inf-note {
+  margin: 28px 0 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+.inf-note b { color: var(--accent); font-size: 30px; }
+.stages-col { padding-left: 48px; }
+.rail {
+  position: absolute;
+  left: 8px;
+  top: 52px;
+  bottom: 52px;
+  width: 3px;
+  background: var(--line);
+}
+.rail-fill { position: absolute; inset: 0; background: var(--accent); transform-origin: 50% 0; }
+.stg { position: relative; }
+.sdot {
+  position: absolute;
+  left: -48px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px var(--paper);
+}
+
+/* ---------- 9. Смотрим вживую ---------- */
+.glow-bg {
+  position: absolute;
+  left: -200px;
+  top: 80px;
+  width: 1500px;
+  height: 900px;
+  background: radial-gradient(ellipse at center, rgba(169, 155, 255, 0.22), rgba(169, 155, 255, 0) 60%);
+  pointer-events: none;
+}
+.bridge { z-index: 1; }
+.caret { display: inline-block; margin-left: 4px; color: var(--accent-dark); font-weight: 300; }
