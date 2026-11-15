@@ -1484,8 +1484,19 @@
 /* ---------- Адаптив ---------- */
 
 @media (max-width: 1080px) {
+  /* Узкий экран: доска в одну колонку, фиксированная высота снимается —
+     иначе карточки обрезаются. */
+  .queue-page {
+    height: auto;
+    min-height: 0;
+  }
+
   .queue-board {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .queue-column__list {
+    overflow: visible;
   }
 
   .queue-column__note {

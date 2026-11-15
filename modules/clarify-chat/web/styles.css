@@ -1290,6 +1290,12 @@
   .chat-sticker-slot {
     position: static;
     width: 100%;
+    /* На узком экране стикер — компактная карточка над полем ввода:
+       сжимается первым, но не ниже 120 px; внутри прокручивается сам. */
+    flex: 0 1 auto;
+    min-height: 120px;
+    max-height: 34vh;
+    overflow-y: auto;
     margin-bottom: var(--space-3);
   }
 

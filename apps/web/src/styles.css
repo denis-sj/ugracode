@@ -6,15 +6,20 @@
 
 .app {
   position: relative;
-  min-height: 100vh;
+  height: 100svh;
+  overflow: hidden;
 }
 
+/* Оболочка занимает ровно экран: шапка стоит, содержимое прокручивается внутри.
+   Так экраны, которым нужен целый вьюпорт (чат, доска), получают определённую высоту. */
 .app__content {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .chat-visually-hidden {
@@ -672,6 +677,8 @@
   max-width: var(--layout-page);
   margin: 0 auto;
   padding: var(--page-pad);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Экраны по умолчанию не сжимаются: страница прокручивается как обычно.
@@ -1128,6 +1135,31 @@ html:not([data-theme='dark']) .ugra-ambient__blob--ice {
 .shell-avatar-wrap {
   flex: none;
 }
+/* Узкий экран: шапка в две строки — бренд и док сверху, капсула вкладок под ними. */
+@media (max-width: 1180px) {
+  .shell-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'brand dock'
+      'nav nav';
+    row-gap: var(--space-3);
+  }
+
+  .shell-brand {
+    grid-area: brand;
+  }
+
+  .shell-actions {
+    grid-area: dock;
+  }
+
+  .shell-menu {
+    grid-area: nav;
+    justify-self: center;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 1200px) and (min-width: 761px) {
   .shell-head {
     grid-template-columns: auto 1fr auto;
