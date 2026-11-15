@@ -24,8 +24,8 @@
 | 10 | Сценарий демо на защите | [demo-script.md](demo-script.md) | ✅ |
 | 11 | Видео демо | записать по сценарию (5 минут) | ❌ |
 | 12 | Презентация | `presentation/index.html` под кликер — [спецификация](../specs/case9-presentation.md), README в `presentation/`; цифры К4 вписать в `DATA` из [reports/measure.md](../../reports/measure.md) после замера | ✅ |
-| 13 | SonarQube: нет Blocker / Critical / Major | прогон 2026-11-14, Quality Gate OK, 0 issues; [reports/sonarqube-summary.md](../../reports/sonarqube-summary.md) | ✅ |
-| 14 | Покрытие тестами в SonarQube | lcov создаётся, Sonar 83 %, Vitest 84,11 % строк (цель ≥ 60 %) | ✅ |
+| 13 | SonarQube: нет Blocker / Critical / Major | прогон 2026-11-14 на Community Build 26.11: 37 → **0** issues, A/A/A, Gate OK; [reports/sonarqube-summary.md](../../reports/sonarqube-summary.md) | ✅ |
+| 14 | Покрытие тестами в SonarQube | lcov по всему коду: Sonar 63 %, Vitest 60,2 % строк (цель ≥ 60 %), серверная логика > 80 % | ✅ |
 | 15 | Флаги фич | `FEATURES_OFF=<id>` выключает модуль, остальное работает | ✅ |
 | 16 | Запасная копия демо | сервер владельца, ❓ адрес | ❓ |
 | 17 | Ключи и доступы | `POLZA_API_KEY` в `.env`, в репозиторий не попадает | ✅ |
@@ -39,7 +39,8 @@
 - `sonar-project.properties`: проект `ugracode`, источники `apps`, `packages`, `modules`, тесты — `**/tests/**`,
   `**/*.test.ts(x)`; исключены `**/node_modules/**`, `**/dist/**`, `**/coverage/**`, `**/migrations/**`,
   `**/*.d.ts`, `docs/**`, `reports/**`.
-- Профиль `sonar` в `docker-compose.yml` (http://localhost:9000).
+- Профиль `sonar` в `docker-compose.yml` (http://localhost:9000), образ `sonarqube:community`.
+  ⚠️ LTS 9.9 не понимает наш `tsconfig` и молча пропускает все `.ts`/`.tsx` — не возвращать.
 - CI `.github/workflows/check.yml`: `pnpm install --frozen-lockfile` → `pnpm check` → проверка ссылок
   документации (`python3 -m unittest discover -s tests`).
 - `pnpm check` = `tsc --noEmit` + ESLint (включая границы слоёв) + Vitest.
@@ -47,10 +48,10 @@
 Покрытие и анализ:
 
 - `@vitest/coverage-v8` (3.2.7) подключён, `pnpm test:coverage` пишет `coverage/lcov.info`,
-  в CI добавлен шаг покрытия. Серверная логика — **84,11 %** строк (цель ≥ 60 %).
+  в CI добавлен шаг покрытия. Покрытие меряется по всему коду, который видит Sonar: **60,2 %** строк (цель ≥ 60 %).
 - `pnpm sonar` запускает официальный scanner через Docker; токен — только в `.env` (`SONAR_TOKEN`).
 - Первый и итоговый прогоны зафиксированы в [reports/sonarqube-summary.md](../../reports/sonarqube-summary.md):
-  Quality Gate **OK**, issues **0**, Security Hotspots **4 → 0** (Dockerfile), покрытие Sonar 83 %.
+  issues **37 → 0** (10 багов, 1 уязвимость, 26 замечаний), рейтинги A/A/A, покрытие Sonar 63 %.
 - Sonar в CI не запускается (нужен `SONAR_TOKEN` в секретах и доступный сервер) — на хакатоне
   локальный прогон перед сдачей достаточно; статус ✅ для локальной сдачи.
 

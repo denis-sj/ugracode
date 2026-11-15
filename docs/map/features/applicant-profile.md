@@ -71,3 +71,15 @@ npx vitest run modules/applicant-profile packages/core
   `profile.prefill`. В тест-контракте id шага подменяется на `applicant-profile.profile-prefill`;
   `run`, `reads`, `writes` при этом настоящие. Правильное лечение — отдельный namespace шагов в `packages/testkit`.
 - Экран «Мой профиль» — COULD: `listApplicantEquipment` уже готов, маршрут и страница — отдельной задачей.
+
+## Правка места и техники, сотрудники руководителя (2026-11-14)
+
+| Что | Где |
+|---|---|
+| `GET /api/profile/options` — корпуса и техника CMDB для форм | `apps/api/src/people-routes.ts` |
+| `PATCH /api/profile/place` `{ building, cabinet }` — этаж из первой цифры кабинета | там же |
+| `POST /api/profile/equipment` `{ equipmentId }`, `POST /api/profile/equipment/:id/remove` — первая техника становится основной | там же |
+| `POST /api/users`, `PATCH /api/users/:id/role` — право `settings` (руководитель), свою роль менять нельзя | там же |
+| Экран профиля: карточки с формами | `apps/web/src/screens/ProfilePage.tsx`, `profile-format.ts` (`equipmentChoices`) |
+| Вкладка «Сотрудники» (`/team`) | `apps/web/src/screens/TeamPage.tsx`, `team-format.ts`, `team.css` |
+| Хранилище: `saveApplicantEquipment`, `deleteApplicantEquipment` | `packages/core/src/storage.ts`, `packages/db/src/pg-store.ts` |

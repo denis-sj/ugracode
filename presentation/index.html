@@ -63,11 +63,11 @@
       <!-- 4. Стек: живой граф — обращение проходит путь, по клику облако меняется на локальную модель -->
       <section class="slide s-stack" data-title="Стек" data-section="Стек" data-steps="1" data-fx="stack">
         <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Стек</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Ядро, модули, порты</h2></div></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Как устроена система</h2></div></div>
         <div class="stack" data-a>
           <svg class="stack-svg" viewBox="0 0 1728 580" aria-hidden="true">
             <defs><marker id="arr" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M2,2 L12,7 L2,12" fill="none" stroke="rgba(15,18,34,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-            <text class="n-head" x="0" y="-28">ВХОД</text><text class="n-head" x="330" y="-28">СЕРВЕР</text><text class="n-head" x="640" y="-28">ЯДРО И МОДУЛИ</text><text class="n-head" x="1160" y="-28">ПОРТЫ</text><text class="n-head" x="1448" y="-28">ВНЕШНИЙ МИР</text>
+            <text class="n-head" x="0" y="-28">ВХОД</text><text class="n-head" x="330" y="-28">СЕРВЕР</text><text class="n-head" x="640" y="-28">ЯДРО И МОДУЛИ</text><text class="n-head" x="1160" y="-28">ИНТЕГРАЦИИ</text><text class="n-head" x="1448" y="-28">ВНЕШНИЙ МИР</text>
             <path class="edge" pathLength="1" d="M250 190 H290 V270 H330" marker-end="url(#arr)"/>
             <path class="edge" pathLength="1" d="M250 350 H290 V270"/>
             <path class="edge" pathLength="1" d="M560 270 H640" marker-end="url(#arr)"/>
@@ -80,7 +80,7 @@
             <path class="edge" pathLength="1" d="M1400 340 H1448" marker-end="url(#arr)"/>
             <path class="edge" pathLength="1" d="M1400 485 H1448" marker-end="url(#arr)"/>
             <text class="e-label" x="600" y="254" text-anchor="middle">HTTP</text>
-            <text class="e-label" x="1120" y="254" text-anchor="middle">порт</text>
+            <text class="e-label" x="1120" y="254" text-anchor="middle">связь</text>
             <text class="e-label" x="874" y="476">SQL</text>
             <path class="hot" data-route="in" d="M250 350 H290 V270 H330"/>
             <path class="hot" data-route="api" d="M560 270 H640"/>
@@ -95,16 +95,16 @@
             <g class="node" data-node="api" transform="translate(330,215)"><g class="pop"><rect class="box" width="230" height="110" rx="16"/><rect class="strip" width="6" height="110" rx="3" fill="#027DEA"/><text class="n-title" x="28" y="46">API</text><text class="n-sub" x="28" y="76">Fastify · Node.js</text><rect class="glow" width="230" height="110" rx="16"/></g></g>
             <g class="node node-core" data-node="core" transform="translate(640,95)"><g class="pop"><rect class="box box-core" width="440" height="350" rx="20"/><rect class="strip" width="6" height="350" rx="3" fill="#5A49E0"/><text class="n-title" x="28" y="52">Ядро</text><text class="n-sub" x="28" y="84">TypeScript · пайплайн · шина событий</text><g class="pill" transform="translate(28,118)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">Разбор</text></g><g class="pill" transform="translate(226,118)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">Приоритет</text></g><g class="pill" transform="translate(28,190)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">Исполнитель</text></g><g class="pill pill-alarm" transform="translate(226,190)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">Авария</text></g><g class="pill" transform="translate(28,262)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">База знаний</text></g><g class="pill" transform="translate(226,262)"><rect class="pill-bg" width="186" height="56" rx="28"/><rect class="pill-hot" width="186" height="56" rx="28"/><text class="pill-t" x="93" y="36" text-anchor="middle">Отчёты</text></g><rect class="glow" width="440" height="350" rx="20"/></g></g>
             <g class="node" data-node="db" transform="translate(720,490)"><g class="pop"><rect class="box" width="280" height="86" rx="16"/><rect class="strip" width="6" height="86" rx="3" fill="#14172B"/><text class="n-title" x="28" y="40">База данных</text><text class="n-sub" x="28" y="68">PostgreSQL · Drizzle</text><rect class="glow" width="280" height="86" rx="16"/></g></g>
-            <g class="node" data-node="ports" transform="translate(1160,215)"><g class="pop"><rect class="box" width="200" height="110" rx="16"/><rect class="strip" width="6" height="110" rx="3" fill="#14172B"/><text class="n-title" x="28" y="46">Порты</text><text class="n-sub" x="28" y="76">адаптеры</text><rect class="glow" width="200" height="110" rx="16"/></g></g>
+            <g class="node" data-node="ports" transform="translate(1160,215)"><g class="pop"><rect class="box" width="200" height="110" rx="16"/><rect class="strip" width="6" height="110" rx="3" fill="#14172B"/><text class="n-title" x="28" y="46">Интеграции</text><text class="n-sub" x="28" y="76">подключение сервисов</text><rect class="glow" width="200" height="110" rx="16"/></g></g>
             <g class="node" data-node="ai" transform="translate(1448,5)"><g class="pop"><g class="ai-cloud"><rect class="box" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="40">Модель ИИ</text><text class="n-sub" x="28" y="68">облако · Polza</text></g><rect class="glow" width="280" height="90" rx="16"/></g></g>
             <g transform="translate(1448,5)"><g class="ai-local"><rect class="box box-local" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#5A49E0"/><text class="n-title" x="28" y="40">Локальный ИИ</text><text class="n-sub" x="28" y="68">в контуре заказчика</text></g></g>
             <g class="node" data-node="voice" transform="translate(1448,150)"><g class="pop"><rect class="box" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="40">Голос</text><text class="n-sub" x="28" y="68">RouterAI · синтез речи</text><rect class="glow" width="280" height="90" rx="16"/></g></g>
-            <g class="node" data-node="cmdb" transform="translate(1448,295)"><g class="pop"><rect class="box" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="40">CMDB и история</text><text class="n-sub" x="28" y="68">справочник · 600 заявок</text><rect class="glow" width="280" height="90" rx="16"/></g></g>
+            <g class="node" data-node="cmdb" transform="translate(1448,295)"><g class="pop"><rect class="box" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="40">Оборудование</text><text class="n-sub" x="28" y="68">справочник · прошлые заявки</text><rect class="glow" width="280" height="90" rx="16"/></g></g>
             <g class="node" data-node="notify" transform="translate(1448,440)"><g class="pop"><rect class="box" width="280" height="90" rx="16"/><rect class="strip" width="6" height="90" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="40">Уведомления</text><text class="n-sub" x="28" y="68">дежурные инженеры</text><rect class="glow" width="280" height="90" rx="16"/></g></g>
             <g class="packet"><circle class="packet-halo" r="24"/><circle class="packet-dot" r="11"/></g><g class="packet packet-b"><circle class="packet-halo" r="24"/><circle class="packet-dot" r="11"/></g><g class="packet packet-b"><circle class="packet-halo" r="24"/><circle class="packet-dot" r="11"/></g><g class="packet packet-b"><circle class="packet-halo" r="24"/><circle class="packet-dot" r="11"/></g><g class="packet packet-b"><circle class="packet-halo" r="24"/><circle class="packet-dot" r="11"/></g>
           </svg>
         </div>
-        <p class="stack-tech" data-a>TypeScript · Node.js · PostgreSQL · Docker Compose · Vitest · SonarQube</p>
+        <p class="stack-tech" data-a>TypeScript · Node.js · PostgreSQL · Docker Compose · Vitest</p>
         <p class="stack-swap" data-step="1">облако → локальная модель: <span class="hand">меняется один адаптер<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span></p>
       </section>
 
@@ -175,20 +175,13 @@
         <p class="caveat" data-a>ориентир: 1,5 мин на заявку × 22 рабочих дня · смена 8 ч · реальную нагрузку снимем в пилоте</p>
       </section>
 
-      <!-- 8. Команда и внедрение -->
-      <section class="slide s-team" data-title="Команда и внедрение" data-section="Команда" data-fx="team">
+      <!-- 8. Команда -->
+      <section class="slide s-team" data-title="Команда" data-section="Команда">
         <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Команда</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Команда и внедрение</h2></div></div>
-        <div class="team-photo" data-a><span class="photo-img fxa"></span><span class="curtain fxa"></span><span class="photo-note">место для фото команды · media/team.jpg</span></div>
-        <div class="team-col" data-a>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Команда</h2></div></div>
+        <div class="team-col" data-a style="left: calc(50% - 380px); top: 400px; width: 760px; text-align: center; padding: 32px 40px;">
           <div class="person from-right"><b>Денис</b><span>продукт · архитектура · демо</span></div>
-          <p class="inf-note fxa"><b>1</b> — человек · <b>∞</b> — ИИ-агенты</p>
-        </div>
-        <div class="stages-col" data-a>
-          <span class="rail" aria-hidden="true"><span class="rail-fill fxa"></span></span>
-          <div class="stg from-right"><i class="sdot fxa"></i><b>Пилот на одной линии</b><span>4 недели</span></div>
-          <div class="stg from-right"><i class="sdot fxa"></i><b>Расширение</b><span>2–3 месяца</span></div>
-          <div class="stg from-right"><i class="sdot fxa"></i><b>Эксплуатация в контуре заказчика</b><span></span></div>
+          <p class="inf-note"><b>1</b> — человек · <b>∞</b> — ИИ-агенты</p>
         </div>
       </section>
 

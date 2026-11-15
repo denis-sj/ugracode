@@ -2,97 +2,82 @@
 
 Статус: active
 Дата: 2026-11-14
-Проект: `ugracode` · SonarQube Community 9.9.8 · http://localhost:9000
-Версия кода: `a897e53` (рабочее дерево с правками задачи 2)
+Проект: `ugracode` · **SonarQube Community Build 26.11** · http://localhost:9000
 Источник данных: только API SonarQube (`/api/measures/component`, `/api/issues/search`, `/api/hotspots/search`, `/api/qualitygates/project_status`).
+
+## 0. Почему прошлый отчёт был неверным
+
+Прошлые прогоны шли на SonarQube **9.9 LTS**. Встроенный в эту версию TypeScript не знает нашего
+`tsconfig.json` (`moduleResolution: Bundler`, `lib: ES2023`): анализатор падал с
+`Failed to create program`, но прогон всё равно завершался `EXECUTION SUCCESS`. Файлы `.ts`/`.tsx`
+фактически не проверялись, поэтому было «0 замечаний».
+
+Теперь в `docker-compose.yml` стоит образ `sonarqube:community` (26.11, TypeScript 6.0.3). В логе
+сканера должна быть строка `Analyzing 443 file(s) from tsconfig /usr/src/tsconfig.json` и не должно быть `ERROR`.
 
 ## 1. Quality Gate
 
-| Прогон | Время | Статус |
-|---|---|---|
-| Первый (до правок Dockerfile) | 2026-11-14 ~20:30 | **OK (Passed)** |
-| Итоговый (после правок, повторный на текущем коде) | 2026-11-14 ~22:36 | **OK (Passed)** |
-
-В Community Edition условия Quality Gate не настраиваются — платформа возвращает `status: OK`
-без conditions. Дополнительно вручную проверено: Blocker / Critical / Major = 0.
+| Прогон | Статус |
+|---|---|
+| Первый честный прогон (до правок) | Bugs 10, Vulnerabilities 1, Code Smells 26, 37 issues |
+| Итоговый | **0 issues**, рейтинги A/A/A |
+| Итоговый код как новый проект (так его увидит платформа) | **Quality Gate OK**, 0 issues |
 
 ## 2. Метрики
 
-| Метрика | До | После | Комментарий |
-|---|---|---|---|
-| Bugs | 0 | 0 | — |
-| Vulnerabilities | 0 | 0 | — |
-| Security Hotspots | **4** | **0** | 4 в Dockerfile: `COPY . .` и root-пользователь |
-| Code Smells | 0 | 0 | — |
-| Coverage | 83,0 % | 83,0 % | `coverage/lcov.info`, Vitest: **84,11 %** строк |
-| Duplications | 0,0 % | 0,0 % | — |
-| Reliability rating | 1.0 (A) | 1.0 (A) | — |
-| Security rating | 1.0 (A) | 1.0 (A) | — |
-| Maintainability rating | 1.0 (A) | 1.0 (A) | — |
-| Technical debt (`sqale_index`) | 0 | 0 | — |
-| Строк кода (ncloc) | 8 225 | 9 135 | новые экраны и журнал ИИ |
-| Файлов | 275 | 300+ | новые модули страниц |
-| Cognitive complexity | 1 | 1 | — |
-
-## 3. Замечания по серьёзности
-
-| Серьёзность | До | После |
+| Метрика | До | После |
 |---|---|---|
-| Blocker | 0 | 0 |
-| Critical | 0 | 0 |
-| Major | 0 | 0 |
-| Minor | 0 | 0 |
-| Info | 0 | 0 |
+| Bugs | 10 | **0** |
+| Vulnerabilities | 1 | **0** |
+| Code Smells | 26 | **0** |
+| Security Hotspots | 0 | 0 |
+| Reliability rating | D | **A** |
+| Security rating | C | **A** |
+| Maintainability rating | A | A |
+| Technical debt | 395 мин | **0** |
+| Duplications | 2,0 % | 2,0 % |
+| Coverage (Sonar) | 59,1 % | **63,0 %** |
+| Строк кода (ncloc) | 50 707 | 52 194 |
 
-Всего issues: **0 → 0** (повторный прогон 22:36). Открытых замечаний нет, поэтому топ-10 правил и топ-10 файлов пусты —
-платформа не нашла ни одного issue в `apps`, `packages`, `modules`.
+## 3. Замечания по правилам (до → после)
 
-## 4. Security Hotspots (проверены вручную)
+| Правило | Что значит | Было | Как исправили |
+|---|---|---|---|
+| `S8786` | регулярка с квадратичным откатом (ReDoS) | 16 | линейные утилиты `trimEndChars`/`trimChars`/`groupThousands` в `@ugra/contracts` (`packages/contracts/src/text.ts`), разбор без регулярок, однозначные шаблоны (`\S.*`, `(?<!\d)`) |
+| `S2871` | `sort()` без функции сравнения | 3 | `localeCompare` |
+| `S6848`, `S6845` | обработчики и `tabIndex` на неинтерактивных элементах | 5 | клавиатура перенесена на кнопки (`Select`, `ReviewFields`), `QuoteChip` стал `<button>`, фон модалки — `role="presentation"` |
+| `S9379` | атрибут `autoFocus` | 4 | фокус через `ref`/эффект |
+| `S6959` | `reduce()` без начального значения | 2 | начальное значение — первый элемент |
+| `S6544`, `S4822` | промис в условии и в `try` без `await` | 3 | async-хелпер `startPlayback` в `voice-call/web/tts.ts` |
+| `S9383` | промис без обработки | 1 | `void` для `MemoryStore` в прогоне качества |
+| `S7727` | функция передана прямо в `.map` | 1 | явная стрелка |
+| `S2245` | `Math.random` в идентификаторе | 1 | `crypto.getRandomValues` (работает и по http) |
+| `S1313` | «зашитый» IP | 1 | адрес из диапазона для документации RFC 5737 в заглушке CMDB |
+| `S7737` | объект-литерал как значение параметра по умолчанию | 1 | константа `AI_ACTOR` |
 
-| Правило | Файл | Строка | Статус «до» | Что сделано |
-|---|---|---|---|---|
-| `docker:S6470` | `apps/api/Dockerfile` | 9 | TO_REVIEW | заменили `COPY . .` на явные `COPY` каталогов |
-| `docker:S6470` | `apps/web/Dockerfile` | 9 | TO_REVIEW | то же |
-| `docker:S6471` | `apps/api/Dockerfile` | 1 | TO_REVIEW | добавили `USER node` (не-root) |
-| `docker:S6471` | `apps/web/Dockerfile` | 1 | TO_REVIEW | то же |
+## 4. Покрытие
 
-После правок: **0 hotspots**. Образы пересобраны и проверены (`/api/health` через веб-прокси отвечает).
+Раньше Vitest мерил только серверную логику (84 %), а Sonar считал все исходники, поэтому цифры
+расходились. Теперь `coverage.include` в `vitest.config.ts` совпадает с `sonar.sources`:
+Vitest **60,2 %** строк по всему коду, Sonar **63,0 %**. Непокрытое — в основном React-компоненты
+экранов (`*.tsx`) без юнит-тестов; серверная логика по-прежнему покрыта выше 80 %.
 
-## 5. Что исправлено
-
-1. **6 вызовов `console.log`** вне тестов (`packages/db/src/migrate.ts`, `packages/db/src/seed/index.ts`)
-   заменены на общий `packages/db/src/log.ts` (`process.stdout.write`).
-2. **Dockerfile**: явные `COPY` вместо рекурсивного `COPY . .`, непривилегированный пользователь `node`.
-3. Подключено покрытие: `@vitest/coverage-v8` (3.2.7), `pnpm test:coverage`, lcov, пороги 60/60/60/50,
-   шаг в CI. Серверная логика — **84,11 %** строк (цель ≥ 60 %).
-4. Убран TODO про lcov, добавлен `pnpm sonar`, токен только в `.env`.
-
-## 6. Что не исправлено и почему
-
-Открытых Blocker / Critical / Major / Minor / Info — **нет**. Сознательно оставлено:
-
-- `packages/db/src/pg-store.ts` и `schema.ts` — 0 % покрытия: требуют живого PostgreSQL, в юнит-тестах
-  используется `MemoryStore`; интеграционные тесты с базой вынесены за рамки задачи. Общее покрытие выше порога.
-- Security Hotspots после проверки закрыты правками Dockerfile; подавлять правила в Sonar не потребовалось.
-
-## 7. Как воспроизвести
+## 5. Как воспроизвести
 
 ```bash
-# покрытие
-pnpm install
-pnpm test:coverage               # создаёт coverage/lcov.info, печатает таблицу
+docker compose --profile sonar up -d sonar   # http://localhost:9000, логин admin, пароль — SONAR_ADMIN_PASSWORD в .env
+pnpm test:coverage                           # coverage/lcov.info
+pnpm sonar                                   # токен — SONAR_TOKEN в .env
+```
 
-# SonarQube (локально)
-docker compose --profile sonar up -d sonar   # http://localhost:9000
-# токен: My Account → Security → Generate Tokens → в .env: SONAR_TOKEN=...
-pnpm sonar
+Метрики через API (токен как basic-auth):
 
-# метрики через API (токен из .env)
+```bash
 set -a; . ./.env; set +a
 curl -s -u "$SONAR_TOKEN": "http://localhost:9000/api/measures/component?component=ugracode&metricKeys=bugs,vulnerabilities,security_hotspots,code_smells,coverage,duplicated_lines_density"
 curl -s -u "$SONAR_TOKEN": "http://localhost:9000/api/issues/search?componentKeys=ugracode&resolved=false&facets=severities,rules,files"
-curl -s -u "$SONAR_TOKEN": "http://localhost:9000/api/hotspots/search?projectKey=ugracode"
 ```
 
-Примечание: SonarQube 9.9 принимает токен в API как basic-auth (`-u "$SONAR_TOKEN":`), заголовок
-`Authorization: Bearer` для этих эндпоинтов возвращает 401.
+Quality Gate локального проекта `ugracode` может показывать ERROR по условию «покрытие нового кода
+< 80 %»: «новым» считается всё, что изменилось после первого прогона. На платформе анализ первый,
+периода нового кода нет — проверено прогоном под новым ключом проекта: Gate **OK**.

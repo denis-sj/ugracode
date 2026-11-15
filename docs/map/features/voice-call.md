@@ -30,7 +30,7 @@
 | `modules/voice-call/web/PhoneCallPage.tsx` | публичная `/call`: экран вызова, микрофон, субтитры, таймер, предсинтез по «Ответить», номер заявки |
 | `modules/voice-call/web/tts.ts` | клиент озвучки: `fetchSpeech` (`POST /api/tts`), `createVoicePlayer` (один `Audio`, кэш object-URL, таймаут 3 с), `unlock()` для iOS, запасной `speechSynthesis` |
 | `modules/voice-call/web/call-flow.ts` | чистые функции страницы звонка (устройство, таймер, путь `/call`, фазы) и `CALL_PREFETCH` — что синтезируем заранее |
-| `modules/voice-call/web/CallsPage.tsx` | экран диспетчера: реплики вживую, плашка входящего со звуком, QR |
+| `modules/voice-call/web/CallsPage.tsx` | экран диспетчера: реплики вживую, плашка входящего со звуком; QR и ссылка только в терминале |
 | `modules/voice-call/web/format.ts` | формат для экрана: устройство вместо номера, длительность, новый звонок, адрес для QR |
 | `modules/voice-call/web/voice.css` | стили обоих экранов, только токены `@ugra/ui` |
 | `apps/api/src/tts.ts` | `POST /api/tts`: право `appeal.create`, лимит 400 символов, кэш `sha256(голос+текст)` на 200 фраз, 503 без ключа |
@@ -136,3 +136,47 @@
 - SonarQube по ветке: 0 Blocker/Critical/Major, Quality Gate OK.
 - В браузере: `http://localhost:5173/call` (микрофон на localhost разрешён) и `http://localhost:5173/#/calls`.
   Без ключа RouterAI страница обязана говорить голосом браузера — это и есть проверка запасного пути.
+
+## Звонок по QR «сразу готов» (2026-11-14)
+
+- `pnpm demo:tunnel` собирает веб и отдаёт телефону `vite preview` (:4173, прокси `/api`); `--dev` — по-старому на 5173.
+- cloudflared (`--protocol http2`) публикует адрес только после `Registered tunnel connection`; нет за 25 с (VPN, закрытый 7844) —
+  запасной `ssh -p 443 -R0:localhost:4173 free.pinggy.io` (на телефоне один раз «Enter site», живёт 60 мин). Парсеры —
+  `isTunnelRegistered`, `parsePinggyUrl` в `server/public-url.ts`.
+- `apps/api/src/index.ts` передаёт `warmTts` (`CALL_PREFETCH` + `GREETING_REPEAT`): фразы синтезируются при старте и лежат в кэше `/api/tts`.
+
+## Исправление доступа с телефона и экрана звонков — 2026-11-14
+
+- Из «Звонка» удалены QR, ссылка, технические подсказки и опрос адреса; разговоры занимают всю ширину.
+- `scripts/demo-tunnel.ts` повторно использует preview после пересборки; накапливает вывод туннелей,
+  чтобы URL и регистрация, разбитые по порциям данных, распознавались корректно; убирает неудачный SSH-процесс.
+- `scripts/tunnel-health.ts` проверяет публичную страницу и API перед публикацией, повторяет попытки;
+  SSH учитывает хост и порт целевого сервера. HTTP 530 и заставка провайдера не считаются успехом.
+- Регрессии: `apps/web/tests/calls-page.test.ts`, `apps/web/tests/tunnel-health.test.ts`.
+- Новый адрес: Ctrl+C, затем `pnpm demo:tunnel`; QR и URL остаются только в терминале.
+
+### Мобильная заставка Pinggy — исправление
+
+Проверка обычным серверным fetch обходила заставку и давала ложную уверенность в мобильном доступе.
+Теперь `scripts/tunnel-health.ts` использует User-Agent Safari/iPhone и воспроизводит Enter site с cookie.
+`apps/web/src/api.ts` и клиент озвучки передают `X-Pinggy-No-Screen`; HTML с HTTP 200 больше не считается
+успешным ответом API. На первом открытии бесплатного туннеля пользователь нажимает Enter site.
+Регрессии: `apps/web/tests/api-tunnel.test.ts`, проверки cookie в `apps/web/tests/tunnel-health.test.ts`,
+заголовок озвучки в `modules/voice-call/tests/tts.test.ts`.
+
+### Белый экран на телефоне: отдельная загрузка звонка
+
+`apps/web/src/main.tsx` открывает `PhoneCallPage` напрямую на `/call` и `#/call`;
+полная `App` подгружается лениво только на остальных маршрутах. Начальный JavaScript уменьшен
+с 857 до 517 КБ (gzip с 272 до 170 КБ), CSS с 223 до 77 КБ.
+`apps/web/index.html` показывает текст загрузки и кнопку обновления ещё до JavaScript;
+ошибка загрузки или 12 секунд ожидания выводят понятное сообщение вместо пустого экрана.
+Регрессия: `apps/web/tests/mobile-entry.test.ts` проверяет, что звонок не загружает остальные экраны.
+Публичный `/call?mobile=3` проверен в WebKit с профилем iPhone: видимая кнопка «Ответить», 4,5 с, без pageerror.
+
+### Альтернативный домен для телефона
+
+`pnpm demo:tunnel --serveo` использует Serveo по SSH 443 с внешним портом 80 и preview 4174.
+`parseServeoUrl` в `server/public-url.ts` распознаёт домен сайта, а `sshForwardTarget` поддерживает
+внешний порт. В Vite разрешены домены Serveo. При обрыве SSH повторное подключение проверяет
+публичный адрес перед публикацией. Бесплатный Serveo требует **Continue to Site** при первом входе.
