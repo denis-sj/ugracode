@@ -79,29 +79,23 @@
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Из чего сделано и как работает</h2></div></div>
         <div class="stack" data-a>
           <svg class="stack-svg" viewBox="0 0 1728 560" aria-hidden="true">
-            <defs>
-              <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 z" fill="rgba(15,18,34,0.35)"/>
-              </marker>
-            </defs>
-            <path class="edge" pathLength="1" d="M300 228 L357 228" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M657 228 L714 228" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M1014 228 L1071 228" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 58 1428 58" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M1371 228 L1428 208" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 358 1428 358" marker-end="url(#arr)"/>
-            <path class="edge edge-dash" pathLength="1" d="M1371 228 C1400 228 1400 502 1428 502" marker-end="url(#arr)"/>
-            <path class="edge" pathLength="1" d="M864 286 L864 438 C864 438 1000 438 1071 438" marker-end="url(#arr)"/>
-
-            <g transform="translate(0,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Веб-интерфейс</text><text class="n-sub" x="24" y="84">React 19 · Vite 7</text></g></g>
-            <g transform="translate(357,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">API</text><text class="n-sub" x="24" y="84">Fastify 5 · Node.js</text></g></g>
-            <g transform="translate(714,170)"><g class="pop"><rect class="box box-core" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Ядро</text><text class="n-sub" x="24" y="84">TypeScript · пайплайн</text></g></g>
-            <g transform="translate(1071,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Порты</text><text class="n-sub" x="24" y="84">адаптеры внешнего мира</text></g></g>
-            <g transform="translate(1428,0)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Модель ИИ</text><text class="n-sub" x="24" y="84">облако Polza · OpenAI SDK</text></g></g>
-            <g transform="translate(1428,150)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">CMDB и история</text><text class="n-sub" x="24" y="84">справочник · 600 заявок</text></g></g>
-            <g transform="translate(1428,300)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Уведомления</text><text class="n-sub" x="24" y="84">дежурные инженеры</text></g></g>
-            <g transform="translate(1428,444)"><g class="pop"><rect class="box box-dash" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Речь</text><text class="n-sub" x="24" y="84">порт, пока не подключено</text></g></g>
-            <g transform="translate(1071,380)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">База данных</text><text class="n-sub" x="24" y="84">PostgreSQL · Drizzle ORM</text></g></g>
+            <defs><marker id="arr" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M2,2 L12,7 L2,12" fill="none" stroke="rgba(15,18,34,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+            <text class="n-head" x="0" y="196">ИНТЕРФЕЙС</text><text class="n-head" x="368" y="196">СЕРВЕР</text><text class="n-head" x="736" y="196">ЯДРО</text><text class="n-head" x="1104" y="196">ПОРТЫ</text><text class="n-head" x="1448" y="0">ВНЕШНИЕ СЕРВИСЫ</text>
+            <path class="edge" pathLength="1" d="M280 265 H368" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M648 265 H736" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1016 265 H1104" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M876 317 V400" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1384 265 H1416"/>
+            <path class="edge" pathLength="1" d="M1416 70 V460"/>
+            <path class="edge" pathLength="1" d="M1416 70 H1448" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1416 200 H1448" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1416 330 H1448" marker-end="url(#arr)"/>
+            <path class="edge edge-soft" pathLength="1" d="M1416 460 H1448" marker-end="url(#arr)"/>
+            <text class="e-label" x="324" y="250" text-anchor="middle">HTTP</text>
+            <text class="e-label" x="692" y="250" text-anchor="middle">вызов</text>
+            <text class="e-label" x="1060" y="250" text-anchor="middle">порт</text>
+            <text class="e-label" x="892" y="364">SQL</text>
+            <g transform="translate(0,213)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#5A49E0"/><text class="n-title" x="28" y="46">Веб-интерфейс</text><text class="n-sub" x="28" y="76">React 19 · Vite 7</text></g></g><g transform="translate(368,213)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#027DEA"/><text class="n-title" x="28" y="46">API</text><text class="n-sub" x="28" y="76">Fastify 5 · Node.js</text></g></g><g transform="translate(736,213)"><g class="pop"><rect class="box box-core" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#5A49E0"/><text class="n-title" x="28" y="46">Ядро</text><text class="n-sub" x="28" y="76">TypeScript · пайплайн</text></g></g><g transform="translate(1104,213)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#14172B"/><text class="n-title" x="28" y="46">Порты</text><text class="n-sub" x="28" y="76">адаптеры внешнего мира</text></g></g><g transform="translate(736,400)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#14172B"/><text class="n-title" x="28" y="46">База данных</text><text class="n-sub" x="28" y="76">PostgreSQL · Drizzle ORM</text></g></g><g transform="translate(1448,18)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="46">Модель ИИ</text><text class="n-sub" x="28" y="76">облако Polza · OpenAI SDK</text></g></g><g transform="translate(1448,148)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="46">CMDB и история</text><text class="n-sub" x="28" y="76">справочник · 600 заявок</text></g></g><g transform="translate(1448,278)"><g class="pop"><rect class="box" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="46">Уведомления</text><text class="n-sub" x="28" y="76">дежурные инженеры</text></g></g><g transform="translate(1448,408)"><g class="pop"><rect class="box box-dash" width="280" height="104" rx="16"/><rect class="strip" width="6" height="104" rx="3" fill="#0E8A5F"/><text class="n-title" x="28" y="46">Речь</text><text class="n-sub" x="28" y="76">порт, пока не подключено</text></g></g>
           </svg>
         </div>
         <div class="chips-row" data-a>
