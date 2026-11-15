@@ -713,9 +713,13 @@ const SHOW = {
       playStep(slides[state.i], state.step);
       return;
     }
+    // демо-слайд: «›» открывает вкладку демо. Если браузер заблокировал окно — подсказка на слайде.
+    // Проверка идёт до «последнего слайда»: демо стоит в конце показа.
+    if (slides[state.i].dataset.demo !== undefined) {
+      const opened = openDemoTab();
+      if (!opened || state.i === slides.length - 1) return;
+    }
     if (state.i === slides.length - 1) return;
-    // браузер заблокировал окно — остаёмся на демо-слайде и показываем подсказку
-    if (slides[state.i].dataset.demo !== undefined && !openDemoTab()) return;
     show(state.i + 1, 0);
   }
 
