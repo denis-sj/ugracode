@@ -116,6 +116,10 @@ describe('статусы и права', () => {
     expect(hasPermission('applicant', 'tickets.confirm')).toBe(false);
     expect(hasPermission(Role.enum.applicant, 'any')).toBe(true);
   });
+
+  it('роль вне матрицы прав ничего не разрешает', () => {
+    expect(hasPermission('auditor' as Role, 'appeal.create')).toBe(false);
+  });
 });
 
 describe('Ticket', () => {

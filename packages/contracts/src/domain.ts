@@ -96,7 +96,9 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
 };
 
 export function hasPermission(role: Role, permission: Permission): boolean {
-  return permission === 'any' || ROLE_PERMISSIONS[role].includes(permission);
+  if (permission === 'any') return true;
+  // Роль вне матрицы (битая сессия, новая роль без прав) прав не даёт, а не роняет запрос.
+  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
 }
 
 export interface StatusTransition {
