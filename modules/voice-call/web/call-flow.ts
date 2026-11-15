@@ -46,6 +46,31 @@ export function sessionUserIds(): readonly string[] {
   return [GUEST_USER_ID, FALLBACK_GUEST_ID];
 }
 
+/** Что нужно от клиента API для гостевого входа: только `post`. */
+export interface GuestLoginApi {
+  post<T>(path: string, body?: unknown): Promise<T>;
+}
+
+/**
+ * Вход гостем для страницы звонка: первый подходящий `userId` из `sessionUserIds()`.
+ * Пустой результат — вход удался; иначе ошибка последней попытки (её и показываем).
+ * Нужен до первого запроса к `/turn` и `/api/tts`: без сессии сервер ответит 401.
+ */
+export async function loginGuest(api: GuestLoginApi): Promise<unknown | null> {
+  let lastError: unknown = null;
+  for (const userId of sessionUserIds()) {
+    try {
+      await api.post('/api/session', { userId });
+      return null;
+    } catch (reason) {
+      lastError = reason;
+      // Нет такого пользователя (старая база без сида модуля) — пробуем общего гостя.
+      if (!isMissingUser(reason)) return reason;
+    }
+  }
+  return lastError;
+}
+
 /** 404 от `POST /api/session`: такого пользователя в базе нет, пробуем следующего. */
 export function isMissingUser(error: unknown): boolean {
   return typeof error === 'object' && error !== null && (error as { status?: unknown }).status === 404;

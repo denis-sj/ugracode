@@ -55,6 +55,77 @@ export function pcmToWav(pcm: Uint8Array, sampleRate = TTS_SAMPLE_RATE): Uint8Ar
   return Buffer.concat([header, Buffer.from(pcm)]);
 }
 
+/** Сколько тишины по краям считаем лишней: всё, что тише 1 % шкалы. */
+const SILENCE_THRESHOLD = 0.01;
+/** Пауза на вдох/выдох перед первой фонемой остаётся — иначе звук начинается с щелчка. */
+const SILENCE_PADDING_MS = 30;
+
+interface WavLayout {
+  channels: number;
+  sampleRate: number;
+  bits: number;
+  dataStart: number;
+}
+
+/** Разбор заголовка WAV: где начинаются сэмплы и в каком они формате. */
+function layoutOf(wav: Uint8Array): WavLayout | null {
+  if (!isWav(wav)) return null;
+  const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+  let offset = 12;
+  let channels = TTS_CHANNELS;
+  let sampleRate = TTS_SAMPLE_RATE;
+  let bits = TTS_BITS;
+  while (offset + 8 <= wav.byteLength) {
+    const id = ascii(wav, offset, 4);
+    const size = view.getUint32(offset + 4, true);
+    if (id === 'fmt ') {
+      channels = view.getUint16(offset + 10, true) || TTS_CHANNELS;
+      sampleRate = view.getUint32(offset + 12, true) || TTS_SAMPLE_RATE;
+      bits = view.getUint16(offset + 22, true) || TTS_BITS;
+    }
+    if (id === 'data') return { channels, sampleRate, bits, dataStart: offset + 8 };
+    offset += 8 + size + (size % 2);
+  }
+  return null;
+}
+
+/**
+ * Срезать тишину по краям WAV: Gemini TTS начинает фразу с 160–280 мс паузы,
+ * и это время зритель слышит как «задумался» ещё до первого слова.
+ * Длительность фразы сокращается ровно на срезанное, кэш хранит уже подрезанный звук.
+ */
+export function trimSilence(wav: Uint8Array): Uint8Array {
+  const layout = layoutOf(wav);
+  if (!layout) return wav;
+  const frame = layout.channels * (layout.bits / 8);
+  if (frame <= 0) return wav;
+  const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+  const total = Math.floor((wav.byteLength - layout.dataStart) / frame);
+  if (total <= 0) return wav;
+  const loud = (index: number): boolean => {
+    const at = layout.dataStart + index * frame;
+    return Math.abs(view.getInt16(at, true)) / 32768 >= SILENCE_THRESHOLD;
+  };
+  let first = 0;
+  while (first < total && !loud(first)) first += 1;
+  if (first >= total) return wav;
+  let last = total - 1;
+  while (last > first && !loud(last)) last -= 1;
+  const padding = Math.round((layout.sampleRate * SILENCE_PADDING_MS) / 1000);
+  const start = Math.max(0, first - padding);
+  const end = Math.min(total - 1, last + padding);
+  if (start === 0 && end >= total - 1) return wav;
+  const data = wav.subarray(layout.dataStart + start * frame, layout.dataStart + (end + 1) * frame);
+  const header = wav.subarray(0, layout.dataStart);
+  const result = new Uint8Array(header.byteLength + data.byteLength);
+  result.set(header, 0);
+  result.set(data, header.byteLength);
+  const out = new DataView(result.buffer);
+  out.setUint32(4, result.byteLength - 8, true);
+  out.setUint32(40, data.byteLength, true);
+  return result;
+}
+
 /**
  * Длительность WAV в секундах по заголовку. Чанки читаем по порядку:
  * провайдер вправе добавить служебный блок перед `data`.

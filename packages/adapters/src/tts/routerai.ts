@@ -1,5 +1,5 @@
 import type { TtsPort, TtsRequest, TtsResult } from '@ugra/core';
-import { pcmToWav } from './pcm-wav';
+import { pcmToWav, trimSilence } from './pcm-wav';
 
 export const DEFAULT_ROUTERAI_BASE_URL = 'https://routerai.ru/api/v1';
 export const DEFAULT_TTS_MODEL = 'google/gemini-3.8-flash-lite-tts';
@@ -91,6 +91,7 @@ export class RouterAiTts implements TtsPort {
     }
     const audio = new Uint8Array(await response.arrayBuffer());
     if (audio.byteLength === 0) throw new Error('RouterAI TTS: пустой ответ');
-    return { audio: pcmToWav(audio), mimeType: 'audio/wav', voice };
+    // Gemini TTS начинает с паузы 160–280 мс: подрезаем её, иначе звук «задумывается» до первого слова.
+    return { audio: trimSilence(pcmToWav(audio)), mimeType: 'audio/wav', voice };
   }
 }

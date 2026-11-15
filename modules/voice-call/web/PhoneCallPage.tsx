@@ -12,10 +12,9 @@ import {
   THINKING_SAY,
   appendLine,
   detectDevice,
-  isMissingUser,
+  loginGuest,
   modeNote,
   phaseLabel,
-  sessionUserIds,
   shouldAutoFinish,
   ticketLabel,
   timerText,
@@ -360,18 +359,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
 
-    let sessionError: unknown = null;
-    for (const userId of sessionUserIds()) {
-      try {
-        await api.post('/api/session', { userId });
-        sessionError = null;
-        break;
-      } catch (reason) {
-        sessionError = reason;
-        // Нет такого пользователя (старая база без сида модуля) — пробуем общего гостя.
-        if (!isMissingUser(reason)) break;
-      }
-    }
+    const sessionError = await loginGuest(api);
     if (sessionError) {
       activeRef.current = false;
       player().stop();
@@ -424,6 +412,23 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
   useEffect(() => {
     if (activeRef.current && shouldAutoFinish(seconds)) void finishCall();
   }, [seconds]);
+
+  /**
+   * Открыли страницу — заранее входим гостем и синтезируем первые фразы.
+   * Холодный синтез приветствия занимает до 4–5 с, а к нажатию «Ответить» звук уже лежит в кэше:
+   * жест остаётся только для разблокировки звука на iOS.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const error = await loginGuest(api);
+      if (cancelled || error !== null) return;
+      await player().prefetch(CALL_PREFETCH);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   // Ушли со страницы — гасим микрофон и звук, чтобы телефон не «звонил» в кармане.
   useEffect(
