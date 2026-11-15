@@ -378,10 +378,7 @@ const SHOW = {
       playStep(slides[state.i], state.step);
       return;
     }
-    if (state.i === slides.length - 1) {
-      goDemo();
-      return;
-    }
+    if (state.i === slides.length - 1) return;
     show(state.i + 1, 0);
   }
 
@@ -399,10 +396,6 @@ const SHOW = {
   function goTo(i, animate) {
     const j = Math.max(0, Math.min(slides.length - 1, i));
     show(j, 0, { animate });
-  }
-
-  function goDemo() {
-    window.location.href = SHOW.demoUrl;
   }
 
   /* ---------- полный экран, чёрный экран, курсор ---------- */
@@ -539,7 +532,7 @@ const SHOW = {
       if (isFull()) exitFull(); else enterFull();
       return;
     }
-    if (code === 'KeyV' && state.i === slides.length - 1) {
+    if (code === 'KeyV' && slides[state.i].dataset.demo !== undefined) {
       e.preventDefault();
       openDemoVideo();
     }

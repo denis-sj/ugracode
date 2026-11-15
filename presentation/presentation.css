@@ -936,3 +936,55 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 .stages-col { position: absolute; left: 680px; top: 300px; width: 480px; }
 
 .stg b { font-size: 30px; }
+
+/* ---------- 3. Решение: три шага и ветка аварии ---------- */
+
+.flow {
+  position: absolute;
+  left: 96px;
+  top: 380px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+.flow-node {
+  width: 500px;
+  padding: 40px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(15, 18, 34, 0.06);
+}
+.flow-node b {
+  display: block;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.flow-node span {
+  display: block;
+  margin-top: 14px;
+  font-size: 24px;
+  color: var(--mute);
+}
+.flow-human { border-color: rgba(90, 73, 224, 0.35); }
+.flow-arrow { font-size: 64px; color: var(--dim); }
+.alarm-line {
+  position: absolute;
+  left: 96px;
+  top: 760px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+  color: var(--alarm);
+}
+.alarm-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--alarm);
+}
+
+/* ---------- 8. Экономия: формула ниже таблицы, не под ней ---------- */
+.s-save .formula { bottom: 112px; }
+.s-save .caveat { bottom: 74px; }

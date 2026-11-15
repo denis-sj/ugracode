@@ -44,6 +44,34 @@
         </ul>
       </section>
 
+      <!-- 3. Решение -->
+      <section class="slide s-solution" data-title="Решение" data-section="Решение">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Решение</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Обращение → готовая заявка</h2></div></div>
+        <div class="flow" data-a>
+          <div class="flow-node pop"><b>Заявитель пишет</b><span>текст, звонок или скриншот</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node pop"><b>ИИ разбирает</b><span>поля с цитатами, приоритет, исполнитель</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node flow-human pop"><b>Диспетчер подтверждает</b><span>последнее слово — за человеком</span></div>
+        </div>
+        <div class="alarm-line" data-a><span class="alarm-dot"></span>признаки аварии → дежурные уведомляются автоматически</div>
+      </section>
+
+      <!-- 11. Смотрим вживую -->
+      <section class="slide s-bridge" data-title="Демонстрация" data-section="Демонстрация" data-demo>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Демо</span></div>
+        <div class="bridge">
+          <div class="mask"><h2 class="bridge-h mask-in">Смотрим<br><span class="hand">вживую<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span><span class="dot">.</span></h2></div>
+          <p class="bridge-sub" data-a>переходим в демо · <span data-demo-host>localhost:5173</span></p>
+        </div>
+        <p class="bridge-hint" data-a><span class="kbd">V</span> запасное видео</p>
+        <div class="video-layer" hidden>
+          <video class="demo-video" controls playsinline preload="none"></video>
+          <p class="video-missing" hidden>видео не найдено: presentation/media/demo.mp4</p>
+        </div>
+      </section>
+
       <!-- 3. Стек -->
       <section class="slide s-stack" data-title="Стек" data-section="Стек">
         <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Стек</span></div>
@@ -80,28 +108,6 @@
         </div>
       </section>
 
-      <!-- 5. Точность -->
-      <section class="slide s-acc" data-title="Точность" data-section="Точность">
-        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Точность</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Точность на&nbsp;<span data-num="testCases">10</span> обращениях</h2></div></div>
-
-        <div class="acc-main" data-a>
-          <div class="big-wrap">
-            <span class="big" data-num="missedEmergencies">0</span>
-            <svg class="sketch oval" viewBox="0 0 725 1000" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 481.7 77.1 C 489.4 82.0 512.8 95.0 527.4 106.2 C 542.0 117.4 556.6 129.8 569.5 144.4 C 582.5 159.0 594.5 175.9 604.9 193.8 C 615.3 211.8 624.0 231.9 632.0 251.8 C 640.1 271.7 646.6 292.6 653.2 313.2 C 659.9 333.9 666.1 354.5 671.9 375.8 C 677.7 397.2 683.7 418.8 687.8 441.2 C 691.9 463.6 695.5 487.0 696.4 510.3 C 697.4 533.6 696.4 557.7 693.5 580.8 C 690.6 603.8 685.1 626.6 679.0 648.5 C 672.9 670.3 665.1 691.3 657.0 711.8 C 648.9 732.3 640.2 752.3 630.6 771.5 C 621.0 790.7 610.8 810.0 599.2 827.0 C 587.6 844.0 574.7 860.3 560.7 873.5 C 546.8 886.8 531.1 897.6 515.5 906.3 C 499.8 914.9 483.1 920.3 466.8 925.2 C 450.5 930.2 434.1 932.9 417.8 935.9 C 401.6 938.9 385.5 941.6 369.1 943.2 C 352.7 944.7 336.1 946.5 319.5 945.4 C 302.9 944.3 285.9 942.0 269.7 936.7 C 253.5 931.3 237.3 923.0 222.2 913.2 C 207.1 903.3 192.8 890.5 178.9 877.4 C 165.1 864.3 152.1 849.7 139.3 834.6 C 126.6 819.5 113.9 804.0 102.3 786.9 C 90.7 769.8 79.0 751.8 69.6 732.1 C 60.3 712.4 51.9 690.8 46.1 668.7 C 40.2 646.5 36.8 622.5 34.8 599.2 C 32.8 575.9 33.4 551.9 34.1 528.7 C 34.9 505.5 37.1 482.7 39.3 460.0 C 41.6 437.4 44.0 415.0 47.6 392.7 C 51.2 370.5 55.1 348.0 60.9 326.6 C 66.7 305.2 73.8 283.9 82.5 264.4 C 91.2 245.0 101.9 226.8 113.0 209.9 C 124.2 193.0 136.8 178.0 149.4 163.1 C 161.9 148.3 174.9 134.5 188.4 121.0 C 201.9 107.5 215.5 93.8 230.1 82.1 C 244.8 70.4 260.2 58.8 276.2 50.9 C 292.3 43.0 309.5 37.0 326.5 34.6 C 343.5 32.1 361.2 33.3 378.2 36.1 C 395.2 38.9 412.0 45.0 428.3 51.3 C 444.6 57.6 460.4 65.5 476.1 74.0 C 491.7 82.5 507.2 91.4 522.0 102.2 C 536.8 113.1 551.5 124.9 564.7 139.1 C 577.9 153.3 595.0 179.3 601.0 187.3"/></svg>
-          </div>
-          <p class="big-label">пропущенных аварий</p>
-          <p class="big-sub">из&nbsp;<span data-num="emergencyCases">2</span> аварийных обращений в&nbsp;наборе из&nbsp;<span data-num="testCases">10</span></p>
-        </div>
-
-        <div class="acc-side" data-a>
-          <div class="trow from-right"><span class="tn" data-num="assigneeTop3">100 %</span><span class="tt">исполнитель в&nbsp;топ-3</span></div>
-          <div class="trow from-right"><span class="tn" data-num="fieldsByAi">84 %</span><span class="tt">полей заполнил ИИ</span></div>
-        </div>
-
-        <p class="foot" data-a><span data-num="inventedFields">9</span> выдуманных полей — все подсвечены, без&nbsp;диспетчера заявка не&nbsp;уходит. <span data-num="falseAlarms">1</span> ложная тревога.</p>
-      </section>
-
       <!-- 6. Авария -->
       <section class="slide s-alarm" data-title="Авария" data-section="Авария">
         <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Авария</span></div>
@@ -136,8 +142,8 @@
         <div class="act-main" data-a>
           <div class="act-pair">
             <div class="act-col pop">
-              <div class="big-wrap big-wrap-md"><span class="big">1–1,5 мин</span></div>
-              <p class="cap">вручную · ориентир, не замер</p>
+              <div class="big-wrap big-wrap-md"><span class="big">≈ 1,5 мин</span></div>
+              <p class="cap">вручную, среднее · ориентир, не замер</p>
             </div>
             <span class="act-arrow">→</span>
             <div class="act-col pop">
@@ -154,17 +160,17 @@
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Экономия времени диспетчера</h2></div></div>
         <div class="save-main" data-a>
           <div class="big-wrap big-wrap-md">
-            <span class="big">18–28 ч</span>
+            <span class="big">≈ 28 ч</span>
           </div>
           <p class="cap">часов в месяц при 50 заявках в день</p>
         </div>
         <div class="save-table" data-a>
           <div class="st-row st-head"><span></span><span>30 заявок в день</span><span>50 заявок в день</span><span>100 заявок в день</span></div>
-          <div class="st-row"><span class="st-label">часов в месяц</span><span>11–17 ч</span><span>18–28 ч</span><span>37–55 ч</span></div>
-          <div class="st-row"><span class="st-label">смен в месяц</span><span>1–2</span><span>2–3</span><span>5–7</span></div>
+          <div class="st-row"><span class="st-label">часов в месяц</span><span>≈ 17 ч</span><span>≈ 28 ч</span><span>≈ 55 ч</span></div>
+          <div class="st-row"><span class="st-label">смен в месяц</span><span>≈ 2</span><span>≈ 3</span><span>≈ 7</span></div>
         </div>
-        <p class="formula" data-a>(разбор вручную − разбор с ИИ: 1–1,5 мин) × заявок в день × 22 / 3600; смена 8 ч</p>
-        <p class="caveat" data-a>только этап разбора, ориентир из открытых источников, не замер; реальная нагрузка заказчика неизвестна</p>
+        <p class="formula" data-a>(≈ 1,5 мин вручную − ≈ 0 с ИИ) × заявок в день × 22 / 3600; смена 8 ч</p>
+        <p class="caveat" data-a>среднее время разбора вручную ≈ 1,5 мин — ориентир из открытых источников, не замер; реальная нагрузка заказчика неизвестна</p>
       </section>
 
       <!-- 10. Команда и внедрение -->
@@ -174,28 +180,11 @@
         <div class="team-photo" data-a><span class="photo-note">место для фото команды · media/team.jpg</span></div>
         <div class="team-col" data-a>
           <div class="person from-right"><b>Денис</b><span>капитан и продукт</span></div>
-          <div class="person from-right"><b>Данкония</b><span>архитектор</span></div>
-          <div class="person from-right"><b>Семён</b><span>код и тесты</span></div>
         </div>
         <div class="stages-col" data-a>
           <div class="stg from-right"><b>Пилот на одной линии</b><span>4 недели</span></div>
           <div class="stg from-right"><b>Расширение</b><span>2–3 месяца</span></div>
           <div class="stg from-right"><b>Эксплуатация в контуре заказчика</b><span></span></div>
-        </div>
-        <p class="limits" data-a>данные синтетические · одна облачная модель · речь не подключена · набор маленький — перемерим в пилоте</p>
-      </section>
-
-      <!-- 11. Смотрим вживую -->
-      <section class="slide s-bridge" data-title="Смотрим вживую" data-section="Демо">
-        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Демо</span></div>
-        <div class="bridge">
-          <div class="mask"><h2 class="bridge-h mask-in">Смотрим<br><span class="hand">вживую<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span><span class="dot">.</span></h2></div>
-          <p class="bridge-sub" data-a>следующее нажатие → <span data-demo-host>localhost:5173</span></p>
-        </div>
-        <p class="bridge-hint" data-a><span class="kbd">V</span> запасное видео</p>
-        <div class="video-layer" hidden>
-          <video class="demo-video" controls playsinline preload="none"></video>
-          <p class="video-missing" hidden>видео не найдено: presentation/media/demo.mp4</p>
         </div>
       </section>
 
