@@ -393,6 +393,8 @@ const SHOW = {
     try { opened = window.open(SHOW.demoUrl, DEMO_WINDOW); } catch (e) { opened = null; }
     const hint = document.querySelector('.demo-hint');
     if (hint) hint.hidden = Boolean(opened);
+    // вернуть фокус презентации: браузер мог переключиться на новую вкладку
+    if (opened) setTimeout(() => window.focus(), 300);
     return Boolean(opened);
   }
 
@@ -585,13 +587,17 @@ const SHOW = {
 
   fit();
   window.addEventListener('resize', fit);
-  document.addEventListener('keydown', onKey);
+  // capture на window: клавиша доходит до нас раньше, чем её перехватит видео или элемент страницы,
+  // и preventDefault срабатывает до умолчаний браузера (F5 не перезагружает, Space не скроллит)
+  window.addEventListener('keydown', onKey, true);
+  window.addEventListener('pointerdown', () => window.focus());
   document.addEventListener('mousemove', wakeCursor);
   window.addEventListener('hashchange', () => {
     const i = slideFromHash();
     if (i !== state.i) show(i, 0, { animate: true });
   });
   wakeCursor();
+  window.focus();
 
   if (hasGsap) gsap.set(slides, { autoAlpha: 0 });
   const start = slideFromHash();
