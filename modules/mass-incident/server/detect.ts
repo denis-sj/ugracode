@@ -121,15 +121,29 @@ async function publishOpened(deps: MassDeps, incident: Incident, size: number): 
   }
 }
 
-/** Уведомление дежурным: порт — заглушка, ошибка доставки не валит шаг. */
+/** Сохраняем уведомление для колокольчика и отдельно пробуем канал доставки. */
 async function notifyDuty(deps: MassDeps, incident: Incident, size: number): Promise<void> {
   const title = 'Массовый сбой';
   const body = `Инцидент ${incident.number}: ${size} похожих обращений (${placeLabel(incident)}). Откройте инцидент и ответьте всем одной кнопкой.`;
   for (const toUserId of readDutyEngineerIds(deps.data)) {
     try {
+      await deps.db.saveNotification({
+        id: randomUUID(),
+        toUserId,
+        channel: 'inapp',
+        title,
+        body,
+        ticketId: null,
+        readAt: null,
+        createdAt: deps.ports.clock.now().toISOString(),
+      });
+    } catch (error) {
+      console.error('Не удалось сохранить уведомление о массовом сбое', error);
+    }
+    try {
       await deps.ports.notifications.send({ toUserId, channel: 'inapp', title, body });
-    } catch {
-      // доставка — не причина ронять разбор
+    } catch (error) {
+      console.error('Не удалось доставить уведомление о массовом сбое', error);
     }
   }
 }

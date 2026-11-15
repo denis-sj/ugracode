@@ -34,6 +34,10 @@ function makePorts(sent: Sent[] = []): Ports {
     },
     embeddings: { embed: async () => [] },
     speech: { transcribe: async () => ({ text: '' }) },
+    tts: {
+      available: false,
+      speak: async () => Promise.reject(new Error('tts не нужен')),
+    },
     vision: { describe: async () => ({ text: '' }) },
     cmdb: { findEquipment: async () => [], locations: async () => [] },
     history: { similar: async () => [] },
@@ -43,7 +47,6 @@ function makePorts(sent: Sent[] = []): Ports {
         return { delivered: true };
       },
     },
-    tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
     clock: { now: () => NOW },
   };
 }
@@ -240,6 +243,10 @@ describe('mass-incident: шаг mass-incident.detect', () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]?.toUserId).toBe('e-duty');
     expect(sent[0]?.body).toContain(stored[0]?.number ?? '');
+    expect(await store.listNotifications('e-duty')).toMatchObject([
+      { title: 'Массовый сбой', toUserId: 'e-duty', readAt: null, createdAt: NOW_ISO },
+    ]);
+    expect(await store.listNotifications('e-off')).toEqual([]);
   });
 
   it('четыре похожих — порог не пройден, инцидента нет', async () => {
