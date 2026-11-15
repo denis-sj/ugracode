@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import type { OverviewResult } from '../contracts';
 import type { OverviewFiltersState } from './api';
-import { formatCount, formatPercent, formatMinutes } from './format';
+import { formatCount, formatMinutes, formatPercent, openStatuses } from './format';
 import { useOverview } from './useOverview';
 
 export interface TilesWidgetProps {
@@ -12,22 +12,6 @@ export interface TilesWidgetProps {
   fetchOwn?: boolean;
   /** Открыть шторку просрочек на этом же экране. */
   onOverdue?: () => void;
-}
-
-const OPEN_STATUSES: Record<string, string> = {
-  new: 'Новые',
-  ai_draft: 'Разбор ИИ',
-  waiting_applicant: 'Ждут ответа',
-  in_review: 'На проверке',
-  assigned: 'Назначены',
-  in_progress: 'В работе',
-};
-
-/** Открытые заявки по статусам — «труба» из ячеек под числом. */
-export function openStatuses(data: OverviewResult): { key: string; label: string; count: number }[] {
-  return data.byStatus
-    .filter((slice) => OPEN_STATUSES[slice.key] !== undefined && slice.count > 0)
-    .map((slice) => ({ key: slice.key, label: OPEN_STATUSES[slice.key] ?? slice.key, count: slice.count }));
 }
 
 /**
@@ -93,10 +77,10 @@ export function TilesWidget({
         {target !== null && <span className="rd-mini__hint">цель {target}%</span>}
         {data.totals.slaBreaches > 0 ? (
           <button type="button" className="rd-link" onClick={onOverdue}>
-            {formatCount(data.totals.slaBreaches)} просрочено →
+            {formatCount(data.totals.slaBreaches)} нарушений SLA →
           </button>
         ) : (
-          <span className="rd-mini__hint">просрочек нет</span>
+          <span className="rd-mini__hint">нарушений срока нет</span>
         )}
       </article>
 

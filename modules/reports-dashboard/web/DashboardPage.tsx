@@ -138,7 +138,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
             onClick={() => setFiltersOpen((open) => !open)}
             aria-expanded={filtersOpen}
           >
-            <Icon name="reports" size={16} />
+            <Icon name="filter" size={16} />
             Фильтры
             {activeFilters > 0 && <span className="rd-chip__count">{activeFilters}</span>}
           </button>
@@ -153,7 +153,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
               aria-label="Выгрузить"
               title="Выгрузить"
             >
-              <Icon name="tasks" size={16} />
+              <Icon name="download" size={16} />
             </button>
             {exportOpen && (
               <div className="rd-menu" role="menu" aria-label="Выгрузка">
@@ -242,6 +242,7 @@ export function DashboardPage({ meta }: WebPageProps): JSX.Element {
         onClose={() => setOverdueOpen(false)}
         query={query}
         reason={data?.insights.sla ?? null}
+        slaBreaches={data?.totals.slaBreaches ?? 0}
       />
     </div>
   );

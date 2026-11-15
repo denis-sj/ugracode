@@ -12,12 +12,12 @@
 | Файл | Что там |
 |---|---|
 | `modules/history-seed/server/generator.ts` | детерминированный генератор (mulberry32, фиксированное зерно): рабочие часы 8–19, пик в понедельник, 3 аварии, 7 обращений по принтеру в каб. 312, статусы closed/resolved/cancelled + несколько открытых, 2–6 полей, обращение и событие `ticket.status.changed` |
-| `modules/history-seed/server/index.ts` | `defineModule`: `seed({db,data,clock})` пишет через `saveTicket`/`saveTicketFields`/`saveAppeal`/`appendEvent`; идемпотентно — при ≥300 заявках в базе пропускает |
+| `modules/history-seed/server/index.ts` | `defineModule`: `seed({db,data,clock})` пишет через `saveTicket`/`saveTicketFields`/`saveAppeal`/`appendEvent`; идемпотентно — при ≥300 заявках в базе пропускает; добавляет 4 демо-правки диспетчера (`ticket.field.corrected`) для журнала и метрики «ИИ без правок» |
 | `modules/reports-dashboard/contracts.ts` | zod-схемы параметров и результата отчёта О0 (общие для сервера и веба) |
-| `modules/reports-dashboard/server/overview.ts` | расчёт: период и прошлый период, плитки, разрезы, тепловая карта, горячие точки, SLA, шаблонные выводы |
-| `modules/reports-dashboard/server/index.ts` | `ReportDef` `dashboard.overview`, `facts()` и маршрут `GET /api/m/reports-dashboard/overview` (право `reports`) |
-| `modules/reports-dashboard/web/` | страница `/dashboard` (manager/admin), виджеты `dashboard.tiles` и `dashboard.main` на компонентах `@ugra/ui`, клиент маршрута и форматирование ▲/▼ |
-| `modules/reports-dashboard/web/dashboard.css` | стили экрана: только токены `@ugra/ui` (стеклянные карточки, hero, сетки, полоски приоритетов, тепловая карта) |
+| `modules/reports-dashboard/server/overview.ts` | расчёт: период и прошлый период, разрезы, `byPriority.daily` (мини-столбцы), `previousByPriority` (строка «+N к прошлому»), `aiEffect` (доля заявок без правок диспетчера), `slaTargetPercent` из настроек, тепловая карта, горячие точки, шаблонные выводы; `computeOverdue` — просроченные открытые заявки |
+| `modules/reports-dashboard/server/index.ts` | `ReportDef` `dashboard.overview`, `facts()` и маршруты `GET /api/m/reports-dashboard/overview` и `GET /api/m/reports-dashboard/overdue` (право `reports`) |
+| `modules/reports-dashboard/web/` | страница `/dashboard` (manager/admin) по макету D2: `PriorityCards` (5 карточек), `TilesWidget` (3 плитки), `OverdueDrawer` (шторка просрочек), клиент маршрутов и форматирование ▲/▼ |
+| `modules/reports-dashboard/web/dashboard.css` | стили экрана: только токены `@ugra/ui` (стеклянные карточки, оттенок приоритета, мини-столбцы, плитки, шторка) |
 | `modules/reports-dashboard/web/options.ts` | селекты фильтров из `/api/meta` и разреза ответа, стабильный список исполнителей, выключенные пункты выгрузки |
 | `modules/history-seed/tests/`, `modules/reports-dashboard/tests/` | генератор, идемпотентность сида, расчёт отчёта, форматирование/дельты, фильтры и выгрузка, тест-контракт обоих модулей |
 
@@ -147,3 +147,18 @@ npx vite build --config apps/web/vite.config.ts
 - Категории и корпуса фильтров берутся из `/api/meta`, но если менеджер не получил meta, в список
   попадают значения из ответа отчёта. Исполнители приходят только из `byAssignee`: отдельного
   справочника исполнителей в `/api/meta` нет.
+
+## Дашборд D2 (2026-11-14)
+
+Экран руководителя приведён к утверждённому макету `13-dash4-D2`: пять стеклянных карточек
+приоритетов (число, «+N к прошлому», доля, мини-столбцы по дням, мягкий оттенок приоритета)
+и три плитки — «Сейчас в работе» (труба по открытым статусам), «Закрыто в срок» (полоса с целевой
+отметкой и ссылкой на шторку), «ИИ оформил без правок» (доля и «диспетчер правит 1 из N»).
+Клик по нарушениям SLA открывает **правую шторку на самом дашборде** (`OverdueDrawer`):
+причина из `insights.sla`, группы по исполнителям, список открытых просрочек и копирование списка.
+
+Данные, которых не хватало, добавлены контрактом и сервером (обратно совместимо):
+`byPriority[].daily`, `previousByPriority`, `aiEffect`, `slaTargetPercent`, маршрут `/overdue`.
+Цель SLA 90 % — из `data/settings.json` (допущение, отмечено в `docs/knowledge/limitations.md`).
+Удалены: абзац-пояснение, dev-подпись про агента `analyst`, тепловая карта и горячие точки
+с дашборда (живут в отчётах), старые пять плиток метрик и виджет `dashboard.main`.

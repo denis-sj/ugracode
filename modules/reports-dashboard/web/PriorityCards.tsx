@@ -33,12 +33,14 @@ function deltaText(count: number, previousCount: number | undefined): string {
 export function PriorityCards({ slices, previous, periodDays }: PriorityCardsProps): JSX.Element {
   const total = slices.reduce((sum, slice) => sum + slice.count, 0);
   const previousById = new Map(previous.map((slice) => [slice.key, slice.count]));
-  const maxDaily = Math.max(1, ...slices.flatMap((slice) => slice.daily));
+
 
   return (
     <section className="rd-prio" aria-label="Обращения по приоритетам">
       {slices.map((slice) => {
         const share = total === 0 ? 0 : Math.round((slice.count / total) * 100);
+        // Масштаб столбцов — внутри карточки: иначе редкий приоритет выглядит пустым.
+        const maxDaily = Math.max(1, ...slice.daily);
         const delta = deltaText(slice.count, previousById.get(slice.key));
         return (
           <article

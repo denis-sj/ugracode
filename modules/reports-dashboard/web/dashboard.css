@@ -387,6 +387,7 @@
 
 .rd-pipe > i {
   flex: 1 1 0;
+  max-width: 16px;
   border-radius: 3px;
   background: var(--color-priority-medium);
 }
@@ -488,7 +489,7 @@
 .rd-drawer__backdrop {
   flex: 1 1 auto;
   border: none;
-  background: var(--color-overlay);
+  background: color-mix(in srgb, var(--color-text) 24%, transparent);
   cursor: pointer;
 }
 

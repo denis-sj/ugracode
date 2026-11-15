@@ -1,6 +1,6 @@
 /** Форматирование дашборда: чистые функции, без DOM и React. */
 
-import type { Heatmap } from '../contracts';
+import type { Heatmap, OverviewResult } from '../contracts';
 
 export type DeltaTone = 'ok' | 'warn' | 'danger' | 'muted';
 
@@ -164,4 +164,21 @@ export function heatmapIsEmpty(heatmap: Heatmap): boolean {
 export function barPercent(count: number, max: number): number {
   if (max <= 0 || count <= 0) return 0;
   return Math.max(2, Math.round((count / max) * 100));
+}
+
+/** Подписи открытых статусов для плитки «Сейчас в работе». */
+export const OPEN_STATUS_LABELS: Readonly<Record<string, string>> = {
+  new: 'Новые',
+  ai_draft: 'Разбор ИИ',
+  waiting_applicant: 'Ждут ответа',
+  in_review: 'На проверке',
+  assigned: 'Назначены',
+  in_progress: 'В работе',
+};
+
+/** Открытые заявки по статусам — «труба» из ячеек под числом. */
+export function openStatuses(data: OverviewResult): { key: string; label: string; count: number }[] {
+  return data.byStatus
+    .filter((slice) => OPEN_STATUS_LABELS[slice.key] !== undefined && slice.count > 0)
+    .map((slice) => ({ key: slice.key, label: OPEN_STATUS_LABELS[slice.key] ?? slice.key, count: slice.count }));
 }

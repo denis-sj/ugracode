@@ -11,13 +11,21 @@ export interface OverdueDrawerProps {
   query: OverviewQuery;
   /** Строка вывода ИИ про SLA из уже загруженного отчёта — без нового вызова модели. */
   reason: string | null;
+  /** Всего нарушений срока за период (как на плитке) — чтобы числа не расходились. */
+  slaBreaches: number;
 }
 
 /**
  * Правая шторка дашборда «N просрочено →» (макет D2, раздел 4 плана).
  * Не уводит на очередь: руководитель остаётся на дашборде и видит причину и группы.
  */
-export function OverdueDrawer({ open, onClose, query, reason }: OverdueDrawerProps): JSX.Element | null {
+export function OverdueDrawer({
+  open,
+  onClose,
+  query,
+  reason,
+  slaBreaches,
+}: OverdueDrawerProps): JSX.Element | null {
   const [data, setData] = useState<OverdueResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,8 +77,9 @@ export function OverdueDrawer({ open, onClose, query, reason }: OverdueDrawerPro
       <aside className="rd-drawer" role="dialog" aria-modal="true" aria-label="Просроченные заявки">
         <header className="rd-drawer__head">
           <div>
-            <span className="rd-cap">Просрочено</span>
+            <span className="rd-cap">Просрочено сейчас</span>
             <h2 className="rd-drawer__title">{data ? formatCount(data.total) : '…'}</h2>
+            <span className="rd-drawer__hint">Всего нарушений срока за период: {formatCount(slaBreaches)}</span>
           </div>
           <button type="button" className="rd-drawer__close" aria-label="Закрыть" onClick={onClose}>
             ×

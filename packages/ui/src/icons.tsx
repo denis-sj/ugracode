@@ -24,7 +24,9 @@ export type IconName =
   | 'kb'
   | 'moon'
   | 'sun'
-  | 'bell';
+  | 'bell'
+  | 'filter'
+  | 'download';
 
 /** Заливка двухтонового слоя: тот же контур, только заполненный. */
 const DU = 'ugra-icon__du';
@@ -144,6 +146,18 @@ const ICONS: Record<IconName, JSX.Element> = {
     <>
       <path className={DU} d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" />
       <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM9.8 21a2.4 2.4 0 0 0 4.4 0" />
+    </>
+  ),
+  filter: (
+    <>
+      <path className={DU} d="M4 5.5h16l-6.2 7.4v6.1l-3.6-2V12.9z" />
+      <path d="M4 5.5h16l-6.2 7.4v6.1l-3.6-2V12.9z" />
+    </>
+  ),
+  download: (
+    <>
+      <path className={DU} d="M7 4.5h10v9.5H7z" />
+      <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
     </>
   ),
 };

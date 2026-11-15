@@ -559,7 +559,8 @@ async function titleOf(ticket: Ticket, db: KernelStore): Promise<string> {
     return found && found.value !== null ? String(found.value) : null;
   };
   const text = value('symptoms') ?? value('object') ?? value('category') ?? 'Обращение';
-  return text.length > 80 ? `${text.slice(0, 79)}…` : text;
+  const sentence = text.charAt(0).toLocaleUpperCase('ru') + text.slice(1);
+  return sentence.length > 80 ? `${sentence.slice(0, 79)}…` : sentence;
 }
 
 /** Просроченные заявки периода — список и группы по исполнителям для шторки дашборда. */
