@@ -839,6 +839,11 @@ export interface PgStoreHandle {
 /** Создаёт хранилище на пуле соединений. `close()` закрывает пул. */
 export function createPgStore(connectionString = process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL): PgStoreHandle {
   const pool = new Pool({ connectionString });
+  // Обрыв простаивающего соединения (сеть, перезапуск БД) не должен ронять весь API:
+  // pg-pool эмитит 'error' на пуле, а без обработчика Node завершает процесс.
+  pool.on('error', (error) => {
+    console.warn(`Соединение с БД оборвалось: ${error.message}`);
+  });
   const db = drizzle(pool, { schema });
   return {
     store: new PgStore(db),

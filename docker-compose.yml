@@ -33,6 +33,11 @@ services:
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-}
       EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-}
       SPEECH_MODEL: ${SPEECH_MODEL:-ai-sage/gigaam-v3}
+      # Постоянный HTTPS-адрес веба для QR (важнее адреса туннеля).
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-}
+    volumes:
+      # `pnpm demo:tunnel` пишет адрес на хосте — API читает его внутри контейнера.
+      - ./.demo:/app/.demo:ro
     depends_on:
       db:
         condition: service_healthy

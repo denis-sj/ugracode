@@ -31,6 +31,7 @@ import {
   TransitionInput,
   UpdateFieldInput,
   UpdateSettingInput,
+  type Actor,
   type Appeal,
   type AppealMessage,
   type DictionaryItem,
@@ -53,6 +54,7 @@ import {
   missingFields,
   resolveEnabledModules,
   subscribeModules,
+  type AppealIntake,
   type KernelStore,
   type ModuleDeps,
   type Ports,
@@ -79,6 +81,7 @@ interface RouteContext {
   body: unknown;
   params: Record<string, string>;
   query: Record<string, unknown>;
+  headers: Record<string, string>;
   user: User | null;
   setCookie(value: string): void;
 }
@@ -99,6 +102,7 @@ export interface AppContext {
   engine: PipelineEngine;
   bus: KernelEventBus;
   hub: ProgressHub;
+  appeals: AppealIntake;
   modules: ServerModule[];
 }
 
@@ -113,6 +117,55 @@ function asRecord(value: unknown): Record<string, unknown> {
 function effectiveAiMode(env: Record<string, string | undefined>): 'stub' | 'cloud' {
   if (env.AI_MODE === 'stub') return 'stub';
   return env.POLZA_API_KEY ? 'cloud' : 'stub';
+}
+
+/** Заголовки Fastify → строки: повторяющиеся склеиваются через запятую, как в HTTP. */
+export function plainHeaders(headers: Record<string, string | string[] | undefined>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (value === undefined) continue;
+    result[name.toLowerCase()] = Array.isArray(value) ? value.join(', ') : value;
+  }
+  return result;
+}
+
+interface IntakeDeps {
+  store: KernelStore;
+  bus: KernelEventBus;
+  tickets: TicketService;
+  engine: PipelineEngine;
+}
+
+/**
+ * Приём обращения — общий путь для `POST /api/appeals` и модулей (`ModuleDeps.appeals`):
+ * обращение → `appeal.created` → черновик заявки → пайплайн → итог в заявку.
+ */
+export function createAppealIntake(deps: IntakeDeps): AppealIntake {
+  const analyze = async (appeal: Appeal, ticketId: string): Promise<string> => {
+    const run = await deps.engine.run(appeal, { ticketId, actor: { kind: 'ai' } });
+    await deps.tickets.applyAnalysis(ticketId, run.draft);
+    return run.runId;
+  };
+  return {
+    async submit(appeal, options = {}) {
+      const actor: Actor = options.actor ?? { kind: 'system' };
+      await deps.store.saveAppeal(appeal);
+      await deps.bus.publish({
+        type: 'appeal.created',
+        actor,
+        payload: { appealId: appeal.id, channel: appeal.channel },
+      });
+      const ticket = await deps.tickets.createDraft(appeal);
+      await deps.tickets.transition(ticket.id, 'ai_draft', { kind: 'system' });
+      const base = { appealId: appeal.id, ticketId: ticket.id, ticketNumber: ticket.number };
+      if (options.wait === false) {
+        // Ошибка фонового разбора видна в журнале шагов пайплайна; заявка уже у диспетчера.
+        void analyze(appeal, ticket.id).catch(() => undefined);
+        return { ...base, runId: null };
+      }
+      return { ...base, runId: await analyze(appeal, ticket.id) };
+    },
+  };
 }
 
 function httpError(message: string, statusCode: number): Error {
@@ -287,7 +340,9 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
   });
 
   const app = Fastify({ logger: options.logger ?? false, bodyLimit: 25 * 1024 * 1024 });
-  const ctx: AppContext = { app, store: options.store, tickets, engine, bus, hub, modules: enabled };
+  const appeals = createAppealIntake({ store: options.store, bus, tickets, engine });
+  deps.appeals = appeals;
+  const ctx: AppContext = { app, store: options.store, tickets, engine, bus, hub, appeals, modules: enabled };
 
   const addRoute = (def: RouteDef): void => {
     app.route({
@@ -313,6 +368,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
           body,
           params: asRecord(request.params) as Record<string, string>,
           query: asRecord(request.query),
+          headers: plainHeaders(request.headers),
           user,
           setCookie: (value: string) => reply.header('set-cookie', value),
         });
@@ -343,6 +399,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
               body: routeCtx.body,
               params: routeCtx.params,
               query: routeCtx.query as Record<string, string>,
+              headers: routeCtx.headers,
               user: routeCtx.user as User,
               deps,
             }),
@@ -534,17 +591,8 @@ function registerCoreRoutes(
         attachments: input.attachments,
         createdAt: new Date().toISOString(),
       };
-      await store.saveAppeal(appeal);
-      await ctx.bus.publish({
-        type: 'appeal.created',
-        actor: { kind: 'user', id: user.id },
-        payload: { appealId: appeal.id, channel: appeal.channel },
-      });
-      const ticket = await tickets.createDraft(appeal);
-      await tickets.transition(ticket.id, 'ai_draft', { kind: 'system' });
-      const run = await engine.run(appeal, { ticketId: ticket.id, actor: { kind: 'ai' } });
-      await tickets.applyAnalysis(ticket.id, run.draft);
-      return { appealId: appeal.id, ticketId: ticket.id, runId: run.runId };
+      const result = await ctx.appeals.submit(appeal, { actor: { kind: 'user', id: user.id } });
+      return { appealId: result.appealId, ticketId: result.ticketId, runId: result.runId ?? '' };
     },
   });
 

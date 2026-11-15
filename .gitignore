@@ -12,3 +12,5 @@ __pycache__/
 
 .claude/
 generated_images/
+.demo/*
+!.demo/.gitkeep

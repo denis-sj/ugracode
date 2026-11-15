@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 import type {
+  Actor,
+  Appeal,
   DomainEvent,
   EventDef,
   FieldDef,
@@ -15,7 +17,35 @@ import type { Ports } from './ports';
 import type { TicketService } from './tickets';
 import type { AgentProfile, ToolDef } from './agent';
 
+/** Итог приёма обращения: заявка создана, разбор запущен (`runId: null` — идёт в фоне). */
+export interface AppealSubmitResult {
+  appealId: string;
+  ticketId: string;
+  ticketNumber: string;
+  runId: string | null;
+}
+
+export interface AppealSubmitOptions {
+  /** Кто подал обращение; по умолчанию — система. */
+  actor?: Actor;
+  /**
+   * `true` (по умолчанию) — дождаться разбора, как `POST /api/appeals`.
+   * `false` — вернуть заявку сразу после черновика, разбор идёт в фоне (звонок не ждёт 20 с).
+   */
+  wait?: boolean;
+}
+
+/**
+ * Приём обращения из модуля: тот же путь, что `POST /api/appeals` — сохранить обращение,
+ * событие `appeal.created`, черновик заявки, пайплайн разбора, перенос итога в заявку.
+ */
+export interface AppealIntake {
+  submit(appeal: Appeal, options?: AppealSubmitOptions): Promise<AppealSubmitResult>;
+}
+
 export interface ModuleDeps {
+  /** Приём обращений из модуля (звонок, почта). Даёт сервер приложения; в тестах модулей может отсутствовать. */
+  appeals?: AppealIntake;
   bus: { publish(event: Omit<DomainEvent, 'id' | 'at'> & { id?: string; at?: string }): Promise<void> };
   ports: Ports;
   data: ReferenceData;
@@ -52,6 +82,8 @@ export type ModuleHandler = (ctx: {
   body: unknown;
   params: Record<string, string>;
   query: Record<string, string>;
+  /** Заголовки запроса в нижнем регистре (например, `x-forwarded-for` для лимита частоты). Сервер передаёт всегда. */
+  headers?: Readonly<Record<string, string>>;
   user: User;
   deps: ModuleDeps;
 }) => Promise<unknown> | unknown;

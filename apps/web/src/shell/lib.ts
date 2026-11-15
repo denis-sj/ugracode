@@ -6,6 +6,7 @@ export type TabCounter = 'queue' | 'incidents' | 'tasks';
 export type TabIconName =
   | 'queue'
   | 'incidents'
+  | 'phone'
   | 'journal'
   | 'executors'
   | 'chat'
@@ -35,6 +36,7 @@ const TABS: Record<Role, readonly ShellTab[]> = {
   dispatcher: [
     { path: '/queue', label: 'Очередь', icon: 'queue', counter: 'queue' },
     { path: '/incidents', label: 'Аварии', icon: 'incidents', counter: 'incidents', danger: true },
+    { path: '/calls', label: 'Звонок', icon: 'phone' },
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
     { path: '/measure', label: 'С ИИ / без ИИ', icon: 'reports' },
@@ -51,6 +53,7 @@ const TABS: Record<Role, readonly ShellTab[]> = {
   admin: [
     { path: '/queue', label: 'Очередь', icon: 'queue', counter: 'queue' },
     { path: '/incidents', label: 'Аварии', icon: 'incidents', counter: 'incidents', danger: true },
+    { path: '/calls', label: 'Звонок', icon: 'phone' },
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
     { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },

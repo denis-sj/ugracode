@@ -295,6 +295,13 @@
       "role": "applicant",
       "departmentId": null,
       "position": "Гость (без профиля)"
+    },
+    {
+      "id": "u-call-guest",
+      "fullName": "Звонок ИИ-оператору",
+      "role": "applicant",
+      "departmentId": null,
+      "position": "Заявитель по звонку"
     }
   ]
 }

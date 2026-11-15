@@ -58,6 +58,10 @@ class CheckerTest(unittest.TestCase):
         self.write("docs/other.md", "see `docs/missing.md`")
         self.assertEqual(cdl.check(self.root), [])
 
+    def test_build_artifact_paths_ignored(self):
+        self.write("docs/map/README.md", "сборка в `apps/web/dist`, кэш в `coverage/`")
+        self.assertEqual(cdl.check(self.root), [])
+
     def test_main_returns_nonzero_on_problems(self):
         self.write("AGENTS.md", "[x](docs/nope.md)")
         self.assertEqual(cdl.main(["prog", str(self.root)]), 1)
