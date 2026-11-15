@@ -140,15 +140,28 @@ function readField(
 
 const MAX_TITLE = 90;
 
+/** Первая мысль текста заявителя — до запятой: заголовок не должен дублировать цитату целиком. */
+function headlineFromText(text: string): string {
+  const oneLine = text.replace(/\s+/g, ' ').trim();
+  const head = (oneLine.split(/[,;:.!?—–]/)[0] ?? '').trim();
+  return head.length >= 12 ? head : oneLine;
+}
+
 /**
- * Заголовок карточки: «что случилось» словами заявителя, затем объект, затем категория.
+ * Заголовок карточки: «что случилось» словами заявителя, затем объект, затем категория,
+ * затем — первая мысль обращения. Заголовок всегда человеческий, кода в нём нет.
  * `categoryLabel` уже должна быть русской подписью из справочника (null — подписи нет).
  */
 export function incidentTitle(
   fields: readonly Pick<TicketField, 'fieldKey' | 'value'>[] | null | undefined,
   categoryLabel: string | null,
+  text: string | null = null,
 ): string {
-  const raw = readField(fields, 'symptoms') ?? readField(fields, 'object') ?? categoryLabel;
+  const raw =
+    readField(fields, 'symptoms') ??
+    readField(fields, 'object') ??
+    categoryLabel ??
+    (text === null || text.trim() === '' ? null : headlineFromText(text));
   if (raw === null || raw.trim() === '') return 'Обращение';
   const oneLine = raw.replace(/\s+/g, ' ').trim();
   const capitalized = oneLine.charAt(0).toUpperCase() + oneLine.slice(1);

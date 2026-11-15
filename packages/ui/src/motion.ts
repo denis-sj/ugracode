@@ -271,6 +271,51 @@ export function springIn(panel: HTMLElement | null | undefined, backdrop?: HTMLE
   );
 }
 
+/**
+ * Стикер «прилипает» к стене: прилетает справа, слегка шлёпается и затухающе покачивается,
+ * как бумажка на скотче. Только transform и opacity, композицию не сдвигает.
+ * При `prefers-reduced-motion` элемент просто появляется в конечном положении.
+ */
+export function stickerSlap(target: HTMLElement | null | undefined, settle = 0.6): void {
+  if (!target) return;
+  const finish = (): void => {
+    target.style.opacity = '';
+    target.style.transform = '';
+  };
+  if (prefersReducedMotion()) {
+    finish();
+    return;
+  }
+  gsap.killTweensOf(target);
+  const tween = gsap.fromTo(
+    target,
+    { opacity: 0, x: 56, scale: 0.94, rotate: settle + 6 },
+    {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      rotate: settle,
+      duration: 0.55,
+      ease: 'back.out(1.5)',
+      onComplete: () => {
+        gsap.to(target, {
+          rotate: settle - 1.2,
+          duration: 0.14,
+          yoyo: true,
+          repeat: 1,
+          ease: 'sine.inOut',
+          onComplete: finish,
+        });
+      },
+    },
+  );
+  // Страховка: если кадры стоят (фоновая вкладка), стикер не должен остаться невидимым.
+  window.setTimeout(() => {
+    tween.kill();
+    finish();
+  }, 900);
+}
+
 /** Конфетти из центра элемента: «заявка назначена». Цвета — из палитры интерфейса. */
 export function celebrate(origin?: HTMLElement | null): void {
   if (prefersReducedMotion()) return;

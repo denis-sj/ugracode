@@ -82,6 +82,78 @@ export function queueSize(groups: QueueGroups): number {
   );
 }
 
+/**
+ * Раскладка очереди по доске: три колонки с решением и одна свёрнутая полоса.
+ * Авария показывается только в колонке «Аварии» — даже если она ещё на проверке
+ * или ждёт заявителя, чтобы не дублировать карточку на экране.
+ */
+export interface QueueBoard {
+  /** Все активные аварии — красная тема экрана. */
+  emergencies: Ticket[];
+  /** ИИ сомневается в полях: нужно решение диспетчера. */
+  decision: Ticket[];
+  /** ИИ уверен, исполнитель предложен: можно подтверждать. */
+  ready: Ticket[];
+  /** Уже у инженера. */
+  withEngineer: Ticket[];
+  /** Ждут ответа заявителя. */
+  waitingApplicant: Ticket[];
+  /** Новые заявки, которые ИИ ещё разбирает. */
+  drafting: Ticket[];
+}
+
+export function emptyBoard(): QueueBoard {
+  return {
+    emergencies: [],
+    decision: [],
+    ready: [],
+    withEngineer: [],
+    waitingApplicant: [],
+    drafting: [],
+  };
+}
+
+/** Раскладывает уже отфильтрованную и отсортированную очередь по колонкам доски. */
+export function boardTickets(
+  tickets: readonly Ticket[],
+  signalsOf: Record<string, QueueSignals>,
+): QueueBoard {
+  const board = emptyBoard();
+  for (const ticket of tickets) {
+    if (ticket.isEmergency) {
+      board.emergencies.push(ticket);
+      continue;
+    }
+    if (ticket.status === 'in_review') {
+      const target = isReadyTicket(ticket, signalsOf[ticket.id]) ? board.ready : board.decision;
+      target.push(ticket);
+      continue;
+    }
+    if (ticket.status === 'assigned' || ticket.status === 'in_progress') {
+      board.withEngineer.push(ticket);
+      continue;
+    }
+    if (ticket.status === 'waiting_applicant') {
+      board.waitingApplicant.push(ticket);
+      continue;
+    }
+    if (DRAFTING_STATUSES.has(ticket.status)) board.drafting.push(ticket);
+  }
+  return board;
+}
+
+/** Сколько всего заявок на доске — для пустого состояния экрана. */
+export function boardSize(board: QueueBoard): number {
+  return (
+    board.emergencies.length +
+    board.decision.length +
+    board.ready.length +
+    board.withEngineer.length +
+    board.waitingApplicant.length +
+    board.drafting.length
+  );
+}
+
 /** Первая активная авария для закреплённой полосы; порядок берём из уже отсортированной очереди. */
 export function featuredEmergency(tickets: readonly Ticket[]): Ticket | null {
   return tickets.find((ticket) => ticket.isEmergency && ACTIVE_EMERGENCY_STATUSES.has(ticket.status)) ?? null;

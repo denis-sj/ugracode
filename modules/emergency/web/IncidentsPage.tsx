@@ -15,12 +15,10 @@ import {
   Button,
   Card,
   EmptyState,
-  Icon,
-  PersonAvatar,
-  Timer,
   Timeline,
   Toast,
   formatDateTime,
+  formatTicketNumber,
   formatTicketStatus,
   pulse,
   ticketStatusTone,
@@ -49,6 +47,7 @@ import { IncidentHero } from './IncidentHero';
 import { IncidentList } from './IncidentList';
 import { IncidentMiniList } from './IncidentMiniList';
 import { MassBlock } from './MassBlock';
+import { RegulationBlock } from './RegulationBlock';
 import {
   assignmentState,
   isServiceEvent,
@@ -127,6 +126,8 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   const [checks, setChecks] = useState<readonly (number | null)[]>([]);
   const [candidates, setCandidates] = useState<readonly AssigneeCandidate[]>(EMPTY_CANDIDATES);
   const [assigning, setAssigning] = useState(false);
+  /** Разбор висит дольше восьми секунд — «Загружаем регламент…» не держим вечно. */
+  const [analysisSlow, setAnalysisSlow] = useState(false);
 
   /* Массовость: список и карточка инцидента — с сервера, без локальной имитации. */
   const [incidents, setIncidents] = useState<readonly IncidentCard[]>(EMPTY_INCIDENTS);
@@ -136,7 +137,6 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   const [incidentDetail, setIncidentDetail] = useState<IncidentDetailView | null>(null);
   const [incidentError, setIncidentError] = useState<string | null>(null);
   const [declaring, setDeclaring] = useState(false);
-  const [massOpen, setMassOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: ToastTone } | null>(null);
 
   const rowsRef = useRef<HTMLDivElement | null>(null);
@@ -446,8 +446,13 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
   const massTotal = mass.total;
 
   useEffect(() => {
-    setMassOpen(mass.thresholdMet || incidentDetail !== null);
-  }, [selectedId, mass.thresholdMet, incidentDetail]);
+    if (!analysisLoading) {
+      setAnalysisSlow(false);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setAnalysisSlow(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [analysisLoading, selectedId]);
 
   const userName = useCallback(
     (id: string | null): string | null =>
@@ -609,6 +614,19 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
           : `${previous.open} не закрыты`
         : 'все закрыты';
 
+  const regulationLoading = analysisLoading && !analysisSlow;
+  const checksDone = checks.filter((value) => value !== null && value !== undefined).length;
+  const regulationSummary =
+    checklist.length > 0
+      ? `${checksDone} из ${checklist.length} ${plural(checklist.length, 'шаг', 'шага', 'шагов')}`
+      : regulationLoading
+        ? 'загружаем…'
+        : 'шагов нет';
+  const massSummary =
+    massTotal === 0
+      ? 'похожих нет'
+      : `${massTotal} ${plural(massTotal, 'похожее', 'похожих', 'похожих')} · порог ${MASS_THRESHOLD}`;
+
   return (
     <div className="er-page">
       <h1 className="ugra-sr-only">Аварии</h1>
@@ -652,12 +670,12 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
 
       {tickets.length > 0 && (
         <div className="er-layout">
-          <Card className="er-list" padded={false} as="section">
+          <Card className="er-list" padded={false} as="aside">
             <div className="er-list__head">
               <h2 className="er-list__title">Аварийные заявки</h2>
               <span className="er-list__count">{tickets.length}</span>
             </div>
-            <div ref={rowsRef}>
+            <div className="er-list__scroll" ref={rowsRef}>
               <IncidentList
                 tickets={tickets}
                 places={places}
@@ -678,185 +696,138 @@ export function IncidentsPage({ meta, api, user, trackAction }: WebPageProps): J
                 <p className="ugra-muted">Выберите аварийную заявку слева.</p>
               </Card>
             ) : (
-              <IncidentHero
-                ticket={selectedTicket}
-                detail={detail}
-                detailError={detailError}
-                verdict={verdict}
-                analysisLoading={analysisLoading}
-                analysisMissing={analysisMissing}
-                categoryLabel={categoryLabel(meta, selectedTicket.category)}
-                place={selectedPlace}
-                checklist={checklist}
-                checks={checks}
-                onToggle={toggleCheck}
-              />
-            )}
-          </div>
+              <>
+                <IncidentHero
+                  ticket={selectedTicket}
+                  detail={detail}
+                  detailError={detailError}
+                  verdict={verdict}
+                  analysisLoading={analysisLoading}
+                  analysisMissing={analysisMissing}
+                  categoryLabel={categoryLabel(meta, selectedTicket.category)}
+                  place={selectedPlace}
+                  assignee={assignee}
+                  candidateName={candidateName}
+                  assignAllowed={assignState.allowed}
+                  assignHint={assignState.hint}
+                  assigning={assigning}
+                  onAssign={() => void assign()}
+                  normState={normState}
+                  normText={normText}
+                  slabFilled={slabFilled}
+                />
 
-          {selectedTicket !== null && (
-            <aside className="er-side">
-              <Card className="er-timer-card" padded={false}>
-                <div className="er-timer__label">С момента обращения</div>
-                <Timer from={startedAt} className="er-timer__value" />
-                <div className="er-slabs" aria-hidden="true">
-                  {[0, 1, 2, 3].map((index) => (
-                    <i key={index} className={index < slabFilled ? 'on' : undefined} />
-                  ))}
-                </div>
-                <div className="er-slabs__axis">
-                  <span>0</span>
-                  <span className={`er-slabs__norm er-slabs__norm--${normState}`}>{normText}</span>
-                </div>
-              </Card>
-
-              <Card className="er-owner" padded={false}>
-                <div className="er-owner__head">
-                  {assignee === null ? (
-                    <span className="er-owner__empty" aria-hidden="true">
-                      <Icon name="executors" size={20} />
-                    </span>
-                  ) : (
-                    <PersonAvatar name={assignee.fullName} size={40} />
-                  )}
-                  <div className="er-owner__text">
-                    <div className="er-owner__name">{assignee?.fullName ?? 'Не назначен'}</div>
-                    <div className="er-owner__hint">
-                      {assignee?.position ??
-                        (candidateName === null ? 'Исполнитель не предложен' : `Предлагаем: ${candidateName}`)}
+                <Card className="er-folds" padded={false} as="section">
+                  <details className="er-fold" key={`regulation-${selectedId}`}>
+                    <summary className="er-fold__head">
+                      <span className="er-fold__title">Регламент</span>
+                      <span className="er-fold__summary">{regulationSummary}</span>
+                      <span className="er-fold__chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="er-fold__body">
+                      <RegulationBlock
+                        checklist={checklist}
+                        checks={checks}
+                        onToggle={toggleCheck}
+                        loading={regulationLoading}
+                      />
                     </div>
-                  </div>
-                </div>
+                  </details>
 
-                {assignee === null && (
-                  <>
-                    <Button
-                      variant="primary"
-                      block
-                      loading={assigning}
-                      disabled={!assignState.allowed || topCandidate === null}
-                      onClick={() => void assign()}
-                      title={
-                        assignState.hint ??
-                        (candidateName === null
-                          ? 'Сервер не предложил исполнителя'
-                          : `Назначить: ${candidateName} (Enter)`)
-                      }
-                    >
-                      Назначить <span className="er-kbd">Enter</span>
-                    </Button>
-                    {assignState.hint !== null && <p className="er-owner__note">{assignState.hint}</p>}
-                  </>
-                )}
-              </Card>
-
-              <Card className="er-folds" padded={false}>
-                <details
-                  className="er-fold"
-                  key={`mass-${selectedId}`}
-                  open={massOpen}
-                  onToggle={(event) => setMassOpen(event.currentTarget.open)}
-                >
-                  <summary className="er-fold__head">
-                    <span className="er-fold__text">
+                  <details
+                    className={mass.thresholdMet ? 'er-fold er-fold--hot' : 'er-fold'}
+                    key={`mass-${selectedId}`}
+                  >
+                    <summary className="er-fold__head">
                       <span className="er-fold__title">Массовый сбой?</span>
-                      <span className="er-fold__summary">
-                        {massTotal} {plural(massTotal, 'похожее', 'похожих', 'похожих')} · порог{' '}
-                        {MASS_THRESHOLD}
-                      </span>
-                    </span>
-                    <span className="er-fold__chevron" aria-hidden="true" />
-                  </summary>
-                  <div className="er-fold__body">
-                    <MassBlock
-                      mass={mass}
-                      massTotal={massTotal}
-                      massWindow={massWindow}
-                      hasPlace={
-                        incidentDetail !== null ||
-                        (selectedPlace !== null && selectedPlace.building !== null)
-                      }
-                      incidentDetail={incidentDetail}
-                      incidentError={incidentError}
-                      incidentRef={incidentRef}
-                      incidents={incidents}
-                      incidentsLoading={incidentsLoading}
-                      incidentsError={incidentsError}
-                      activeIncidentId={activeIncidentId}
-                      onSelectIncident={selectIncident}
-                      rights={rights}
-                      declaring={declaring}
-                      onDeclare={() => void declareIncident()}
-                    />
-                  </div>
-                </details>
+                      <span className="er-fold__summary">{massSummary}</span>
+                      <span className="er-fold__chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="er-fold__body">
+                      <MassBlock
+                        mass={mass}
+                        massTotal={massTotal}
+                        massWindow={massWindow}
+                        hasPlace={
+                          incidentDetail !== null ||
+                          (selectedPlace !== null && selectedPlace.building !== null)
+                        }
+                        incidentDetail={incidentDetail}
+                        incidentError={incidentError}
+                        incidentRef={incidentRef}
+                        incidents={incidents}
+                        incidentsLoading={incidentsLoading}
+                        incidentsError={incidentsError}
+                        activeIncidentId={activeIncidentId}
+                        onSelectIncident={selectIncident}
+                        rights={rights}
+                        declaring={declaring}
+                        onDeclare={() => void declareIncident()}
+                      />
+                    </div>
+                  </details>
 
-                <details className="er-fold" key={`timeline-${selectedId}`}>
-                  <summary className="er-fold__head">
-                    <span className="er-fold__text">
+                  <details className="er-fold" key={`timeline-${selectedId}`}>
+                    <summary className="er-fold__head">
                       <span className="er-fold__title">Хронология</span>
                       <span className="er-fold__summary">
                         {eventsBlocked ? 'журнал недоступен' : eventsSummary}
                       </span>
-                    </span>
-                    <span className="er-fold__chevron" aria-hidden="true" />
-                  </summary>
-                  <div className="er-fold__body">
-                    {eventsBlocked ? (
-                      <p className="er-note">
-                        События заявки недоступны: маршрут вернул ошибку или нет права смотреть журнал.
-                      </p>
-                    ) : (
-                      <Timeline items={safeTimeline} empty="Событий пока нет" />
-                    )}
-                  </div>
-                </details>
+                      <span className="er-fold__chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="er-fold__body">
+                      {eventsBlocked ? (
+                        <p className="er-note">
+                          События заявки недоступны: маршрут вернул ошибку или нет права смотреть журнал.
+                        </p>
+                      ) : (
+                        <Timeline items={safeTimeline} empty="Событий пока нет" />
+                      )}
+                    </div>
+                  </details>
 
-                <details className="er-fold" key={`previous-${selectedId}`}>
-                  <summary className="er-fold__head">
-                    <span className="er-fold__text">
-                      <span className="er-fold__title">
-                        Ранее{previous.total > 0 ? ` · ${previous.total}` : ''}
-                      </span>
+                  <details className="er-fold" key={`previous-${selectedId}`}>
+                    <summary className="er-fold__head">
+                      <span className="er-fold__title">Ранее</span>
                       <span className="er-fold__summary">{previousSummary}</span>
-                    </span>
-                    <span className="er-fold__chevron" aria-hidden="true" />
-                  </summary>
-                  <div className="er-fold__body">
-                    {previous.total === 0 ? (
-                      <p className="er-note">Ранее аварий в этом корпусе не было.</p>
-                    ) : (
-                      <>
-                        {previous.lastAt !== null && (
-                          <p className="er-note">Последняя — {formatDateTime(previous.lastAt)}.</p>
-                        )}
-                        <div className="er-prev">
-                          {previous.items.map((ticket) => (
-                            <button
-                              type="button"
-                              key={ticket.id}
-                              className="er-prev__row"
-                              onClick={() => {
-                                setSelectedId(ticket.id);
-                                trackAction?.('select');
-                              }}
-                            >
-                              <span className="er-prev__num">№ {ticket.number}</span>
-                              <span className="er-prev__date">{formatDateTime(ticket.createdAt)}</span>
-                              <span className={`er-status er-status--${ticketStatusTone(ticket.status)}`}>
-                                <span className="er-status__dot" aria-hidden="true" />
-                                {formatTicketStatus(ticket.status)}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </details>
-              </Card>
-            </aside>
-          )}
+                      <span className="er-fold__chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="er-fold__body">
+                      {previous.total === 0 ? (
+                        <p className="er-note">Ранее аварий в этом корпусе не было.</p>
+                      ) : (
+                        <>
+                          {previous.lastAt !== null && (
+                            <p className="er-note">Последняя — {formatDateTime(previous.lastAt)}.</p>
+                          )}
+                          <div className="er-prev">
+                            {previous.items.map((ticket) => (
+                              <button
+                                type="button"
+                                key={ticket.id}
+                                className="er-prev__row"
+                                onClick={() => {
+                                  setSelectedId(ticket.id);
+                                  trackAction?.('select');
+                                }}
+                              >
+                                <span className="er-prev__num">{formatTicketNumber(ticket.number)}</span>
+                                <span className="er-prev__date">{formatDateTime(ticket.createdAt)}</span>
+                                <span className={`er-status er-status--${ticketStatusTone(ticket.status)}`}>
+                                  <span className="er-status__dot" aria-hidden="true" />
+                                  {formatTicketStatus(ticket.status)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </details>
+                </Card>
+              </>
+            )}
+          </div>
         </div>
       )}
 

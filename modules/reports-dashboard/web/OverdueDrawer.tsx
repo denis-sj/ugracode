@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import type { OverdueResult } from '../contracts';
 import type { OverviewQuery } from './api';
 import { fetchOverdue } from './api';
+import { formatTicketNumber } from '@ugra/ui';
 import { formatCount, formatMinutes } from './format';
 
 export interface OverdueDrawerProps {
@@ -59,7 +60,10 @@ export function OverdueDrawer({
   const copy = useCallback(async (): Promise<void> => {
     if (!data) return;
     const text = data.items
-      .map((item) => `${item.number} · ${item.title} · ${item.assigneeName ?? 'без исполнителя'} · ${formatMinutes(item.overdueMinutes)}`)
+      .map(
+        (item) =>
+          `${formatTicketNumber(item.number)} · ${item.title} · ${item.assigneeName ?? 'без исполнителя'} · ${formatMinutes(item.overdueMinutes)}`,
+      )
       .join('\n');
     try {
       await navigator.clipboard.writeText(text);
@@ -113,7 +117,7 @@ export function OverdueDrawer({
                 <li key={item.ticketId}>
                   <span className="rd-overdue__title">{item.title}</span>
                   <span className="rd-overdue__meta">
-                    № {item.number} · {item.assigneeName ?? 'без исполнителя'}
+                    {formatTicketNumber(item.number)} · {item.assigneeName ?? 'без исполнителя'}
                   </span>
                   <span className="rd-overdue__late">+{formatMinutes(item.overdueMinutes)}</span>
                 </li>

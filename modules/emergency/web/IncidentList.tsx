@@ -1,6 +1,6 @@
 import type { Ticket } from '@ugra/contracts';
 import type { JSX } from 'react';
-import { PriorityMark, formatTicketStatus, ticketStatusTone } from '@ugra/ui';
+import { PriorityMark, formatTicketNumber, formatTicketStatus, ticketStatusTone } from '@ugra/ui';
 import { incidentTimer, placeLabel, type Place } from './format';
 
 export interface IncidentListProps {
@@ -33,6 +33,7 @@ export function IncidentList({
         const place = places[ticket.id];
         const active = ticket.id === activeId;
         const timer = incidentTimer(ticket.createdAt, now);
+        const placeText = place === undefined ? '—' : placeLabel(place);
         const tone = ticketStatusTone(ticket.status);
         return (
           <button
@@ -45,7 +46,7 @@ export function IncidentList({
             <span className="er-row__top">
               <span className="er-row__num">
                 <PriorityMark priority={ticket.priority} isEmergency />
-                <span className="er-row__number">№ {ticket.number}</span>
+                <span className="er-row__number">{formatTicketNumber(ticket.number)}</span>
               </span>
             </span>
             <span className="er-row__meta">
@@ -57,7 +58,7 @@ export function IncidentList({
                 <span className="er-row__age">{timer.age}</span>
               </span>
               <span className="er-row__place">
-                {place ? placeLabel(place) : 'место не указано'}
+                {placeText === '—' ? 'место не указано' : placeText}
               </span>
             </span>
           </button>

@@ -7,7 +7,7 @@ import type {
   User,
   UsersResponse,
 } from '@ugra/contracts';
-import { formatDue } from '@ugra/ui';
+import { formatDue, formatTicketNumber, stickerSlap } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { AskCard } from './AskCard';
 import { RunTrace } from './RunTrace';
@@ -62,6 +62,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   const [analysis, setAnalysis] = useState<AnalysisView | null>(null);
 
   const threadRef = useRef<HTMLDivElement | null>(null);
+  const stickerSlotRef = useRef<HTMLDivElement | null>(null);
   const messageId = useRef(0);
   const lastText = useRef('');
   const sendingRef = useRef(false);
@@ -113,6 +114,13 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   );
   const safeIndex = clampIndex(questionIndex, questions.length);
   const question = questions[safeIndex] ?? null;
+
+  // Стикер появляется только после отправки и «прилипает» справа, не сдвигая чат.
+  const stickerId = ticket?.ticket.id ?? null;
+  useEffect(() => {
+    if (!stickerId) return;
+    stickerSlap(stickerSlotRef.current);
+  }, [stickerId]);
 
   // Карточка-вопрос может быть выше видимой части ленты — прокручиваем к её низу.
   // Два прохода: сразу после отрисовки и после раскладки шрифтов/анимации появления.
@@ -204,11 +212,7 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
     [loadAnalysis, meta.dictionaries, meta.fields, refreshTicket, trackAction],
   );
 
-  const {
-    progress: runProgress,
-    running: runRunning,
-    start: startRun,
-  } = useRunStream({
+  const { progress: runProgress, start: startRun } = useRunStream({
     stepDelayMs: 20,
     onFinished: (failed) => {
       void completeRun(failed);
@@ -326,10 +330,10 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
       ? users.find((candidate) => candidate.id === ticket.ticket.assigneeId)
       : undefined;
     const text = assignee
-      ? `Готово: заявка **№ ${ticket.ticket.number}** назначена. Инженер **${assignee.fullName}** придёт ${formatDue(
+      ? `Готово: заявка **${formatTicketNumber(ticket.ticket.number)}** назначена. Инженер **${assignee.fullName}** придёт ${formatDue(
           ticket.ticket.slaDueAt,
         )}.`
-      : `Готово: заявка **№ ${ticket.ticket.number}** собрана и ушла диспетчеру. Он проверит детали и назначит инженера.`;
+      : `Готово: заявка **${formatTicketNumber(ticket.ticket.number)}** собрана и ушла диспетчеру. Он проверит детали и назначит инженера.`;
     setMessages((previous) => [...previous, { id: nextMessageId(), from: 'ai', text }]);
   }, [busy, finalShown, questions.length, started, ticket, users]);
 
@@ -342,20 +346,10 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
   };
 
   const composerRows = started ? 1 : 3;
-  const currentStepId =
-    runProgress.current === null
-      ? null
-      : ([...runProgress.steps].reverse().find((step) => step.status !== 'completed')?.stepId ?? null);
 
   return (
     <div
-      className={
-        started
-          ? ticket
-            ? 'chat-page chat-page--with-ticket'
-            : 'chat-page'
-          : 'chat-page chat-page--start'
-      }
+      className={started ? 'chat-page chat-page--talk' : 'chat-page chat-page--start'}
     >
       <div className="chat-page__grid" aria-hidden="true" />
       <div className="chat-main">
@@ -382,29 +376,6 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
                 )}
               </div>
             ),
-          )}
-
-          {runRunning && runProgress.steps.length > 0 && (
-            <ol className="chat-steps" aria-hidden="true">
-              {runProgress.steps.map((step) => (
-                <li
-                  key={step.stepId}
-                  className={
-                    step.status === 'completed'
-                      ? 'chat-steps__item chat-steps__item--done'
-                      : step.stepId === currentStepId
-                        ? 'chat-steps__item chat-steps__item--current'
-                        : 'chat-steps__item'
-                  }
-                >
-                  <span className="chat-steps__mark">{step.status === 'completed' ? '✓' : '·'}</span>
-                  <span className="chat-steps__label">{step.label}</span>
-                  {step.message && step.message !== step.label && step.status !== 'completed' && (
-                    <span className="chat-steps__message">{step.message}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
           )}
 
           {(busy || runProgress.finished || runProgress.trace.length > 0) && (
@@ -443,6 +414,19 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
 
           <div className="chat-thread__end" />
         </div>
+
+        {started && ticket && (
+          <div className="chat-sticker-slot" ref={stickerSlotRef} data-motion="off">
+            <TicketSticker
+              className="chat-sticker--float"
+              detail={ticket}
+              meta={meta}
+              users={users}
+              answers={answers}
+              analysis={analysis}
+            />
+          </div>
+        )}
 
         <div className="chat-composer-wrap">
           <form
@@ -579,17 +563,6 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           )}
         </div>
       </div>
-
-      {ticket && (
-        <TicketSticker
-          className="chat-sticker--inline"
-          detail={ticket}
-          meta={meta}
-          users={users}
-          answers={answers}
-          analysis={analysis}
-        />
-      )}
     </div>
   );
 }

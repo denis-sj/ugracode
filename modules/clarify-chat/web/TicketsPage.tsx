@@ -13,6 +13,7 @@ import {
   TICKET_STAGES,
   formatDayMonth,
   formatDue,
+  formatTicketNumber,
   formatTicketStatus,
   groupHistory,
   ticketStage,
@@ -187,7 +188,7 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
         <article className="tickets-confirm">
           <div className="tickets-confirm__top">
             <span className="tickets-meta">
-              № {awaiting.ticket.number} · {formatDayMonth(awaiting.ticket.createdAt)}
+              {formatTicketNumber(awaiting.ticket.number)} · {formatDayMonth(awaiting.ticket.createdAt)}
             </span>
             <span className="tickets-confirm__flag">Нужно ваше подтверждение</span>
           </div>
@@ -263,11 +264,13 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
               <article className="tickets-row" key={item.ticket.id}>
                 <span className="tickets-cell">
                   <span className="tickets-title">{titleOf(item, meta)}</span>
-                  <span className="tickets-meta">
-                    № {item.ticket.number} · <StatusText status={item.ticket.status} />
-                  </span>
+                  <span className="tickets-meta">{formatTicketNumber(item.ticket.number)}</span>
                 </span>
                 <span className="tickets-cell tickets-cell--stage">
+                  {/* Статус — подпись к полоскам хода, а не к названию заявки. */}
+                  <span className="tickets-stage-label">
+                    <StatusText status={item.ticket.status} />
+                  </span>
                   <StageScale stage={ticketStage(item.ticket.status)} />
                 </span>
                 <span className="tickets-cell tickets-cell--who">

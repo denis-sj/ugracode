@@ -1,5 +1,5 @@
 import type { JSX, RefObject } from 'react';
-import { Badge, Button } from '@ugra/ui';
+import { Badge, Button, formatTicketNumber } from '@ugra/ui';
 import {
   MASS_THRESHOLD,
   MASS_WINDOW_MINUTES,
@@ -129,7 +129,7 @@ export function MassBlock({
           </p>
           {incidentDetail.tickets.length > 0 && (
             <p className="er-incident__tickets">
-              {incidentDetail.tickets.map((ticket) => `№ ${ticket.number}`).join(', ')}
+              {incidentDetail.tickets.map((ticket) => formatTicketNumber(ticket.number)).join(', ')}
             </p>
           )}
         </div>

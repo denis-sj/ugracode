@@ -610,11 +610,11 @@ export function serviceEventCount(
   return rows.filter((row) => isServiceEvent(row) && inPeriod(row.time, period, now)).length;
 }
 
-/** Сколько правок помещается в верхний блок «ИИ предложил → человек исправил». */
-export const FIXES_IN_BLOCK = 4;
+/** Сколько правок помещается в компактный блок «ИИ предложил → человек исправил». */
+export const FIXES_IN_BLOCK = 3;
 
-/** Сколько событий показываем в «Остальных событиях» до кнопки «Показать ещё». */
-export const REST_IN_BLOCK = 6;
+/** Сколько последних событий видно в таблице журнала до кнопки «Показать ещё». */
+export const EVENTS_IN_BLOCK = 5;
 
 export interface JournalFeed {
   /** Правки для верхнего блока, самые свежие сверху. */

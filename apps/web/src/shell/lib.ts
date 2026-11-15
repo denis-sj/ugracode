@@ -1,4 +1,4 @@
-import type { Role } from '@ugra/contracts';
+import type { Role, User } from '@ugra/contracts';
 
 export type TabCounter = 'queue' | 'incidents' | 'tasks';
 
@@ -89,6 +89,33 @@ const ROLE_LABEL: Record<Role, string> = {
 
 export function roleLabel(role: Role): string {
   return ROLE_LABEL[role];
+}
+
+/** Роли на экране входа: по одной готовой учётке на каждую, администратор — отдельной ссылкой. */
+export const LOGIN_ROLES: readonly Role[] = ['applicant', 'dispatcher', 'engineer', 'manager'];
+
+/**
+ * Учётка для карточки роли — одна, детерминированно.
+ * В сиде учётки пронумерованы (`u-applicant-1`, `u-dispatcher-1`, …): младший номер и есть
+ * типовая учётка демо. Порядок `/api/users` тут не годится — сервер отдаёт людей по алфавиту,
+ * и заявителем оказался бы случайный человек. Нет номерных — берём первую по роли.
+ * Гость и звонок ИИ-оператору номеров не имеют, поэтому на карточки не попадают: они в «Ещё».
+ */
+export function pickRoleUser(users: readonly User[], role: Role): User | null {
+  const ofRole = users.filter((user) => user.role === role);
+  let picked: User | null = null;
+  let pickedNumber = Number.POSITIVE_INFINITY;
+  for (const user of ofRole) {
+    const match = /^u-[a-z]+-(\d+)$/.exec(user.id);
+    const rawNumber = match?.[1];
+    if (rawNumber === undefined) continue;
+    const number = Number(rawNumber);
+    if (number < pickedNumber) {
+      picked = user;
+      pickedNumber = number;
+    }
+  }
+  return picked ?? ofRole[0] ?? null;
 }
 
 /** Короткая подпись в шапке: «Ольга Ветрова» → «Ольга В.» (как в макете). */
