@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 import './review.css';
 import type { AssigneeCandidate, TicketResponse, User, UsersResponse } from '@ugra/contracts';
 import { hasPermission } from '@ugra/contracts';
@@ -13,6 +14,7 @@ import {
   Modal,
   PriorityMark,
   ProgressScale,
+  Select,
   StepBlock,
   TICKET_STAGES,
   Toast,
@@ -340,7 +342,7 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
 
       <header className="review-head" data-reveal>
         <div className="review-head__meta">
-          № {ticket.number} · {detail.appeal.channel} · {formatDateTime(ticket.createdAt)}
+          № {shortTicketNumber(ticket.number)} · {detail.appeal.channel} · {formatDateTime(ticket.createdAt)}
         </div>
         <div className="review-head__row">
           <h1 className="review-title">{title}</h1>
@@ -520,23 +522,16 @@ export function ReviewPage({ user, meta, api, navigate, query, trackAction }: We
                   );
                 })}
                 {candidates.length === 0 && (
-                  <label className="review-candidate-empty">
+                  <div className="review-candidate-empty">
                     <span>Кандидатов нет — выберите инженера вручную</span>
-                    <select
+                    <Select
                       className="review-editor__control"
                       value={assigneeId}
-                      onChange={(event) => setAssigneeId(event.target.value)}
-                    >
-                      <option value="">Выберите инженера…</option>
-                      {users
-                        .filter((candidate) => candidate.role === 'engineer')
-                        .map((engineer) => (
-                          <option value={engineer.id} key={engineer.id}>
-                            {engineer.fullName}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
+                      label="Выберите инженера"
+                      onChange={setAssigneeId}
+                      options={[{ value: '', label: 'Выберите инженера…' }, ...users.filter((candidate) => candidate.role === 'engineer').map((engineer) => ({ value: engineer.id, label: engineer.fullName }))]}
+                    />
+                  </div>
                 )}
               </div>
 

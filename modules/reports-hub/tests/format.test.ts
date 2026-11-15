@@ -16,6 +16,11 @@ import {
   reportIsEmpty,
   reportTable,
   runBody,
+  formatAnswer,
+  hotspotFocus,
+  plural,
+  summaryAnswer,
+  summaryUrl,
   todayIso,
 } from '../web/format';
 
@@ -336,15 +341,7 @@ const emergencyRun = {
 
 describe('REPORTS и маршруты', () => {
   it('перечисляет О1–О7 в порядке брифа', () => {
-    expect(REPORTS.map((report) => report.code)).toEqual([
-      'О1',
-      'О2',
-      'О3',
-      'О4',
-      'О5',
-      'О6',
-      'О7',
-    ]);
+    expect(REPORTS.map((report) => report.code)).toEqual(['О1', 'О2', 'О3', 'О4', 'О5', 'О6', 'О7']);
     expect(REPORTS.map((report) => report.id)).toEqual([
       'report-shift',
       'report-hotspots',
@@ -362,9 +359,7 @@ describe('REPORTS и маршруты', () => {
   });
 
   it('собирает ссылку CSV за тот же период', () => {
-    expect(csvUrl('report-hotspots', 30)).toBe(
-      '/api/m/report-hotspots/export?format=csv&days=30',
-    );
+    expect(csvUrl('report-hotspots', 30)).toBe('/api/m/report-hotspots/export?format=csv&days=30');
     expect(csvUrl('report-shift', 30, '2026-11-14')).toBe(
       '/api/m/report-shift/export?format=csv&date=2026-11-14',
     );
@@ -387,13 +382,7 @@ describe('таблицы отчётов', () => {
   it('О2: строки горячих точек и числа', () => {
     const table = reportTable(hotspotsRun);
     expect(table?.columns).toEqual(['Точка', 'Корпус', 'Заявок', 'Доля', 'Среднее решение']);
-    expect(table?.rows[0]?.cells).toEqual([
-      'HP LaserJet Pro M404dn',
-      'Б',
-      '7',
-      '1,2%',
-      '1 ч 35 мин',
-    ]);
+    expect(table?.rows[0]?.cells).toEqual(['HP LaserJet Pro M404dn', 'Б', '7', '1,2%', '1 ч 35 мин']);
     expect(table?.rows[1]?.cells[4]).toBe('—');
     expect(numberRows(hotspotsRun)).toBe(2);
   });
@@ -407,13 +396,7 @@ describe('таблицы отчётов', () => {
 
   it('О3: подразделения и доля в срок', () => {
     const table = reportTable(slaRun);
-    expect(table?.columns).toEqual([
-      'Подразделение',
-      'Всего',
-      'Нарушений',
-      'В срок',
-      'Среднее решение',
-    ]);
+    expect(table?.columns).toEqual(['Подразделение', 'Всего', 'Нарушений', 'В срок', 'Среднее решение']);
     expect(table?.rows[0]?.cells).toEqual(['ИТ', '30', '4', '87,5%', '3 ч 30 мин']);
   });
 
@@ -430,13 +413,7 @@ describe('таблицы отчётов', () => {
 
   it('О6: темы без статьи', () => {
     const table = reportTable(kbGapsRun);
-    expect(table?.rows[0]?.cells).toEqual([
-      'VPN не подключается',
-      'Сеть',
-      '23',
-      '31,5%',
-      'З-1001',
-    ]);
+    expect(table?.rows[0]?.cells).toEqual(['VPN не подключается', 'Сеть', '23', '31,5%', 'З-1001']);
   });
 
   it('О7: аварийные точки и дата последней', () => {
@@ -469,9 +446,7 @@ describe('таблицы отчётов', () => {
 
 describe('выводы и показатели', () => {
   it('читает insight и форматирует facts, пропуская период', () => {
-    expect(insightText(hotspotsRun)).toBe(
-      'Принтер в кабинете 312 снова в топе: 7 заявок за месяц.',
-    );
+    expect(insightText(hotspotsRun)).toBe('Принтер в кабинете 312 снова в топе: 7 заявок за месяц.');
     expect(insightActions(hotspotsRun)).toHaveLength(2);
     expect(insightView(hotspotsRun).source).toBe('ai');
     expect(insightView(hotspotsRun).model).toBe('openai/gpt-4o-mini');
@@ -479,9 +454,7 @@ describe('выводы и показатели', () => {
       { label: 'Заявок за период', value: '600' },
       { label: 'Главная точка', value: 'HP LaserJet Pro M404dn — 7' },
     ]);
-    expect(reportFacts({ report: {}, facts: [{ label: 'Период, дней', value: 30 }] })).toEqual(
-      [],
-    );
+    expect(reportFacts({ report: {}, facts: [{ label: 'Период, дней', value: 30 }] })).toEqual([]);
   });
 
   it('поддерживает insights как запасной формат вывода', () => {
@@ -521,5 +494,188 @@ describe('ошибки сервера', () => {
     expect(isReportError(null)).toBe(false);
     expect(isReportError('oops')).toBe(false);
     expect(errorMessage(null)).toBeNull();
+  });
+});
+
+describe('карточки-ответы хаба отчётов', () => {
+  it('строит адрес сводки без вызова ИИ и с косой чертой маршрута', () => {
+    expect(summaryUrl(REPORTS[1]!, 30, '2026-11-14')).toBe('/api/m/report-hotspots/?days=30');
+    expect(summaryUrl(REPORTS[0]!, 30, '2026-11-14')).toBe('/api/m/report-shift/?date=2026-11-14');
+  });
+
+  it('склоняет существительные по числу', () => {
+    expect(plural(1, 'заявка', 'заявки', 'заявок')).toBe('заявка');
+    expect(plural(2, 'заявка', 'заявки', 'заявок')).toBe('заявки');
+    expect(plural(5, 'заявка', 'заявки', 'заявок')).toBe('заявок');
+    expect(plural(11, 'заявка', 'заявки', 'заявок')).toBe('заявок');
+    expect(plural(21, 'заявка', 'заявки', 'заявок')).toBe('заявка');
+    expect(plural(23, 'заявка', 'заявки', 'заявок')).toBe('заявки');
+  });
+
+  it('форматирует ответ словами и числами', () => {
+    expect(formatAnswer({ value: 48.2, unit: 'percent', caption: '', hint: null })).toBe('48,2%');
+    expect(formatAnswer({ value: 19, unit: 'minutes', caption: '', hint: null })).toBe('19 мин');
+    expect(formatAnswer({ value: 1284, unit: 'count', caption: '', hint: null })).toBe('1\u00A0284');
+    expect(formatAnswer({ value: 'Кузнецов', unit: 'text', caption: '', hint: null })).toBe('Кузнецов');
+  });
+
+  it('О1: заявки смены и аварии', () => {
+    expect(summaryAnswer('report-shift', shiftRun)).toEqual({
+      value: 12,
+      unit: 'count',
+      caption: 'заявок за смену',
+      hint: '1 авария',
+    });
+  });
+
+  it('О3: доля в срок и просрочки', () => {
+    expect(summaryAnswer('report-sla', slaRun)).toEqual({
+      value: 92,
+      unit: 'percent',
+      caption: 'закрыто в срок',
+      hint: '5 просрочено · 3 под риском',
+    });
+  });
+
+  it('О4: перегруженный инженер', () => {
+    expect(summaryAnswer('report-workload', workloadRun)).toEqual({
+      value: 'Петров',
+      unit: 'text',
+      caption: '11 из 5 задач',
+      hint: '1 инженер перегружен',
+    });
+  });
+
+  it('О4: перегруза нет — честно говорим «никто»', () => {
+    const payload = {
+      report: {
+        ...workloadRun.report,
+        summary: { ...workloadRun.report.summary, overloaded: 0 },
+        byEngineer: [
+          {
+            assigneeId: null,
+            name: 'Не назначено',
+            departmentId: null,
+            departmentLabel: '—',
+            open: 9,
+            closed: 0,
+            total: 9,
+            avgResolutionMinutes: null,
+            overload: true,
+          },
+          {
+            assigneeId: 'u-engineer-2',
+            name: 'Артём Кузнецов',
+            departmentId: 'dep-it',
+            departmentLabel: 'ИТ',
+            open: 2,
+            closed: 1,
+            total: 3,
+            avgResolutionMinutes: 40,
+            overload: false,
+          },
+        ],
+      },
+      facts: [],
+      insight: { meaning: '', actions: [], source: 'template', model: null },
+    };
+    expect(summaryAnswer('report-workload', payload)).toEqual({
+      value: 'Никто',
+      unit: 'text',
+      caption: 'перегруженных инженеров нет',
+      hint: 'больше всех — Кузнецов, 2 задачи',
+    });
+  });
+
+  it('О5: доля заявок без правок', () => {
+    expect(summaryAnswer('report-ai-effect', aiEffectRun)).toEqual({
+      value: 80,
+      unit: 'percent',
+      caption: 'заявок ИИ оформил без правок',
+      hint: '7 мин до подтверждения',
+    });
+  });
+
+  it('О6: самая частая тема без статьи', () => {
+    expect(summaryAnswer('report-kb-gaps', kbGapsRun)).toEqual({
+      value: 'VPN не подключается',
+      unit: 'text',
+      caption: '23 заявки без статьи',
+      hint: null,
+    });
+  });
+
+  it('О6: длинная тема обрезается по слову', () => {
+    const payload = {
+      report: {
+        ...kbGapsRun.report,
+        themes: [
+          {
+            ...kbGapsRun.report.themes[0],
+            label: 'Компьютер не включается, индикатор питания мигает',
+            count: 7,
+          },
+        ],
+      },
+      facts: [],
+      insight: { meaning: '', actions: [], source: 'template', model: null },
+    };
+    const answer = summaryAnswer('report-kb-gaps', payload);
+    expect(answer?.value).toBe('Компьютер не включается…');
+    expect(answer?.caption).toBe('7 заявок без статьи');
+  });
+
+  it('О7: средняя реакция на аварию', () => {
+    expect(summaryAnswer('report-emergency', emergencyRun)).toEqual({
+      value: 8,
+      unit: 'minutes',
+      caption: 'средняя реакция на аварию',
+      hint: '16 аварий за период',
+    });
+  });
+
+  it('нет данных — нет ответа, карточка покажет пустое состояние', () => {
+    expect(summaryAnswer('report-sla', { report: {} })).toBeNull();
+    expect(summaryAnswer('report-sla', null)).toBeNull();
+    expect(summaryAnswer('report-hotspots', hotspotsRun)).toBeNull();
+    expect(summaryAnswer('nope', slaRun)).toBeNull();
+  });
+
+  it('О2: главная точка, причина и полоски', () => {
+    const focus = hotspotFocus(hotspotsRun);
+    expect(focus).not.toBeNull();
+    expect(focus?.label).toBe('HP LaserJet Pro M404dn');
+    expect(focus?.count).toBe(7);
+    expect(focus?.caption).toBe('7 заявок за 30 дней');
+    expect(focus?.trend).toBe('+75% к прошлому периоду');
+    expect(focus?.repeated).toBe(42);
+    expect(focus?.bars.map((bar) => [bar.label, bar.count, bar.width])).toEqual([
+      ['HP LaserJet Pro M404dn', 7, 100],
+      ['Кабинет 314', 5, 71],
+    ]);
+  });
+
+  it('О2: повторных поломок нет — главного отчёта нет', () => {
+    const single = {
+      report: {
+        ...hotspotsRun.report,
+        rows: [{ ...hotspotsRun.report.rows[0], count: 1 }],
+      },
+      facts: [],
+      insight: { meaning: '', actions: [], source: 'template', model: null },
+    };
+    expect(hotspotFocus(single)).toBeNull();
+    expect(hotspotFocus({ report: {} })).toBeNull();
+    expect(hotspotFocus('oops')).toBeNull();
+  });
+
+  it('О2: без сравнения тренд не выдумываем', () => {
+    const noTrend = {
+      report: {
+        ...hotspotsRun.report,
+        rows: [{ ...hotspotsRun.report.rows[0], trendPercent: null }],
+      },
+    };
+    expect(hotspotFocus(noTrend)?.trend).toBeNull();
   });
 });

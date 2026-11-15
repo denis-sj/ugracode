@@ -151,3 +151,13 @@ describe('formatDayMonth и formatDayTime', () => {
     expect(formatDayTime('')).toBe('—');
   });
 });
+
+
+describe('короткий номер заявки', () => {
+  it('показывает старый и новый номер одинаково, не меняя неизвестные значения', async () => {
+    const { shortTicketNumber } = await import('@ugra/contracts');
+    expect(shortTicketNumber('З-20261114-0602')).toBe('602');
+    expect(shortTicketNumber('№ 602')).toBe('602');
+    expect(shortTicketNumber('неизвестно')).toBe('неизвестно');
+  });
+});

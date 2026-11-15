@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 import type { FieldDef, FieldGroup, PriorityLevel, Ticket, TicketField, TicketStatus } from '@ugra/contracts';
 
 /**
@@ -139,7 +140,7 @@ export function filterTickets(
   filters: TicketFilters,
   context: FilterContext = {},
 ): Ticket[] {
-  const query = filters.query.trim().toLowerCase();
+  const query = filters.query.trim().toLowerCase().replace(/^№\s*/, '');
   return tickets.filter((ticket) => {
     if (filters.status !== 'all') {
       if (ticket.status !== filters.status) return false;
@@ -150,7 +151,7 @@ export function filterTickets(
     if (filters.assignee !== '' && ticket.assigneeId !== filters.assignee) return false;
     if (!matchesBucket(ticket, filters, context)) return false;
     if (query !== '') {
-      const haystack = `${ticket.number} ${ticket.category ?? ''} ${context.locations?.[ticket.id] ?? ''}`.toLowerCase();
+      const haystack = `${ticket.number} ${shortTicketNumber(ticket.number)} ${ticket.category ?? ''} ${context.locations?.[ticket.id] ?? ''}`.toLowerCase();
       if (!haystack.includes(query)) return false;
     }
     return true;
@@ -1132,7 +1133,7 @@ export function replyTemplate(
 ): string {
   const who = assigneeName ?? 'Инженер';
   const when = due ? `придёт ${due}` : 'свяжется с вами';
-  return `Заявка № ${ticket.number} принята. ${who} ${when}. Если проблема повторится, ответьте в этом чате.`;
+  return `Заявка № ${shortTicketNumber(ticket.number)} принята. ${who} ${when}. Если проблема повторится, ответьте в этом чате.`;
 }
 
 /** Код справочника → подпись; неизвестный код остаётся как есть. */

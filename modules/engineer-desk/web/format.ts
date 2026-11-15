@@ -8,6 +8,12 @@ import type { MetaResponse, PriorityLevel, Ticket, TicketField, TicketStatus } f
 
 /* ---------- Данные маршрута базы знаний ---------- */
 
+/** Статистика статьи: сколько раз решение помогло. Поля в API пока нет — читаем, если придёт. */
+export interface ArticleStats {
+  helped: number;
+  total: number;
+}
+
 /** Статья, как её отдаёт `GET /api/m/knowledge/search` (см. модуль `knowledge`). */
 export interface KnowledgeArticle {
   id: string;
@@ -17,6 +23,7 @@ export interface KnowledgeArticle {
   solution: string;
   category: string | null;
   score?: number;
+  stats?: ArticleStats;
 }
 
 /** Похожая решённая заявка из того же ответа; длительности в API нет — не выдумываем. */
@@ -45,20 +52,6 @@ export interface ArticleStep {
 export interface ArticleStepsResponse {
   ticketId: string;
   steps: ArticleStep[];
-}
-
-/** Ссылка на статью в ответе агента `engineer-assistant`. */
-export interface AskSource {
-  id: string;
-  title: string;
-}
-
-/** Ответ `POST /api/m/knowledge/ask`: только по найденным статьям. */
-export interface AskResponse {
-  answer: string;
-  sources: AskSource[];
-  steps?: string[];
-  mode: 'agent' | 'template';
 }
 
 /* ---------- Статусы и действия ---------- */
@@ -127,6 +120,16 @@ export function nearestDue(ticket: Pick<Ticket, 'reactDueAt' | 'slaDueAt'>): num
   return times.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...times);
 }
 
+/** Дата ближайшего срока — её и показываем в списке задач. */
+export function nearestDueAt(ticket: Pick<Ticket, 'reactDueAt' | 'slaDueAt'>): string | null {
+  const candidates = [
+    { iso: ticket.reactDueAt, time: timeOf(ticket.reactDueAt) },
+    { iso: ticket.slaDueAt, time: timeOf(ticket.slaDueAt) },
+  ].filter((entry): entry is { iso: string; time: number } => entry.iso !== null && entry.iso !== undefined && entry.time !== null);
+  if (candidates.length === 0) return null;
+  return candidates.reduce((best, entry) => (entry.time < best.time ? entry : best)).iso;
+}
+
 /** Задачи «на сегодня»: назначены мне и ещё не выполнены. */
 export function myTasks(tickets: readonly Ticket[], userId: string): Ticket[] {
   return tickets.filter(
@@ -192,6 +195,17 @@ export function dueState(dueAt: string | null | undefined, now: number): DueStat
     overdue,
     dueAt,
   };
+}
+
+/**
+ * Короткая подпись срока для узкой строки списка: «2 ч», «3 д», «просрочено».
+ * Полная подпись — `dueState().text`, она живёт на карточке задачи.
+ */
+export function shortDueLabel(dueAt: string | null | undefined, now: number): string {
+  const time = timeOf(dueAt);
+  if (time === null) return 'без срока';
+  const left = time - now;
+  return left < 0 ? 'просрочено' : formatRemaining(left);
 }
 
 /* ---------- Поля заявки ---------- */
@@ -264,13 +278,20 @@ export function taskPlace(
 
 /** Оборудование одной строкой: «HP LaserJet M428 · инв. 00417». */
 export function equipmentLine(fields: readonly TicketField[] | null | undefined): string {
-  const { equipment, model, errorCode } = taskEquipment(fields);
-  const name = [equipment, model].filter((value): value is string => Boolean(value)).join(' ');
+  const { errorCode } = taskEquipment(fields);
   const inventory = fieldValue(fields, 'inventoryNo');
-  const parts = [name, inventory ? `инв. ${inventory}` : '', errorCode ? `ошибка ${errorCode}` : ''].filter(
-    (value) => value !== '',
-  );
-  return parts.join(' · ');
+  return [equipmentName(fields), inventory ? `инв. ${inventory}` : '', errorCode ? `ошибка ${errorCode}` : '']
+    .filter((value) => value !== '')
+    .join(' · ');
+}
+
+/**
+ * Название техники без повторов: в заявке модель часто записана и в `equipment`, и в `model`
+ * («HP LaserJet Pro M404dn» дважды) — на экран она попадает один раз.
+ */
+export function equipmentName(fields: readonly TicketField[] | null | undefined): string {
+  const { equipment, model } = taskEquipment(fields);
+  return [...new Set([equipment, model].filter((value): value is string => Boolean(value)))].join(' ');
 }
 
 /**
@@ -514,4 +535,158 @@ export function pluralRu(count: number, one: string, few: string, many: string):
 /** «3 задачи» — подпись списка задач на сегодня. */
 export function tasksCountLabel(count: number): string {
   return `${count} ${pluralRu(count, 'задача', 'задачи', 'задач')}`;
+}
+
+/* ---------- Заголовки и подписи карточки ---------- */
+
+/** Первая буква заглавная: заголовок из симптомов заявителя приходит строчными. */
+export function capitalizeFirst(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed === '') return '';
+  return `${trimmed.charAt(0).toLocaleUpperCase('ru')}${trimmed.slice(1)}`;
+}
+
+/**
+ * Подпись таймера на карточке задачи: «2 ч 14 мин до срока» или «просрочено 12 мин».
+ * Срок не задан — так и пишем, без выдуманных чисел.
+ */
+export function dueBadgeLabel(state: DueState | null): string {
+  if (!state) return 'срок не задан';
+  if (state.overdue) return state.text;
+  return `${state.text.replace(/^осталось\s+/u, '')} до срока`;
+}
+
+/* ---------- Диагностика: кандидаты запроса ---------- */
+
+/** Строка непустая и ещё не встречалась: повторы в запрос не попадают. */
+function uniqueQueries(candidates: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const candidate of candidates) {
+    const text = candidate.replace(/\s+/gu, ' ').trim();
+    if (text === '' || seen.has(text)) continue;
+    seen.add(text);
+    result.push(text);
+  }
+  return result;
+}
+
+/**
+ * Запросы в базу знаний от точного к общему.
+ *
+ * Сервер ищет по всем словам сразу, поэтому одна редкая деталь («оранжевая лампочка»)
+ * обнуляет выдачу. Экран пробует кандидатов по очереди и берёт первый ответ со статьями.
+ */
+export function knowledgeQueries(
+  fields: readonly TicketField[] | null | undefined,
+  category: string | null = null,
+): string[] {
+  const { symptoms, object, equipment, model } = taskEquipment(fields);
+  const modelHead = model ? model.split(/\s+/u).slice(0, 2).join(' ') : '';
+  const symptomHead = symptoms ? normalizeWords(symptoms).slice(0, 2).join(' ') : '';
+  return uniqueQueries([
+    knowledgeQuery(fields, category),
+    [object, equipment].filter((value): value is string => Boolean(value)).join(' '),
+    object ?? '',
+    equipment ?? '',
+    modelHead,
+    symptoms ?? '',
+    symptomHead,
+  ]);
+}
+
+/* ---------- Похожие решённые заявки ---------- */
+
+/** Заявка доведена до конца: «похожие решённые», а не отменённые. */
+const SOLVED_STATUSES: ReadonlySet<string> = new Set(['resolved', 'closed']);
+
+/** Только решённые и закрытые заявки — отменённые решением не считаются. */
+export function solvedSimilar(tickets: readonly SimilarTicket[]): SimilarTicket[] {
+  return tickets.filter((ticket) => SOLVED_STATUSES.has(ticket.status));
+}
+
+/** Одна формулировка похожих заявок: сколько раз встречалась и какая заявка последняя. */
+export interface SimilarGroup {
+  title: string;
+  count: number;
+  number: string;
+}
+
+/**
+ * Похожие заявки без простыни: одинаковые формулировки — одна строка со счётчиком.
+ * Сначала частые, затем по заголовку, чтобы порядок не «прыгал» между загрузками.
+ */
+export function groupSimilarTickets(tickets: readonly SimilarTicket[]): SimilarGroup[] {
+  const groups = new Map<string, SimilarGroup>();
+  for (const ticket of tickets) {
+    const title = ticket.title.trim();
+    if (title === '') continue;
+    const known = groups.get(title);
+    if (known) {
+      known.count += 1;
+      if (ticket.number > known.number) known.number = ticket.number;
+      continue;
+    }
+    groups.set(title, { title, count: 1, number: ticket.number });
+  }
+  return [...groups.values()].sort(
+    (left, right) => right.count - left.count || left.title.localeCompare(right.title, 'ru'),
+  );
+}
+
+/** Сводка похожих: «4 заявки · 2 формулировки». */
+export function similarSummary(groups: readonly SimilarGroup[]): string {
+  if (groups.length === 0) return 'похожих решений нет';
+  const total = groups.reduce((sum, group) => sum + group.count, 0);
+  const word = pluralRu(total, 'заявка', 'заявки', 'заявок');
+  if (groups.length === 1) return `${total} ${word} с той же формулировкой`;
+  return `${total} ${word} · ${groups.length} ${pluralRu(groups.length, 'формулировка', 'формулировки', 'формулировок')}`;
+}
+
+/* ---------- Шаги диагностики ---------- */
+
+/** Состояние шага в чек-листе: сделан, текущий (первый неотмеченный) или ещё впереди. */
+export type StepState = 'done' | 'now' | 'next';
+
+/** Состояния шагов статьи: отмеченные — `done`, первый неотмеченный — `now`, как в макете. */
+export function stepStates(
+  steps: readonly string[],
+  checked: Readonly<Record<string, boolean>>,
+  articleId: string,
+): StepState[] {
+  let current = -1;
+  const states: StepState[] = steps.map((_step, index) => {
+    if (checked[stepKey(articleId, index)]) return 'done';
+    if (current < 0) current = index;
+    return 'next';
+  });
+  if (current >= 0) states[current] = 'now';
+  return states;
+}
+
+/** Статистика статьи «помогла N из M раз» — только если API её отдал и числа правдоподобны. */
+export interface ArticleHelp {
+  helped: number;
+  total: number;
+  /** Доля 0…1 для кольца. */
+  ratio: number;
+  /** «помогла 9 из 11 раз». */
+  label: string;
+}
+
+export function articleHelp(article: KnowledgeArticle | null | undefined): ArticleHelp | null {
+  const stats = article?.stats;
+  if (!stats) return null;
+  const { helped, total } = stats;
+  if (!Number.isFinite(helped) || !Number.isFinite(total)) return null;
+  if (total <= 0 || helped < 0 || helped > total) return null;
+  const roundedHelped = Math.round(helped);
+  const roundedTotal = Math.round(total);
+  if (roundedTotal <= 0) return null;
+  return {
+    helped: roundedHelped,
+    total: roundedTotal,
+    ratio: roundedHelped / roundedTotal,
+    label: `помогла ${roundedHelped} из ${roundedTotal} ${pluralRu(roundedTotal, 'раз', 'раза', 'раз')}`,
+  };
 }

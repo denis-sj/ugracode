@@ -21,6 +21,7 @@ export type { CardProps, CardTone } from './components/Card';
 export { Badge } from './components/Badge';
 export type { BadgeProps } from './components/Badge';
 export { Button } from './components/Button';
+export { Select } from './components/Select';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './components/Button';
 export { ConfidenceBar } from './components/ConfidenceBar';
 export type { ConfidenceBarProps } from './components/ConfidenceBar';

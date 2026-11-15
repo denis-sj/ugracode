@@ -83,7 +83,7 @@ describe('страница звонка: подписи и арифметика'
     expect(MAX_CALL_SECONDS).toBe(90);
     expect(shouldAutoFinish(89)).toBe(false);
     expect(shouldAutoFinish(90)).toBe(true);
-    expect(ticketLabel('З-20261114-0001')).toBe('З-20261114-0001');
+    expect(ticketLabel('З-20261114-0001')).toBe('1');
     expect(ticketLabel(null)).toBe('без номера');
     expect(GREETING).toContain('ИИ');
   });

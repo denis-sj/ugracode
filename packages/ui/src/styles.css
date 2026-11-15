@@ -110,6 +110,12 @@ kbd {
 
 /* ---------- Утилиты ---------- */
 
+.ugra-select { position: relative; min-width: 0; }
+.ugra-select__trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: left; cursor: pointer; }
+.ugra-select__menu { position: absolute; z-index: 40; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 260px; overflow-y: auto; padding: 4px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface-2); box-shadow: var(--shadow-pop); }
+.ugra-select__option { display: block; width: 100%; padding: 8px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; white-space: nowrap; cursor: pointer; }
+.ugra-select__option:hover, .ugra-select__option:focus-visible, .ugra-select__option[aria-checked='true'] { background: var(--color-surface-3); }
+
 .ugra-muted {
   color: var(--color-text-muted);
 }
@@ -1678,6 +1684,10 @@ kbd {
 .ugra-step__body {
   padding: 0 22px 22px 66px;
   overflow: hidden;
+}
+
+.ugra-step__body:has(.ugra-select__menu) {
+  overflow: visible;
 }
 
 .ugra-step__footer {

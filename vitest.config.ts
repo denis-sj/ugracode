@@ -6,6 +6,8 @@ const alias = (pkg: string): string => fileURLToPath(new URL(`./${pkg}/src/index
 export default defineConfig({
   resolve: {
     alias: {
+      'react-dom': fileURLToPath(new URL('./apps/web/node_modules/react-dom', import.meta.url)),
+      react: fileURLToPath(new URL('./apps/web/node_modules/react', import.meta.url)),
       '@ugra/contracts': alias('packages/contracts'),
       '@ugra/core': alias('packages/core'),
       '@ugra/adapters': alias('packages/adapters'),

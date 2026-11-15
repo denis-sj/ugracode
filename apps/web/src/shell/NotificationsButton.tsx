@@ -139,7 +139,7 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
                 )}
                 onClick={() => openNotification(notification)}
               >
-                <span className="shell-notification__body">{notification.body || notification.title}</span>
+                <span className="shell-notification__body">{(notification.body || notification.title).replace(/: обращение [0-9a-f]{8}-[0-9a-f-]{27,}\./gi, '.')}</span>
                 <span className="shell-notification__time">{formatRelativeTime(notification.createdAt)}</span>
               </button>
             ))}

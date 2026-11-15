@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 import './voice.css';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -216,7 +217,7 @@ function CallCard({ call, now, onOpenTicket }: { call: CallView; now: number; on
       {call.ticketId && (
         <footer className="voice-call__foot" data-reveal>
           <span>
-            Заявка <b>{call.ticketNumber}</b> создана из разговора и разбирается тем же конвейером, что чат.
+            Заявка <b>{shortTicketNumber(call.ticketNumber ?? '')}</b> создана из разговора и разбирается тем же конвейером, что чат.
           </span>
           <Button onClick={() => call.ticketId && onOpenTicket(call.ticketId)}>Открыть заявку</Button>
         </footer>

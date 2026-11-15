@@ -2,7 +2,7 @@ import './review.css';
 import type { MetaResponse, TicketField } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Button, FieldRow } from '@ugra/ui';
+import { Button, FieldRow, Select } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { fieldDisplayValue, fieldOptions, groupTicketFields, visibleReviewGroups } from './format';
 
@@ -60,7 +60,7 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
                   if (event.key !== 'Enter' || !review || !field || editing) return;
                   event.preventDefault();
                   event.stopPropagation();
-                  startEdit(entry.key, value);
+                  startEdit(entry.key, entry.value);
                 }}
               >
                 <FieldRow
@@ -79,7 +79,7 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
                         type="button"
                         className="review-inline-link"
                         tabIndex={-1}
-                        onClick={() => (editing ? setEditingKey(null) : startEdit(entry.key, value))}
+                        onClick={() => (editing ? setEditingKey(null) : startEdit(entry.key, entry.value))}
                       >
                         {editing ? 'отмена' : 'изменить'}
                       </button>
@@ -89,34 +89,17 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
                   {editing && field && (
                     <div className="review-editor">
                       {options.length > 0 ? (
-                        <select
+                        <Select
                           className="review-editor__control"
                           value={draft}
                           autoFocus
-                          aria-label={`Новое значение поля ${entry.label}`}
-                          onChange={(event) => {
-                            setDraft(event.target.value);
+                          label={`Новое значение поля ${entry.label}`}
+                          options={[{ value: '', label: '— не выбрано —' }, ...options.map((option) => ({ value: option.code, label: option.label }))]}
+                          onChange={(value) => {
+                            setDraft(value);
                             trackAction?.('select');
                           }}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Escape') {
-                              event.stopPropagation();
-                              setEditingKey(null);
-                            }
-                            if (event.key === 'Enter') {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              void save(entry.key);
-                            }
-                          }}
-                        >
-                          <option value="">— не выбрано —</option>
-                          {options.map((option) => (
-                            <option value={option.code} key={option.code}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       ) : (
                         <input
                           className="review-editor__control"

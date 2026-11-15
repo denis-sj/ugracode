@@ -2,7 +2,9 @@
 
 Статус: часть ИИ ✅ (2026-11-14); ручной замер диспетчера ❓ — проводит владелец
 Дата: 2026-11-14
-Связано: [../docs/specs/case9-presentation.md](../docs/specs/case9-presentation.md), [../docs/hackathon/case9-brief.md](../docs/hackathon/case9-brief.md#8-замер-с-ии--без-ии-критерий-к4), [../modules/ai-vs-manual/README.md](../modules/ai-vs-manual/README.md)
+Связано: [../docs/specs/case9-presentation.md](../docs/specs/case9-presentation.md), [../docs/hackathon/case9-brief.md](../docs/hackathon/case9-brief.md#8-замер-с-ии--без-ии-критерий-к4)
+
+> Экран замера снят; инструкция со страницей `/measure` ниже сохранена как историческая и сейчас неприменима.
 
 Единственный источник цифр для слайда 6 «Польза в цифрах». Пока таблицы пустые, цифр на слайде нет.
 Демо-цифры страницы `/measure?demo=1` («47 против 6») сюда **не переносить** — это заглушка.

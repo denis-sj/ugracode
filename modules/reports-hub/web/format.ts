@@ -14,6 +14,8 @@ export interface ReportSpec {
   readonly title: string;
   /** Вопрос руководителя, на который отвечает отчёт. */
   readonly question: string;
+  /** Короткая формулировка для карточки на экране «Отчёты» (одна строка). */
+  readonly ask: string;
   readonly description: string;
   readonly endpoint: string;
   /** Чем задаётся период: днями (7/30/90) или датой смены. */
@@ -27,6 +29,7 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О1',
     title: 'Сводка смены',
     question: 'Что случилось, пока меня не было?',
+    ask: 'Что случилось за смену?',
     description: 'Заявки, аварии и просрочки за день: кто из исполнителей что закрыл и что ждёт проверки.',
     endpoint: '/api/m/report-shift/run',
     params: 'date',
@@ -35,7 +38,8 @@ export const REPORTS: readonly ReportSpec[] = [
     id: 'report-hotspots',
     code: 'О2',
     title: 'Горячие точки',
-    question: 'Что ломается снова и снова?',
+    question: 'Что ломается снова и снова и что с этим делать?',
+    ask: 'Что ломается снова и снова?',
     description: 'Повторные заявки по технике и кабинетам: где дешевле заменить, чем чинить постоянно.',
     endpoint: '/api/m/report-hotspots/run',
     params: 'days',
@@ -45,6 +49,7 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О3',
     title: 'Сроки и SLA',
     question: 'Где мы опаздываем и почему?',
+    ask: 'Где мы опаздываем?',
     description: 'Доля закрытых в срок, просроченные заявки, время реакции и решения по подразделениям.',
     endpoint: '/api/m/report-sla/run',
     params: 'days',
@@ -54,6 +59,7 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О4',
     title: 'Нагрузка',
     question: 'Кто перегружен, а кто свободен?',
+    ask: 'Кто перегружен?',
     description: 'Открытые заявки по инженерам и подразделениям, порог перегруза и среднее время решения.',
     endpoint: '/api/m/report-workload/run',
     params: 'days',
@@ -63,7 +69,9 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О5',
     title: 'Эффект ИИ',
     question: 'Окупается ли ИИ?',
-    description: 'Сколько полей ИИ предложил, сколько диспетчер исправил и сколько времени уходит до подтверждения.',
+    ask: 'Окупается ли ИИ?',
+    description:
+      'Сколько полей ИИ предложил, сколько диспетчер исправил и сколько времени уходит до подтверждения.',
     endpoint: '/api/m/report-ai-effect/run',
     params: 'days',
   },
@@ -72,6 +80,7 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О6',
     title: 'Пробелы базы знаний',
     question: 'Какие инструкции написать?',
+    ask: 'Какие инструкции написать?',
     description: 'Темы обращений, по которым нет статьи, и как часто они повторяются.',
     endpoint: '/api/m/report-kb-gaps/run',
     params: 'days',
@@ -81,6 +90,7 @@ export const REPORTS: readonly ReportSpec[] = [
     code: 'О7',
     title: 'Аварии',
     question: 'Как мы реагировали на аварии?',
+    ask: 'Как реагировали на аварии?',
     description: 'Аварийные заявки, повторные точки, ложные тревоги и время реакции.',
     endpoint: '/api/m/report-emergency/run',
     params: 'days',
@@ -91,9 +101,7 @@ export const REPORTS: readonly ReportSpec[] = [
 export const HERO_REPORT_ID = 'report-hotspots';
 
 /** Карточки-вопросы под главным отчётом: О1, О3–О7 (без О2). */
-export const CARD_REPORTS: readonly ReportSpec[] = REPORTS.filter(
-  (report) => report.id !== HERO_REPORT_ID,
-);
+export const CARD_REPORTS: readonly ReportSpec[] = REPORTS.filter((report) => report.id !== HERO_REPORT_ID);
 
 export interface ReportRowView {
   key: string;
@@ -430,7 +438,8 @@ export function reportFacts(payload: unknown): ReportFactView[] {
     const record = asRecord(item);
     if (!record) return [];
     const label = asText(record['label']);
-    if (label === null || /^период/i.test(label)) return [];
+    // «Точка 1: заявок» дублирует таблицу отчёта — на экране оставляем только итоги.
+    if (label === null || /^период/i.test(label) || /^точка\s+\d/i.test(label)) return [];
     return [{ label, value: formatMetric(record['value']) }];
   });
 }
@@ -475,8 +484,7 @@ export function insightView(payload: unknown): ReportInsightView {
         return text === null ? [] : [text];
       }
       const record = asRecord(item);
-      const text =
-        asText(record?.['text']) ?? asText(record?.['meaning']) ?? asText(record?.['action']);
+      const text = asText(record?.['text']) ?? asText(record?.['meaning']) ?? asText(record?.['action']);
       return text === null ? [] : [text];
     });
     if (meaning === null && texts.length > 0) meaning = texts[0] ?? null;
@@ -593,7 +601,10 @@ function records(value: unknown): Array<Record<string, unknown>> {
 
 /** Последнее слово имени: «Артём Кузнецов» → «Кузнецов». */
 function surname(name: string): string {
-  const words = name.trim().split(/\s+/).filter((word) => word !== '');
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word !== '');
   return words[words.length - 1] ?? name.trim();
 }
 
@@ -602,8 +613,8 @@ function shortLabel(text: string, limit = 26): string {
   if (text.length <= limit) return text;
   const cut = text.slice(0, limit);
   const space = cut.lastIndexOf(' ');
-  const base = space > 12 ? cut.slice(0, space) : cut;
-  return `${base.trimEnd()}…`;
+  const base = (space > 12 ? cut.slice(0, space) : cut).replace(/[\s,;:.·—-]+$/, '');
+  return `${base}…`;
 }
 
 function minutesText(value: number | null): string | null {
@@ -624,10 +635,7 @@ function shiftAnswer(report: Record<string, unknown>): ReportAnswer | null {
     value: created,
     unit: 'count',
     caption: `${plural(created, 'заявка', 'заявки', 'заявок')} за смену`,
-    hint:
-      emergency === 0
-        ? 'без аварий'
-        : `${emergency} ${plural(emergency, 'авария', 'аварии', 'аварий')}`,
+    hint: emergency === 0 ? 'без аварий' : `${emergency} ${plural(emergency, 'авария', 'аварии', 'аварий')}`,
   };
 }
 

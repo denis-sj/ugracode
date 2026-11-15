@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 /**
  * Чистые функции страницы звонка `/call`: их проверяют тесты, компонент только показывает результат.
  * Здесь нет DOM, микрофона и синтеза речи — только тексты, подписи и арифметика.
@@ -177,5 +178,5 @@ export function shouldAutoFinish(seconds: number): boolean {
 
 /** Крупный номер заявки для финального экрана: «З-20261114-0001» → «З-20261114-0001» (null без заявки). */
 export function ticketLabel(ticketNumber: string | null): string {
-  return ticketNumber && ticketNumber.trim() !== '' ? ticketNumber : 'без номера';
+  return ticketNumber && ticketNumber.trim() !== '' ? shortTicketNumber(ticketNumber) : 'без номера';
 }

@@ -55,7 +55,9 @@ function asStringArray(value: unknown): string[] {
  * Корпус, кабинет и этаж из полей заявки. Пустые и «null»-значения считаются отсутствующими:
  * в списке лучше прочерк, чем «каб. null».
  */
-export function placeFromFields(fields: readonly TicketField[] | null | undefined): Place {
+export function placeFromFields(
+  fields: readonly Pick<TicketField, 'fieldKey' | 'value'>[] | null | undefined,
+): Place {
   if (!fields || fields.length === 0) return EMPTY_PLACE;
   const read = (key: string): string | null => {
     const field = fields.find((entry) => entry.fieldKey === key);
@@ -81,6 +83,77 @@ export function placeLabel(place: Place | null | undefined): string {
   const cabinet = asString(place.cabinet);
   if (cabinet !== null) parts.push(`каб. ${cabinet}`);
   return parts.length === 0 ? '—' : parts.join(' · ');
+}
+
+/**
+ * Место из `locationId` вида `cab-B-312` (или `cab-a-3-305`), когда поля заявки пусты.
+ * Этаж берём только если он явно есть в идентификаторе; ничего не додумываем.
+ */
+export function placeFromLocationId(locationId: string | null | undefined): Place {
+  const raw = asString(locationId);
+  if (raw === null) return EMPTY_PLACE;
+  const parts = raw.split(/[-_]/).filter((part) => part !== '');
+  if (parts.length < 3 || parts[0]?.toLowerCase() !== 'cab') return EMPTY_PLACE;
+  const building = parts[1] ?? null;
+  const cabinet = parts.at(-1) ?? null;
+  const floor = parts.length >= 4 ? parts.slice(2, -1).join('-') : null;
+  if (building === null || cabinet === null) return EMPTY_PLACE;
+  return {
+    building: normalizeBuilding(building),
+    cabinet,
+    floor: floor === '' ? null : floor,
+  };
+}
+
+/** Латиница из `locationId` (`cab-B-312`) → кириллица справочника (`Корпус Б`). */
+const LATIN_BUILDINGS: Readonly<Record<string, string>> = {
+  A: 'А',
+  B: 'Б',
+  C: 'В',
+  E: 'Е',
+  H: 'Н',
+  K: 'К',
+  M: 'М',
+  O: 'О',
+  P: 'Р',
+  T: 'Т',
+  X: 'Х',
+};
+
+function normalizeBuilding(value: string): string {
+  if (value.length > 2) return value;
+  const upper = value.toUpperCase();
+  return LATIN_BUILDINGS[upper] ?? upper;
+}
+
+/**
+ * Единый источник места для списка и карточки: сначала поля заявки, недостающие
+ * части — из `locationId`. Так список и заголовок не расходятся.
+ */
+export function placeForTicket(
+  ticket: Pick<Ticket, 'locationId'>,
+  fields: readonly Pick<TicketField, 'fieldKey' | 'value'>[] | null | undefined,
+): Place {
+  const fromFields = placeFromFields(fields);
+  const fromLocation = placeFromLocationId(ticket.locationId);
+  return {
+    building: fromFields.building ?? fromLocation.building,
+    floor: fromFields.floor ?? fromLocation.floor,
+    cabinet: fromFields.cabinet ?? fromLocation.cabinet,
+  };
+}
+
+/** Короткое место для списка: «Б · 3 · 312»; без корпуса — привычное «каб. 312». */
+export function placeShortLabel(place: Place | null | undefined): string {
+  if (!place) return '—';
+  const building = asString(place.building)?.replace(/^корпус\s*/i, '').trim();
+  if (!building) return placeLabel(place);
+  const parts = [building];
+  const floor = asString(place.floor)?.replace(/\s*этаж$/i, '').trim();
+  if (floor) parts.push(floor);
+  const cabinet = asString(place.cabinet);
+  if (cabinet) parts.push(cabinet);
+  return parts.join(' · ');
 }
 
 /* ---------- Вердикт аварии из разбора ---------- */

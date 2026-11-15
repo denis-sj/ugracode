@@ -55,11 +55,6 @@ describe('TabIcon', () => {
     }
   });
 
-  it('у «С ИИ / без ИИ» своя иконка замера, а не отчётов', () => {
-    const measure = tabsForRole('dispatcher').find((tab) => tab.path === '/measure');
-    expect(measure?.icon).toBe('measure');
-  });
-
   it('у базы знаний иконка книги', () => {
     const kb = tabsForRole('engineer').find((tab) => tab.path === '/knowledge');
     expect(kb?.icon).toBe('kb');

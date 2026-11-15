@@ -1,4 +1,4 @@
-import type { MetaResponse } from '@ugra/contracts';
+import type { MetaResponse, Ticket } from '@ugra/contracts';
 
 /**
  * Чистые функции экрана 13 «База знаний» (инженер).
@@ -214,8 +214,12 @@ export interface ArticleRow {
   categoryLabel: string;
   /** Первые симптомы одной строкой: «мышь не двигается · курсор пропал». */
   symptoms: string;
+  /** Короткая суть статьи: решение одной фразой, иначе симптомы. */
+  summary: string;
   /** Оценка сервера строкой: «3» или «0,42». Не проценты. */
   scoreLabel: string | null;
+  /** «помогла 9 из 11» — только если API отдал статистику. */
+  helpLabel: string | null;
   article: KnowledgeArticle;
 }
 
@@ -259,6 +263,36 @@ function symptomsLine(article: KnowledgeArticle): string {
   return article.symptoms.slice(0, 2).join(' · ');
 }
 
+const SENTENCE_END = /[.!?](?:\s|$)/u;
+
+/** Короткая суть статьи: первая фраза решения, иначе симптомы. Длинное обрезаем по слову. */
+export function articleSummary(article: KnowledgeArticle, maxLength = 120): string {
+  const source = article.solution !== '' ? article.solution : symptomsLine(article);
+  const firstSentence = source.split(SENTENCE_END)[0]?.trim() ?? source.trim();
+  if (firstSentence.length <= maxLength) return firstSentence;
+  const cut = firstSentence.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
+/** Статьи без дублей: сервер может вернуть одну и ту же дважды. Порядок и первая запись сохраняются. */
+export function dedupeArticles(articles: readonly KnowledgeArticle[]): KnowledgeArticle[] {
+  const seen = new Set<string>();
+  const result: KnowledgeArticle[] = [];
+  for (const article of articles) {
+    const key = article.title.trim().toLocaleLowerCase('ru');
+    if (key === '' || seen.has(key)) continue;
+    seen.add(key);
+    result.push(article);
+  }
+  return result;
+}
+
+/** Подпись статистики строкой: только когда API её отдал. */
+export function helpLabel(article: KnowledgeArticle): string | null {
+  return articleStats(article)?.label ?? null;
+}
+
 /**
  * Строки списка статей для поиска «своими словами».
  * Сервер уже отфильтровал выдачу, поэтому локальное совпадение только уточняет порядок:
@@ -269,7 +303,7 @@ export function articleRows(
   query = '',
   labels: Readonly<Record<string, string>> = {},
 ): ArticleRow[] {
-  const normalized = normalizeArticles(articles);
+  const normalized = dedupeArticles(normalizeArticles(articles));
   const matched = filterArticles(normalized, query);
   const list = query.trim() === '' || matched.length > 0 ? matched : normalized;
   return list.map((article) => ({
@@ -278,7 +312,9 @@ export function articleRows(
     category: article.category,
     categoryLabel: categoryName(article.category, labels),
     symptoms: symptomsLine(article),
+    summary: articleSummary(article),
     scoreLabel: formatScore(article.score),
+    helpLabel: helpLabel(article),
     article,
   }));
 }
@@ -351,4 +387,132 @@ export function articleStats(article: KnowledgeArticle | null | undefined): Arti
   const stats = normalizeStats(article?.stats);
   if (!stats) return null;
   return { ...stats, label: `помогла ${stats.helped} из ${stats.total}` };
+}
+
+/* ---------- Похожие заявки ---------- */
+
+/** Одна формулировка похожих заявок: сколько раз встречалась и какая заявка последняя. */
+export interface RelatedGroup {
+  title: string;
+  count: number;
+  number: string;
+}
+
+const CANCELLED = 'cancelled';
+
+/**
+ * Похожие заявки без простыни: одинаковые формулировки — одна строка со счётчиком.
+ * Отменённые не считаем: решения по ним нет.
+ */
+export function relatedGroups(tickets: readonly SimilarTicket[]): RelatedGroup[] {
+  const groups = new Map<string, RelatedGroup>();
+  for (const ticket of tickets) {
+    if (ticket.status === CANCELLED) continue;
+    const title = ticket.title.trim();
+    if (title === '') continue;
+    const known = groups.get(title);
+    if (known) {
+      known.count += 1;
+      if (ticket.number > known.number) known.number = ticket.number;
+      continue;
+    }
+    groups.set(title, { title, count: 1, number: ticket.number });
+  }
+  return [...groups.values()].sort(
+    (left, right) => right.count - left.count || left.title.localeCompare(right.title, 'ru'),
+  );
+}
+
+/* ---------- Мои активные задачи ---------- */
+
+/** Задачи инженера, которые ещё можно взять в работу или которые уже в работе. */
+export function activeTasks(tickets: readonly Ticket[], userId: string): Ticket[] {
+  return tickets.filter(
+    (ticket) => ticket.assigneeId === userId && (ticket.status === 'assigned' || ticket.status === 'in_progress'),
+  );
+}
+
+/* ---------- Черновик статьи из решений ---------- */
+
+/** Шаг черновика и статья, из которой он взялся — чтобы инженер видел источник. */
+export interface DraftStep {
+  text: string;
+  articleTitle: string;
+}
+
+/** Решение из закрытой заявки: текст и номер заявки-источника. */
+export interface DraftSolution {
+  text: string;
+  number: string;
+}
+
+export interface ArticleDraft {
+  title: string;
+  /** Повторяющиеся формулировки заявок — будущие симптомы статьи. */
+  symptoms: string[];
+  steps: DraftStep[];
+  solutions: DraftSolution[];
+  /** Ни шагов, ни решений не нашлось: черновик показываем честно пустым. */
+  empty: boolean;
+}
+
+export interface DraftInput {
+  query: string;
+  articles: readonly KnowledgeArticle[];
+  tickets: readonly SimilarTicket[];
+  resolutions?: readonly DraftSolution[];
+}
+
+function uniqueText(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const text = value.trim();
+    const key = text.toLocaleLowerCase('ru');
+    if (text === '' || seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+  }
+  return result;
+}
+
+/**
+ * Черновик статьи из того, что уже есть в базе: шаги найденных статей и решения закрытых заявок.
+ * Ничего не придумывает: нет источников — черновик пустой, и экран так и говорит.
+ */
+export function buildDraft({ query, articles, tickets, resolutions = [] }: DraftInput): ArticleDraft {
+  const steps: DraftStep[] = [];
+  const seenSteps = new Set<string>();
+  for (const article of articles) {
+    for (const step of article.steps) {
+      const text = step.trim();
+      const key = text.toLocaleLowerCase('ru');
+      if (text === '' || seenSteps.has(key)) continue;
+      seenSteps.add(key);
+      steps.push({ text, articleTitle: article.title });
+      if (steps.length >= 8) break;
+    }
+    if (steps.length >= 8) break;
+  }
+
+  const solutions = resolutions
+    .map((solution) => ({ text: solution.text.trim(), number: solution.number }))
+    .filter((solution) => solution.text !== '');
+  const uniqueSolutions = solutions.filter(
+    (solution, index) =>
+      solutions.findIndex((candidate) => candidate.text.toLocaleLowerCase('ru') === solution.text.toLocaleLowerCase('ru')) ===
+      index,
+  );
+
+  const symptoms = uniqueText(tickets.map((ticket) => ticket.title)).slice(0, 3);
+  const fallbackTitle = articles[0]?.title ?? symptoms[0] ?? '';
+  const title = query.trim() !== '' ? query.trim() : fallbackTitle;
+
+  return {
+    title,
+    symptoms,
+    steps,
+    solutions: uniqueSolutions,
+    empty: steps.length === 0 && uniqueSolutions.length === 0,
+  };
 }

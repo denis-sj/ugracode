@@ -2,7 +2,7 @@ import './dashboard.css';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WebPageProps } from '@ugra/ui';
-import { Icon } from '@ugra/ui';
+import { Icon, Select as MenuSelect } from '@ugra/ui';
 import type { OverviewFiltersState } from './api';
 import { overviewQuery } from './api';
 import { formatDateRange, isValidRange, periodTitle } from './format';
@@ -34,21 +34,16 @@ function Select({
   onChange: (value: string) => void;
 }): JSX.Element {
   return (
-    <label className="rd-filter">
+    <div className="rd-filter">
       <span className="rd-filter__label">{label}</span>
-      <select
+      <MenuSelect
         className="rd-filter__select"
+        label={label}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">все</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+        onChange={onChange}
+        options={[{ value: '', label: 'все' }, ...options.filter((option) => option.value !== '')]}
+      />
+    </div>
   );
 }
 

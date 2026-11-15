@@ -61,6 +61,7 @@ AGENTS.md  (ты здесь)
 │   ├── mentor-notes.md     вопросы ментору кейса 9 и его ответы
 │   ├── case-analysis.md    анализ и выбор кейса (история)
 │   ├── demo-script.md      сценарий демо на защите: шаги, тайминг, что делать при сбое
+│   ├── speech.md           ★ текст выступления: слайды → демо, тайминг 5:00, заготовки ответов
 │   ├── delivery.md         чек-лист сдачи, SonarQube, флаги фич, план внедрения
 │   └── winning-strategy.md как побеждаем: демо, презентация, тайминг
 ├── Правила ──────────── docs/rules/
@@ -89,7 +90,7 @@ AGENTS.md  (ты здесь)
 [raw-cases](docs/hackathon/cases/raw-cases.md) · [case-analysis](docs/hackathon/case-analysis.md) ·
 [**case9-brief**](docs/hackathon/case9-brief.md) · [case9-presentation](docs/hackathon/cases/case9-presentation.md) ·
 [mentor-notes](docs/hackathon/mentor-notes.md) · [промпт брейншторма](docs/prompts/brainstorm-kickoff.md) · [промпт архитектора](docs/prompts/architect-kickoff.md) · [промпт новой фичи](docs/prompts/feature-intake.md) · [промпт фронтенда](docs/prompts/frontend-kickoff.md) · [промпт анимаций](docs/prompts/animations-rollout.md) ·
-[demo-script](docs/hackathon/demo-script.md) · [delivery](docs/hackathon/delivery.md) · [winning-strategy](docs/hackathon/winning-strategy.md) ·
+[demo-script](docs/hackathon/demo-script.md) · [**выступление**](docs/hackathon/speech.md) · [delivery](docs/hackathon/delivery.md) · [winning-strategy](docs/hackathon/winning-strategy.md) ·
 [git-and-deploy](docs/rules/git-and-deploy.md) · [testing](docs/rules/testing.md) ·
 [code-quality](docs/rules/code-quality.md) · [**анимации**](docs/rules/animations.md) · [банк фич](docs/ideas/case9-features.md) ·
 [сценка](docs/ideas/pitch-scene.md) ·
@@ -141,5 +142,6 @@ AGENTS.md  (ты здесь)
 - Задача закрыта записью в `docs/history/` и удалением файла задачи в том же PR.
 - Проверка ссылок проходит: `python3 -m unittest discover -s tests`.
 - Нет новых замечаний SonarQube уровня Blocker/Critical/Major ([code-quality](docs/rules/code-quality.md)): код оценивает машина, это баллы.
+  **⛔ Прогоны SonarQube/SonarLint НЕ запускать, пока владелец явно не скажет** («делай прогон Sonar»). Код пишем по правилам качества, но сам анализ не гоняем и в DoD/PR-чек-листе его не требуем.
 - Экран фронтенда анимирован по [правилам анимаций](docs/rules/animations.md) и проверен в браузере.
 - Фича **работает в демо-сценарии**: то, что нельзя показать на защите, не считается сделанным.

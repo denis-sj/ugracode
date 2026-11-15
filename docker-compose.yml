@@ -33,6 +33,11 @@ services:
       EMBEDDINGS_MODEL: ${EMBEDDINGS_MODEL:-}
       EMBEDDINGS_DIM: ${EMBEDDINGS_DIM:-}
       SPEECH_MODEL: ${SPEECH_MODEL:-ai-sage/gigaam-v3}
+      # Озвучка ИИ-оператора (задача 039): только ключ включает голос RouterAI.
+      ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
+      ROUTERAI_BASE_URL: ${ROUTERAI_BASE_URL:-https://routerai.ru/api/v1}
+      ROUTERAI_TTS_MODEL: ${ROUTERAI_TTS_MODEL:-google/gemini-3.8-flash-lite-tts}
+      ROUTERAI_TTS_VOICE: ${ROUTERAI_TTS_VOICE:-Kore}
       # Постоянный HTTPS-адрес веба для QR (важнее адреса туннеля).
       PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-}
     volumes:

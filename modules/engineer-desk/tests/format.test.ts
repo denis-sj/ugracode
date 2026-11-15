@@ -2,27 +2,38 @@ import { describe, expect, it } from 'vitest';
 import type { MetaResponse, Ticket, TicketField } from '@ugra/contracts';
 import {
   appendOutcome,
+  articleHelp,
   asTicketStatus,
+  capitalizeFirst,
   deadlineInputToIso,
   defaultDeadlineInput,
+  dueBadgeLabel,
   dueState,
   equipmentLine,
+  equipmentName,
   fieldValue,
   formatRemaining,
+  groupSimilarTickets,
+  knowledgeQueries,
   knowledgeQuery,
   matchScore,
   myTasks,
   nearestDue,
+  nearestDueAt,
   normalizeWords,
   pickArticle,
   quickOutcomes,
   reasonReady,
   recurringEquipmentCount,
+  shortDueLabel,
+  similarSummary,
+  solvedSimilar,
   sortMyTasks,
   statusActions,
   stepCounterLabel,
   stepKey,
   stepProgress,
+  stepStates,
   stepsToChecked,
   taskEquipment,
   taskPlace,
@@ -235,6 +246,13 @@ describe('поля заявки', () => {
     });
   });
 
+  it('модель, записанная дважды, показывается один раз', () => {
+    const fields = [field('equipment', 'HP LaserJet Pro M404dn'), field('model', 'HP LaserJet Pro M404dn')];
+
+    expect(equipmentName(fields)).toBe('HP LaserJet Pro M404dn');
+    expect(equipmentLine(fields)).toBe('HP LaserJet Pro M404dn');
+  });
+
   it('оборудование одной строкой без пустых частей', () => {
     expect(equipmentLine([field('equipment', 'HP LaserJet'), field('model', 'M428'), field('inventoryNo', 'INV-00417')])).toBe(
       'HP LaserJet M428 · инв. INV-00417',
@@ -406,5 +424,151 @@ describe('диалоги', () => {
     expect(reasonReady('Нет запчасти')).toBe(true);
     expect(reasonReady('  да ')).toBe(false);
     expect(reasonReady('')).toBe(false);
+  });
+});
+
+describe('подписи карточки задачи', () => {
+  it('заголовок из симптомов начинается с заглавной буквы', () => {
+    expect(capitalizeFirst('  не печатает, мигает красный')).toBe('Не печатает, мигает красный');
+    expect(capitalizeFirst('')).toBe('');
+    expect(capitalizeFirst('   ')).toBe('');
+  });
+
+  it('таймер: «до срока», просрочка и отсутствие срока', () => {
+    expect(dueBadgeLabel(dueState('2026-11-14T12:14:00.000Z', NOW))).toBe('2 ч 14 мин до срока');
+    expect(dueBadgeLabel(dueState('2026-11-14T09:48:00.000Z', NOW))).toBe('просрочено 12 мин');
+    expect(dueBadgeLabel(null)).toBe('срок не задан');
+  });
+
+  it('короткая подпись для строки списка', () => {
+    expect(shortDueLabel('2026-11-14T12:14:00.000Z', NOW)).toBe('2 ч 14 мин');
+    expect(shortDueLabel('2026-11-14T09:48:00.000Z', NOW)).toBe('просрочено');
+    expect(shortDueLabel(null, NOW)).toBe('без срока');
+    expect(shortDueLabel('битая дата', NOW)).toBe('без срока');
+  });
+
+  it('ближайший срок — конкретная дата, а не только число', () => {
+    expect(
+      nearestDueAt({
+        reactDueAt: '2026-11-14T12:00:00.000Z',
+        slaDueAt: '2026-11-14T15:00:00.000Z',
+      }),
+    ).toBe('2026-11-14T12:00:00.000Z');
+    expect(nearestDueAt({ reactDueAt: null, slaDueAt: null })).toBeNull();
+  });
+});
+
+describe('запросы в базу знаний', () => {
+  const fields = [
+    field('symptoms', 'не печатает, горит оранжевая лампочка'),
+    field('object', 'принтер HP'),
+    field('equipment', 'HP LaserJet Pro M404dn'),
+    field('model', 'HP LaserJet Pro M404dn'),
+  ];
+
+  it('первый кандидат — полный запрос, дальше всё более общие', () => {
+    const queries = knowledgeQueries(fields, 'printer');
+
+    expect(queries[0]).toBe(knowledgeQuery(fields, 'printer'));
+    expect(queries).toContain('принтер HP');
+    expect(queries).toContain('HP LaserJet');
+    expect(queries).toContain('не печатает, горит оранжевая лампочка');
+    expect(queries.at(-1)).toBe('печатает горит');
+  });
+
+  it('пустые и повторяющиеся кандидаты не попадают', () => {
+    const queries = knowledgeQueries([field('symptoms', 'не печатает')]);
+
+    expect(new Set(queries).size).toBe(queries.length);
+    expect(queries.every((query) => query.trim() !== '')).toBe(true);
+  });
+
+  it('без полей запросов нет', () => {
+    expect(knowledgeQueries([])).toEqual([]);
+    expect(knowledgeQueries(null)).toEqual([]);
+  });
+});
+
+describe('похожие решённые заявки', () => {
+  it('отменённые не считаются решением', () => {
+    const list = solvedSimilar([
+      similar({ ticketId: 't-1', status: 'closed' }),
+      similar({ ticketId: 't-2', status: 'cancelled' }),
+      similar({ ticketId: 't-3', status: 'resolved' }),
+    ]);
+
+    expect(list.map((ticket) => ticket.ticketId)).toEqual(['t-1', 't-3']);
+  });
+
+  it('одинаковые формулировки собираются в одну строку', () => {
+    const groups = groupSimilarTickets([
+      similar({ ticketId: 't-1', number: '2026-1', title: 'принтер не печатает' }),
+      similar({ ticketId: 't-2', number: '2026-5', title: 'принтер не печатает' }),
+      similar({ ticketId: 't-3', number: '2026-3', title: 'нет сети' }),
+    ]);
+
+    expect(groups).toEqual([
+      { title: 'принтер не печатает', count: 2, number: '2026-5' },
+      { title: 'нет сети', count: 1, number: '2026-3' },
+    ]);
+  });
+
+  it('сводка склоняет заявки и формулировки', () => {
+    expect(similarSummary([])).toBe('похожих решений нет');
+    expect(similarSummary([{ title: 'одна', count: 1, number: '1' }])).toBe(
+      '1 заявка с той же формулировкой',
+    );
+    expect(
+      similarSummary([
+        { title: 'первая', count: 3, number: '1' },
+        { title: 'вторая', count: 1, number: '2' },
+      ]),
+    ).toBe('4 заявки · 2 формулировки');
+  });
+
+  it('пустые заголовки пропускаются', () => {
+    expect(groupSimilarTickets([similar({ title: '   ' })])).toEqual([]);
+  });
+});
+
+describe('шаги диагностики', () => {
+  const steps = ['Первый', 'Второй', 'Третий'];
+
+  it('первый неотмеченный шаг — текущий', () => {
+    expect(stepStates(steps, { 'kb-1:0': true }, 'kb-1')).toEqual(['done', 'now', 'next']);
+  });
+
+  it('все отмечены — текущего шага нет', () => {
+    expect(stepStates(['Первый'], { 'kb-1:0': true }, 'kb-1')).toEqual(['done']);
+  });
+
+  it('ничего не отмечено — текущий первый', () => {
+    expect(stepStates(steps, {}, 'kb-1')).toEqual(['now', 'next', 'next']);
+  });
+
+  it('отметки другой статьи не влияют', () => {
+    expect(stepStates(['Первый'], { 'kb-2:0': true }, 'kb-1')).toEqual(['now']);
+  });
+});
+
+describe('статистика статьи', () => {
+  it('без статистики блока нет', () => {
+    expect(articleHelp(article())).toBeNull();
+    expect(articleHelp(null)).toBeNull();
+  });
+
+  it('помогла N из M с долей для кольца', () => {
+    const help = articleHelp(article({ stats: { helped: 9, total: 11 } }));
+
+    expect(help).toEqual({ helped: 9, total: 11, ratio: 9 / 11, label: 'помогла 9 из 11 раз' });
+  });
+
+  it('одна помощь склоняется правильно', () => {
+    expect(articleHelp(article({ stats: { helped: 1, total: 1 } }))?.label).toBe('помогла 1 из 1 раз');
+  });
+
+  it('битые числа не рисуются', () => {
+    expect(articleHelp(article({ stats: { helped: 12, total: 11 } }))).toBeNull();
+    expect(articleHelp(article({ stats: { helped: 0, total: 0 } }))).toBeNull();
   });
 });

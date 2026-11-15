@@ -1,83 +1,39 @@
+import { shortTicketNumber } from '@ugra/contracts';
 import './knowledge.css';
+import type { Ticket, TicketListResponse, TicketResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  EmptyState,
-  InsightBlock,
-  SearchField,
-  useListMotion,
-} from '@ugra/ui';
+import { Button, Card, EmptyState, Icon, Modal, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
+import { ArticleView } from './ArticleView';
+import { DraftPanel } from './DraftPanel';
+import { SearchHero } from './SearchHero';
 import {
+  activeTasks,
   articleRows,
-  articleStats,
-  askModeLabel,
+  buildDraft,
   categoryLabels,
-  categoryName,
-  normalizeArticle,
   pluralRu,
-  sourceLinks,
-  stepKey,
-  stepsDone,
+  relatedGroups,
 } from './format';
-import type { AskResponse, KnowledgeArticle, KnowledgeResponse } from './format';
+import type { ArticleDraft, KnowledgeArticle, KnowledgeResponse } from './format';
+import type { Loadable } from './types';
 
 /**
- * Экран 13 «База знаний» (инженер, 4.6): поиск своими словами, статья с шагами,
- * вопрос базе с ответом агента и ссылками-источниками.
+ * База знаний инженера: крупный поиск, статья целиком, черновик из решений.
+ * Вопрос агенту остался на сервере (`POST /api/m/knowledge/ask`) — экран живёт поиском.
  */
-
-interface Loadable<T> {
-  loading: boolean;
-  error: string | null;
-  data: T | null;
-}
 
 const EMPTY_LOAD: Loadable<never> = { loading: false, error: null, data: null };
 /** Короче двух символов сервер искать не просим: шум в выдаче. */
 const SEARCH_MIN = 2;
 /** Поиск после паузы в вода, чтобы не дёргать сервер на каждую букву. */
 const SEARCH_DEBOUNCE_MS = 350;
-/** Минимальная длина вопроса — как в схеме `POST /api/m/knowledge/ask`. */
-const QUESTION_MIN = 3;
-/** Маршрута черновика статьи в API нет — кнопка честно выключена. */
-const DRAFT_HINT =
-  '❓ Маршрута «Собрать черновик статьи» в API пока нет: нужен способ собрать статью из решений закрытых заявок.';
+/** Сколько заявок читаем, собирая черновик статьи. */
+const DRAFT_TICKETS = 5;
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-/** HTTP-код ошибки API: по 422 отличаем «статей нет» от падения сети. */
-function errorStatus(error: unknown): number | null {
-  if (typeof error !== 'object' || error === null) return null;
-  const status = (error as { status?: unknown }).status;
-  return typeof status === 'number' ? status : null;
-}
-
-function askErrorText(error: unknown): string {
-  if (errorStatus(error) === 422) {
-    return 'База знаний не нашла статей по этому вопросу. Назовите модель устройства или код ошибки — либо найдите статью поиском.';
-  }
-  return `Не удалось получить ответ: ${errorText(error)}`;
-}
-
-/** Шаги ответа без мусора: сервер может вернуть не строки. */
-function answerSteps(steps: readonly unknown[] | null | undefined): string[] {
-  if (!Array.isArray(steps)) return [];
-  return steps.filter((step): step is string => typeof step === 'string' && step.trim() !== '');
-}
-
-/** Кнопка «Собрать черновик статьи»: маршрута нет — выключена и объясняет почему. */
-function DraftButton(): JSX.Element {
-  return (
-    <Button variant="primary" block disabled title={DRAFT_HINT}>
-      Собрать черновик статьи
-    </Button>
-  );
 }
 
 function Skeleton({ lines = 3 }: { lines?: number }): JSX.Element {
@@ -93,43 +49,50 @@ function Skeleton({ lines = 3 }: { lines?: number }): JSX.Element {
   );
 }
 
-export function KnowledgePage({ meta, api, trackAction }: WebPageProps): JSX.Element {
+export function KnowledgePage({ user, meta, api, navigate, query, trackAction }: WebPageProps): JSX.Element {
   const labels = useMemo(() => categoryLabels(meta), [meta]);
 
-  const [query, setQuery] = useState('');
+  const [text, setText] = useState(() => query.get('q') ?? '');
   const [search, setSearch] = useState<Loadable<KnowledgeResponse>>(EMPTY_LOAD);
   const [searchTick, setSearchTick] = useState(0);
-  const [selected, setSelected] = useState<KnowledgeArticle | null>(null);
-  const [openError, setOpenError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
 
-  const [askQuestion, setAskQuestion] = useState('');
-  const [ask, setAsk] = useState<Loadable<AskResponse>>(EMPTY_LOAD);
-  const [askBusy, setAskBusy] = useState(false);
+  const [draft, setDraft] = useState<ArticleDraft | null>(null);
+  const [draftBusy, setDraftBusy] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
 
-  const listRef = useRef<HTMLUListElement | null>(null);
+  const [pickOpen, setPickOpen] = useState(false);
+  const [pickState, setPickState] = useState<Loadable<Ticket[]>>(EMPTY_LOAD);
+  const moreRef = useRef<HTMLUListElement | null>(null);
 
-  const rows = useMemo(() => articleRows(search.data?.articles, query, labels), [search.data, query, labels]);
-  useListMotion(listRef, rows.length > 0);
+  const rows = useMemo(() => articleRows(search.data?.articles, text, labels), [search.data, text, labels]);
+  const related = useMemo(() => relatedGroups(search.data?.tickets ?? []), [search.data]);
+  const collected = related.reduce((sum, group) => sum + group.count, 0);
+  const hasQuery = text.trim().length >= SEARCH_MIN;
+  const selectedRow = rows.find((row) => row.id === selectedId) ?? rows[0] ?? null;
+  const others = rows.filter((row) => row.id !== selectedRow?.id);
+  useListMotion(moreRef, others.length > 0);
 
   useEffect(() => {
-    const text = query.trim();
-    if (text.length < SEARCH_MIN) {
+    const value = text.trim();
+    if (value.length < SEARCH_MIN) {
       setSearch(EMPTY_LOAD);
-      setSelected(null);
-      setOpenError(null);
+      setDraft(null);
       return undefined;
     }
     let alive = true;
     setSearch((previous) => ({ loading: true, error: null, data: previous.data }));
     const timer = window.setTimeout(() => {
       api
-        .get<KnowledgeResponse>(`/api/m/knowledge/search?q=${encodeURIComponent(text)}`)
+        .get<KnowledgeResponse>(`/api/m/knowledge/search?q=${encodeURIComponent(value)}`)
         .then((response) => {
           if (!alive) return;
           setSearch({ loading: false, error: null, data: response });
-          setSelected(articleRows(response?.articles, text, labels)[0]?.article ?? null);
-          setOpenError(null);
+          setDraft(null);
+          setDraftError(null);
+          // Первую статью выбираем сразу: экран открывается с решением, а не со списком.
+          setSelectedId(null);
         })
         .catch((cause: unknown) => {
           if (!alive) return;
@@ -140,270 +103,96 @@ export function KnowledgePage({ meta, api, trackAction }: WebPageProps): JSX.Ele
       alive = false;
       window.clearTimeout(timer);
     };
-  }, [api, labels, query, searchTick]);
+  }, [api, text, searchTick]);
 
-  const checkedIndexes = useMemo(() => {
-    const set = new Set<number>();
-    if (!selected) return set;
-    selected.steps.forEach((_step, index) => {
-      if (checked[stepKey(selected.id, index)]) set.add(index);
-    });
-    return set;
-  }, [checked, selected]);
-  const progress = stepsDone(selected?.steps, checkedIndexes);
-  const stats = articleStats(selected);
-
-  const links = sourceLinks(ask.data?.sources);
-  const answer = typeof ask.data?.answer === 'string' ? ask.data.answer.trim() : '';
-  const askSteps = answerSteps(ask.data?.steps);
-  const questionReady = askQuestion.trim().length >= QUESTION_MIN;
-
-  const openArticle = useCallback(
-    (id: string, title: string): void => {
-      trackAction?.('navigate');
-      setOpenError(null);
-      api
-        .get<{ article: unknown }>(`/api/m/knowledge/articles/${encodeURIComponent(id)}`)
-        .then((response) => {
-          const article = normalizeArticle(response?.article);
-          if (!article) {
-            setOpenError(`Статья «${title}» не найдена в базе знаний`);
-            return;
-          }
-          setSelected(article);
-        })
-        .catch((cause: unknown) => setOpenError(errorText(cause)));
+  const toggleStep = useCallback(
+    (article: KnowledgeArticle, index: number): void => {
+      trackAction?.('select');
+      const key = `${article.id}:${index}`;
+      setChecked((previous) => ({ ...previous, [key]: !previous[key] }));
     },
-    [api, trackAction],
+    [trackAction],
   );
 
-  function toggleStep(articleId: string, stepIndex: number): void {
-    trackAction?.('select');
-    const key = stepKey(articleId, stepIndex);
-    setChecked((previous) => ({ ...previous, [key]: !previous[key] }));
-  }
-
-  function askBase(): void {
-    const question = askQuestion.trim();
-    if (question.length < QUESTION_MIN) {
-      setAsk({ loading: false, error: 'Опишите вопрос хотя бы тремя символами', data: null });
-      return;
-    }
+  const buildDraftView = useCallback(async (): Promise<void> => {
+    const data = search.data;
+    if (!data) return;
     trackAction?.('click');
-    setAskBusy(true);
-    setAsk({ loading: true, error: null, data: null });
-    setOpenError(null);
+    setDraftBusy(true);
+    setDraftError(null);
+    try {
+      const sources = data.tickets.filter((ticket) => ticket.status !== 'cancelled').slice(0, DRAFT_TICKETS);
+      const details = await Promise.all(
+        sources.map((ticket) =>
+          api.get<TicketResponse>(`/api/tickets/${ticket.ticketId}`).catch(() => null),
+        ),
+      );
+      const resolutions = details.map((detail, index) => ({
+        number: sources[index]?.number ?? '',
+        text: detail?.ticket.resolution ?? '',
+      }));
+      setDraft(
+        buildDraft({
+          query: text,
+          articles: data.articles,
+          tickets: data.tickets,
+          resolutions,
+        }),
+      );
+    } catch (cause: unknown) {
+      setDraftError(errorText(cause));
+    } finally {
+      setDraftBusy(false);
+    }
+  }, [api, search.data, text, trackAction]);
+
+  const openTaskPicker = useCallback((): void => {
+    trackAction?.('click');
+    setPickOpen(true);
+    setPickState({ loading: true, error: null, data: null });
     api
-      .post<AskResponse>('/api/m/knowledge/ask', { question })
-      .then((response) => setAsk({ loading: false, error: null, data: response }))
-      .catch((cause: unknown) => setAsk({ loading: false, error: askErrorText(cause), data: null }))
-      .finally(() => setAskBusy(false));
+      .get<TicketListResponse>(`/api/tickets?assigneeId=${encodeURIComponent(user.id)}&limit=200`)
+      .then((response) => {
+        setPickState({ loading: false, error: null, data: activeTasks(response.tickets, user.id) });
+      })
+      .catch((cause: unknown) => {
+        setPickState({ loading: false, error: errorText(cause), data: null });
+      });
+  }, [api, trackAction, user.id]);
+
+  function takeToTask(ticketId: string): void {
+    if (!selectedRow) return;
+    trackAction?.('navigate');
+    setPickOpen(false);
+    navigate(`/tasks?ticket=${encodeURIComponent(ticketId)}&article=${encodeURIComponent(selectedRow.id)}`);
   }
 
-  const hasQuery = query.trim().length >= SEARCH_MIN;
+  const pickTasks = pickState.data ?? [];
 
   return (
     <div className="kb-page">
-      <header className="kb-head" data-reveal>
-        <div className="kb-head__titles">
-          <h1 className="ugra-page-title">База знаний</h1>
-          <p className="kb-head__lead">
-            Инструкции и решения из закрытых заявок. ИИ ищет здесь, когда подсказывает инженеру.
-          </p>
-        </div>
-        <SearchField
-          className="kb-head__search"
-          label="Поиск по базе знаний"
-          placeholder="Своими словами: «принтер жуёт бумагу»"
-          value={query}
-          onChange={(value) => {
-            setQuery(value);
-            trackAction?.('input');
-          }}
-        />
-      </header>
+      <SearchHero
+        query={text}
+        busy={search.loading && rows.length === 0}
+        onChange={(value) => {
+          setText(value);
+          trackAction?.('input');
+        }}
+        onSubmit={() => setSearchTick((value) => value + 1)}
+      />
 
-      <div className="kb-layout">
+      {!hasQuery && (
+        <Card className="kb-empty-card">
+          <EmptyState
+            title="Опишите, что сломалось"
+            hint="Своими словами: симптом, модель устройства или код ошибки. Найдём статью и покажем шаги."
+            icon={<Icon name="kb" size={22} />}
+          />
+        </Card>
+      )}
+
+      <div className={hasQuery ? 'kb-layout' : 'kb-layout kb-layout--idle'}>
         <div className="kb-col">
-          <Card padded={false} className="kb-list">
-            <p className="kb-list__head">
-              {rows.length > 0
-                ? `Найдено ${rows.length} ${pluralRu(rows.length, 'статья', 'статьи', 'статей')}`
-                : 'Статьи базы знаний'}
-            </p>
-
-            {search.loading && rows.length === 0 && (
-              <div className="kb-list__pad">
-                <Skeleton lines={3} />
-              </div>
-            )}
-
-            {!hasQuery && !search.loading && (
-              <p className="kb-list__empty-hint">
-                Опишите проблему своими словами — покажем подходящие статьи.
-              </p>
-            )}
-
-            {rows.length > 0 && (
-              <ul className="kb-list__items" aria-label="Найденные статьи" ref={listRef}>
-                {rows.map((row) => (
-                  <li key={row.id}>
-                    <button
-                      type="button"
-                      className={selected?.id === row.id ? 'kb-row kb-row--on' : 'kb-row'}
-                      aria-current={selected?.id === row.id ? 'true' : undefined}
-                      onClick={() => {
-                        trackAction?.('select');
-                        setSelected(row.article);
-                        setOpenError(null);
-                      }}
-                    >
-                      <span className="kb-row__title">{row.title}</span>
-                      {row.symptoms !== '' && <span className="kb-row__symptoms">{row.symptoms}</span>}
-                      <span className="kb-row__foot">
-                        <span className="kb-row__meta">{row.categoryLabel}</span>
-                        {row.scoreLabel && (
-                          <span className="kb-score" title="Оценка релевантности от сервера — не проценты">
-                            совпадение {row.scoreLabel}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-
-          <Card className="kb-draft">
-            <h2 className="kb-card-title">Нет статьи, а заявки идут</h2>
-            <p className="kb-draft__text">
-              Черновик собирается из решений закрытых заявок. Пока маршрута в API нет — кнопка выключена.
-            </p>
-            <DraftButton />
-            <p className="kb-hint">❓ Нужен маршрут сборки черновика из решений по одной проблеме.</p>
-          </Card>
-        </div>
-
-        <div className="kb-col">
-          <Card className="kb-ask">
-            <h2 className="kb-card-title">Спросить базу</h2>
-            <label className="kb-field">
-              <span className="kb-label">Вопрос инженера</span>
-              <textarea
-                className="kb-textarea"
-                rows={3}
-                value={askQuestion}
-                placeholder="Например: принтер HP мигает красным, что проверить сначала?"
-                onChange={(event) => {
-                  setAskQuestion(event.target.value);
-                  trackAction?.('input');
-                }}
-              />
-            </label>
-            <div className="kb-ask__actions">
-              <Button variant="primary" loading={askBusy} disabled={!questionReady} onClick={askBase}>
-                Спросить
-              </Button>
-              <span className="kb-hint">
-                Агент ищет статьи инструментами и ссылается только на найденное — без выдуманных источников.
-              </span>
-            </div>
-          </Card>
-
-          {ask.loading && (
-            <Card className="kb-loading-card" aria-label="Ищем ответ в базе знаний">
-              <Skeleton lines={2} />
-            </Card>
-          )}
-
-          {!ask.loading && ask.error && (
-            <Card tone="danger">
-              <h2 className="kb-card-title">Ответ не получен</h2>
-              <p className="kb-answer__text">{ask.error}</p>
-              <Button variant="secondary" size="sm" onClick={askBase}>
-                Повторить
-              </Button>
-            </Card>
-          )}
-
-          {!ask.loading && ask.data && (
-            <Card className="kb-answer">
-              <div className="kb-answer__head">
-                <h2 className="kb-card-title">Ответ базы знаний</h2>
-                <Badge tone={ask.data.mode === 'template' ? 'warn' : 'accent'}>
-                  {askModeLabel(ask.data.mode)}
-                </Badge>
-              </div>
-
-              {answer !== '' ? (
-                <p className="kb-answer__text">{answer}</p>
-              ) : (
-                <p className="kb-hint">Модель не вернула текст ответа — откройте источники ниже.</p>
-              )}
-
-              {askSteps.length > 0 && (
-                <ol className="kb-answer__steps">
-                  {askSteps.map((step, index) => (
-                    <li key={`${index}-${step}`}>{step}</li>
-                  ))}
-                </ol>
-              )}
-
-              {links.length > 0 && (
-                <div className="kb-answer__sources">
-                  <span className="kb-label">Источники</span>
-                  <div className="kb-answer__links">
-                    {links.map((source) => (
-                      <button
-                        type="button"
-                        key={source.id}
-                        className="kb-source"
-                        onClick={() => openArticle(source.id, source.title)}
-                      >
-                        <span className="kb-source__title">«{source.title}»</span>
-                        <span className="kb-source__id">{source.id}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {ask.data.mode === 'template' && (
-                <p className="kb-hint">Ответ по статьям без модели — проверьте шаги статьи перед выездом.</p>
-              )}
-            </Card>
-          )}
-
-          {openError && (
-            <Card tone="danger">
-              <h2 className="kb-card-title">Статья не открылась</h2>
-              <p className="kb-answer__text">{openError}</p>
-            </Card>
-          )}
-
-          {!hasQuery && (
-            <Card>
-              <EmptyState
-                title="Начните искать"
-                hint="Опишите симптом своими словами: «принтер жуёт бумагу», «нет сети в кабинете», «ошибка лицензии 1С»."
-                icon="⌕"
-              />
-            </Card>
-          )}
-
-          {hasQuery && !search.loading && !search.error && rows.length === 0 && (
-            <Card>
-              <EmptyState
-                title="Ничего не нашли"
-                hint="Соберите черновик статьи из решений закрытых заявок — или измените запрос: модель, код ошибки, симптом."
-                icon="⌕"
-              >
-                <DraftButton />
-              </EmptyState>
-            </Card>
-          )}
-
           {search.error && (
             <Card tone="danger">
               <h2 className="kb-card-title">База знаний не отвечает</h2>
@@ -414,86 +203,117 @@ export function KnowledgePage({ meta, api, trackAction }: WebPageProps): JSX.Ele
             </Card>
           )}
 
-          {selected && (
-            <Card as="article" className="kb-article">
-              <div className="kb-article__meta">
-                <Badge tone="neutral">{categoryName(selected.category, labels)}</Badge>
-                <span className="kb-article__id">статья {selected.id}</span>
-              </div>
-              <h2 className="kb-article__title">{selected.title}</h2>
-
-              {selected.symptoms.length > 0 && (
-                <section className="kb-article__block">
-                  <h3 className="kb-label">Симптомы</h3>
-                  <ul className="kb-symptoms">
-                    {selected.symptoms.map((symptom) => (
-                      <li key={symptom}>{symptom}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {selected.steps.length > 0 && (
-                <section className="kb-article__block">
-                  <div className="kb-steps__head">
-                    <h3 className="kb-label">Шаги статьи</h3>
-                    <span className="kb-steps__count">{progress.label}</span>
-                  </div>
-                  <ol className="kb-steps">
-                    {selected.steps.map((step, index) => {
-                      const on = checkedIndexes.has(index);
-                      return (
-                        <li key={stepKey(selected.id, index)}>
-                          <button
-                            type="button"
-                            className={on ? 'kb-step kb-step--done' : 'kb-step'}
-                            aria-pressed={on}
-                            onClick={() => toggleStep(selected.id, index)}
-                          >
-                            <span className={on ? 'kb-step__box kb-step__box--on' : 'kb-step__box'} aria-hidden="true">
-                              {on && (
-                                <svg
-                                  width="13"
-                                  height="13"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M5 12l5 5 9-10" />
-                                </svg>
-                              )}
-                            </span>
-                            <span className="kb-step__text">
-                              <span className="kb-step__num">{index + 1}.</span> {step}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                  <p className="kb-hint">Отметки живут в этом окне: на экране базы знаний заявки нет.</p>
-                </section>
-              )}
-
-              {selected.solution !== '' && (
-                <InsightBlock kind="meaning" title="Что обычно помогает">
-                  {selected.solution}
-                </InsightBlock>
-              )}
-
-              {stats && (
-                <div className="kb-article__stats" data-reveal>
-                  <span className="kb-label">Статистика статьи</span>
-                  <strong className="kb-article__stat-value">{stats.label}</strong>
-                </div>
-              )}
+          {search.loading && rows.length === 0 && !search.error && (
+            <Card className="kb-loading-card">
+              <Skeleton lines={4} />
             </Card>
           )}
+
+          {hasQuery && !search.loading && !search.error && rows.length === 0 && (
+            <Card>
+              <EmptyState
+                title="Статьи по этому запросу нет"
+                hint="Назовите модель или код ошибки — или соберите черновик из решений похожих заявок."
+                icon={<Icon name="kb" size={22} />}
+              />
+            </Card>
+          )}
+
+          {selectedRow && (
+            <ArticleView
+              row={selectedRow}
+              best={selectedRow.id === rows[0]?.id}
+              checked={checked}
+              related={related}
+              collected={collected}
+              taking={pickState.loading}
+              onToggleStep={(index) => toggleStep(selectedRow.article, index)}
+              onTakeToTask={openTaskPicker}
+            />
+          )}
         </div>
+
+        <aside className="kb-side">
+          <DraftPanel
+            query={text}
+            articleCount={rows.length}
+            ticketsCount={related.length > 0 ? collected : search.data?.tickets.length ?? 0}
+            related={related}
+            draft={draft}
+            building={draftBusy}
+            error={draftError}
+            onBuild={() => void buildDraftView()}
+          />
+
+          {others.length > 0 && (
+            <Card className="kb-more">
+              <p className="kb-list__head">
+                Ещё {others.length} {pluralRu(others.length, 'совпадение', 'совпадения', 'совпадений')}
+              </p>
+              <ul className="kb-more__items" ref={moreRef}>
+                {others.map((row) => (
+                  <li key={row.id}>
+                    <button
+                      type="button"
+                      className="kb-more__row"
+                      onClick={() => {
+                        trackAction?.('select');
+                        setSelectedId(row.id);
+                      }}
+                    >
+                      <span className="kb-more__title">{row.title}</span>
+                      {row.summary !== '' && <span className="kb-more__summary">{row.summary}</span>}
+                      {row.helpLabel !== null && <span className="kb-more__help">{row.helpLabel}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </aside>
       </div>
+
+      <Modal open={pickOpen} title="Взять статью в задачу" onClose={() => setPickOpen(false)}>
+        {pickState.loading && <Skeleton lines={3} />}
+
+        {!pickState.loading && pickState.error && (
+          <div className="kb-pick" role="alert">
+            <p>Задачи не загрузились: {pickState.error}</p>
+            <Button variant="secondary" size="sm" onClick={openTaskPicker}>
+              Повторить
+            </Button>
+          </div>
+        )}
+
+        {!pickState.loading && !pickState.error && pickTasks.length === 0 && (
+          <EmptyState
+            title="Активных задач нет"
+            hint="Возьмите заявку в «Моих задачах» — и вернитесь сюда за инструкцией."
+          >
+            <Button variant="secondary" onClick={() => navigate('/tasks')}>
+              Открыть мои задачи
+            </Button>
+          </EmptyState>
+        )}
+
+        {pickTasks.length > 0 && (
+          <div className="kb-pick">
+            <p className="kb-pick__lead">Статья откроется на карточке выбранной задачи.</p>
+            <ul className="kb-pick__list">
+              {pickTasks.map((ticket) => (
+                <li key={ticket.id}>
+                  <button type="button" className="kb-pick__row" onClick={() => takeToTask(ticket.id)}>
+                    <span className="kb-pick__number">№ {shortTicketNumber(ticket.number)}</span>
+                    <span className="kb-pick__title">
+                      {ticket.status === 'in_progress' ? 'В работе' : 'Назначена'}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 import './executors.css';
 import type { EngineerInfo, EngineersResponse, Ticket, TicketListResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
@@ -271,7 +272,7 @@ function CurrentTasks({
                   }}
                 >
                   <PriorityMark priority={ticket.priority} isEmergency={ticket.isEmergency} />
-                  <span className="exec-task__number">№ {ticket.number}</span>
+                  <span className="exec-task__number">№ {shortTicketNumber(ticket.number)}</span>
                   <span className="exec-task__title">{categoryLabel(meta, ticket.category)}</span>
                   <Badge tone={ticketStatusTone(ticket.status)}>{formatTicketStatus(ticket.status)}</Badge>
                   <span className={`exec-task__due${due === null ? '' : ` exec-task__due--${due.tone}`}`}>

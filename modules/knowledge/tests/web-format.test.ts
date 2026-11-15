@@ -1,21 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import type { MetaResponse } from '@ugra/contracts';
+import type { MetaResponse, Ticket } from '@ugra/contracts';
 import {
+  activeTasks,
   articleRows,
   articleStats,
+  articleSummary,
   askModeLabel,
+  buildDraft,
   categoryLabels,
   categoryName,
+  dedupeArticles,
   filterArticles,
   formatScore,
   normalizeArticle,
   pluralRu,
   queryWords,
+  relatedGroups,
   sourceLinks,
   stepKey,
   stepsDone,
 } from '../web/format';
-import type { KnowledgeArticle } from '../web/format';
+import type { KnowledgeArticle, SimilarTicket } from '../web/format';
 
 function article(overrides: Partial<KnowledgeArticle> = {}): KnowledgeArticle {
   return {
@@ -257,5 +262,169 @@ describe('подписи', () => {
 
   it('слова запроса без служебных и коротких', () => {
     expect(queryWords('Что это: принтер жуёт бумагу?')).toEqual(['принтер', 'жуёт', 'бумагу']);
+  });
+});
+
+describe('articleSummary и дубли', () => {
+  it('суть — первая фраза решения', () => {
+    expect(articleSummary(article({ solution: 'Проверить лоток. Затем картридж.' }))).toBe('Проверить лоток');
+  });
+
+  it('без решения берём симптомы', () => {
+    expect(articleSummary(article({ solution: '', symptoms: ['не печатает', 'мигает'] }))).toBe(
+      'не печатает · мигает',
+    );
+  });
+
+  it('длинное обрезается по слову с многоточием', () => {
+    const long = 'слово '.repeat(40);
+    const summary = articleSummary(article({ solution: long }), 40);
+
+    expect(summary.endsWith('…')).toBe(true);
+    expect(summary.length).toBeLessThanOrEqual(41);
+  });
+
+  it('одинаковые статьи по заголовку не дублируются', () => {
+    const list = dedupeArticles([
+      article({ id: 'kb-1', title: 'Один и тот же' }),
+      article({ id: 'kb-2', title: 'один и тот же' }),
+      article({ id: 'kb-3', title: 'Другой' }),
+    ]);
+
+    expect(list.map((item) => item.id)).toEqual(['kb-1', 'kb-3']);
+  });
+
+  it('строки списка получают суть и подпись статистики, если она есть', () => {
+    const rows = articleRows([article({ stats: { helped: 9, total: 11 } })]);
+
+    expect(rows[0]?.helpLabel).toBe('помогла 9 из 11');
+    expect(rows[0]?.summary).toBe('Обычно помогает замена картриджа или перезапуск устройства');
+  });
+});
+
+describe('похожие заявки', () => {
+  function similar(overrides: Partial<SimilarTicket> = {}): SimilarTicket {
+    return {
+      ticketId: 'ticket-1',
+      number: 'З-1',
+      status: 'closed',
+      title: 'принтер не печатает',
+      score: 1,
+      ...overrides,
+    };
+  }
+
+  it('одинаковые формулировки собираются в одну строку со счётчиком', () => {
+    const groups = relatedGroups([
+      similar(),
+      similar({ ticketId: 'ticket-2', number: 'З-2' }),
+      similar({ ticketId: 'ticket-3', title: 'нет сети' }),
+    ]);
+
+    expect(groups).toEqual([
+      { title: 'принтер не печатает', count: 2, number: 'З-2' },
+      { title: 'нет сети', count: 1, number: 'З-1' },
+    ]);
+  });
+
+  it('отменённые заявки решением не считаются', () => {
+    const groups = relatedGroups([similar({ status: 'cancelled' }), similar({ ticketId: 'ticket-2' })]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.count).toBe(1);
+  });
+
+  it('пустой ответ — пустой список', () => {
+    expect(relatedGroups([])).toEqual([]);
+  });
+});
+
+describe('активные задачи инженера', () => {
+  function ticket(overrides: Partial<Ticket> = {}): Ticket {
+    return {
+      id: 't-1',
+      number: 'З-1',
+      appealId: 'a-1',
+      status: 'assigned',
+      priority: 'medium',
+      category: 'printer',
+      departmentId: null,
+      assigneeId: 'u-engineer',
+      isEmergency: false,
+      incidentId: null,
+      reactDueAt: null,
+      slaDueAt: null,
+      equipmentId: null,
+      locationId: null,
+      confirmedBy: null,
+      confirmedAt: null,
+      createdAt: '2026-11-14T08:00:00.000Z',
+      updatedAt: '2026-11-14T08:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  it('оставляет назначенные и взятые в работу', () => {
+    const list = activeTasks(
+      [
+        ticket(),
+        ticket({ id: 't-2', status: 'in_progress' }),
+        ticket({ id: 't-3', status: 'resolved' }),
+        ticket({ id: 't-4', assigneeId: 'u-other' }),
+      ],
+      'u-engineer',
+    );
+
+    expect(list.map((item) => item.id)).toEqual(['t-1', 't-2']);
+  });
+});
+
+describe('черновик статьи из решений', () => {
+  it('собирает шаги статей без дублей и решения заявок', () => {
+    const draft = buildDraft({
+      query: 'VPN не подключается',
+      articles: [
+        article({ id: 'kb-vpn', title: 'VPN: подключение', steps: ['Проверить интернет', 'Перезапустить клиент'] }),
+        article({ id: 'kb-2', title: 'VPN: сеть', steps: ['Проверить интернет', 'Проверить сервер'] }),
+      ],
+      tickets: [
+        {
+          ticketId: 'ticket-1',
+          number: 'З-1',
+          status: 'closed',
+          title: 'VPN не подключается из дома',
+          score: 1,
+        },
+      ],
+      resolutions: [
+        { number: 'З-1', text: 'Перевыпущен сертификат' },
+        { number: 'З-2', text: '  ' },
+      ],
+    });
+
+    expect(draft.title).toBe('VPN не подключается');
+    expect(draft.steps.map((step) => step.text)).toEqual([
+      'Проверить интернет',
+      'Перезапустить клиент',
+      'Проверить сервер',
+    ]);
+    expect(draft.steps[0]?.articleTitle).toBe('VPN: подключение');
+    expect(draft.solutions).toEqual([{ number: 'З-1', text: 'Перевыпущен сертификат' }]);
+    expect(draft.symptoms).toEqual(['VPN не подключается из дома']);
+    expect(draft.empty).toBe(false);
+  });
+
+  it('без источников черновик честно пустой', () => {
+    const draft = buildDraft({ query: 'wi-fi', articles: [], tickets: [] });
+
+    expect(draft.empty).toBe(true);
+    expect(draft.steps).toEqual([]);
+    expect(draft.solutions).toEqual([]);
+  });
+
+  it('заголовок берётся из статьи, если запрос пустой', () => {
+    const draft = buildDraft({ query: '  ', articles: [article()], tickets: [] });
+
+    expect(draft.title).toBe('Принтер мигает красным индикатором');
   });
 });

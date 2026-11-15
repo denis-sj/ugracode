@@ -28,14 +28,13 @@ function ruleTitles(rules: EmergencyRulesFile, ids: readonly string[]): string[]
 }
 
 function notificationBody(
-  appealId: string,
   verdict: EmergencyVerdict,
   rules: EmergencyRulesFile,
 ): string {
   const label = verdict.level === 'confirmed' ? 'Авария подтверждена' : 'Авария под вопросом';
   const quotes = verdict.signs.slice(0, 3).map((sign) => `«${sign.quote}»`);
   const titles = ruleTitles(rules, verdict.rulesMatched);
-  const parts = [`${label}: обращение ${appealId}.`];
+  const parts = [`${label}.`];
   if (quotes.length > 0) parts.push(`Признаки: ${quotes.join(', ')}.`);
   if (titles.length > 0) parts.push(`Правила: ${titles.join('; ')}.`);
   parts.push('Откройте заявку и сверьтесь с чек-листом.');
@@ -67,7 +66,7 @@ async function notifyDuty(
   if (verdict.notifyUserIds.length === 0) return;
 
   const title = 'Авария по обращению';
-  const body = notificationBody(ctx.appeal.id, verdict, rules);
+  const body = notificationBody(verdict, rules);
   const createdAt = ctx.ports.clock.now().toISOString();
 
   for (const toUserId of verdict.notifyUserIds) {

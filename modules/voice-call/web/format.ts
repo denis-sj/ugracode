@@ -1,3 +1,4 @@
+import { shortTicketNumber } from '@ugra/contracts';
 /** Звонок, как его отдаёт `GET /api/m/voice-call/calls` (схема — `server/view.ts`). */
 export interface CallLineView {
   speaker: 'caller' | 'ai';
@@ -89,5 +90,5 @@ export function sourceLabel(line: CallLineView): string | null {
 
 export function statusText(call: CallView): string {
   if (call.status === 'active') return 'Идёт разговор';
-  return call.ticketNumber ? `Заявка ${call.ticketNumber}` : 'Звонок завершён';
+  return call.ticketNumber ? `Заявка ${shortTicketNumber(call.ticketNumber)}` : 'Звонок завершён';
 }
