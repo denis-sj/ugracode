@@ -24,7 +24,8 @@ describe('tabsForRole', () => {
 
   it('у диспетчера очередь, аварии, звонок, журнал и исполнители', () => {
     const tabs = tabsForRole('dispatcher');
-    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Звонок', 'Журнал', 'Исполнители', 'С ИИ / без ИИ']);
+    expect(tabs.map((tab) => tab.label)).toEqual(['Очередь', 'Аварии', 'Звонок', 'Журнал', 'Исполнители']);
+    expect(tabs.some((tab) => tab.path === '/measure')).toBe(false);
     expect(tabs.find((tab) => tab.path === '/incidents')?.danger).toBe(true);
     expect(tabs.find((tab) => tab.path === '/calls')?.icon).toBe('phone');
   });

@@ -40,7 +40,6 @@ const TABS: Record<Role, readonly ShellTab[]> = {
     { path: '/calls', label: 'Звонок', icon: 'phone' },
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
-    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'measure' },
   ],
   engineer: [
     { path: '/tasks', label: 'Мои задачи', icon: 'tasks', counter: 'tasks' },
@@ -58,7 +57,6 @@ const TABS: Record<Role, readonly ShellTab[]> = {
     { path: '/journal', label: 'Журнал', icon: 'journal' },
     { path: '/executors', label: 'Исполнители', icon: 'executors' },
     { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
-    { path: '/measure', label: 'С ИИ / без ИИ', icon: 'measure' },
   ],
 };
 
