@@ -990,3 +990,13 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 .s-save .caveat { bottom: 74px; }
 
 .demo-hint { margin: 24px 0 0; font-size: 22px; color: var(--dim); }
+
+/* стек: чистая схема, мелкие стрелки, подписи слоёв и связей */
+.stack-svg .n-title { font-size: 28px; }
+.stack-svg .n-sub { font-size: 19px; }
+.stack-svg .n-head { font-family: Manrope, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.12em; fill: #8A90A6; }
+.stack-svg .e-label { font-family: Manrope, sans-serif; font-weight: 600; font-size: 16px; fill: #8A90A6; }
+.stack-svg .strip { opacity: 0.85; }
+.stack-svg .edge { stroke: rgba(15, 18, 34, 0.35); stroke-width: 2px; stroke-linecap: round; }
+.stack-svg .edge-soft { opacity: 0.5; }
+.stack-svg .box-dash { stroke: rgba(15, 18, 34, 0.25); }
