@@ -34,6 +34,17 @@ export const hotspotsReport: ReportDef<HotspotsParams, HotspotsResultType> = {
   },
 };
 
+/** Минуты → «12 ч 46 мин», «45 мин», «2 дн 3 ч»: так время читается с первого взгляда. */
+export function durationText(minutes: number): string {
+  const total = Math.max(0, Math.round(minutes));
+  const days = Math.floor(total / 1440);
+  const hours = Math.floor((total % 1440) / 60);
+  const rest = total % 60;
+  if (days > 0) return hours > 0 ? `${days} дн ${hours} ч` : `${days} дн`;
+  if (hours > 0) return rest > 0 ? `${hours} ч ${rest} мин` : `${hours} ч`;
+  return `${rest} мин`;
+}
+
 /** Только эти пары «показатель → значение» увидит модель вывода. */
 export function factsOf(result: HotspotsResultType): Fact[] {
   const facts: Fact[] = [
@@ -46,18 +57,15 @@ export function factsOf(result: HotspotsResultType): Fact[] {
     },
     { label: 'Заявок в точках с повторами', value: result.repeatedTickets },
   ];
-  result.rows.slice(0, 3).forEach((row, index) => {
-    const position = index + 1;
-    facts.push({ label: `Точка ${position}: заявок`, value: row.count });
+  // Подписи — сами места, а не «Точка 1»: модель пересказывает факты, и руководитель читает понятный текст.
+  for (const row of result.rows.slice(0, 3)) {
+    facts.push({ label: `${row.label}: заявок`, value: row.count });
+    facts.push({ label: `${row.label}: доля, %`, value: row.sharePercent });
     facts.push({
-      label: `Точка ${position}: доля, %`,
-      value: row.sharePercent,
+      label: `${row.label}: среднее решение`,
+      value: row.avgResolutionMinutes === null ? 'нет данных' : durationText(row.avgResolutionMinutes),
     });
-    facts.push({
-      label: `Точка ${position}: среднее решение, мин`,
-      value: row.avgResolutionMinutes ?? 'нет данных',
-    });
-  });
+  }
   const top = result.rows[0];
   facts.push({
     label: 'Главная точка',

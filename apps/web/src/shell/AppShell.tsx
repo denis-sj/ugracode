@@ -7,6 +7,7 @@ import { webModules } from '../web-modules';
 import type { HashRoute } from '../router';
 import { toHash } from '../router';
 import { ProfilePage } from '../screens/ProfilePage';
+import { TeamPage } from '../screens/TeamPage';
 import { NotificationsButton } from './NotificationsButton';
 import { TabIcon } from './TabIcon';
 import { firstTab, isTabPath, roleLabel, shortName, tabTitle, tabsForRole, type TabCounter } from './lib';
@@ -183,6 +184,8 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
           createElement(PageComponent, { key: route.path, ...pageProps })
         ) : route.path === '/profile' ? (
           <ProfilePage user={user} meta={meta} api={api} onLogout={onLogout} />
+        ) : route.path === '/team' && isTabPath(user.role, '/team') ? (
+          <TeamPage user={user} meta={meta} api={api} />
         ) : (
           <Placeholder title={title} />
         )}

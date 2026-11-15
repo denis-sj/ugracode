@@ -1,28 +1,25 @@
 import './quality.css';
 import type { JSX, RefObject } from 'react';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Card, EmptyState, formatDateTime, useListMotion } from '@ugra/ui';
+import { Button, Card, EmptyState, celebrate, formatDateTime, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import type { QualityReport } from '../contracts';
 import { loadQualityReport, runQualityEval } from './api';
-import { QUALITY_COLUMNS, caseRows, metricRows, summaryText } from './format';
-import type { CaseRow, MetricRow, ThresholdState } from './format';
+import { KEY_METRICS, QUALITY_COLUMNS, caseRows, metricRows, metricViews, qualityScore } from './format';
+import type { CaseRow } from './format';
+import { MetricCard, RunScanner, ScoreRing, caseVerdict } from './QualityVisual';
+import type { ScanState } from './QualityVisual';
 
 /** Экран 14 «Качество ИИ» (К2): прогон набора и таблица «эталон / ИИ». */
 
-const RUN_HINT = 'Гоняем 10 обращений через движок в режиме заглушки: до 60 секунд.';
+/** Шаг «живого» показа прогона: обращения проверяются по очереди, результат — из ответа сервера. */
+const SCAN_STEP_MS = 320;
 
-const METRIC_TONE: Readonly<Record<ThresholdState, 'ok' | 'danger' | 'muted'>> = {
-  met: 'ok',
-  unmet: 'danger',
-  none: 'muted',
-};
-
-const METRIC_LABEL: Readonly<Record<ThresholdState, string>> = {
-  met: 'порог выполнен',
-  unmet: 'порог не выполнен',
-  none: 'нет эталона',
-};
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -30,18 +27,6 @@ function errorText(error: unknown): string {
 
 function detailId(id: string): string {
   return `qlt-detail-${id.replace(/[^\w-]/g, '-')}`;
-}
-
-function MetricCell({ metric }: { metric: MetricRow }): JSX.Element {
-  return (
-    <div className={`qlt-metric qlt-metric--${metric.state}`}>
-      <span className="qlt-metric__title">{metric.title}</span>
-      <span className="qlt-metric__value">{metric.display}</span>
-      <span className="qlt-metric__threshold">порог {metric.threshold}</span>
-      <Badge tone={METRIC_TONE[metric.state]}>{METRIC_LABEL[metric.state]}</Badge>
-      {metric.note && <span className="qlt-metric__note">{metric.note}</span>}
-    </div>
-  );
 }
 
 function CaseDetails({ row }: { row: CaseRow }): JSX.Element {
@@ -177,6 +162,11 @@ export function QualityPage({ api, trackAction }: WebPageProps): JSX.Element {
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [scanTitles, setScanTitles] = useState<{ id: string; title: string }[]>([]);
+  const [scanStates, setScanStates] = useState<ScanState[]>([]);
+  const [scanDone, setScanDone] = useState(0);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const heroRef = useRef<HTMLDivElement | null>(null);
   const tbodyRef = useRef<HTMLTableSectionElement | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
@@ -197,13 +187,39 @@ export function QualityPage({ api, trackAction }: WebPageProps): JSX.Element {
 
   const run = async (): Promise<void> => {
     if (running) return;
+    const titles = caseRows(report?.cases).map((row) => ({ id: row.id, title: row.title }));
+    const list = titles.length > 0 ? titles : Array.from({ length: 10 }, (_v, index) => ({ id: `case-${index + 1}`, title: `Обращение ${index + 1}` }));
+    setScanTitles(list);
+    setScanStates(list.map(() => 'wait'));
+    setScanDone(0);
     setRunning(true);
     setRunError(null);
     trackAction?.('click');
+    // Пока сервер гоняет набор, бегунок идёт по обращениям; ответ не придёт раньше — ждём на последнем.
+    let cursor = 0;
+    const timer = window.setInterval(() => {
+      cursor = Math.min(cursor + 1, list.length - 1);
+      setScanStates((states) => states.map((state, index) => (index === cursor ? 'scan' : state)));
+    }, SCAN_STEP_MS);
+    setScanStates((states) => states.map((state, index) => (index === 0 ? 'scan' : state)));
     try {
-      setReport(await runQualityEval(api));
+      const fresh = await runQualityEval(api);
+      window.clearInterval(timer);
+      const freshRows = caseRows(fresh.cases);
+      // Итог каждого обращения — из настоящего ответа: раскрываем по одному.
+      for (let index = 0; index < list.length; index += 1) {
+        const verdict = caseVerdict(freshRows.find((row) => row.id === list[index]?.id) ?? freshRows[index]);
+        setScanStates((states) => states.map((state, at) => (at === index ? verdict : state)));
+        setScanDone(index + 1);
+        await wait(SCAN_STEP_MS / 2);
+      }
+      await wait(400);
+      setReport(fresh);
       setExpanded(null);
+      setUpdatedAt(Date.now());
+      celebrate(heroRef.current);
     } catch (error) {
+      window.clearInterval(timer);
       setRunError(errorText(error));
     } finally {
       setRunning(false);
@@ -211,7 +227,10 @@ export function QualityPage({ api, trackAction }: WebPageProps): JSX.Element {
   };
 
   const rows = useMemo(() => caseRows(report?.cases), [report]);
-  const metrics = useMemo(() => metricRows(report?.summary?.metrics), [report]);
+  const metrics = useMemo(() => metricViews(metricRows(report?.summary?.metrics)), [report]);
+  const score = useMemo(() => qualityScore(report, metrics), [report, metrics]);
+  const keyMetrics = metrics.filter((metric) => KEY_METRICS.includes(metric.key));
+  const otherMetrics = metrics.filter((metric) => !KEY_METRICS.includes(metric.key) && metric.state !== 'none');
   const hasReport = report !== null && !report.empty;
   useListMotion(tbodyRef, rows.length > 0);
 
@@ -228,23 +247,13 @@ export function QualityPage({ api, trackAction }: WebPageProps): JSX.Element {
         <div className="qlt-head__titles">
           <h1 className="ugra-page-title qlt-title">Качество ИИ</h1>
           <p className="qlt-sub">
-            Тестовый набор: 10 обращений с эталонной разметкой. Сравниваем ответ ИИ с эталоном по каждому
-            полю.
+            10 обращений с эталонной разметкой проходят через того же агента, что и в демо. Каждое поле
+            сравнивается с эталоном.
           </p>
-        </div>
-        <div className="qlt-actions">
-          <Button variant="primary" size="lg" loading={running} onClick={() => void run()}>
-            {runLabel}
-          </Button>
         </div>
       </div>
 
-      {running && (
-        <p className="qlt-status" role="status">
-          <span className="qlt-spinner" aria-hidden="true" />
-          {RUN_HINT}
-        </p>
-      )}
+      {running && <RunScanner titles={scanTitles} states={scanStates} done={scanDone} />}
 
       {runError && (
         <Card tone="danger" className="qlt-error-card">
@@ -295,39 +304,58 @@ export function QualityPage({ api, trackAction }: WebPageProps): JSX.Element {
 
       {!loading && hasReport && report && (
         <>
-          <Card className="qlt-summary">
-            <div className="qlt-summary__head">
-              <div>
-                <h2 className="qlt-section-title">Сводка с порогами</h2>
-                <p className="qlt-summary__text">{summaryText(report)}</p>
-              </div>
-              <div className="qlt-summary__meta">
-                {report.startedAt && <span>{formatDateTime(report.startedAt)}</span>}
-                {report.model && <span>{report.model}</span>}
-                {report.duration && <span>{report.duration}</span>}
-                {report.set && <span>набор {report.set}</span>}
-              </div>
-            </div>
-            <div className="qlt-metrics">
-              {metrics.map((metric) => (
-                <MetricCell key={metric.key} metric={metric} />
-              ))}
-            </div>
-            <p className="qlt-caveat">
-              Набор — 10 обращений, синтетика: цифры могут быть завышены и не заменяют настройку на большом
-              наборе. Без эталона оценщик показывает «—»: это «не проверяли», а не «всё хорошо».
-            </p>
-            {report.notes.length > 0 && (
-              <details className="qlt-notes">
-                <summary>Оговорки отчёта</summary>
-                <ul>
-                  {report.notes.map((note, index) => (
-                    <li key={`${index}-${note.slice(0, 24)}`}>{note}</li>
+          <section className={updatedAt ? 'qv-hero qv-hero--fresh' : 'qv-hero'} ref={heroRef} key={updatedAt ?? 'initial'}>
+            <ScoreRing score={score} />
+            <div className="qv-hero__text">
+              <h2 className="qv-hero__verdict">{score.verdict}</h2>
+              <p className="qv-hero__meta">
+                {report.cases.length} обращений
+                {report.model ? ` · ${report.model}` : ''}
+                {report.duration ? ` · ${report.duration}` : ''}
+                {report.startedAt ? ` · ${formatDateTime(report.startedAt)}` : ''}
+                {updatedAt ? ' · обновлено только что' : ''}
+              </p>
+              {score.gaps.length > 0 && (
+                <ul className="qv-hero__gaps">
+                  {score.gaps.map((gap) => (
+                    <li key={gap}>{gap}</li>
                   ))}
                 </ul>
-              </details>
-            )}
-          </Card>
+              )}
+            </div>
+            <div className="qv-hero__action">
+              <Button variant="primary" size="lg" loading={running} onClick={() => void run()}>
+                {runLabel}
+              </Button>
+              <span className="qv-hero__hint">Набор 10 обращений · результат ниже</span>
+            </div>
+          </section>
+
+          <div className="qv-grid qv-grid--key">
+            {keyMetrics.map((metric, index) => (
+              <MetricCard key={metric.key} metric={metric} index={index} large />
+            ))}
+          </div>
+          <div className="qv-grid">
+            {otherMetrics.map((metric, index) => (
+              <MetricCard key={metric.key} metric={metric} index={index + keyMetrics.length} />
+            ))}
+          </div>
+          {score.unchecked.length > 0 && (
+            <p className="qv-unchecked">
+              Не проверялось — в наборе нет эталона: {score.unchecked.join(', ')}. Это «не мерили», а не «всё хорошо».
+            </p>
+          )}
+          {report.notes.length > 0 && (
+            <details className="qlt-notes">
+              <summary>Оговорки отчёта</summary>
+              <ul>
+                {report.notes.map((note, index) => (
+                  <li key={`${index}-${note.slice(0, 24)}`}>{note}</li>
+                ))}
+              </ul>
+            </details>
+          )}
 
           <QualityTable rows={rows} expanded={expanded} onToggle={toggle} tbodyRef={tbodyRef} />
         </>

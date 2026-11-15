@@ -1,5 +1,12 @@
 import type { Role, User } from '@ugra/contracts';
 
+/** Уведомление о назначении открывает конкретную задачу в кабинете исполнителя. */
+export function notificationPath(role: Role, ticketId: string | null): string {
+  if (role === 'engineer') return ticketId ? `/tasks?ticket=${encodeURIComponent(ticketId)}` : '/tasks';
+  if (role === 'applicant') return '/tickets';
+  return ticketId ? `/review?id=${encodeURIComponent(ticketId)}` : '/queue';
+}
+
 export type TabCounter = 'queue' | 'incidents' | 'tasks';
 
 /** Иконка над подписью вкладки (вариант E «Вдавленное стекло с иконками»). */
@@ -49,6 +56,7 @@ const TABS: Record<Role, readonly ShellTab[]> = {
     { path: '/dashboard', label: 'Дашборд', icon: 'dashboard' },
     { path: '/reports', label: 'Отчёты', icon: 'reports' },
     { path: '/quality', label: 'Качество ИИ', icon: 'quality' },
+    { path: '/team', label: 'Сотрудники', icon: 'executors' },
   ],
   admin: [
     { path: '/queue', label: 'Очередь', icon: 'queue', counter: 'queue' },

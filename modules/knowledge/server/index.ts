@@ -3,6 +3,7 @@ import type { KnowledgeArticle, ModuleDeps, ToolDef } from '@ugra/core';
 import { defineModule, runAgent } from '@ugra/core';
 import { engineerAssistant } from './assistant';
 import {
+  ArticleListResponse,
   ArticleResponse,
   ArticleStepsResponse,
   AskQuestionInput,
@@ -90,6 +91,11 @@ export default defineModule({
       },
       { response: KnowledgeSearchResponse },
     );
+
+    /** Каталог статей: пустой экран инженера показывает всю базу, а не «опишите проблему». */
+    router.get('/articles', 'tickets.read', async () => ({ articles: await deps.db.listKnowledgeArticles() }), {
+      response: ArticleListResponse,
+    });
 
     /** Статья по id — кнопка «Открыть статью» у источника в ответе агента. */
     router.get(

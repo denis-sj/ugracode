@@ -66,7 +66,8 @@ import { resolveRequestUser, sessionCookieHeader } from './auth';
 import { traceEventFromBus } from './agent-trace';
 import { canSeeEvent } from './event-access';
 import { ProgressHub } from './hub';
-import { registerTtsRoute } from './tts';
+import { registerTtsRoute, warmTts } from './tts';
+import { peopleRoutes } from './people-routes';
 
 export interface BuildServerOptions {
   store: KernelStore;
@@ -75,6 +76,8 @@ export interface BuildServerOptions {
   modules?: readonly ServerModule[];
   env?: Record<string, string | undefined>;
   logger?: boolean;
+  /** Фразы, которые озвучить заранее при старте (звонок по QR): тесты их не передают. */
+  warmTts?: readonly string[];
 }
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -88,7 +91,7 @@ interface RouteContext {
   setCookie(value: string): void;
 }
 
-interface RouteDef {
+export interface RouteDef {
   method: Method;
   url: string;
   access: Permission;
@@ -405,6 +408,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
   };
 
   registerCoreRoutes(addRoute, options.store, ctx, data, env, options.ports);
+  for (const route of peopleRoutes(options.store, data)) addRoute(route);
 
   for (const mounted of collectRoutes(enabled, deps)) {
     for (const route of mounted.routes) {
@@ -430,7 +434,12 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
   }
 
   registerStreamRoute(ctx, options.store);
-  registerTtsRoute(app, { store: options.store, ports: options.ports });
+  const ttsCache = registerTtsRoute(app, { store: options.store, ports: options.ports });
+  if (options.warmTts && options.warmTts.length > 0) {
+    void warmTts(ttsCache, options.ports, options.warmTts).then((count) => {
+      if (count > 0) app.log.info({ count }, 'голос звонка прогрет');
+    });
+  }
   return ctx;
 }
 

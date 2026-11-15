@@ -75,8 +75,11 @@ function errorText(error: unknown): string {
 }
 
 function createCallId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  return `call-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  if (typeof crypto === 'undefined') return `call-${Date.now()}`;
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  // randomUUID есть только в защищённом контексте; по http (демо по локальной сети) берём getRandomValues.
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return `call-${Date.now()}-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** Phone-down, чтобы красная кнопка читалась без подписи. */

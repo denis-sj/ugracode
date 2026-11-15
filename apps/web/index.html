@@ -25,7 +25,25 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height:100vh;display:grid;place-content:center;gap:16px;text-align:center;padding:24px;font-family:system-ui,sans-serif;background:#f7f7fb;color:#252536">
+        <strong style="font-size:24px">Диспетчерская с ИИ</strong>
+        <p id="boot-status" role="status">Загружаем страницу звонка…</p>
+        <button type="button" onclick="window.location.reload()" style="padding:12px 20px;border:0;border-radius:12px;background:#5a49e0;color:white;font:inherit">Обновить</button>
+        <noscript>Для звонка включите JavaScript в настройках браузера.</noscript>
+      </div>
+    </div>
+    <script>
+      (function () {
+        function loadingFailed() {
+          var message = document.getElementById('boot-status');
+          if (message) message.textContent = 'Не удалось загрузить приложение. Нажмите «Обновить» или переключите Wi-Fi / мобильный интернет.';
+        }
+        window.addEventListener('error', loadingFailed, true);
+        window.addEventListener('unhandledrejection', loadingFailed);
+        window.setTimeout(loadingFailed, 12000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

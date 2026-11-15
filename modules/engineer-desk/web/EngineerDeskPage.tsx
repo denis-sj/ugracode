@@ -2,7 +2,7 @@ import './engineer-desk.css';
 import type { Ticket, TicketListResponse, TicketResponse, User, UsersResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, EmptyState } from '@ugra/ui';
+import { Button, Card, EmptyState, useBackgroundRefresh } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
   deadlineInputToIso,
@@ -76,6 +76,10 @@ export function EngineerDeskPage({ user, meta, api, navigate, query, trackAction
   const [previews, setPreviews] = useState<Record<string, TaskPreview>>({});
   const [users, setUsers] = useState<User[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(() => query.get('ticket'));
+  const requestedTicketId = query.get('ticket');
+  useEffect(() => {
+    if (requestedTicketId) setSelectedId(requestedTicketId);
+  }, [requestedTicketId]);
 
   const [detail, setDetail] = useState<TicketResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -134,6 +138,8 @@ export function EngineerDeskPage({ user, meta, api, navigate, query, trackAction
   useEffect(() => {
     void loadTasks();
   }, [loadTasks]);
+  const refreshTasks = useCallback(() => loadTasks('quiet'), [loadTasks]);
+  useBackgroundRefresh(refreshTasks);
 
   useEffect(() => {
     let alive = true;

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { trimEndChars } from '@ugra/contracts';
 
 export interface Route {
   /** Путь без решётки и query: `/chat`. */
@@ -16,7 +17,7 @@ export function parseHash(hash: string): Route {
 /** Пустой или относительный путь → абсолютный вид `/chat` без хвоста. */
 export function normalizePath(path: string): string {
   const trimmed = path.trim();
-  const withoutTrailing = trimmed.replace(/\/+$/, '');
+  const withoutTrailing = trimEndChars(trimmed, '/');
   if (withoutTrailing === '') return '/';
   return withoutTrailing.startsWith('/') ? withoutTrailing : `/${withoutTrailing}`;
 }

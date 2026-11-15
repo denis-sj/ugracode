@@ -678,6 +678,7 @@
   margin: 0 auto;
   padding: var(--page-pad);
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

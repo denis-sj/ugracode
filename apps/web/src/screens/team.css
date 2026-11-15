@@ -1,0 +1,191 @@
+/*
+ * Вкладка руководителя «Сотрудники». Цвета, радиусы и отступы — только токены `@ugra/ui`.
+ */
+
+.team-page {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.team-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.team-lead {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.team-form {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+}
+
+.team-form__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-black);
+}
+
+.team-form__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.team-field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.team-field__label {
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.team-input {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  outline: none;
+  background: color-mix(in srgb, var(--color-surface) 75%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-md);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.team-input:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+}
+
+.team-input--sm {
+  min-height: 34px;
+  font-size: var(--text-sm);
+}
+
+.team-form__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.team-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.team-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.team-group {
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+}
+
+.team-group__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+}
+
+.team-group__count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 18px;
+  text-align: center;
+}
+
+.team-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.team-row:hover {
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+}
+
+.team-row--fresh {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.team-row__text {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.team-row__name {
+  overflow: hidden;
+  font-size: var(--text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-row__meta {
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-row__role {
+  position: relative;
+  flex: none;
+  width: 150px;
+}
+
+.team-row__you {
+  flex: none;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+.team-note {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 1080px) {
+  .team-groups,
+  .team-form__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -18,7 +18,9 @@ import type { CaseRun, EvalRun } from './run';
  */
 
 const SEPARATOR = /^:?-{2,}:?$/;
-const TITLE_NOTE = /^(.*?)\s*_\((.+)\)_\s*$/;
+/** Пометка в заголовке метрики: «Поля _(точное совпадение)_». */
+const NOTE_OPEN = '_(';
+const NOTE_CLOSE = ')_';
 const METRIC_KEYS: readonly { title: string; key: string }[] = [
   { title: 'Поля', key: 'fields' },
   { title: 'Выдуманные поля', key: 'fabricated' },
@@ -182,7 +184,7 @@ function metaOf(markdown: string): Map<string, string> {
 }
 
 function thresholdCounts(value: string | undefined): { met: number; withThreshold: number } {
-  const match = /(\d+)\s+из\s+(\d+)/.exec(value ?? '');
+  const match = /(?<!\d)(\d+)\s+из\s+(\d+)/.exec(value ?? '');
   if (!match) return { met: 0, withThreshold: 0 };
   return { met: Number(match[1] ?? 0), withThreshold: Number(match[2] ?? 0) };
 }
@@ -192,10 +194,13 @@ function metricKey(title: string, index: number): string {
 }
 
 function parseTitle(raw: string): { title: string; note?: string } {
-  const match = TITLE_NOTE.exec(raw);
-  if (!match) return { title: raw };
-  const title = (match[1] ?? raw).trim();
-  const note = (match[2] ?? '').trim();
+  const text = raw.trimEnd();
+  const open = text.indexOf(NOTE_OPEN);
+  if (open < 0 || !text.endsWith(NOTE_CLOSE)) return { title: raw };
+  const inner = text.slice(open + NOTE_OPEN.length, text.length - NOTE_CLOSE.length);
+  if (inner === '') return { title: raw };
+  const title = text.slice(0, open).trim();
+  const note = inner.trim();
   return note === '' ? { title } : { title, note };
 }
 
@@ -218,7 +223,7 @@ function metricFromCells(cells: readonly string[], index: number): QualityMetric
 function parseMetrics(markdown: string): QualityMetric[] {
   return tableRows(sectionLines(markdown, 'Таблица «эталон / ИИ»'), 5)
     .filter((cells) => (cells[0] ?? '') !== 'Оценщик')
-    .map(metricFromCells);
+    .map((cells, index) => metricFromCells(cells, index));
 }
 
 function boolCell(value: string | undefined): boolean | null {
@@ -245,7 +250,7 @@ function assigneeCell(value: string | undefined): Pick<QualityCase, 'assigneeTop
 
 function fieldsCell(value: string | undefined): QualityCase['fields'] {
   const cell = value ?? '';
-  const ratio = /(\d+)\s*\/\s*(\d+)/.exec(cell);
+  const ratio = /(?<!\d)(\d+)\s*\/\s*(\d+)/.exec(cell);
   const invented = /\+\s*(\d+)\s*выд/.exec(cell);
   return {
     correct: ratio ? Number(ratio[1] ?? 0) : 0,
@@ -288,7 +293,7 @@ function parseDetails(markdown: string): Map<string, string[]> {
   let current: string | null = null;
   for (const raw of sectionLines(markdown, 'Провалы по оценщикам')) {
     const line = raw.trim();
-    const heading = /^###\s+(.+)$/.exec(line);
+    const heading = /^###\s+(\S.*)$/.exec(line);
     if (heading) {
       current = (heading[1] ?? '').trim();
       if (!details.has(current)) details.set(current, []);

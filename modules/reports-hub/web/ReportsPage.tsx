@@ -22,6 +22,7 @@ import {
   findReport,
   formatAnswer,
   hotspotFocus,
+  hotspotsView,
   insightView,
   isKnownReportPayload,
   isReportError,
@@ -35,6 +36,7 @@ import {
   todayIso,
 } from './format';
 import type { HotspotFocusView, ReportAnswer, ReportSpec } from './format';
+import { HotspotsReport } from './HotspotsReport';
 
 /**
  * Страница `/reports`: один главный вопрос (О2 «Что ломается снова») и шесть
@@ -315,6 +317,35 @@ function ReportBody({
 
   const facts = reportFacts(state.payload);
   const insight = insightView(state.payload);
+  const hotspots = spec.id === 'report-hotspots' ? hotspotsView(state.payload) : null;
+
+  if (hotspots !== null && !reportIsEmpty(state.payload)) {
+    return (
+      <>
+        <HotspotsReport view={hotspots} action={insight.actions[0] ?? null} />
+        {insight.meaning !== null && <InsightBlock kind="meaning">{insight.meaning}</InsightBlock>}
+        {insight.actions.length > 1 && (
+          <InsightBlock kind="action">
+            <ul className="rp-actions">
+              {insight.actions.slice(1).map((action, index) => (
+                <li key={`${index}-${action.slice(0, 24)}`}>{action}</li>
+              ))}
+            </ul>
+          </InsightBlock>
+        )}
+        <div className="rp-table__foot">
+          <span className="rp-note">Полный список точек — в CSV.</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => window.open(csvUrl(spec.id, days, date), '_blank', 'noopener,noreferrer')}
+          >
+            Скачать CSV
+          </Button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

@@ -801,10 +801,10 @@
   }
 }
 
-/* ---------- QR на экране диспетчера и плашка «входящий» ---------- */
+/* ---------- Экран диспетчера и плашка «входящий» ---------- */
 
 .voice-layout--calls {
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .voice-layout__main {
@@ -815,60 +815,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-.voice-qr {
-  position: sticky;
-  top: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  text-align: center;
-}
-
-.voice-qr__title {
-  margin: 0;
-  font-size: var(--text-md);
-}
-
-.voice-qr__image {
-  width: min(320px, 68vw);
-  height: auto;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  background: #fff;
-}
-
-.voice-qr__empty {
-  display: grid;
-  place-items: center;
-  width: min(320px, 68vw);
-  height: min(320px, 68vw);
-  border: 2px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  color: var(--color-text-dim);
-  font-size: var(--text-3xl);
-  letter-spacing: 0.08em;
-}
-
-.voice-qr__url {
-  max-width: 100%;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-soft);
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  word-break: break-all;
-}
-
-.voice-qr__hint,
-.voice-qr__note {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
 }
 
 .voice-incoming {
@@ -932,16 +878,6 @@
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
-
-@media (max-width: 960px) {
-  .voice-layout--calls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .voice-qr {
-    position: static;
   }
 }
 

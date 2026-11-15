@@ -223,7 +223,7 @@ function loadKbArticles(dir: string): KbFile['articles'] {
   if (!existsSync(kbDir)) return [];
   return readdirSync(kbDir)
     .filter((name) => name.endsWith('.json'))
-    .sort()
+    .sort((left, right) => left.localeCompare(right))
     .flatMap((name) => KbFile.parse(readJson(`${kbDir}${name}`)).articles);
 }
 

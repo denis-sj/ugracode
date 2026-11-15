@@ -1,6 +1,7 @@
 /** Форматирование дашборда: чистые функции, без DOM и React. */
 
 import type { Heatmap, OverviewResult } from '../contracts';
+import { groupThousands } from '@ugra/contracts';
 
 export type DeltaTone = 'ok' | 'warn' | 'danger' | 'muted';
 
@@ -40,7 +41,7 @@ export function formatCount(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return '—';
   const rounded = Math.round(value);
   const sign = rounded < 0 ? '−' : '';
-  return sign + String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, THIN_SPACE);
+  return sign + groupThousands(String(Math.abs(rounded)), THIN_SPACE);
 }
 
 export function formatPercent(value: number | null): string {

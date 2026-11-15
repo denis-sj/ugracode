@@ -109,7 +109,7 @@ export async function fetchSpeech({ text, voice, signal }: FetchSpeechInput): Pr
     response = await fetch(TTS_PATH, {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Pinggy-No-Screen': '1' },
       body: JSON.stringify(body),
       ...(signal ? { signal } : {}),
     });
@@ -230,6 +230,16 @@ function withinDeadline<T>(promise: Promise<T>, ms: number): Promise<T | null> {
  * Тишина на 20 мс в формате сервера (WAV, 16 бит, моно, 24 кГц).
  * Нужна только чтобы «разбудить» `Audio` внутри жеста — дальше он играет без спроса.
  */
+/** Запускает воспроизведение; false — браузер отказал (автоплей, битый источник). */
+async function startPlayback(element: HTMLAudioElement): Promise<boolean> {
+  try {
+    await element.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function silentWav(): Blob {
   const frames = 480; // 20 мс при 24 кГц
   const buffer = new ArrayBuffer(44 + frames * 2);
@@ -397,12 +407,13 @@ export function createVoicePlayer(options: VoicePlayerOptions = {}): VoicePlayer
 
       try {
         element.src = url;
-        const started = element.play();
-        if (started && typeof started.catch === 'function') started.catch(() => settle(false));
       } catch {
         settle(false);
         return;
       }
+      void startPlayback(element).then((ok) => {
+        if (!ok) settle(false);
+      });
       // Если `ended` не придёт (вкладка в фоне), разговор не замирает.
       state.timer = setTimeout(() => settle(true), MAX_PLAY_MS);
     });
@@ -497,18 +508,6 @@ export function createVoicePlayer(options: VoicePlayerOptions = {}): VoicePlayer
       try {
         url = URL.createObjectURL(silentWav());
         element.src = url;
-        const started = element.play();
-        const reset = (): void => {
-          try {
-            element.pause();
-            element.removeAttribute('src');
-            URL.revokeObjectURL(url);
-          } catch {
-            /* элемент уже без источника */
-          }
-        };
-        if (started && typeof started.then === 'function') void started.then(reset).catch(reset);
-        else reset();
       } catch {
         if (url !== '') {
           try {
@@ -517,7 +516,18 @@ export function createVoicePlayer(options: VoicePlayerOptions = {}): VoicePlayer
             /* URL уже освобождён */
           }
         }
+        return;
       }
+      const reset = (): void => {
+        try {
+          element.pause();
+          element.removeAttribute('src');
+          URL.revokeObjectURL(url);
+        } catch {
+          /* элемент уже без источника */
+        }
+      };
+      void startPlayback(element).then(reset);
     },
 
     prefetch: async (texts: readonly string[]): Promise<void> => {

@@ -9,6 +9,7 @@ export * from './ticket-format';
 export * from './animations';
 export * from './motion';
 export * from './useActionCounter';
+export * from './useBackgroundRefresh';
 export * from './theme';
 export { cx } from './cx';
 export { Icon, ICON_NAMES } from './icons';

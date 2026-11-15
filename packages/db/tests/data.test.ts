@@ -408,8 +408,8 @@ describe('пользователи data/users.json', () => {
 });
 
 describe('база знаний data/kb/*.json', () => {
-  it('10 статей с шагами и существующей категорией', () => {
-    expect(data.kbArticles).toHaveLength(10);
+  it('18 статей с шагами и существующей категорией', () => {
+    expect(data.kbArticles).toHaveLength(18);
     const ids = data.kbArticles.map((article) => article.id);
     expect(ids.length).toBe(new Set(ids).size);
     for (const article of data.kbArticles) {

@@ -1,4 +1,5 @@
 import type { Ticket, TicketField } from '@ugra/contracts';
+import { trimChars } from '@ugra/contracts';
 import type { KernelStore, ReferenceData } from '@ugra/core';
 import type {
   KbGapsCategoryRow,
@@ -109,13 +110,12 @@ function symptomOf(read: (key: string) => string): string {
   return text.slice(0, MAX_SYMPTOM_LENGTH);
 }
 
+/** Пробелы и знаки препинания, которые срезаются с краёв симптома. */
+const EDGE_PUNCTUATION = ' .,;:!?«»"\'()-';
+
 function normalize(value: string): string {
-  return value
-    .toLowerCase()
-    .replaceAll('ё', 'е')
-    .replaceAll(/\s+/g, ' ')
-    .replaceAll(/^[\s.,;:!?«»"'()-]+|[\s.,;:!?«»"'()-]+$/g, '')
-    .slice(0, MAX_SYMPTOM_LENGTH);
+  const collapsed = value.toLowerCase().replaceAll('ё', 'е').replaceAll(/\s+/g, ' ');
+  return trimChars(collapsed, EDGE_PUNCTUATION).slice(0, MAX_SYMPTOM_LENGTH);
 }
 
 function displaySymptom(value: string): string {

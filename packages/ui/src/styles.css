@@ -581,8 +581,9 @@ kbd {
   border-bottom: 1px dashed var(--color-accent-ring);
   background: transparent;
   color: var(--color-accent);
-  font-size: var(--text-xs);
   cursor: help;
+  font: inherit;
+  font-size: var(--text-xs);
   max-width: 100%;
 }
 

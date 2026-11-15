@@ -43,6 +43,13 @@
   justify-content: center;
 }
 
+/* Разговор: чат и стикер — один блок по центру, стикеру хватает места на подписи. */
+.chat-page--talk .chat-main {
+  margin-left: max(0px, calc(50% - 542px));
+  margin-right: auto;
+  transition: margin var(--dur-slow) var(--ease-out);
+}
+
 .chat-hero {
   text-align: center;
   max-width: 760px;
@@ -86,6 +93,27 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  /* Тонкий ползунок в цвет интерфейса и зазор, чтобы карточки не прилипали к нему. */
+  padding-right: var(--space-2);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text) 18%, transparent) transparent;
+}
+
+.chat-thread::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-thread::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-thread::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-text) 18%, transparent);
+}
+
+.chat-thread::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-text) 32%, transparent);
 }
 
 .chat-me {
@@ -189,7 +217,7 @@
 /* ---------- Карточка-вопрос ---------- */
 
 .chat-ask {
-  padding: 22px 22px 18px;
+  padding: 14px 16px 12px;
   border-radius: var(--radius-card);
   background: var(--glass-card);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -202,11 +230,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: 0 6px 10px;
+  padding: 0 4px 6px;
 }
 
 .chat-ask__title {
-  font-size: 19px;
+  font-size: 16px;
+  line-height: 1.35;
   font-weight: var(--weight-black);
   letter-spacing: -0.01em;
 }
@@ -254,14 +283,14 @@
   align-items: center;
   gap: 14px;
   width: 100%;
-  margin-top: var(--space-1);
-  padding: 13px 14px;
+  margin-top: 2px;
+  padding: 8px 10px;
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 15.5px;
+  font-size: 14.5px;
   font-weight: var(--weight-semi);
   text-align: left;
   cursor: pointer;
@@ -301,8 +330,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   flex: none;
   border-radius: 8px;
   background: var(--color-graphite-soft);
@@ -328,7 +357,7 @@
   align-items: center;
   gap: 14px;
   margin-top: 2px;
-  padding: 8px 14px;
+  padding: 4px 10px;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-surface) 70%, transparent);
   box-shadow: var(--ring-inset-soft);
@@ -343,7 +372,7 @@
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .chat-ask__input::placeholder {
@@ -354,12 +383,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   padding: 0 4px;
 }
 
 .chat-ask__skip {
-  min-height: 40px;
+  min-height: 36px;
   padding: 0 var(--space-2);
   border: none;
   background: none;
@@ -378,8 +407,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 14px;
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-graphite);
@@ -406,6 +435,91 @@
   background: color-mix(in srgb, var(--color-surface) 25%, transparent);
   font-size: 11px;
   font-weight: var(--weight-bold);
+}
+
+/* ---------- Заявка готова ---------- */
+
+.chat-done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  align-self: flex-start;
+  max-width: 560px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--color-ok) 22%, transparent), transparent 60%),
+    var(--glass-card);
+  box-shadow: var(--glass-inset), inset 0 0 0 1px color-mix(in srgb, var(--color-ok) 35%, transparent), var(--shadow-card);
+  animation: chat-done-in 0.5s var(--ease-out) both;
+}
+
+.chat-done__mark {
+  width: 52px;
+  height: 52px;
+  flex: none;
+}
+
+.chat-done__circle {
+  fill: color-mix(in srgb, var(--color-ok) 16%, transparent);
+  stroke: var(--color-ok);
+  stroke-width: 2.5;
+  stroke-dasharray: 145;
+  stroke-dashoffset: 145;
+  animation: chat-done-draw 0.6s var(--ease-out) 0.1s forwards;
+}
+
+.chat-done__check {
+  fill: none;
+  stroke: var(--color-ok);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: chat-done-draw 0.4s var(--ease-out) 0.6s forwards;
+}
+
+.chat-done__text {
+  display: grid;
+  gap: 2px;
+}
+
+.chat-done__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-black);
+}
+
+.chat-done__caption {
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+@keyframes chat-done-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chat-done-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-done,
+  .chat-done__circle,
+  .chat-done__check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ---------- Ошибка ---------- */
@@ -582,8 +696,10 @@
   /* Широкий экран: стикер висит справа от колонки чата и не участвует в раскладке. */
   position: absolute;
   top: 0;
-  left: calc(50% + 396px);
-  width: min(320px, calc(50vw - 420px));
+  /* Чат (760) + зазор (24) + стикер (300) = 1084 px стоят по центру страницы единым блоком:
+     колонка чата сдвинута влево (см. `.chat-page--talk .chat-main`), стикер — сразу за ней. */
+  left: calc(50% + 242px);
+  width: 300px;
   z-index: var(--z-sticky);
 }
 
@@ -628,6 +744,19 @@
 .chat-sticker__status {
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
+  white-space: nowrap;
+}
+
+.chat-sticker__eyebrow {
+  white-space: nowrap;
+}
+
+/* Подписи этапов в стикере: в одну строку, мелко, без наезда друг на друга. */
+.chat-sticker__progress .ugra-scale__labels > span {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-sticker__status--accent {
@@ -1105,7 +1234,7 @@
   padding: 6px 2px;
   border: none;
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--color-text-muted);
   font: inherit;
   font-size: 15px;
   cursor: pointer;
@@ -1113,11 +1242,11 @@
 }
 
 .chat-trace__toggle:hover .chat-trace__title {
-  color: var(--ink);
+  color: var(--color-text);
 }
 
 .chat-trace__toggle:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -1133,7 +1262,7 @@
 }
 
 .chat-trace--busy .chat-trace__title {
-  background: linear-gradient(90deg, var(--ink-soft), var(--ink), var(--ink-soft));
+  background: linear-gradient(90deg, var(--color-text-muted), var(--color-text), var(--color-text-muted));
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -1142,22 +1271,74 @@
 }
 
 .chat-trace--failed .chat-trace__title {
-  color: var(--alert);
+  color: var(--color-danger);
 }
 
-.chat-trace__shimmer {
-  width: 8px;
-  height: 8px;
+/* «Думаю»: три точки прыгают по очереди — как набор сообщения в мессенджере. */
+.chat-trace__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: 26px;
+  height: 18px;
+  flex: none;
+}
+
+.chat-trace__dots i {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--accent);
-  animation: ugra-pulse 1.2s ease-in-out infinite;
+  background: var(--color-accent);
+  animation: chat-think 1.2s ease-in-out infinite;
+}
+
+.chat-trace__dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-trace__dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-think {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* Смена слова «Думаю → Размышляю» — мягкое появление. */
+.chat-trace--busy .chat-trace__title {
+  animation-name: ugra-shimmer, chat-word-in;
+  animation-duration: 1.6s, 0.35s;
+  animation-timing-function: linear, ease-out;
+  animation-iteration-count: infinite, 1;
+}
+
+@keyframes chat-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .chat-trace__panel {
   margin-top: var(--space-1);
   padding: var(--space-3);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
   border: 1px solid var(--glass-edge);
 }
 
@@ -1165,11 +1346,14 @@
   margin: 0 0 var(--space-2);
   font-size: 14px;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--color-text-muted);
 }
 
 .chat-trace__count {
-  margin-left: auto;
+  margin-left: var(--space-2);
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-graphite-soft);
   color: var(--color-text-dim);
   font-size: var(--text-sm);
   font-weight: var(--weight-semi);
@@ -1178,7 +1362,7 @@
 .chat-trace__empty {
   margin: 0;
   font-size: 14px;
-  color: var(--muted);
+  color: var(--color-text-dim);
 }
 
 .chat-trace__list {
@@ -1195,26 +1379,26 @@
   align-items: baseline;
   gap: 8px;
   font-size: 14px;
-  color: var(--ink-soft);
+  color: var(--color-text-muted);
 }
 
 .chat-trace__item--running {
-  color: var(--ink);
+  color: var(--color-text);
 }
 
 .chat-trace__item--blocked,
 .chat-trace__item--error {
-  color: var(--warn);
+  color: var(--color-warn);
 }
 
 .chat-trace__mark {
-  color: var(--ok);
+  color: var(--color-ok);
   font-weight: 700;
   text-align: center;
 }
 
 .chat-trace__item--running .chat-trace__mark {
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
 .chat-trace__label {
@@ -1222,14 +1406,14 @@
 }
 
 .chat-trace__summary {
-  color: var(--muted);
+  color: var(--color-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .chat-trace__time {
-  color: var(--muted);
+  color: var(--color-text-dim);
   font-variant-numeric: tabular-nums;
   font-size: 13px;
 }
@@ -1251,12 +1435,12 @@
   }
 
   .chat-trace--busy .chat-trace__title,
-  .chat-trace__shimmer {
+  .chat-trace__dots i {
     animation: none;
   }
 
   .chat-trace--busy .chat-trace__title {
-    color: var(--ink-soft);
+    color: var(--color-text-muted);
     background: none;
     -webkit-text-fill-color: currentColor;
   }
@@ -1287,6 +1471,10 @@
 }
 /* Узкий экран: стикер встаёт над полем ввода, а не в пустое поле справа. */
 @media (max-width: 1240px) {
+  .chat-page--talk .chat-main {
+    margin-left: auto;
+  }
+
   .chat-sticker-slot {
     position: static;
     width: 100%;

@@ -70,7 +70,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_COUNT = 600;
 const DEFAULT_MONTHS = 6;
 const HOT_SPOT_EQUIPMENT_CABINET = '312';
-const HOT_SPOT_TICKETS = 7;
+/** «Больной» принтер: 9 обращений за последний месяц и 4 раньше — главная горячая точка дашборда. */
+const HOT_SPOT_TICKETS = 13;
+const HOT_SPOT_RECENT = 9;
 const EMERGENCY_TICKETS = 3;
 const CANCELLED_SHARE = 0.13;
 const OPEN_TICKETS = 4;
@@ -289,14 +291,12 @@ function buildDays(now: Date, months: number): Weighted<Date>[] {
   return days;
 }
 
-/** Свежее время в рабочих часах: для открытых заявок, которые ещё в работе. */
+/**
+ * Свежее время для открытых заявок: 8, 22, 36… минут назад. Так на защите очередь выглядит живой —
+ * без «просрочено 11 ч» у заявок, которые диспетчер ещё даже не подтвердил.
+ */
 function recentWorkingTime(now: Date, index: number): Date {
-  let moment = new Date(now.getTime() - (index + 1) * 4 * 60 * 60_000);
-  const hour = moment.getHours();
-  if (hour < 8 || hour > 18) {
-    moment = new Date(moment.getTime() - DAY_MS);
-  }
-  return withTime(moment, Math.min(17, Math.max(9, index + 9)), 15, 0);
+  return new Date(now.getTime() - (8 + index * 14) * 60_000);
 }
 
 function pickCreatedAt(random: () => number, days: readonly Weighted<Date>[]): Date {
@@ -332,12 +332,8 @@ function pickEquipment(
 ): HistoryEquipment | null {
   const types = CATEGORY_EQUIPMENT_TYPES[category] ?? [];
   if (types.length === 0) return null;
-  const sameBuilding = equipment.filter(
-    (item) => types.includes(item.type) && item.building === building,
-  );
-  const sameCabinet = cabinet
-    ? sameBuilding.filter((item) => item.cabinet === cabinet)
-    : [];
+  const sameBuilding = equipment.filter((item) => types.includes(item.type) && item.building === building);
+  const sameCabinet = cabinet ? sameBuilding.filter((item) => item.cabinet === cabinet) : [];
   const pool = sameCabinet.length > 0 ? sameCabinet : sameBuilding;
   if (pool.length > 0) return pick(random, pool);
   return pick(
@@ -384,19 +380,18 @@ function defaultSymptoms(category: string): string {
 function materialize(
   plan: TicketPlan,
   index: number,
-  daySequence: Map<string, number>,
   authorId: string,
   channel: Channel,
+  now: Date,
 ): GeneratedTicket {
   const createdIso = plan.createdAt.toISOString();
   const dateKey = isoDate(plan.createdAt);
-  const sequence = (daySequence.get(dateKey) ?? 0) + 1;
-  daySequence.set(dateKey, sequence);
 
   const suffix = pad(index + 1, 4);
   const ticketId = `ticket-hist-${suffix}`;
   const appealId = `appeal-hist-${suffix}`;
-  const number = `З-${dateKey.replaceAll('-', '')}-${pad(sequence, 4)}`;
+  // Сквозной номер 1…N по времени: на экране «№ 1…№ 600», а живые заявки продолжают с № 601.
+  const number = `З-${dateKey.replaceAll('-', '')}-${pad(index + 1, 4)}`;
 
   const objectWord = plan.equipment?.model ?? CATEGORY_WORD[plan.category] ?? 'оборудование';
   const originalText = `Корпус ${plan.building}, кабинет ${plan.cabinet}. ${objectWord}: ${plan.symptoms}.`;
@@ -412,8 +407,14 @@ function materialize(
 
   const slaMinutes = DEFAULT_SLA_MINUTES[plan.priority];
   const reactMinutes = DEFAULT_REACT_MINUTES[plan.priority];
-  const resolutionAt =
+  // Закрытие не позже «сейчас минус минута»: в журнале не бывает событий из будущего.
+  const latest = now.getTime() - 60_000;
+  const planned =
     plan.resolutionMinutes === null ? null : minutesLater(plan.createdAt, plan.resolutionMinutes);
+  const resolutionAt =
+    planned === null
+      ? null
+      : new Date(Math.max(plan.createdAt.getTime(), Math.min(planned.getTime(), latest)));
   const updatedAt = (resolutionAt ?? plan.createdAt).toISOString();
 
   const ticket: Ticket = {
@@ -424,7 +425,8 @@ function materialize(
     priority: plan.priority,
     category: plan.category,
     departmentId: plan.engineer.departmentId,
-    assigneeId: plan.engineer.id,
+    // На проверке исполнитель ещё не назначен: его предлагает ИИ, назначает диспетчер.
+    assigneeId: plan.status === 'in_review' ? null : plan.engineer.id,
     isEmergency: plan.priority === 'emergency',
     incidentId: null,
     reactDueAt: minutesLater(plan.createdAt, reactMinutes).toISOString(),
@@ -464,13 +466,21 @@ function materialize(
   const event: DomainEvent = {
     id: `event-hist-${suffix}`,
     type: 'ticket.status.changed',
-    at: (resolutionAt ?? minutesLater(plan.createdAt, 20)).toISOString(),
+    at: (
+      resolutionAt ??
+      new Date(
+        Math.max(plan.createdAt.getTime(), Math.min(minutesLater(plan.createdAt, 20).getTime(), latest)),
+      )
+    ).toISOString(),
     actor: { kind: 'user', id: plan.engineer.id },
     ticketId,
     payload: {
       from,
       to: plan.status,
-      resolutionMinutes: plan.resolutionMinutes,
+      resolutionMinutes:
+        resolutionAt === null
+          ? null
+          : Math.round((resolutionAt.getTime() - plan.createdAt.getTime()) / 60_000),
       resolvedAt: resolutionAt?.toISOString() ?? null,
     },
   };
@@ -514,7 +524,7 @@ function buildPlans(input: HistorySeedInput, random: () => number): TicketPlan[]
   const engineerFor = (category: string, building: string): HistoryEngineer | null =>
     pickEngineer(random, input.engineers, category, building) ?? input.engineers[0] ?? null;
 
-  // «Больной» принтер в кабинете 312: 7 обращений за полгода.
+  // «Больной» принтер в кабинете 312: ломается каждые 3 дня последний месяц — его пора менять.
   const printer312 =
     input.equipment.find(
       (item) =>
@@ -525,8 +535,9 @@ function buildPlans(input: HistorySeedInput, random: () => number): TicketPlan[]
   const hotBuilding = printer312?.building ?? 'Б';
   const hotCabinet = printer312?.cabinet ?? HOT_SPOT_EQUIPMENT_CABINET;
   for (let index = 0; index < HOT_SPOT_TICKETS; index += 1) {
+    const daysAgo = index < HOT_SPOT_RECENT ? 2 + index * 3 : 35 + (index - HOT_SPOT_RECENT) * 30;
     const createdAt = withTime(
-      new Date(input.now.getTime() - (index * 19 + 6) * DAY_MS),
+      new Date(input.now.getTime() - daysAgo * DAY_MS),
       9 + (index % 3),
       10 + index,
       0,
@@ -544,8 +555,7 @@ function buildPlans(input: HistorySeedInput, random: () => number): TicketPlan[]
       equipment: printer312,
       engineer,
       symptoms:
-        SYMPTOMS['printer']?.[index % (SYMPTOMS['printer']?.length ?? 1)] ??
-        defaultSymptoms('printer'),
+        SYMPTOMS['printer']?.[index % (SYMPTOMS['printer']?.length ?? 1)] ?? defaultSymptoms('printer'),
       resolutionMinutes: pickResolution(random, priority),
     });
   }
@@ -553,13 +563,13 @@ function buildPlans(input: HistorySeedInput, random: () => number): TicketPlan[]
   // Три аварии за полгода.
   for (let index = 0; index < EMERGENCY_TICKETS; index += 1) {
     const category = index === 1 ? 'server' : 'network';
-    const createdAt = withTime(
-      new Date(input.now.getTime() - (index * 47 + 22) * DAY_MS),
-      14 + index,
-      5,
-      0,
+    const createdAt = withTime(new Date(input.now.getTime() - (index * 47 + 22) * DAY_MS), 14 + index, 5, 0);
+    const equipment = pickEquipment(
+      random,
+      input.equipment,
+      category,
+      buildings[index % buildings.length] ?? 'Б',
     );
-    const equipment = pickEquipment(random, input.equipment, category, buildings[index % buildings.length] ?? 'Б');
     const building = equipment?.building ?? buildings[(index + 1) % buildings.length] ?? 'Б';
     const engineer = engineerFor(category, building);
     if (!engineer) continue;
@@ -631,11 +641,10 @@ export function generateHistory(input: HistorySeedInput): GeneratedHistory {
     input.users.length > 0
       ? input.users
       : input.engineers.map((engineer) => ({ id: engineer.id, fullName: engineer.fullName }));
-  const daySequence = new Map<string, number>();
 
   const tickets = plans.map((plan, index) => {
     const author = users.length > 0 ? users[pickIndex(random, users.length)] : null;
-    return materialize(plan, index, daySequence, author?.id ?? '', pickChannel(random));
+    return materialize(plan, index, author?.id ?? '', pickChannel(random), input.now);
   });
 
   return { tickets };

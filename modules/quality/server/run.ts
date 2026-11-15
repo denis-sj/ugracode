@@ -628,7 +628,7 @@ function seedKnowledgeBase(store: MemoryStore, dataDir: string): void {
         }[];
       };
       for (const article of parsed.articles ?? []) {
-        store.saveKnowledgeArticle({
+        void store.saveKnowledgeArticle({
           id: article.id,
           title: article.title,
           symptoms: article.symptoms ?? [],

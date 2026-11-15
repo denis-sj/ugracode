@@ -787,6 +787,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
         <div className="queue-board">
           <QueueColumn
             title="Сомнительные"
+            tone="warn"
             count={board.decision.length}
             note={board.decision.length > 0 ? 'ИИ не уверен' : undefined}
             empty="Спорных нет"
@@ -798,6 +799,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
 
           <QueueColumn
             title="Готовые"
+            tone="ok"
             count={board.ready.length}
             action={
               canConfirm && board.ready.length > 0 ? (
@@ -821,6 +823,7 @@ export function QueuePage({ user, meta, api, navigate, query, trackAction }: Web
 
           <QueueColumn
             title="Аварии"
+            tone="danger"
             count={emergencyCards.length}
             note={alarmTicket ? 'ещё одна — на полосе выше' : undefined}
             empty={alarmTicket ? 'Других аварий нет' : 'Аварий нет'}

@@ -366,3 +366,90 @@ export function runTimeLabel(iso: string | null | undefined): string | null {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${date.getDate()} ${month}, ${hours}:${minutes}`;
 }
+
+/* ---------- Наглядный вид: балл, карточки метрик, полосы с порогом ---------- */
+
+/** Что метрика значит — одной фразой для руководителя. */
+export const METRIC_EXPLAIN: Readonly<Record<string, string>> = {
+  fields: 'Поля заявки совпали с эталоном',
+  fabricated: 'Значения, которых нет в обращении',
+  emergency: 'Аварии, которые ИИ пропустил',
+  priority: 'Приоритет совпал с эталоном',
+  assigneeTop1: 'Лучший кандидат — тот самый инженер',
+  assigneeTop3: 'Нужный инженер среди трёх предложенных',
+  article: 'Нужная статья базы знаний в топ-3',
+  question: 'ИИ спросил то, чего не хватало',
+  trajectory: 'Агент вызвал нужные инструменты',
+  time: 'Сколько ИИ разбирает одно обращение',
+  price: 'Сколько стоит разбор одного обращения',
+};
+
+/** Главные метрики — крупно сверху; остальные — компактно. */
+export const KEY_METRICS: readonly string[] = ['fields', 'emergency', 'assigneeTop3', 'fabricated'];
+
+export interface MetricView extends MetricRow {
+  explain: string;
+  /** Доля 0…100 для полосы; `null` — метрика не процентная. */
+  percent: number | null;
+  /** Где на полосе стоит порог, 0…100. */
+  thresholdAt: number | null;
+}
+
+/** «84 %» → 84; «14,8 с» → null (не процент). */
+export function percentOf(display: string): number | null {
+  const match = /^(\d+(?:[.,]\d+)?)\s*%$/.exec(display.trim());
+  if (!match?.[1]) return null;
+  return Math.max(0, Math.min(100, Number(match[1].replace(',', '.'))));
+}
+
+/** «≥ 90 %» → 90 для полосы; не процентный порог — null. */
+export function thresholdPercent(threshold: string): number | null {
+  const match = /(\d+(?:[.,]\d+)?)\s*%/.exec(threshold);
+  return match?.[1] ? Number(match[1].replace(',', '.')) : null;
+}
+
+export function metricViews(metrics: readonly MetricRow[]): MetricView[] {
+  return metrics.map((metric) => ({
+    ...metric,
+    explain: METRIC_EXPLAIN[metric.key] ?? metric.title,
+    percent: percentOf(metric.display),
+    thresholdAt: thresholdPercent(metric.threshold),
+  }));
+}
+
+export interface QualityScore {
+  met: number;
+  total: number;
+  /** 0…100 для кольца. */
+  percent: number;
+  verdict: string;
+  /** Что не дотягивает: «Поля 84 % (нужно ≥ 90 %)». */
+  gaps: string[];
+  /** Чего нет в наборе — не проверяли. */
+  unchecked: string[];
+}
+
+/** Общий балл экрана: сколько порогов пройдено и что подтянуть. */
+export function qualityScore(report: QualityReport | null | undefined, metrics: readonly MetricRow[]): QualityScore {
+  const met = safeCount(report?.summary?.met);
+  const total = safeCount(report?.summary?.withThreshold);
+  const checked = metrics.filter((metric) => metric.state !== 'none');
+  const passed = checked.filter((metric) => metric.state === 'met').length;
+  const percent = checked.length === 0 ? 0 : Math.round((passed / checked.length) * 100);
+  let verdict = 'Проверок с эталоном пока нет';
+  if (checked.length > 0) {
+    if (passed === checked.length) verdict = 'ИИ проходит все проверки качества';
+    else if (percent >= 70) verdict = 'ИИ проходит большую часть проверок';
+    else verdict = 'ИИ требует настройки';
+  }
+  return {
+    met: checked.length > 0 ? passed : met,
+    total: checked.length > 0 ? checked.length : total,
+    percent,
+    verdict,
+    gaps: metrics
+      .filter((metric) => metric.state === 'unmet')
+      .map((metric) => `${metric.title} ${metric.display} (нужно ${metric.threshold})`),
+    unchecked: metrics.filter((metric) => metric.state === 'none').map((metric) => metric.title),
+  };
+}

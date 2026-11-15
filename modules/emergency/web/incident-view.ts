@@ -72,7 +72,7 @@ export function humanizeEventText(
 ): string {
   if (isTechnicalId(text)) return '';
   const segments = text.split(' · ').map((segment) => {
-    const match = /^([A-Za-z][A-Za-z0-9_]*):\s*(.+)$/.exec(segment);
+    const match = /^([A-Za-z]\w*):\s*(\S.*)$/.exec(segment);
     if (!match) return segment;
     const [, key, value] = match;
     if (key === undefined || value === undefined) return segment;

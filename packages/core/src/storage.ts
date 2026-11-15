@@ -107,6 +107,10 @@ export interface KernelStore {
   saveApplicantProfile(profile: ApplicantProfile): Promise<void>;
   /** Техника, закреплённая за заявителем (`applicant_equipment`). */
   listApplicantEquipment(userId: string): Promise<ApplicantEquipment[]>;
+  /** Закрепляет технику за пользователем (повторная запись с тем же `id` обновляет её). */
+  saveApplicantEquipment(item: ApplicantEquipment): Promise<void>;
+  /** Открепляет технику пользователя; `false` — такой записи у него нет. */
+  deleteApplicantEquipment(userId: string, id: string): Promise<boolean>;
 
   saveAppeal(appeal: Appeal): Promise<void>;
   getAppeal(id: string): Promise<Appeal | null>;
@@ -151,6 +155,8 @@ export interface KernelStore {
 
   /** Статья базы знаний по id (инструмент `kb_get_article`). */
   getKnowledgeArticle(id: string): Promise<KnowledgeArticle | null>;
+  /** Все статьи базы знаний по названию — каталог на экране инженера. */
+  listKnowledgeArticles(): Promise<KnowledgeArticle[]>;
   /** Поиск статей по словам без эмбеддингов (инструмент `kb_search`). */
   searchKnowledge(query: KnowledgeSearchQuery): Promise<KnowledgeArticle[]>;
   /** Похожие заявки по словам, категории и корпусу (инструмент `tickets_find_similar`). */
@@ -374,9 +380,15 @@ export class MemoryStore implements KernelStore {
       .map((item) => ({ ...item }));
   }
 
-  /** Наполнение техники в памяти: сид и тесты, в интерфейсе `KernelStore` только чтение. */
   async saveApplicantEquipment(item: ApplicantEquipment): Promise<void> {
     this.applicantEquipment.set(item.id, { ...item });
+  }
+
+  async deleteApplicantEquipment(userId: string, id: string): Promise<boolean> {
+    const item = this.applicantEquipment.get(id);
+    if (!item || item.userId !== userId) return false;
+    this.applicantEquipment.delete(id);
+    return true;
   }
 
   async saveKnowledgeArticle(article: KnowledgeArticle): Promise<void> {
@@ -385,6 +397,12 @@ export class MemoryStore implements KernelStore {
       symptoms: [...article.symptoms],
       steps: [...article.steps],
     });
+  }
+
+  async listKnowledgeArticles(): Promise<KnowledgeArticle[]> {
+    return [...this.knowledge.values()]
+      .sort((left, right) => left.title.localeCompare(right.title, 'ru'))
+      .map((article) => ({ ...article, symptoms: [...article.symptoms], steps: [...article.steps] }));
   }
 
   async getKnowledgeArticle(id: string): Promise<KnowledgeArticle | null> {

@@ -1,4 +1,4 @@
-import type { MetaResponse, ProfileResponse } from '@ugra/contracts';
+import type { MetaResponse, ProfileOptionsResponse, ProfileResponse } from '@ugra/contracts';
 
 /** Подпись подразделения по коду из справочника (`dep-it` → «ИТ-служба»). */
 export function departmentLabel(meta: MetaResponse, code: string | null): string {
@@ -35,3 +35,27 @@ export const ROLE_TITLE: Record<string, string> = {
   manager: 'Руководитель',
   admin: 'Администратор',
 };
+
+/**
+ * Варианты «Добавить технику»: без уже закреплённой; сначала техника своего кабинета,
+ * затем своего корпуса, затем остальная. Подпись — «Принтер HP … · Б-312».
+ */
+export function equipmentChoices(
+  catalog: ProfileOptionsResponse['equipment'],
+  profile: ProfileResponse['profile'],
+  equipment: ProfileResponse['equipment'],
+): { value: string; label: string }[] {
+  const taken = new Set(equipment.map((item) => item.equipmentId));
+  const rank = (item: ProfileOptionsResponse['equipment'][number]): number => {
+    if (!profile?.building || item.building !== profile.building) return 2;
+    return item.cabinet === profile.cabinet ? 0 : 1;
+  };
+  return catalog
+    .filter((item) => !taken.has(item.id))
+    .map((item) => ({ item, rank: rank(item) }))
+    .sort((left, right) => left.rank - right.rank || left.item.label.localeCompare(right.item.label, 'ru'))
+    .map(({ item }) => ({
+      value: item.id,
+      label: item.building && item.cabinet ? `${item.label} · ${item.building}-${item.cabinet}` : item.label,
+    }));
+}

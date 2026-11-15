@@ -12,7 +12,7 @@ const SYMPTOMS_LIMIT = 200;
 const ERROR_CODE =
   /(?:код\s*(?:ошибки)?|ошибк[аиуы]?|error|err)[^0-9a-zа-я]{0,4}(0x[0-9a-f]+|[a-zа-я]{0,3}[-_]?\d{2,6}(?:[-_]\d{1,6})?)/i;
 /** Модель техники: «Модель: HP LaserJet 1102». */
-const MODEL = /(?:модель|model)\s*[:№-]?\s*([A-Za-zА-Яа-я0-9][\w./-]*(?:\s+[A-Za-z0-9][\w./-]*){0,2})/i;
+const MODEL = /(?:модель|model)[\s:№-]*([A-Za-zА-Яа-я0-9][\w./-]*(?:\s+[A-Za-z0-9][\w./-]*){0,2})/i;
 
 export interface VisionFieldsInput {
   /** Текст распознавания. */

@@ -149,7 +149,7 @@ export function placeShortLabel(place: Place | null | undefined): string {
   const building = asString(place.building)?.replace(/^корпус\s*/i, '').trim();
   if (!building) return placeLabel(place);
   const parts = [building];
-  const floor = asString(place.floor)?.replace(/\s*этаж$/i, '').trim();
+  const floor = asString(place.floor)?.replace(/этаж$/i, '').trim();
   if (floor) parts.push(floor);
   const cabinet = asString(place.cabinet);
   if (cabinet) parts.push(cabinet);

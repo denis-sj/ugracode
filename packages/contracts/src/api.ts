@@ -123,6 +123,49 @@ export const ProfileResponse = z.object({
 });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
 
+/** Где сидит сотрудник: корпус и кабинет; этаж сервер берёт из CMDB или из первой цифры кабинета. */
+export const ProfilePlaceInput = z.object({
+  building: z.string().trim().min(1, 'Укажите корпус').max(16),
+  cabinet: z.string().trim().min(1, 'Укажите кабинет').max(16),
+});
+export type ProfilePlaceInput = z.infer<typeof ProfilePlaceInput>;
+
+/** Закрепить технику из CMDB за собой. */
+export const ProfileEquipmentInput = z.object({
+  equipmentId: z.string().trim().min(1).max(64),
+  note: z.string().trim().max(120).optional(),
+});
+export type ProfileEquipmentInput = z.infer<typeof ProfileEquipmentInput>;
+
+/** Что можно выбрать в профиле: корпуса и техника из CMDB. */
+export const ProfileOptionsResponse = z.object({
+  buildings: z.array(z.object({ code: z.string(), label: z.string() })),
+  equipment: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      building: z.string().nullable(),
+      cabinet: z.string().nullable(),
+    }),
+  ),
+});
+export type ProfileOptionsResponse = z.infer<typeof ProfileOptionsResponse>;
+
+/** Новый сотрудник: руководитель заводит его сразу с ролью и, по желанию, рабочим местом. */
+export const CreateUserInput = z.object({
+  fullName: z.string().trim().min(3, 'Укажите фамилию и имя').max(80),
+  role: Role,
+  position: z.string().trim().min(2, 'Укажите должность').max(80),
+  departmentId: z.string().trim().max(64).nullable().optional(),
+  building: z.string().trim().max(16).optional(),
+  cabinet: z.string().trim().max(16).optional(),
+});
+export type CreateUserInput = z.infer<typeof CreateUserInput>;
+
+/** Смена роли сотрудника. */
+export const UpdateUserRoleInput = z.object({ role: Role });
+export type UpdateUserRoleInput = z.infer<typeof UpdateUserRoleInput>;
+
 export const EventsResponse = z.object({ events: z.array(z.unknown()) });
 export type EventsResponse = { events: DomainEvent[] };
 

@@ -13,6 +13,8 @@ export default defineConfig({
       '@ugra/adapters': alias('packages/adapters'),
       '@ugra/db': alias('packages/db'),
       '@ugra/testkit': alias('packages/testkit'),
+      '@ugra/ui/tokens.css': fileURLToPath(new URL('./packages/ui/src/tokens.css', import.meta.url)),
+      '@ugra/ui/styles.css': fileURLToPath(new URL('./packages/ui/src/styles.css', import.meta.url)),
       '@ugra/ui': alias('packages/ui'),
     },
   },
@@ -24,17 +26,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       reportsDirectory: 'coverage',
-      // Меряем серверную логику: API, ядро/адаптеры/база и серверные части модулей.
-      include: [
-        'apps/api/src/**/*.ts',
-        'packages/contracts/src/**/*.ts',
-        'packages/core/src/**/*.ts',
-        'packages/adapters/src/**/*.ts',
-        'packages/db/src/**/*.ts',
-        'modules/*/server/**/*.ts',
-      ],
+      // Меряем весь код, который анализирует SonarQube (sonar.sources = apps, packages, modules),
+      // чтобы покрытие в отчёте Sonar совпадало с локальным.
+      include: ['apps/*/src/**/*.{ts,tsx}', 'packages/*/src/**/*.{ts,tsx}', 'modules/*/**/*.{ts,tsx}'],
       exclude: [
         '**/*.test.ts',
+        '**/*.d.ts',
+        '**/dist/**',
         '**/tests/**',
         '**/prompts/**',
         'packages/db/src/seed/**',

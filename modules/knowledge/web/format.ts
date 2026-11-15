@@ -114,7 +114,7 @@ export function normalizeArticle(value: unknown): KnowledgeArticle | null {
   };
 }
 
-function normalizeArticles(articles: readonly unknown[] | null | undefined): KnowledgeArticle[] {
+export function normalizeArticles(articles: readonly unknown[] | null | undefined): KnowledgeArticle[] {
   if (!Array.isArray(articles)) return [];
   const result: KnowledgeArticle[] = [];
   for (const item of articles) {
@@ -515,4 +515,25 @@ export function buildDraft({ query, articles, tickets, resolutions = [] }: Draft
     solutions: uniqueSolutions,
     empty: steps.length === 0 && uniqueSolutions.length === 0,
   };
+}
+
+export interface CatalogGroup {
+  code: string;
+  label: string;
+  count: number;
+}
+
+/** Категории каталога со счётчиками: самые наполненные первыми, затем по алфавиту. */
+export function catalogGroups(
+  articles: readonly KnowledgeArticle[],
+  labels: Readonly<Record<string, string>>,
+): CatalogGroup[] {
+  const counts = new Map<string, number>();
+  for (const article of articles) {
+    if (!article.category) continue;
+    counts.set(article.category, (counts.get(article.category) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => ({ code, label: labels[code] ?? code, count }))
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, 'ru'));
 }

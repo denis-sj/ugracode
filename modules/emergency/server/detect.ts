@@ -159,7 +159,7 @@ export function pickDutyEngineers(
     }
   }
 
-  return picked.sort();
+  return picked.sort((left, right) => left.localeCompare(right));
 }
 
 export interface DetectEmergencyInput {

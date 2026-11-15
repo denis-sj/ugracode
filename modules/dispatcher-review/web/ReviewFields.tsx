@@ -14,6 +14,11 @@ export interface ReviewFieldsProps {
   trackAction?: WebPageProps['trackAction'];
 }
 
+/** Ставит фокус в поле правки, когда оно появилось (вместо атрибута autoFocus). */
+function focusOnMount(element: HTMLElement | null): void {
+  element?.focus();
+}
+
 /** Шаг «Поля заявки»: сомнительные сверху, правка в одно действие, происхождение и цитата. */
 export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: ReviewFieldsProps): JSX.Element {
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -53,15 +58,7 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
               <div
                 key={entry.key}
                 className={`review-field${review ? ' review-field--review' : ''}${editing ? ' review-field--editing' : ''}`}
-                tabIndex={review && field ? 0 : -1}
                 data-field-key={entry.key}
-                aria-label={review ? `Спорное поле ${entry.label}` : undefined}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter' || !review || !field || editing) return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  startEdit(entry.key, entry.value);
-                }}
               >
                 <FieldRow
                   fieldKey={entry.key}
@@ -78,7 +75,8 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
                       <button
                         type="button"
                         className="review-inline-link"
-                        tabIndex={-1}
+                        tabIndex={review ? 0 : -1}
+                        aria-label={review ? `${editing ? 'Отмена правки' : 'Изменить спорное поле'} ${entry.label}` : undefined}
                         onClick={() => (editing ? setEditingKey(null) : startEdit(entry.key, entry.value))}
                       >
                         {editing ? 'отмена' : 'изменить'}
@@ -104,7 +102,7 @@ export function ReviewFields({ fields, meta, canEdit, onSave, trackAction }: Rev
                         <input
                           className="review-editor__control"
                           value={draft}
-                          autoFocus
+                          ref={focusOnMount}
                           aria-label={`Новое значение поля ${entry.label}`}
                           onChange={(event) => {
                             setDraft(event.target.value);

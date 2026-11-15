@@ -19,6 +19,7 @@ import {
   ticketStage,
   ticketStatusTone,
   useListMotion,
+  useBackgroundRefresh,
 } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { fieldValues, ticketTitle } from './format';
@@ -90,8 +91,8 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
   const [acting, setActing] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = useCallback(async (): Promise<void> => {
-    setState((previous) => ({ ...previous, loading: true, error: null }));
+  const load = useCallback(async (quiet = false): Promise<void> => {
+    if (!quiet) setState((previous) => ({ ...previous, loading: true, error: null }));
     try {
       const [list, users] = await Promise.all([
         api.get<TicketListResponse>('/api/tickets?limit=50'),
@@ -106,13 +107,15 @@ export function TicketsPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
       }));
       setState({ loading: false, error: null, items, users: users.users });
     } catch (caught) {
-      setState((previous) => ({ ...previous, loading: false, error: errorText(caught) }));
+      if (!quiet) setState((previous) => ({ ...previous, loading: false, error: errorText(caught) }));
     }
   }, [api]);
 
   useEffect(() => {
     void load();
   }, [load]);
+  const refreshTickets = useCallback(() => load(true), [load]);
+  useBackgroundRefresh(refreshTickets);
 
   const groups = useMemo(() => groupHistory(state.items.map((item) => item.ticket)), [state.items]);
 

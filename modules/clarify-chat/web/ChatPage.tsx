@@ -7,7 +7,7 @@ import type {
   User,
   UsersResponse,
 } from '@ugra/contracts';
-import { formatDue, formatTicketNumber, stickerSlap } from '@ugra/ui';
+import { celebrate, formatDue, formatTicketNumber, stickerSlap } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import { AskCard } from './AskCard';
 import { RunTrace } from './RunTrace';
@@ -33,6 +33,28 @@ interface ChatMessage {
   id: string;
   from: 'me' | 'ai';
   text: string;
+  /** Финал: заявка собрана — показываем галочку, а не просто текст. */
+  done?: { number: string; caption: string };
+}
+
+/** «Заявка готова»: галочка рисуется, карточка мягко появляется, разлетается конфетти. */
+function DoneCard({ number, caption }: { number: string; caption: string }): JSX.Element {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    celebrate(ref.current);
+  }, []);
+  return (
+    <div className="chat-done" ref={ref} role="status">
+      <svg className="chat-done__mark" viewBox="0 0 52 52" aria-hidden="true">
+        <circle className="chat-done__circle" cx="26" cy="26" r="23" />
+        <path className="chat-done__check" d="M15 27l7.5 7.5L38 19" />
+      </svg>
+      <div className="chat-done__text">
+        <strong className="chat-done__title">Заявка {number} готова</strong>
+        <span className="chat-done__caption">{caption}</span>
+      </div>
+    </div>
+  );
 }
 
 function sleep(ms: number): Promise<void> {
@@ -335,7 +357,13 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           ticket.ticket.slaDueAt,
         )}.`
       : `Готово: заявка **${formatTicketNumber(ticket.ticket.number)}** собрана и ушла диспетчеру. Он проверит детали и назначит инженера.`;
-    setMessages((previous) => [...previous, { id: nextMessageId(), from: 'ai', text }]);
+    const caption = assignee
+      ? `Инженер ${assignee.fullName} придёт ${formatDue(ticket.ticket.slaDueAt)}.`
+      : 'Ушла диспетчеру: он проверит детали и назначит инженера.';
+    setMessages((previous) => [
+      ...previous,
+      { id: nextMessageId(), from: 'ai', text, done: { number: formatTicketNumber(ticket.ticket.number), caption } },
+    ]);
   }, [busy, finalShown, questions.length, started, ticket, users]);
 
   const submitComposer = (): void => {
@@ -366,6 +394,8 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
               <div className="chat-me" key={message.id}>
                 {message.text}
               </div>
+            ) : message.done ? (
+              <DoneCard key={message.id} number={message.done.number} caption={message.done.caption} />
             ) : (
               <div className="chat-ai" key={message.id}>
                 {parseEmphasis(message.text).map((segment, index) =>

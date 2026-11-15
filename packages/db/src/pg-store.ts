@@ -293,6 +293,24 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
     return rows.map(mapApplicantEquipmentRow);
   }
 
+  async saveApplicantEquipment(item: ApplicantEquipment): Promise<void> {
+    await this.db
+      .insert(applicantEquipmentTable)
+      .values({ id: item.id, userId: item.userId, equipmentId: item.equipmentId, note: item.note })
+      .onConflictDoUpdate({
+        target: applicantEquipmentTable.id,
+        set: { userId: item.userId, equipmentId: item.equipmentId, note: item.note },
+      });
+  }
+
+  async deleteApplicantEquipment(userId: string, id: string): Promise<boolean> {
+    const rows = await this.db
+      .delete(applicantEquipmentTable)
+      .where(and(eq(applicantEquipmentTable.id, id), eq(applicantEquipmentTable.userId, userId)))
+      .returning({ id: applicantEquipmentTable.id });
+    return rows.length > 0;
+  }
+
   async saveAppeal(appeal: Appeal): Promise<void> {
     await this.db
       .insert(appealTable)
@@ -688,6 +706,11 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
     return row ? mapKbArticleRow(row) : null;
   }
 
+  async listKnowledgeArticles(): Promise<KnowledgeArticle[]> {
+    const rows = await this.db.select().from(kbArticleTable).orderBy(asc(kbArticleTable.title));
+    return rows.map(mapKbArticleRow);
+  }
+
   /** Полнотекстовый поиск Postgres с русской морфологией + ILIKE как запасной путь. */
   async searchKnowledge(query: KnowledgeSearchQuery): Promise<KnowledgeArticle[]> {
     const text = query.text.trim();
@@ -696,7 +719,8 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
     const limit = normalizeLimit(query.limit);
     const pattern = `%${text}%`;
     const document = sql`to_tsvector('russian', coalesce(title, '') || ' ' || coalesce(symptoms::text, '') || ' ' || coalesce(solution, ''))`;
-    const tsQuery = sql`plainto_tsquery('russian', ${text})`;
+    // Слова через ИЛИ: агент присылает длинные фразы, а строгое И давало пустую выдачу; порядок задаёт ts_rank.
+    const tsQuery = sql`replace(plainto_tsquery('russian', ${text})::text, ' & ', ' | ')::tsquery`;
 
     const result = await this.db.execute<KbSearchRow>(sql`
       SELECT
@@ -749,7 +773,8 @@ export class PgStore implements KernelStore {  constructor(private readonly db: 
     const symptoms = sql`coalesce((SELECT f.value #>> '{}' FROM ticket_field f WHERE f.ticket_id = tk.id AND f.field_key = 'symptoms' LIMIT 1), '')`;
     const object = sql`coalesce((SELECT f.value #>> '{}' FROM ticket_field f WHERE f.ticket_id = tk.id AND f.field_key = 'object' LIMIT 1), '')`;
     const document = sql`to_tsvector('russian', ${symptoms} || ' ' || ${object} || ' ' || coalesce(tk.category, ''))`;
-    const tsQuery = sql`plainto_tsquery('russian', ${text})`;
+    // Слова через ИЛИ: агент присылает длинные фразы, а строгое И давало пустую выдачу; порядок задаёт ts_rank.
+    const tsQuery = sql`replace(plainto_tsquery('russian', ${text})::text, ' & ', ' | ')::tsquery`;
 
     const result = await this.db.execute<SimilarTicketRow>(sql`
       SELECT

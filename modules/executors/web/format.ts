@@ -240,8 +240,9 @@ export function taskDeadline(
   const candidates = [ticket.reactDueAt, ticket.slaDueAt]
     .map((at) => ({ at, time: parseTime(at) }))
     .filter((entry): entry is { at: string; time: number } => entry.at !== null && entry.time !== null);
-  if (candidates.length === 0) return null;
-  const nearest = candidates.reduce((left, right) => (right.time < left.time ? right : left));
+  const [first, ...rest] = candidates;
+  if (!first) return null;
+  const nearest = rest.reduce((best, entry) => (entry.time < best.time ? entry : best), first);
   const left = nearest.time - now;
   const overdue = left < 0;
   return {

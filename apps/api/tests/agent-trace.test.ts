@@ -12,6 +12,17 @@ describe('agent-trace: безопасный журнал', () => {
     expect(clean).not.toContain('89123456789');
   });
 
+  it('убирает почту внутри фразы и оставляет обычные слова с «@» без домена', () => {
+    expect(sanitizeSummary('Пишите на ivanov@corp.example.ru по вопросу')).toBe('Пишите на по вопросу');
+    expect(sanitizeSummary('Канал @support в чате')).toBe('Канал @support в чате');
+  });
+
+  it('длинная строка без пробелов обрабатывается быстро', () => {
+    const started = performance.now();
+    sanitizeSummary(`${'a'.repeat(100_000)}@`);
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+
   it('обрезает итог до 100 символов', () => {
     expect(sanitizeSummary('а'.repeat(300)).length).toBe(100);
   });

@@ -78,8 +78,12 @@ export function QueueConfidence({ value }: { value: number | null }): JSX.Elemen
   );
 }
 
+export type QueueColumnTone = 'warn' | 'ok' | 'danger';
+
 export interface QueueColumnProps {
   title: string;
+  /** Цвет полосы колонки: жёлтая — решение, зелёная — готово, красная — аварии. */
+  tone: QueueColumnTone;
   count: number;
   /** Пояснение под заголовком колонки. */
   note?: string;
@@ -95,6 +99,7 @@ export interface QueueColumnProps {
 /** Колонка доски: заголовок со счётчиком и стопка карточек с отступами. */
 export function QueueColumn({
   title,
+  tone,
   count,
   note,
   action,
@@ -103,8 +108,9 @@ export function QueueColumn({
   children,
 }: QueueColumnProps): JSX.Element {
   return (
-    <section className="queue-column" aria-label={`${title}: ${count}`}>
+    <section className={cx('queue-column', `queue-column--${tone}`)} aria-label={`${title}: ${count}`}>
       <header className="queue-column__head">
+        <i className="queue-column__dot" aria-hidden="true" />
         <h2 className="queue-column__title">{title}</h2>
         <span className="queue-column__count">{count}</span>
         {note && <span className="queue-column__note">{note}</span>}
@@ -112,7 +118,16 @@ export function QueueColumn({
         {action}
       </header>
       <div className="queue-column__list" ref={listRef}>
-        {count === 0 ? <p className="queue-column__empty">{empty}</p> : children}
+        {count === 0 ? (
+          <p className="queue-column__empty">
+            <span className="queue-column__empty-mark" aria-hidden="true">
+              ✓
+            </span>
+            {empty}
+          </p>
+        ) : (
+          children
+        )}
       </div>
     </section>
   );
@@ -226,11 +241,12 @@ export function QueueQuiet({ groups }: QueueQuietProps): JSX.Element | null {
     <Card className="queue-quiet" padded={false} as="section">
       <h2 className="queue-quiet__caption">Дальше по очереди</h2>
       {visible.map((group) => (
-        <div className="queue-quiet__group" key={group.key}>
+        <div className={cx('queue-quiet__group', group.open && 'queue-quiet__group--open')} key={group.key}>
           <button
             type="button"
             className="queue-quiet__head"
             aria-expanded={group.open}
+            title={group.summary !== '' ? group.summary : undefined}
             onClick={group.onToggle}
           >
             <span className="queue-quiet__chevron" aria-hidden="true">
@@ -238,9 +254,6 @@ export function QueueQuiet({ groups }: QueueQuietProps): JSX.Element | null {
             </span>
             <span className="queue-quiet__title">{group.title}</span>
             <span className="queue-quiet__count">{group.count}</span>
-            {!group.open && group.summary !== '' && (
-              <span className="queue-quiet__summary">{group.summary}</span>
-            )}
           </button>
           {group.open && (
             <div className="queue-quiet__list" ref={group.listRef}>

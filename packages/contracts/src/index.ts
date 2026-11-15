@@ -5,3 +5,4 @@ export * from './ai';
 export * from './api';
 
 export * from './ticket-number';
+export * from './text';

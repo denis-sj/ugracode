@@ -116,3 +116,31 @@ export function registerTtsRoute(app: FastifyInstance, options: TtsRouteOptions)
 
   return cache;
 }
+
+/**
+ * Прогрев: типовые фразы звонка синтезируются при старте API и лежат в кэше.
+ * Тогда приветствие звучит сразу после «Ответить», даже если телефон отсканировал QR секунду назад.
+ * По одной фразе, чтобы не упереться в лимит провайдера; сбой не мешает запуску.
+ */
+export async function warmTts(
+  cache: TtsCache,
+  ports: Pick<Ports, 'tts'>,
+  texts: readonly string[],
+): Promise<number> {
+  if (!ports.tts.available) return 0;
+  let warmed = 0;
+  for (const raw of texts) {
+    const text = raw.replace(/\s+/g, ' ').trim();
+    if (text === '') continue;
+    const key = ttsCacheKey(text, '');
+    if (cache.get(key)) continue;
+    try {
+      const result = await ports.tts.speak({ text });
+      cache.set(key, result.audio);
+      warmed += 1;
+    } catch {
+      // Провайдер недоступен — фраза синтезируется по первому запросу, как раньше.
+    }
+  }
+  return warmed;
+}

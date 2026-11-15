@@ -55,6 +55,7 @@ export function Modal({
   return (
     <div
       className="ugra-modal"
+      role="presentation"
       ref={backdropRef}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();

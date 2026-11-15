@@ -76,6 +76,12 @@ export const KnowledgeSearchResponse = z.object({
 });
 export type KnowledgeSearchResult = z.infer<typeof KnowledgeSearchResponse>;
 
+/** Каталог: `GET /api/m/knowledge/articles` — все статьи по названию (экран без запроса). */
+export const ArticleListResponse = z.object({
+  articles: z.array(KnowledgeArticleSchema),
+});
+export type ArticleListResult = z.infer<typeof ArticleListResponse>;
+
 /** Статья по id: `GET /api/m/knowledge/articles/:id` (кнопка «Открыть статью»). */
 export const ArticleResponse = z.object({
   article: KnowledgeArticleSchema.nullable(),

@@ -2,15 +2,11 @@ import { shortTicketNumber } from '@ugra/contracts';
 import './voice.css';
 import type { JSX } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
 import { Badge, Button, Card, EmptyState, cx, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
   CALLS_URL,
   POLL_MS,
-  PUBLIC_URL_POLL_MS,
-  PUBLIC_URL_URL,
-  callUrlOf,
   callerLabel,
   duration,
   findNewCall,
@@ -18,7 +14,6 @@ import {
   sourceLabel,
   statusText,
   type CallView,
-  type PublicUrlView,
 } from './format';
 
 function errorText(error: unknown): string {
@@ -69,35 +64,6 @@ function useCalls(api: WebPageProps['api']): CallsState {
     };
   }, [api]);
   return { calls, error, forbidden, loaded, updatedAt };
-}
-
-/** Публичный адрес страницы звонка: туннель меняет его при каждом запуске — спрашиваем раз в 15 с. */
-function usePublicUrl(api: WebPageProps['api']): { value: PublicUrlView | null; failed: boolean } {
-  const [value, setValue] = useState<PublicUrlView | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    const load = (): void => {
-      api
-        .get<PublicUrlView>(PUBLIC_URL_URL)
-        .then((response) => {
-          if (!alive) return;
-          setValue(response);
-          setFailed(false);
-        })
-        .catch(() => {
-          if (!alive) return;
-          setFailed(true);
-        });
-    };
-    load();
-    const timer = setInterval(load, PUBLIC_URL_POLL_MS);
-    return () => {
-      alive = false;
-      clearInterval(timer);
-    };
-  }, [api]);
-  return { value, failed };
 }
 
 /** Короткий звук вызова. WebAudio требует жеста: контекст создаём на первом клике диспетчера. */
@@ -252,56 +218,6 @@ function RecentCalls({ calls, currentId, now, onSelect }: { calls: CallView[]; c
   );
 }
 
-/** QR на `/call`: жюри сканирует со слайда и звонит со своего телефона. */
-function CallQr({ value, failed }: { value: PublicUrlView | null; failed: boolean }): JSX.Element {
-  const [image, setImage] = useState<string | null>(null);
-  const callUrl = callUrlOf(value);
-
-  useEffect(() => {
-    if (!callUrl) {
-      setImage(null);
-      return undefined;
-    }
-    let alive = true;
-    QRCode.toDataURL(callUrl, { margin: 1, width: 360, errorCorrectionLevel: 'M', color: { dark: '#0f1222', light: '#ffffff' } })
-      .then((data) => {
-        if (alive) setImage(data);
-      })
-      .catch(() => {
-        if (alive) setImage(null);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [callUrl]);
-
-  return (
-    <Card className="voice-qr" as="aside">
-      <h2 className="voice-qr__title">Позвонить ИИ-диспетчеру</h2>
-      {image ? (
-        <img className="voice-qr__image" src={image} alt={`QR-код на страницу звонка ${callUrl ?? ''}`} width={236} height={236} />
-      ) : (
-        <div className="voice-qr__empty" aria-hidden="true">
-          QR
-        </div>
-      )}
-      {callUrl ? (
-        <>
-          <code className="voice-qr__url">{callUrl}</code>
-          <p className="voice-qr__note">
-            Наведите камеру телефона и нажмите «Ответить». {value?.source === 'tunnel' ? 'Адрес туннеля живёт, пока запущен pnpm demo:tunnel.' : 'Адрес взят из PUBLIC_WEB_URL.'}
-          </p>
-        </>
-      ) : (
-        <p className="voice-qr__hint">
-          {failed ? 'Сервер не отдал адрес.' : 'Публичного адреса пока нет.'} Запустите <code>pnpm demo:tunnel</code> — адрес и QR появятся здесь сами. На этом
-          ноутбуке звонок работает и по <code>localhost:5173/call</code>.
-        </p>
-      )}
-    </Card>
-  );
-}
-
 function IncomingBanner({ call, onOpen, onClose }: { call: CallView; onOpen: () => void; onClose: () => void }): JSX.Element {
   return (
     <div className="voice-incoming" role="alert">
@@ -322,10 +238,9 @@ function IncomingBanner({ call, onOpen, onClose }: { call: CallView; onOpen: () 
   );
 }
 
-/** Экран «Входящий звонок»: QR для жюри, реплики ИИ вживую, после звонка — ссылка на заявку. */
+/** Реплики ИИ вживую и созданная из разговора заявка. */
 export function CallsPage({ api, navigate, trackAction }: WebPageProps): JSX.Element {
   const { calls, error, forbidden, loaded, updatedAt } = useCalls(api);
-  const publicUrl = usePublicUrl(api);
   const ring = useRinger();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [incoming, setIncoming] = useState<CallView | null>(null);
@@ -362,8 +277,7 @@ export function CallsPage({ api, navigate, trackAction }: WebPageProps): JSX.Ele
         <div>
           <h1>Входящий звонок</h1>
           <p className="voice-lead">
-            Жюри сканирует QR и говорит с ИИ-оператором со своего телефона: ИИ отвечает голосом, задаёт одно-два уточнения и кладёт трубку —
-            заявка уже в очереди.
+            Разговоры с ИИ-оператором, расшифровки и созданные заявки обновляются в реальном времени.
           </p>
         </div>
         {forbidden ? (
@@ -419,11 +333,10 @@ export function CallsPage({ api, navigate, trackAction }: WebPageProps): JSX.Ele
             <EmptyState
               icon="☎"
               title="Звонков пока нет"
-              hint="Покажите QR справа: жюри сканирует его и нажимает «Ответить». Или проверьте без телефона — pnpm voice:sim."
+              hint="Здесь появится разговор, когда сотрудник позвонит ИИ-оператору."
             />
           )}
         </div>
-        <CallQr value={publicUrl.value} failed={publicUrl.failed} />
       </div>
     </div>
   );

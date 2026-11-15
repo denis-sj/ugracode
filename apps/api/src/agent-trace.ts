@@ -18,10 +18,23 @@ function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
+/** Похоже на почту: есть «@» не в начале и точка в домене после него. */
+function looksLikeEmail(token: string): boolean {
+  const at = token.indexOf('@');
+  return at > 0 && token.indexOf('.', at + 2) > at + 1;
+}
+
+/** Выкидывает слова-почты; разбор по словам линейный, без отката регулярного выражения. */
+function withoutEmails(text: string): string {
+  return text
+    .split(' ')
+    .filter((token) => !looksLikeEmail(token))
+    .join(' ');
+}
+
 /** Убирает почты, UUID, инвентарные номера, телефоны и длинные идентификаторы. */
 export function sanitizeSummary(text: string): string {
-  return text
-    .replace(/[\w.+-]+@[\w.-]+\.\w+/g, '')
+  return withoutEmails(text)
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
     .replace(/\b[A-ZА-ЯЁ]{2,}[-‐ ]?\d{3,}\b/g, '')
     .replace(/\b\d{10,}\b/g, '')

@@ -1,3 +1,4 @@
+import { groupThousands, trimEndChars } from '@ugra/contracts';
 /**
  * Чистые функции хаба отчётов О1–О7.
  * Ответы сервера приходят как `unknown`: страница не падает на незнакомом формате,
@@ -163,6 +164,8 @@ export function formatShiftDate(value: string): string {
 
 /** Пробел-разделитель разрядов: неразрывный, чтобы «1 284» не рвалось на две строки. */
 const THIN_SPACE = '\u00A0';
+/** Пробелы и знаки, которые не должны висеть перед многоточием. */
+const TRAILING_PUNCTUATION = ' \t\n,;:.·—-';
 
 /** Значение показателя: числа с разрядами, проценты и строки — как есть. */
 export function formatMetric(value: unknown): string {
@@ -175,7 +178,7 @@ export function formatMetric(value: unknown): string {
       ? String(absolute)
       : String(Math.round(absolute * 10) / 10).replace('.', ',');
     const [whole = '0', fraction] = text.split(',');
-    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, THIN_SPACE);
+    const grouped = groupThousands(whole, THIN_SPACE);
     return `${sign}${grouped}${fraction === undefined ? '' : `,${fraction}`}`;
   }
   if (typeof value === 'string') {
@@ -613,7 +616,7 @@ function shortLabel(text: string, limit = 26): string {
   if (text.length <= limit) return text;
   const cut = text.slice(0, limit);
   const space = cut.lastIndexOf(' ');
-  const base = (space > 12 ? cut.slice(0, space) : cut).replace(/[\s,;:.·—-]+$/, '');
+  const base = trimEndChars(space > 12 ? cut.slice(0, space) : cut, TRAILING_PUNCTUATION);
   return `${base}…`;
 }
 
@@ -825,5 +828,111 @@ export function hotspotFocus(payload: unknown): HotspotFocusView | null {
     trend: trendText(num(top['trendPercent'])),
     bars,
     repeated: num(report['repeatedTickets']) ?? 0,
+  };
+}
+
+/* ---------- О2 «Горячие точки»: наглядный вид отчёта ---------- */
+
+export type HotspotTone = 'hot' | 'warm' | 'calm';
+
+export interface HotspotRowView {
+  readonly key: string;
+  readonly rank: number;
+  /** Что ломается: модель техники или «Кабинет 201». */
+  readonly title: string;
+  /** Где: «Корпус Б · каб. 312». */
+  readonly place: string;
+  readonly kind: 'equipment' | 'cabinet';
+  readonly count: number;
+  /** Ширина полосы относительно лидера, %. */
+  readonly width: number;
+  readonly share: string;
+  readonly avg: string;
+  /** «+350%» / «−20%» / «новая» / null. */
+  readonly trend: string | null;
+  readonly trendUp: boolean;
+  readonly tone: HotspotTone;
+}
+
+export interface HotspotsView {
+  readonly days: number;
+  readonly total: number;
+  readonly previousTotal: number;
+  readonly trend: string | null;
+  readonly trendUp: boolean;
+  readonly repeated: number;
+  /** Доля заявок в точках с повторами, %. */
+  readonly repeatedShare: number;
+  readonly rows: readonly HotspotRowView[];
+}
+
+/** Подпись точки делим на «что» и «где»: «HP LaserJet · Корпус Б · каб. 312» → две строки. */
+export function splitHotspotLabel(label: string, kind: 'equipment' | 'cabinet'): { title: string; place: string } {
+  const parts = label.split(' · ');
+  if (kind === 'equipment' && parts.length > 1) {
+    return { title: parts[0] ?? label, place: parts.slice(1).join(' · ') };
+  }
+  const cabinet = parts.find((part) => part.startsWith('каб.'));
+  return { title: cabinet ? `Кабинет ${cabinet.replace('каб.', '').trim()}` : label, place: parts.join(' · ') };
+}
+
+function trendLabel(value: number | null, previous: number): string | null {
+  if (value === null) return previous === 0 ? 'новая' : null;
+  if (value === 0) return 'без изменений';
+  const rounded = Math.round(value);
+  return rounded > 0 ? `+${rounded}%` : `−${Math.abs(rounded)}%`;
+}
+
+/** Цвет точки: лидер и всё, что не меньше 2/3 лидера, — «горячие», от 1/3 — «тёплые». */
+function toneOf(count: number, max: number): HotspotTone {
+  if (max === 0) return 'calm';
+  const ratio = count / max;
+  if (ratio >= 0.67) return 'hot';
+  return ratio >= 0.34 ? 'warm' : 'calm';
+}
+
+/** Наглядный вид О2: плитки, лидер и рейтинг точек с повторами (2+ заявки). */
+export function hotspotsView(payload: unknown, limit = 8): HotspotsView | null {
+  const report = reportOf(payload);
+  if (report === null) return null;
+  const total = num(report['total']) ?? 0;
+  const previousTotal = num(report['previousTotal']) ?? 0;
+  const trendPercent = num(report['trendPercent']);
+  const repeated = num(report['repeatedTickets']) ?? 0;
+  const days = num(asRecord(report['period'])?.['days']) ?? 30;
+  const source = records(report['rows'])
+    .filter((row) => (num(row['count']) ?? 0) >= 2)
+    .sort((left, right) => (num(right['count']) ?? 0) - (num(left['count']) ?? 0))
+    .slice(0, limit);
+  const max = num(source[0]?.['count']) ?? 0;
+  const rows = source.map((row, index): HotspotRowView => {
+    const kind = row['kind'] === 'equipment' ? 'equipment' : 'cabinet';
+    const count = num(row['count']) ?? 0;
+    const trend = num(row['trendPercent']);
+    const { title, place } = splitHotspotLabel(asText(row['label']) ?? '—', kind);
+    return {
+      key: asText(row['key']) ?? `hotspot-${index}`,
+      rank: index + 1,
+      title,
+      place,
+      kind,
+      count,
+      width: max === 0 ? 0 : Math.max(4, Math.round((count / max) * 100)),
+      share: formatPercent(row['sharePercent']),
+      avg: formatMinutes(row['avgResolutionMinutes']),
+      trend: trendLabel(trend, num(row['previousCount']) ?? 0),
+      trendUp: (trend ?? 1) > 0,
+      tone: toneOf(count, max),
+    };
+  });
+  return {
+    days,
+    total,
+    previousTotal,
+    trend: trendLabel(trendPercent, previousTotal),
+    trendUp: (trendPercent ?? 0) > 0,
+    repeated,
+    repeatedShare: total === 0 ? 0 : Math.round((repeated / total) * 100),
+    rows,
   };
 }

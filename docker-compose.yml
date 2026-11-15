@@ -62,17 +62,19 @@ services:
       - "5173:5173"
 
   sonar:
-    image: sonarqube:lts-community
+    # Community Build: встроенный TypeScript понимает moduleResolution=Bundler и lib ES2023
+    # (LTS 9.9 на нашем tsconfig падал и молча не анализировал .ts/.tsx).
+    image: sonarqube:community
     profiles: ["sonar"]
     ports:
       - "9000:9000"
     environment:
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     volumes:
-      - sonar-data:/opt/sonarqube/data
-      - sonar-extensions:/opt/sonarqube/extensions
+      - sonar-cb-data:/opt/sonarqube/data
+      - sonar-cb-extensions:/opt/sonarqube/extensions
 
 volumes:
   db-data:
-  sonar-data:
-  sonar-extensions:
+  sonar-cb-data:
+  sonar-cb-extensions:

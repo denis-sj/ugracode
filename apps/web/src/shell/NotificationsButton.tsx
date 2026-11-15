@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { NotificationsResponse, User, UserNotification } from '@ugra/contracts';
-import { cx, Icon, useListMotion } from '@ugra/ui';
+import { cx, Icon, useBackgroundRefresh, useListMotion } from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
-import { formatRelativeTime } from './lib';
+import { formatRelativeTime, notificationPath } from './lib';
 
 export interface NotificationsButtonProps {
   api: ApiClient;
@@ -25,22 +25,23 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
   const listRef = useRef<HTMLDivElement | null>(null);
   useListMotion(listRef, open && items.length > 0);
 
-  const load = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (quiet = false): Promise<void> => {
+    if (!quiet) { setLoading(true); setError(null); }
     try {
       const response = await api.get<NotificationsResponse>('/api/notifications');
       setItems(response.notifications);
     } catch (caught) {
-      setError(errorText(caught));
+      if (!quiet) setError(errorText(caught));
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
-  }, [api]);
+  }, [api, user.id]);
 
   useEffect(() => {
     void load();
   }, [load]);
+  const refreshNotifications = useCallback(() => load(true), [load]);
+  useBackgroundRefresh(refreshNotifications);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -86,7 +87,7 @@ export function NotificationsButton({ api, user, navigate }: NotificationsButton
   const openNotification = (notification: UserNotification): void => {
     void markRead(notification);
     setOpen(false);
-    navigate(user.role === 'applicant' ? '/tickets' : '/queue');
+    navigate(notificationPath(user.role, notification.ticketId));
   };
 
   return (

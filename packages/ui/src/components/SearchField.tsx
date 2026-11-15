@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { JSX } from 'react';
 import { cx } from '../cx';
 
@@ -20,6 +21,10 @@ export function SearchField({
   className,
   autoFocus = false,
 }: SearchFieldProps): JSX.Element {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (autoFocus) input.current?.focus();
+  }, [autoFocus]);
   return (
     <label className={cx('ugra-search', className)}>
       <span className="ugra-sr-only">{label}</span>
@@ -42,7 +47,7 @@ export function SearchField({
         type="search"
         value={value}
         placeholder={placeholder}
-        autoFocus={autoFocus}
+        ref={input}
         onChange={(event) => onChange(event.target.value)}
       />
     </label>

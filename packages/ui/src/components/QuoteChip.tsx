@@ -14,13 +14,13 @@ export function QuoteChip({ text, sourceLabel, className }: QuoteChipProps): JSX
   if (!quote) return null;
   const preview = quote.length > 28 ? `${quote.slice(0, 28)}…` : quote;
   return (
-    <span className={cx('ugra-quote', className)} tabIndex={0} title={quote}>
+    <button type="button" className={cx('ugra-quote', className)} title={quote} aria-label={`Цитата: ${quote}`}>
       <span aria-hidden="true">❝</span>
       <span className="ugra-quote__text">{preview}</span>
       <span className="ugra-quote__bubble" role="tooltip">
         {quote}
         {sourceLabel && <span className="ugra-quote__source">Источник: {sourceLabel}</span>}
       </span>
-    </span>
+    </button>
   );
 }

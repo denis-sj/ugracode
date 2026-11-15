@@ -271,6 +271,7 @@ describe('запрос озвучки на сервер', () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/tts');
     expect(sent.init?.method).toBe('POST');
     expect(sent.init?.credentials).toBe('include');
+    expect(sent.init?.headers).toMatchObject({ 'X-Pinggy-No-Screen': '1' });
     expect(JSON.parse(sent.body)).toEqual({ text: 'Привет, мир', voice: 'Kore' });
   });
 

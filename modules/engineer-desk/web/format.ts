@@ -126,8 +126,9 @@ export function nearestDueAt(ticket: Pick<Ticket, 'reactDueAt' | 'slaDueAt'>): s
     { iso: ticket.reactDueAt, time: timeOf(ticket.reactDueAt) },
     { iso: ticket.slaDueAt, time: timeOf(ticket.slaDueAt) },
   ].filter((entry): entry is { iso: string; time: number } => entry.iso !== null && entry.iso !== undefined && entry.time !== null);
-  if (candidates.length === 0) return null;
-  return candidates.reduce((best, entry) => (entry.time < best.time ? entry : best)).iso;
+  const [first, ...rest] = candidates;
+  if (!first) return null;
+  return rest.reduce((best, entry) => (entry.time < best.time ? entry : best), first).iso;
 }
 
 /** Задачи «на сегодня»: назначены мне и ещё не выполнены. */

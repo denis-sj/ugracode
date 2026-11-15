@@ -13,7 +13,8 @@ export const DEFAULT_EQUIPMENT: readonly Equipment[] = [
     model: 'HP LaserJet Pro M404dn',
     serial: 'VNB3K12345',
     inventoryNo: 'INV-000312',
-    ip: '10.10.3.12',
+    // Адрес из диапазона для документации (RFC 5737): заглушка не должна указывать на реальную сеть.
+    ip: '192.0.2.12',
     building: 'Б',
     cabinet: '312',
     criticality: 'high',

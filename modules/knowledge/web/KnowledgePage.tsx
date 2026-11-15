@@ -5,6 +5,7 @@ import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card, EmptyState, Icon, Modal, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
+import { ArticleCatalog } from './ArticleCatalog';
 import { ArticleView } from './ArticleView';
 import { DraftPanel } from './DraftPanel';
 import { SearchHero } from './SearchHero';
@@ -13,6 +14,7 @@ import {
   articleRows,
   buildDraft,
   categoryLabels,
+  normalizeArticles,
   pluralRu,
   relatedGroups,
 } from './format';
@@ -53,6 +55,22 @@ export function KnowledgePage({ user, meta, api, navigate, query, trackAction }:
   const labels = useMemo(() => categoryLabels(meta), [meta]);
 
   const [text, setText] = useState(() => query.get('q') ?? '');
+  const [catalog, setCatalog] = useState<Loadable<KnowledgeArticle[]>>({ loading: true, error: null, data: null });
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .get<{ articles: unknown[] }>('/api/m/knowledge/articles')
+      .then((response) => {
+        if (alive) setCatalog({ loading: false, error: null, data: normalizeArticles(response.articles) });
+      })
+      .catch((cause: unknown) => {
+        if (alive) setCatalog({ loading: false, error: errorText(cause), data: [] });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [api]);
   const [search, setSearch] = useState<Loadable<KnowledgeResponse>>(EMPTY_LOAD);
   const [searchTick, setSearchTick] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -182,13 +200,15 @@ export function KnowledgePage({ user, meta, api, navigate, query, trackAction }:
       />
 
       {!hasQuery && (
-        <Card className="kb-empty-card">
-          <EmptyState
-            title="Опишите, что сломалось"
-            hint="Своими словами: симптом, модель устройства или код ошибки. Найдём статью и покажем шаги."
-            icon={<Icon name="kb" size={22} />}
-          />
-        </Card>
+        <ArticleCatalog
+          articles={catalog.data ?? []}
+          labels={labels}
+          loading={catalog.loading}
+          onOpen={(article) => {
+            setText(article.title);
+            trackAction?.('select');
+          }}
+        />
       )}
 
       <div className={hasQuery ? 'kb-layout' : 'kb-layout kb-layout--idle'}>

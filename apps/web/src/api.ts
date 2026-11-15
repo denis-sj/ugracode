@@ -36,6 +36,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     credentials: 'include',
     headers: {
       accept: 'application/json',
+      'X-Pinggy-No-Screen': '1',
       ...(body === undefined ? {} : { 'content-type': 'application/json' }),
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -43,6 +44,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   const payload = await readBody(response);
   if (!response.ok) {
     throw new ApiError(response.status, errorMessage(payload, response.status));
+  }
+  if (typeof payload === 'string' && payload.trimStart().startsWith('<')) {
+    throw new ApiError(502, 'Туннель вернул страницу вместо API. Откройте ссылку в Safari или Chrome и нажмите Enter site.');
   }
   return payload as T;
 }

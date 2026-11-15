@@ -43,7 +43,12 @@ describe('generateHistory', () => {
     const equipmentIds = new Set(input.equipment.map((item) => item.id));
 
     for (const item of history.tickets) {
-      expect(engineerIds.has(item.ticket.assigneeId ?? '')).toBe(true);
+      if (item.ticket.status === 'in_review') {
+        // На проверке исполнителя ещё нет: его назначает диспетчер.
+        expect(item.ticket.assigneeId).toBeNull();
+      } else {
+        expect(engineerIds.has(item.ticket.assigneeId ?? '')).toBe(true);
+      }
       expect(categories.has(item.ticket.category ?? '')).toBe(true);
       if (item.ticket.equipmentId) {
         expect(equipmentIds.has(item.ticket.equipmentId)).toBe(true);
@@ -59,7 +64,15 @@ describe('generateHistory', () => {
 
   it('держит рабочие часы и статусы заявок', () => {
     const history = generateHistory(input);
+    const openStatuses = new Set(['in_review', 'assigned']);
     for (const item of history.tickets) {
+      if (openStatuses.has(item.ticket.status)) {
+        // Открытые заявки — свежие, за последний час до «сейчас»: очередь на защите не просрочена.
+        const age = input.now.getTime() - new Date(item.ticket.createdAt).getTime();
+        expect(age).toBeGreaterThan(0);
+        expect(age).toBeLessThan(60 * 60_000);
+        continue;
+      }
       const hour = new Date(item.ticket.createdAt).getHours();
       expect(hour).toBeGreaterThanOrEqual(8);
       expect(hour).toBeLessThanOrEqual(18);
@@ -74,6 +87,14 @@ describe('generateHistory', () => {
     expect(cancelled / history.tickets.length).toBeLessThan(0.16);
     expect(open).toBeGreaterThan(0);
     expect(open).toBeLessThan(10);
+  });
+
+  it('ни одно событие истории не лежит в будущем', () => {
+    const history = generateHistory(input);
+    for (const item of history.tickets) {
+      expect(new Date(item.event.at).getTime()).toBeLessThanOrEqual(input.now.getTime());
+      expect(new Date(item.ticket.updatedAt).getTime()).toBeLessThanOrEqual(input.now.getTime());
+    }
   });
 
   it('пишет по 2–6 полей и событие смены статуса на каждую заявку', () => {

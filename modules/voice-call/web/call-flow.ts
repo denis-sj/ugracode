@@ -1,4 +1,5 @@
 import { shortTicketNumber } from '@ugra/contracts';
+import { trimEndChars } from '@ugra/contracts';
 /**
  * Чистые функции страницы звонка `/call`: их проверяют тесты, компонент только показывает результат.
  * Здесь нет DOM, микрофона и синтеза речи — только тексты, подписи и арифметика.
@@ -120,7 +121,7 @@ export function timerText(seconds: number): string {
 
 /** QR ведёт на `/call`: страницу показываем и по чистому пути, и по hash-маршруту. */
 export function isCallPath(pathname: string, hash: string): boolean {
-  const normalize = (raw: string): string => raw.trim().replace(/\/+$/, '') || '/';
+  const normalize = (raw: string): string => trimEndChars(raw.trim(), '/') || '/';
   if (normalize(pathname) === '/call') return true;
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
   const [hashPath = ''] = raw.split('?');

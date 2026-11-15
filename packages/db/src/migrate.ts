@@ -10,7 +10,7 @@ const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url))
 export async function runMigrations(
   connectionString = process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
 ): Promise<void> {
-  const files = (await readdir(MIGRATIONS_DIR)).filter((file) => file.endsWith('.sql')).sort();
+  const files = (await readdir(MIGRATIONS_DIR)).filter((file) => file.endsWith('.sql')).sort((left, right) => left.localeCompare(right));
   const client = new Client({ connectionString });
   await client.connect();
   try {

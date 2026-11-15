@@ -30,8 +30,17 @@ function textFromCompletion(completion: OpenAI.Chat.ChatCompletion): string {
   return typeof content === 'string' ? content : '';
 }
 
+const FENCE = '```';
+
+/** Снимает markdown-обёртку ```json … ``` вокруг ответа модели. */
 function parseJson(text: string): unknown {
-  return JSON.parse(text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
+  let body = text.trim();
+  if (body.startsWith(FENCE)) {
+    body = body.slice(FENCE.length);
+    if (body.slice(0, 4).toLowerCase() === 'json') body = body.slice(4);
+  }
+  if (body.endsWith(FENCE)) body = body.slice(0, -FENCE.length);
+  return JSON.parse(body);
 }
 
 function mapFinishReason(

@@ -2,6 +2,17 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
+// Телефон жюри открывает страницу по адресу туннеля. cloudflared — основной путь;
+// pinggy — запасной, когда сеть (или VPN на ноутбуке) не пускает cloudflared.
+const TUNNEL_HOSTS = ['.trycloudflare.com', '.loca.lt', '.pinggy-free.link', '.pinggy.net', '.pinggy.online', '.serveousercontent.com', '.serveo.net'];
+
+const API_PROXY = {
+  '/api': {
+    target: process.env.VITE_API_URL ?? 'http://localhost:3001',
+    changeOrigin: true,
+  },
+};
+
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [react()],
@@ -21,15 +32,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // Телефон жюри открывает страницу по адресу туннеля. cloudflared — основной путь;
-    // pinggy — запасной, когда сеть режет UDP-DNS и cloudflared не регистрируется.
-    allowedHosts: ['.trycloudflare.com', '.loca.lt', '.pinggy-free.link', '.pinggy.net', '.pinggy.online'],
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL ?? 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
+    allowedHosts: TUNNEL_HOSTS,
+    proxy: API_PROXY,
+  },
+  // Телефону через туннель отдаём собранную версию (`pnpm demo:tunnel`): 5 файлов вместо ~190
+  // модулей dev-сервера — страница звонка открывается сразу, без переподключений HMR.
+  preview: {
+    port: 4173,
+    strictPort: true,
+    allowedHosts: TUNNEL_HOSTS,
+    proxy: API_PROXY,
   },
   build: {
     outDir: 'dist',

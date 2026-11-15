@@ -15,6 +15,9 @@ import { findTransition, hasPermission } from '@ugra/contracts';
 import type { KernelStore } from './storage';
 import type { ClockPort } from './ports';
 
+/** Автор изменений по умолчанию — ИИ-разбор. */
+const AI_ACTOR: Actor = { kind: 'ai' };
+
 export interface TicketServiceDeps {
   store: KernelStore;
   bus: EventBus;
@@ -64,7 +67,7 @@ export class TicketService {
   }
 
   /** Переносит итог разбора в заявку: поля, колонки для отчётов, статус `in_review`. */
-  async applyAnalysis(ticketId: string, draft: AnalysisDraft, actor: Actor = { kind: 'ai' }): Promise<Ticket> {
+  async applyAnalysis(ticketId: string, draft: AnalysisDraft, actor: Actor = AI_ACTOR): Promise<Ticket> {
     const ticket = await this.requireTicket(ticketId);
     const rows: TicketField[] = Object.values(draft.fields).map((field) => ({
       ticketId,

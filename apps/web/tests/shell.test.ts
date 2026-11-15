@@ -32,7 +32,7 @@ describe('tabsForRole', () => {
 
   it('у инженера задачи и база знаний, у руководителя — отчёты', () => {
     expect(tabsForRole('engineer').map((tab) => tab.path)).toEqual(['/tasks', '/knowledge']);
-    expect(tabsForRole('manager').map((tab) => tab.path)).toEqual(['/dashboard', '/reports', '/quality']);
+    expect(tabsForRole('manager').map((tab) => tab.path)).toEqual(['/dashboard', '/reports', '/quality', '/team']);
   });
 
   it('администратор видит очередь и дашборд', () => {
