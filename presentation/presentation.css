@@ -1,0 +1,992 @@
+/* Презентация кейса 9. Сцена 1920×1080, масштабируется в presentation.js.
+   Стиль: «одна мысль на слайд, одна большая цифра». Палитра и правила — docs/specs/case9-presentation.md, раздел «Визуальный стиль». */
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: block;
+  src: url('fonts/manrope-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: block;
+  src: url('fonts/manrope-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: block;
+  src: url('fonts/manrope-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: block;
+  src: url('fonts/manrope-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Палитра главного сайта (packages/ui/src/tokens.css, светлая тема). */
+:root {
+  --paper: #F5F6FB;
+  --ink: #0F1222;
+  --mute: #5B6178;
+  --dim: #8A90A6;
+  --line: rgba(15, 18, 34, 0.12);
+  --accent: #5A49E0;
+  --alarm: #D4380D;
+  --graphite: #14172B;
+  --on-dark: #F5F6FB;
+  --accent-dark: #A99BFF;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s;
+}
+body.is-dark { background: var(--graphite); }
+body.cursor-off { cursor: none; }
+
+.viewport { position: fixed; inset: 0; overflow: hidden; }
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  opacity: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ---------- рамка: мелко сверху ---------- */
+
+.frame {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  line-height: 1;
+}
+.brand { font-weight: 700; letter-spacing: -0.01em; }
+.section { color: var(--dim); font-weight: 500; }
+.dot { color: var(--accent); }
+
+/* ---------- маска заголовка: выезжает снизу вверх ---------- */
+
+.mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.mask-in { display: block; }
+
+.h2 {
+  margin: 0;
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.head {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 150px;
+}
+
+/* ---------- цифры ---------- */
+
+.big-wrap {
+  position: relative;
+  display: inline-block;
+  font-size: 380px;
+  line-height: 0.82;
+}
+.big-wrap-md { font-size: 300px; }
+.big {
+  display: inline-block;
+  font-size: 1em;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* «❓ замер»: тот же блок, пунктирная рамка, серый */
+.is-q {
+  color: var(--mute);
+  border: 2px dashed rgba(15, 18, 34, 0.28);
+  border-radius: 14px;
+  padding: 0.08em 0.3em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.big.is-q { font-size: 0.3em; vertical-align: middle; }
+
+/* ---------- рукописные акценты (SVG, дорисовываются через dashoffset) ---------- */
+
+.sketch {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+.sketch path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.big-wrap .oval {
+  left: 50%;
+  top: 50%;
+  width: 0.74em;
+  height: 1.02em;
+  transform: translate(-50%, -50%);
+}
+.oval path { vector-effect: none; stroke-width: 13px; }
+
+.sketch.wipe { transform-origin: 0 50%; }
+.sketch.wipe path { stroke-dasharray: none; stroke-dashoffset: 0; }
+.hand { position: relative; display: inline-block; }
+.hand > .sketch {
+  left: 0;
+  bottom: -0.16em;
+  width: 100%;
+  height: 0.16em;
+}
+
+/* ---------- титул ---------- */
+
+.title-block {
+  position: absolute;
+  left: 96px;
+  top: 170px;
+}
+.hero {
+  margin: 0;
+  font-size: 200px;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+.lead {
+  margin: 56px 0 0;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.legend {
+  position: absolute;
+  left: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 18px;
+  color: var(--dim);
+}
+
+/* ---------- 5. Точность ---------- */
+
+.acc-main {
+  position: absolute;
+  left: 96px;
+  top: 330px;
+}
+.acc-main .big-label {
+  margin: 64px 0 0;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.acc-main .big-sub {
+  margin: 12px 0 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+.acc-side {
+  position: absolute;
+  left: 1180px;
+  top: 380px;
+  width: 644px;
+}
+.trow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.trow:last-child { border-bottom: 1px solid var(--line); }
+.tn {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tt { font-size: 26px; color: var(--mute); }
+
+.foot {
+  position: absolute;
+  left: 96px;
+  bottom: 150px;
+  margin: 0;
+  font-size: 26px;
+  color: var(--mute);
+}
+
+.source {
+  position: absolute;
+  left: 96px;
+  bottom: 48px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--dim);
+}
+
+/* ---------- 6. Авария ---------- */
+
+.s-alarm { --accent: var(--alarm); }
+
+.nb { position: absolute; top: 330px; }
+.nb-main { left: 96px; }
+.nb-duty { left: 1180px; }
+.cap {
+  margin: 40px 0 0;
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.timeline {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 760px;
+}
+.tl-line {
+  position: relative;
+  height: 2px;
+  background: var(--line);
+}
+.tl-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+.tl-dot {
+  position: absolute;
+  right: -10px;
+  top: -9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tl-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 22px;
+  font-size: 24px;
+  color: var(--mute);
+}
+.tl-note {
+  margin: 56px 0 0;
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.manual {
+  position: absolute;
+  left: 1180px;
+  top: 880px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.manual-cap { font-size: 22px; color: var(--mute); }
+.manual-val {
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.manual-val.is-q { font-size: 22px; font-weight: 600; }
+
+/* ---------- черновики (в очереди) ---------- */
+
+.wip-note {
+  position: absolute;
+  left: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+
+/* ---------- 11. Смотрим вживую (тёмный) ---------- */
+
+.s-bridge { background: var(--graphite); color: var(--on-dark); }
+.s-bridge .section { color: var(--dim); }
+.s-bridge .sketch path { stroke: var(--accent-dark); }
+.bridge {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+}
+.bridge .mask { padding-bottom: 80px; margin-bottom: -80px; }
+.s-bridge .dot { color: var(--accent-dark); }
+.s-bridge .hand > .sketch { bottom: -0.3em; }
+.bridge-h {
+  margin: 0;
+  font-size: 240px;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+.bridge-sub {
+  margin: 56px 0 0;
+  font-size: 32px;
+  color: var(--dim);
+}
+.bridge-hint {
+  position: absolute;
+  right: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 18px;
+  color: var(--dim);
+}
+.kbd {
+  display: inline-block;
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ---------- видео: запасное демо (клавиша V на последнем слайде) ---------- */
+
+.video-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #000;
+}
+.demo-video { width: 1600px; max-height: 900px; background: #000; }
+.video-missing { margin: 0; font-size: 22px; color: var(--dim); }
+
+/* ---------- хром: номер, прогресс, чёрный экран ---------- */
+
+.pager {
+  position: absolute;
+  right: 96px;
+  bottom: 48px;
+  font-size: 14px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--line);
+}
+.progress-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+
+.blackout {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+body.is-black .blackout { opacity: 1; }
+
+/* ---------- ?print: слайд на страницу, всё раскрыто ---------- */
+
+@page { size: 1920px 1080px; margin: 0; }
+
+html.is-print, html.is-print body { overflow: visible; height: auto; background: #fff; }
+.is-print .viewport { position: static; overflow: visible; }
+.is-print .stage {
+  position: static;
+  transform: none !important;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  background: none;
+}
+.is-print .slide {
+  position: relative;
+  inset: auto;
+  width: 1920px;
+  height: 1080px;
+  visibility: visible;
+  opacity: 1;
+  overflow: hidden;
+  break-after: page;
+  page-break-after: always;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.is-print .progress, .is-print .pager, .is-print .blackout { display: none; }
+.is-print .slide { background: var(--paper); }
+.is-print .s-bridge { background: var(--graphite); }
+
+/* ---------- 2. Боль ---------- */
+
+.pain-time {
+  position: absolute;
+  left: 96px;
+  top: 330px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--mute);
+}
+.bubble {
+  position: absolute;
+  left: 96px;
+  top: 380px;
+  width: 1040px;
+  height: 460px;
+}
+.bubble-svg {
+  left: 0;
+  top: 0;
+  width: 1040px;
+  height: 460px;
+}
+.bubble-svg path {
+  stroke-width: 4px;
+  vector-effect: none;
+}
+.bubble-text {
+  position: absolute;
+  left: 140px;
+  top: 150px;
+  width: 760px;
+  margin: 0;
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+.tasks {
+  position: absolute;
+  left: 1240px;
+  top: 380px;
+  width: 584px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.tasks li {
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.tasks .tasks-alarm { color: var(--alarm); }
+
+/* ---------- 3. Просил → сделали ---------- */
+
+.ktable {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 300px;
+  border-bottom: 1px solid var(--line);
+}
+.krow {
+  display: grid;
+  grid-template-columns: 110px 660px 1fr 80px;
+  align-items: center;
+  min-height: 118px;
+  border-top: 1px solid var(--line);
+}
+.kid { font-size: 28px; font-weight: 700; }
+.kreq { font-size: 28px; color: var(--mute); padding-right: 32px; }
+.kdone { font-size: 32px; font-weight: 500; letter-spacing: -0.01em; }
+.kcheck {
+  position: relative;
+  width: 60px;
+  height: 50px;
+  justify-self: end;
+}
+.kcheck path {
+  stroke-width: 5px;
+  vector-effect: none;
+}
+.pill {
+  display: inline-block;
+  padding: 6px 18px;
+  border: 1.5px solid var(--dim);
+  border-radius: 999px;
+  font-size: 24px;
+  color: var(--mute);
+}
+
+/* ---------- 4. Как работает ---------- */
+
+.chain {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 470px;
+  height: 0;
+}
+.chain .tl-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+.pt {
+  position: absolute;
+  top: -11px;
+  left: calc(var(--i) * 20%);
+  transform: translateX(-50%);
+  text-align: center;
+}
+.pt i {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.pt b {
+  display: block;
+  margin-top: 44px;
+  font-size: 36px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+.pt-start {
+  transform: none;
+  margin-left: -11px;
+  text-align: left;
+}
+.pt-start i { margin-left: 0; }
+.pt-end {
+  transform: translateX(-100%);
+  margin-right: -11px;
+  text-align: right;
+}
+.pt-end i { margin-right: 0; }
+.pt-human i { background: var(--accent); }
+.how-note {
+  position: absolute;
+  left: 96px;
+  bottom: 150px;
+  margin: 0;
+  font-size: 28px;
+  color: var(--mute);
+}
+
+/* ---------- 7. Действия ---------- */
+
+.act-main {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+}
+.act-pair {
+  display: flex;
+  align-items: flex-start;
+  gap: 56px;
+}
+.act-pair .act-arrow { align-self: center; margin-top: 0; }
+.act-col { position: relative; }
+.act-arrow {
+  font-size: 120px;
+  font-weight: 300;
+  color: var(--dim);
+  line-height: 0.8;
+}
+.act-arrow-sm { font-size: 48px; padding-top: 0; }
+.act-col .cap { margin-top: 40px; }
+.strike {
+  left: -3%;
+  top: 40%;
+  width: 106%;
+  height: 0.9em;
+}
+.act-time {
+  margin-top: 40px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.tt-num {
+  font-size: 96px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.tt-num.is-q { font-size: 40px; }
+.act-time .cap { width: 100%; margin: 14px 0 0; }
+.manual-box {
+  position: absolute;
+  left: 1180px;
+  top: 330px;
+  width: 644px;
+}
+.manual-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--line);
+  border-radius: 6px;
+}
+.video-cap {
+  margin: 14px 0 0;
+  font-size: 18px;
+  color: var(--mute);
+}
+.act-note {
+  position: absolute;
+  left: 96px;
+  bottom: 96px;
+  margin: 0;
+  font-size: 28px;
+  color: var(--mute);
+}
+.act-note .is-q { font-size: 1em; }
+
+/* ---------- 8. Экономия ---------- */
+
+.save-main {
+  position: absolute;
+  left: 96px;
+  top: 280px;
+}
+.save-main .cap { margin-top: 44px; }
+.save-table {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 668px;
+  border-bottom: 1px solid var(--line);
+}
+.st-row {
+  display: grid;
+  grid-template-columns: 420px 1fr 1fr 1fr;
+  align-items: baseline;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.st-head {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0;
+}
+.st-label {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0;
+}
+.st-row .is-q { font-size: 0.6em; }
+.formula {
+  position: absolute;
+  left: 96px;
+  bottom: 132px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--mute);
+}
+.caveat {
+  position: absolute;
+  left: 96px;
+  bottom: 98px;
+  margin: 0;
+  font-size: 18px;
+  color: var(--dim);
+}
+
+/* ---------- 9. Надёжность ---------- */
+
+.rel-stat { position: absolute; top: 300px; }
+.rel-stat-a { left: 96px; }
+.rel-stat-b { left: 1000px; }
+.rel-stat .cap { margin-top: 44px; }
+.rel-tests {
+  position: absolute;
+  left: 96px;
+  top: 680px;
+  margin: 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+.rel-tests span { font-weight: 700; color: var(--ink); }
+.scheme {
+  position: absolute;
+  left: 96px;
+  top: 760px;
+  margin: 0;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.rel-note {
+  position: absolute;
+  left: 96px;
+  top: 820px;
+  margin: 0;
+  font-size: 24px;
+  color: var(--mute);
+}
+
+/* ---------- 10. Команда и внедрение ---------- */
+
+.team-col {
+  position: absolute;
+  left: 96px;
+  top: 300px;
+  width: 760px;
+}
+.person {
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.person b {
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.person span {
+  font-size: 26px;
+  color: var(--mute);
+}
+
+.stg {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.stg b { font-size: 34px; font-weight: 600; }
+.stg span { font-size: 26px; color: var(--mute); white-space: nowrap; }
+.limits {
+  position: absolute;
+  left: 96px;
+  bottom: 88px;
+  margin: 0;
+  font-size: 22px;
+  color: var(--dim);
+}
+
+/* ---------- 7. Время на заявку: одна строка без выхода за край ---------- */
+.s-act .big-wrap-md { font-size: 230px; }
+
+/* ---------- фон: спокойные «невидимые» блоки под содержимым ---------- */
+
+.tasks, .acc-side, .save-table, .team-col, .stages-col {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 0 28px;
+}
+
+/* ---------- 3. Стек: граф компонентов ---------- */
+
+.stack {
+  position: absolute;
+  left: 96px;
+  top: 290px;
+  width: 1728px;
+  height: 560px;
+}
+.stack-svg { width: 1728px; height: 560px; overflow: visible; }
+.stack-svg .box {
+  fill: rgba(255, 255, 255, 0.72);
+  stroke: rgba(15, 18, 34, 0.12);
+  stroke-width: 1.5px;
+}
+.stack-svg .box-core { stroke: #5A49E0; stroke-width: 2px; }
+.stack-svg .box-dash { fill: transparent; stroke-dasharray: 8 8; }
+.stack-svg .n-title { font-family: Manrope, sans-serif; font-weight: 700; font-size: 30px; fill: #0F1222; }
+.stack-svg .n-sub { font-family: Manrope, sans-serif; font-weight: 500; font-size: 20px; fill: #5B6178; }
+.stack-svg .edge {
+  fill: none;
+  stroke: rgba(15, 18, 34, 0.28);
+  stroke-width: 2.5px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.stack-svg .edge-dash { stroke-dasharray: 1; }
+.chips-row {
+  position: absolute;
+  left: 96px;
+  top: 880px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.chip {
+  display: inline-block;
+  padding: 8px 18px;
+  border: 1px solid rgba(15, 18, 34, 0.14);
+  border-radius: 999px;
+  font-size: 20px;
+  color: var(--mute);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- 10. Команда: фото и люди ---------- */
+
+.team-photo {
+  position: absolute;
+  left: 1240px;
+  top: 300px;
+  width: 584px;
+  height: 560px;
+  border-radius: 24px;
+  background: #E6E8F2 url('media/team.jpg') center / cover no-repeat;
+  overflow: hidden;
+}
+.photo-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--dim);
+}
+.team-col { position: absolute; left: 96px; top: 300px; width: 520px; }
+.stages-col { position: absolute; left: 680px; top: 300px; width: 480px; }
+
+.stg b { font-size: 30px; }
+
+/* ---------- 3. Решение: три шага и ветка аварии ---------- */
+
+.flow {
+  position: absolute;
+  left: 96px;
+  top: 380px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+.flow-node {
+  width: 500px;
+  padding: 40px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(15, 18, 34, 0.06);
+}
+.flow-node b {
+  display: block;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.flow-node span {
+  display: block;
+  margin-top: 14px;
+  font-size: 24px;
+  color: var(--mute);
+}
+.flow-human { border-color: rgba(90, 73, 224, 0.35); }
+.flow-arrow { font-size: 64px; color: var(--dim); }
+.alarm-line {
+  position: absolute;
+  left: 96px;
+  top: 760px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+  color: var(--alarm);
+}
+.alarm-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--alarm);
+}
+
+/* ---------- 8. Экономия: формула ниже таблицы, не под ней ---------- */
+.s-save .formula { bottom: 112px; }
+.s-save .caveat { bottom: 74px; }
+
+.demo-hint { margin: 24px 0 0; font-size: 22px; color: var(--dim); }

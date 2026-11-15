@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Диспетчерская с ИИ — защита</title>
+  <link rel="stylesheet" href="presentation.css">
+</head>
+<body>
+  <div class="viewport">
+    <div class="stage" id="stage">
+
+      <!-- 1. Титул -->
+      <section class="slide s-title" data-title="Титул">
+        <div class="title-block">
+          <h1 class="hero">
+            <span class="mask"><span class="mask-in">Диспетчерская</span></span>
+            <span class="mask"><span class="mask-in">с&nbsp;ИИ<span class="dot">.</span></span></span>
+          </h1>
+          <p class="lead" data-a>Обращение → готовая заявка.<br>
+            <span class="hand">Последнее слово — за&nbsp;человеком.<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 110 6 262 20 394 9"/></svg></span>
+          </p>
+        </div>
+        <p class="legend" data-a>Кейс 9 · ООО «Газпром трансгаз Сургут» · команда «1+∞»</p>
+      </section>
+
+      <!-- 2. Боль -->
+      <section class="slide s-pain" data-title="Боль" data-section="Боль">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Боль</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Каждое обращение — вручную</h2></div></div>
+        <p class="pain-time" data-a>03:12 · ночная смена · диспетчер один</p>
+        <div class="bubble" data-a>
+          <svg class="sketch bubble-svg" viewBox="0 0 1040 460" preserveAspectRatio="none" aria-hidden="true">
+            <path pathLength="1" d="M 790.4 54.9 C 799.0 57.4 826.0 64.1 841.9 69.5 C 857.8 74.9 872.6 81.0 885.8 87.4 C 899.0 93.8 910.5 100.9 921.0 107.9 C 931.6 115.0 940.5 122.4 949.3 129.7 C 958.1 137.0 966.0 144.4 973.9 151.9 C 981.7 159.4 989.6 166.8 996.4 174.5 C 1003.3 182.3 1010.3 190.1 1015.2 198.2 C 1020.1 206.3 1024.2 214.6 1025.7 223.0 C 1027.2 231.3 1026.7 239.9 1024.1 248.2 C 1021.4 256.5 1016.2 264.9 1009.8 272.9 C 1003.4 280.9 994.8 288.7 985.8 296.3 C 976.8 303.8 966.6 311.2 955.9 318.4 C 945.2 325.6 934.0 332.7 921.7 339.5 C 909.4 346.4 896.5 353.2 882.1 359.4 C 867.7 365.5 852.1 371.5 835.1 376.7 C 818.2 381.8 799.6 386.3 780.6 390.1 C 761.5 393.8 741.0 396.7 720.7 399.1 C 700.5 401.5 679.6 403.1 659.0 404.6 C 638.5 406.1 618.0 407.1 597.5 408.1 C 577.1 409.1 556.8 410.0 536.2 410.7 C 515.7 411.3 494.9 412.0 474.1 412.0 C 453.2 411.9 431.9 411.6 411.2 410.4 C 390.4 409.2 369.4 407.4 349.4 404.7 C 329.4 402.1 309.9 398.6 291.3 394.7 C 272.7 390.8 254.9 386.2 237.7 381.4 C 220.5 376.6 204.0 371.5 187.8 366.1 C 171.6 360.8 155.7 355.3 140.6 349.4 C 125.4 343.5 110.2 337.5 96.9 330.9 C 83.5 324.3 70.6 317.2 60.3 309.8 C 50.1 302.4 41.4 294.3 35.2 286.3 C 28.9 278.2 25.3 269.6 23.1 261.2 C 20.9 252.8 21.2 244.3 22.0 236.0 C 22.7 227.7 25.1 219.4 27.5 211.3 C 30.0 203.1 32.9 195.1 36.5 187.1 C 40.1 179.0 43.9 171.0 49.2 163.1 C 54.5 155.2 60.5 147.3 68.4 139.7 C 76.4 132.1 85.9 124.7 97.0 117.7 C 108.1 110.8 121.2 104.2 135.0 98.1 C 148.7 91.9 164.1 86.3 179.5 80.8 C 195.0 75.3 211.2 70.3 227.6 65.2 C 244.0 60.2 260.6 55.3 277.9 50.6 C 295.3 45.9 313.0 41.2 331.7 37.2 C 350.4 33.1 370.0 29.2 390.3 26.4 C 410.5 23.5 432.0 21.3 453.3 20.1 C 474.7 18.9 496.9 18.7 518.4 19.2 C 539.9 19.6 561.5 21.2 582.5 22.9 C 603.5 24.7 624.0 27.2 644.2 29.7 C 664.4 32.3 684.2 35.2 703.8 38.3 C 723.3 41.5 742.7 44.7 761.3 48.6 C 780.0 52.4 798.6 56.6 815.7 61.4 C 832.8 66.3 849.2 71.7 863.9 77.6 C 878.5 83.5 897.0 93.7 903.6 96.9"/>
+            <path pathLength="1" d="M 360 404 C 330 432 236 448 150 454 C 232 424 268 408 250 394"/>
+          </svg>
+          <p class="bubble-text">«У меня опять ничего не работает»</p>
+        </div>
+        <ul class="tasks" data-a>
+          <li class="from-right">перезвонить</li>
+          <li class="from-right">найти кабинет</li>
+          <li class="from-right">найти инженера</li>
+          <li class="tasks-alarm from-right">не пропустить аварию</li>
+        </ul>
+      </section>
+
+      <!-- 3. Решение -->
+      <section class="slide s-solution" data-title="Решение" data-section="Решение">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Решение</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Обращение → готовая заявка</h2></div></div>
+        <div class="flow" data-a>
+          <div class="flow-node pop"><b>Заявитель пишет</b><span>текст, звонок или скриншот</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node pop"><b>ИИ разбирает</b><span>поля с цитатами, приоритет, исполнитель</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node flow-human pop"><b>Диспетчер подтверждает</b><span>последнее слово — за человеком</span></div>
+        </div>
+        <div class="alarm-line" data-a><span class="alarm-dot"></span>признаки аварии → дежурные уведомляются автоматически</div>
+      </section>
+
+      <!-- 11. Смотрим вживую -->
+      <section class="slide s-bridge" data-title="Демонстрация" data-section="Демонстрация" data-demo>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Демо</span></div>
+        <div class="bridge">
+          <div class="mask"><h2 class="bridge-h mask-in">Смотрим<br><span class="hand">вживую<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span><span class="dot">.</span></h2></div>
+          <p class="bridge-sub" data-a>переходим в демо · <span data-demo-host>localhost:5173</span></p>
+        <p class="demo-hint" data-a hidden>разрешите всплывающие окна для этой страницы — демо откроется в новой вкладке</p>
+        </div>
+        <p class="bridge-hint" data-a><span class="kbd">V</span> запасное видео</p>
+        <div class="video-layer" hidden>
+          <video class="demo-video" controls playsinline preload="none"></video>
+          <p class="video-missing" hidden>видео не найдено: presentation/media/demo.mp4</p>
+        </div>
+      </section>
+
+      <!-- 3. Стек -->
+      <section class="slide s-stack" data-title="Стек" data-section="Стек">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Стек</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Из чего сделано и как работает</h2></div></div>
+        <div class="stack" data-a>
+          <svg class="stack-svg" viewBox="0 0 1728 560" aria-hidden="true">
+            <defs>
+              <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 z" fill="rgba(15,18,34,0.35)"/>
+              </marker>
+            </defs>
+            <path class="edge" pathLength="1" d="M300 228 L357 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M657 228 L714 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1014 228 L1071 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 58 1428 58" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 L1428 208" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 358 1428 358" marker-end="url(#arr)"/>
+            <path class="edge edge-dash" pathLength="1" d="M1371 228 C1400 228 1400 502 1428 502" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M864 286 L864 438 C864 438 1000 438 1071 438" marker-end="url(#arr)"/>
+
+            <g transform="translate(0,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Веб-интерфейс</text><text class="n-sub" x="24" y="84">React 19 · Vite 7</text></g></g>
+            <g transform="translate(357,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">API</text><text class="n-sub" x="24" y="84">Fastify 5 · Node.js</text></g></g>
+            <g transform="translate(714,170)"><g class="pop"><rect class="box box-core" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Ядро</text><text class="n-sub" x="24" y="84">TypeScript · пайплайн</text></g></g>
+            <g transform="translate(1071,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Порты</text><text class="n-sub" x="24" y="84">адаптеры внешнего мира</text></g></g>
+            <g transform="translate(1428,0)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Модель ИИ</text><text class="n-sub" x="24" y="84">облако Polza · OpenAI SDK</text></g></g>
+            <g transform="translate(1428,150)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">CMDB и история</text><text class="n-sub" x="24" y="84">справочник · 600 заявок</text></g></g>
+            <g transform="translate(1428,300)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Уведомления</text><text class="n-sub" x="24" y="84">дежурные инженеры</text></g></g>
+            <g transform="translate(1428,444)"><g class="pop"><rect class="box box-dash" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Речь</text><text class="n-sub" x="24" y="84">порт, пока не подключено</text></g></g>
+            <g transform="translate(1071,380)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">База данных</text><text class="n-sub" x="24" y="84">PostgreSQL · Drizzle ORM</text></g></g>
+          </svg>
+        </div>
+        <div class="chips-row" data-a>
+          <span class="chip pop">TypeScript</span><span class="chip pop">Node.js</span><span class="chip pop">Fastify 5</span><span class="chip pop">React 19 + Vite</span><span class="chip pop">PostgreSQL + Drizzle</span><span class="chip pop">Polza · OpenAI SDK</span><span class="chip pop">Vitest · SonarQube</span><span class="chip pop">Docker Compose</span>
+        </div>
+      </section>
+
+      <!-- 6. Авария -->
+      <section class="slide s-alarm" data-title="Авария" data-section="Авария">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Авария</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Авария — раньше диспетчера</h2></div></div>
+
+        <div class="nb nb-main" data-a>
+          <div class="big-wrap big-wrap-md">
+            <span class="big" data-num="emergencyNotified" data-suffix=" с">—</span>
+          </div>
+          <p class="cap">авария распознана, <span class="hand">дежурные уведомлены<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span></p>
+        </div>
+
+        <div class="nb nb-duty" data-a>
+          <div class="big-wrap big-wrap-md">
+            <span class="big" data-num="dutyNotified">—</span>
+          </div>
+          <p class="cap">дежурных уведомлено</p>
+        </div>
+
+        <div class="timeline" data-a>
+          <div class="tl-line"><span class="tl-fill"></span><span class="tl-dot"></span></div>
+          <div class="tl-labels"><span>0 с · сообщение</span><span>авария распознана</span></div>
+          <p class="tl-note">раньше, чем диспетчер открыл заявку</p>
+        </div>
+
+      </section>
+
+      <!-- 7. Разбор заявки -->
+      <section class="slide s-act" data-title="Разбор заявки" data-section="Разбор заявки">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Разбор заявки</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Разбор одной заявки</h2></div></div>
+        <div class="act-main" data-a>
+          <div class="act-pair">
+            <div class="act-col pop">
+              <div class="big-wrap big-wrap-md"><span class="big">≈ 1,5 мин</span></div>
+              <p class="cap">вручную, среднее · ориентир, не замер</p>
+            </div>
+            <span class="act-arrow">→</span>
+            <div class="act-col pop">
+              <div class="big-wrap big-wrap-md"><span class="big">≈ 0</span></div>
+              <p class="cap">с ИИ · ориентир, не замер</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Экономия -->
+      <section class="slide s-save" data-title="Экономия" data-section="Экономия">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Экономия</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Экономия времени диспетчера</h2></div></div>
+        <div class="save-main" data-a>
+          <div class="big-wrap big-wrap-md">
+            <span class="big">≈ 28 ч</span>
+          </div>
+          <p class="cap">часов в месяц при 50 заявках в день</p>
+        </div>
+        <div class="save-table" data-a>
+          <div class="st-row st-head"><span></span><span>30 заявок в день</span><span>50 заявок в день</span><span>100 заявок в день</span></div>
+          <div class="st-row"><span class="st-label">часов в месяц</span><span>≈ 17 ч</span><span>≈ 28 ч</span><span>≈ 55 ч</span></div>
+          <div class="st-row"><span class="st-label">смен в месяц</span><span>≈ 2</span><span>≈ 3</span><span>≈ 7</span></div>
+        </div>
+        <p class="formula" data-a>(≈ 1,5 мин вручную − ≈ 0 с ИИ) × заявок в день × 22 / 3600; смена 8 ч</p>
+        <p class="caveat" data-a>среднее время разбора вручную ≈ 1,5 мин — ориентир из открытых источников, не замер; реальная нагрузка заказчика неизвестна</p>
+      </section>
+
+      <!-- 10. Команда и внедрение -->
+      <section class="slide s-team" data-title="Команда и внедрение" data-section="Команда">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Команда</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Команда и внедрение</h2></div></div>
+        <div class="team-photo" data-a><span class="photo-note">место для фото команды · media/team.jpg</span></div>
+        <div class="team-col" data-a>
+          <div class="person from-right"><b>Денис</b><span>капитан и продукт</span></div>
+        </div>
+        <div class="stages-col" data-a>
+          <div class="stg from-right"><b>Пилот на одной линии</b><span>4 недели</span></div>
+          <div class="stg from-right"><b>Расширение</b><span>2–3 месяца</span></div>
+          <div class="stg from-right"><b>Эксплуатация в контуре заказчика</b><span></span></div>
+        </div>
+      </section>
+
+      <div class="progress" aria-hidden="true"><span class="progress-fill"></span></div>
+      <div class="pager" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="blackout" aria-hidden="true"></div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="presentation.js"></script>
+</body>
+</html>
