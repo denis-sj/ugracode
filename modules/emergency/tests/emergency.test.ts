@@ -105,6 +105,7 @@ function ports(sent: { toUserId: string }[] = [], fail = false): Ports {
         return { delivered: true };
       },
     },
+    tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
     clock: { now: () => now },
   };
 }

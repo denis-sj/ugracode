@@ -91,6 +91,7 @@ function makePorts(sent: SentNotification[], failSend = false): Ports {
         return { delivered: true };
       },
     },
+    tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
     clock: { now: () => NOW },
   };
 }

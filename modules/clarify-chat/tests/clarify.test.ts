@@ -125,6 +125,7 @@ async function context(options: ContextOptions = {}): Promise<{ ctx: StepContext
         cmdb: { findEquipment: async () => [], locations: async () => [] },
         history: { similar: async () => [] },
         notifications: { send: async () => ({ delivered: true }) },
+        tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
         clock: { now: () => now },
       },
       data: data(options.settings),

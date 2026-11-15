@@ -43,6 +43,7 @@ function makePorts(sent: Sent[] = []): Ports {
         return { delivered: true };
       },
     },
+    tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
     clock: { now: () => NOW },
   };
 }

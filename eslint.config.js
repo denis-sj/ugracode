@@ -28,6 +28,8 @@ export default tseslint.config(
       '**/*.d.ts',
       '.claude/**',
       'Claude outputs/**',
+      // Презентация защиты — статический артефакт с вендорным GSAP, не код приложения.
+      'presentation/**',
     ],
   },
   js.configs.recommended,

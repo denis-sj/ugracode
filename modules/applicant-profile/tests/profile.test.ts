@@ -131,6 +131,7 @@ async function context(options: ContextOptions = {}): Promise<StepContext> {
       cmdb: options.cmdb ?? cmdbOf(),
       history: { similar: async () => [] },
       notifications: { send: async () => ({ delivered: true }) },
+      tts: { available: false, speak: () => Promise.reject(new Error('tts не нужен')) },
       clock: { now: () => now },
     },
     data: data(),

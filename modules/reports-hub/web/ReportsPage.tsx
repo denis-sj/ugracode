@@ -21,7 +21,6 @@ import {
   errorMessage,
   findReport,
   formatAnswer,
-  formatShiftDate,
   hotspotFocus,
   insightView,
   isKnownReportPayload,
@@ -35,7 +34,7 @@ import {
   summaryUrl,
   todayIso,
 } from './format';
-import type { AnswerUnit, HotspotFocusView, ReportAnswer, ReportSpec } from './format';
+import type { HotspotFocusView, ReportAnswer, ReportSpec } from './format';
 
 /**
  * Страница `/reports`: один главный вопрос (О2 «Что ломается снова») и шесть
