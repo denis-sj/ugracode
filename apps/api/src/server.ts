@@ -66,6 +66,7 @@ import { resolveRequestUser, sessionCookieHeader } from './auth';
 import { traceEventFromBus } from './agent-trace';
 import { canSeeEvent } from './event-access';
 import { ProgressHub } from './hub';
+import { registerTtsRoute } from './tts';
 
 export interface BuildServerOptions {
   store: KernelStore;
@@ -429,6 +430,7 @@ export async function buildServer(options: BuildServerOptions): Promise<AppConte
   }
 
   registerStreamRoute(ctx, options.store);
+  registerTtsRoute(app, { store: options.store, ports: options.ports });
   return ctx;
 }
 

@@ -56,6 +56,29 @@ export interface SpeechPort {
   transcribe(audio: AudioInput): Promise<Transcript>;
 }
 
+/** Что озвучить: текст реплики ИИ-оператора и голос (по умолчанию — голос адаптера). */
+export interface TtsRequest {
+  text: string;
+  voice?: string;
+}
+
+export interface TtsResult {
+  /** Готовый WAV: браузер играет его обычным `<audio>` без перекодирования. */
+  audio: Uint8Array;
+  mimeType: 'audio/wav';
+  voice: string;
+}
+
+/** Синтез речи: текст → аудио (задача 039). */
+export interface TtsPort {
+  /**
+   * Порт настроен и может синтезировать; без ключа — false, тогда сервер отвечает 503,
+   * а страница звонка озвучивает браузером.
+   */
+  readonly available: boolean;
+  speak(request: TtsRequest): Promise<TtsResult>;
+}
+
 export interface VisionPort {
   describe(image: ImageInput, promptId: string): Promise<VisionResult>;
 }
@@ -131,6 +154,7 @@ export interface Ports {
   llm: LlmPort;
   embeddings: EmbeddingsPort;
   speech: SpeechPort;
+  tts: TtsPort;
   vision: VisionPort;
   cmdb: CmdbPort;
   history: TicketHistoryPort;

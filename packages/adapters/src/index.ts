@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { ClockPort, EmbeddingsPort, Ports, SpeechPort } from '@ugra/core';
+import type { ClockPort, EmbeddingsPort, Ports, SpeechPort, TtsPort } from '@ugra/core';
 import { StubLlm } from './llm/stub';
 import { PolzaLlm, DEFAULT_POLZA_BASE_URL } from './llm/polza';
 import { StubEmbeddings } from './embeddings/stub';
@@ -12,6 +12,8 @@ import { StubCmdb, parseEquipment } from './cmdb/stub';
 import { StubTicketHistory } from './history/stub';
 import { InMemoryNotifications } from './notifications/stub';
 import { SystemClock } from './clock/system';
+import { StubTts } from './tts/stub';
+import { DEFAULT_ROUTERAI_BASE_URL, DEFAULT_TTS_MODEL, DEFAULT_TTS_VOICE, RouterAiTts } from './tts/routerai';
 
 export * from './llm/stub';
 export * from './llm/polza';
@@ -25,6 +27,9 @@ export * from './history/stub';
 export * from './notifications/stub';
 export * from './clock/system';
 export * from './clock/fixed';
+export * from './tts/pcm-wav';
+export * from './tts/stub';
+export * from './tts/routerai';
 
 export type AiMode = 'stub' | 'cloud';
 
@@ -38,6 +43,21 @@ function aiModeFrom(env: NodeJS.ProcessEnv): AiMode {
   const raw = env.AI_MODE;
   if (raw === 'stub' || raw === 'cloud') return raw;
   return env.POLZA_API_KEY ? 'cloud' : 'stub';
+}
+
+/**
+ * Озвучка: RouterAI при ключе, иначе заглушка (страница звонка озвучит браузером).
+ * Ключ читаем только из окружения — в интерфейс и логи он не попадает.
+ */
+function buildTts(env: NodeJS.ProcessEnv): TtsPort {
+  const apiKey = env.ROUTERAI_API_KEY;
+  if (!apiKey) return new StubTts();
+  return new RouterAiTts({
+    apiKey,
+    baseURL: env.ROUTERAI_BASE_URL ?? DEFAULT_ROUTERAI_BASE_URL,
+    model: env.ROUTERAI_TTS_MODEL ?? DEFAULT_TTS_MODEL,
+    voice: env.ROUTERAI_TTS_VOICE ?? DEFAULT_TTS_VOICE,
+  });
 }
 
 function loadEquipment(env: NodeJS.ProcessEnv) {
@@ -81,12 +101,14 @@ export function createPorts(env: NodeJS.ProcessEnv = process.env): CreatePortsRe
 
   const embeddings: EmbeddingsPort = cloud?.embeddings ?? new StubEmbeddings();
   const speech: SpeechPort = cloud?.speech ?? new StubSpeech();
+  const tts: TtsPort = buildTts(env);
 
   return {
     aiMode: effective,
     llm,
     embeddings,
     speech,
+    tts,
     vision: new StubVision(),
     cmdb: loadEquipment(env),
     history: new StubTicketHistory(),

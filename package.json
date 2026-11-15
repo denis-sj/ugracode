@@ -20,6 +20,7 @@
     "migrate": "tsx packages/db/src/migrate.ts",
     "seed": "tsx packages/db/src/seed/index.ts",
     "check:polza": "tsx scripts/check-polza.ts",
+    "check:routerai": "tsx scripts/check-routerai.ts",
     "eval": "tsx scripts/eval.ts",
     "demo:check": "tsx scripts/demo-check.ts",
     "demo:tunnel": "tsx scripts/demo-tunnel.ts",

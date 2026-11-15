@@ -65,6 +65,7 @@ export function testPorts(overrides: Partial<Ports> = {}): Ports {
     llm: { structured: notConfigured('llm'), chat: notConfigured('llm') },
     embeddings: { embed: notConfigured('embeddings') },
     speech: { transcribe: notConfigured('speech') },
+    tts: { available: false, speak: notConfigured('tts') },
     vision: { describe: notConfigured('vision') },
     cmdb: { findEquipment: async () => [], locations: async () => [] },
     history: { similar: async () => [] },

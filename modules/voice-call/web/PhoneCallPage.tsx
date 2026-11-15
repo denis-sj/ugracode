@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, cx, useListMotion } from '@ugra/ui';
 import type { WebPageProps } from '@ugra/ui';
 import {
+  CALL_PREFETCH,
   GREETING,
   LINE_SILENCE,
   MAX_CALL_SECONDS,
@@ -14,7 +15,6 @@ import {
   isMissingUser,
   modeNote,
   phaseLabel,
-  pickRussianVoice,
   sessionUserIds,
   shouldAutoFinish,
   ticketLabel,
@@ -25,6 +25,7 @@ import {
   type TranscriptLine,
   type TurnReply,
 } from './call-flow';
+import { createVoicePlayer, type VoicePlayer } from './tts';
 
 /* ---------- Web Speech API: типы есть не во всех браузерах и не в lib.dom ---------- */
 
@@ -134,8 +135,9 @@ export interface PhoneCallPageProps {
 /**
  * Публичная страница `/call` — «входящий вызов» на телефоне жюри (QR).
  *
- * Разговор целиком в браузере: распознаёт `SpeechRecognition` (ru-RU), озвучивает `speechSynthesis`,
- * на сервер уходит только текст. Без распознавания или микрофона — то же окно с полем ввода.
+ * Разговор целиком в браузере: распознаёт `SpeechRecognition` (ru-RU), озвучивает серверный синтез
+ * (`POST /api/tts` через RouterAI), запасной голос — `speechSynthesis` браузера. На сервер уходит текст.
+ * Без распознавания или микрофона — то же окно с полем ввода.
  */
 export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
   const [phase, setPhase] = useState<CallPhase>('incoming');
@@ -157,14 +159,20 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
   const fromRef = useRef('Телефон');
   const activeRef = useRef(false);
   const finishedRef = useRef(false);
-  const unlockedRef = useRef(false);
   const recognitionRef = useRef<RecognitionLike | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const micFailedRef = useRef(false);
+  /** Озвучка живёт весь разговор: один Audio, кэш фраз, предсинтез по жесту. */
+  const playerRef = useRef<VoicePlayer | null>(null);
   /** `startListening` объявлен ниже `sendTurn`: зовём его через ref, чтобы не ловить TDZ. */
   const listenRef = useRef<() => void>(() => undefined);
   const listRef = useRef<HTMLOListElement | null>(null);
   useListMotion(listRef, lines.length > 0);
+
+  const player = (): VoicePlayer => {
+    playerRef.current ??= createVoicePlayer();
+    return playerRef.current;
+  };
 
   const go = (next: CallPhase): void => {
     phaseRef.current = next;
@@ -175,53 +183,6 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     linesRef.current = appendLine(linesRef.current, speaker, text);
     setLines(linesRef.current);
   };
-
-  /** iOS говорит только после жеста: «разблокируем» синтез в обработчике нажатия «Ответить». */
-  const unlockSpeech = (): void => {
-    if (unlockedRef.current) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    try {
-      const warm = new SpeechSynthesisUtterance(' ');
-      warm.volume = 0;
-      warm.lang = 'ru-RU';
-      synth.speak(warm);
-      unlockedRef.current = true;
-    } catch {
-      /* синтез недоступен — разговор пойдёт субтитрами */
-    }
-  };
-
-  const speak = (text: string): Promise<void> =>
-    new Promise((resolve) => {
-      const synth = window.speechSynthesis;
-      if (!synth || text.trim() === '' || typeof SpeechSynthesisUtterance === 'undefined') {
-        resolve();
-        return;
-      }
-      let timer = 0;
-      let finished = false;
-      const finish = (): void => {
-        if (finished) return;
-        finished = true;
-        window.clearTimeout(timer);
-        resolve();
-      };
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ru-RU';
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      const voice = pickRussianVoice(synth.getVoices());
-      if (voice) {
-        const match = synth.getVoices().find((item) => item.lang === voice.lang && item.name === voice.name);
-        if (match) utterance.voice = match;
-      }
-      utterance.onend = finish;
-      utterance.onerror = finish;
-      // Страховка: если onend не придёт (вкладка в фоне), разговор не замирает.
-      timer = window.setTimeout(finish, Math.max(4000, text.length * 120));
-      synth.speak(utterance);
-    });
 
   const stopListening = (): void => {
     const recognition = recognitionRef.current;
@@ -243,7 +204,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     finishedRef.current = true;
     activeRef.current = false;
     stopListening();
-    window.speechSynthesis?.cancel();
+    player().stop();
     go('thinking');
     const transcript = linesRef.current.filter((line) => line.text !== LINE_SILENCE);
     try {
@@ -256,7 +217,8 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
       setTicketNumber(reply.ticketNumber);
       if (reply.say.trim() !== '') pushLine('ai', reply.say);
       go('ended');
-      void speak(reply.say);
+      // Текст уже на экране — звук догоняет по готовности.
+      void player().play(reply.say);
     } catch (reason) {
       setError(errorText(reason));
       go('failed');
@@ -274,6 +236,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
         text,
       });
       setEmergency(reply.emergency);
+      // Сначала субтитр, потом звук: даже если синтез не ответит, человек всё прочитает.
       pushLine('ai', reply.say);
       if (!activeRef.current) return;
       if (reply.done) {
@@ -281,7 +244,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
         return;
       }
       go('speaking');
-      await speak(reply.say);
+      await player().play(reply.say);
       if (!activeRef.current) return;
       if (micFailedRef.current) {
         setMode('text');
@@ -367,7 +330,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
   };
   listenRef.current = startListening;
 
-  /** Нажатие «Ответить» — единственный жест: микрофон, разблокировка синтеза, гостевой вход. */
+  /** Нажатие «Ответить» — единственный жест: микрофон, разблокировка звука, гостевой вход, предсинтез. */
   const answer = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
@@ -377,12 +340,12 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     fromRef.current = detectDevice(navigator.userAgent);
     activeRef.current = true;
     finishedRef.current = false;
-    unlockedRef.current = false;
     micFailedRef.current = false;
     setSeconds(0);
     setTicketId(null);
     setTicketNumber(null);
-    unlockSpeech();
+    // Жест пользователя: здесь и только здесь iOS разрешает звук.
+    player().unlock();
 
     let mic = false;
     try {
@@ -411,6 +374,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     }
     if (sessionError) {
       activeRef.current = false;
+      player().stop();
       setError(`Не удалось войти гостем: ${errorText(sessionError)}. На сервере нужен pnpm seed.`);
       go('failed');
       setBusy(false);
@@ -418,9 +382,12 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     }
     setBusy(false);
 
+    // Сессия есть — только теперь просим звук: иначе `/api/tts` ответил бы 401.
+    // Приветствие возьмём из этого же запроса, дубля не будет.
+    void player().prefetch(CALL_PREFETCH);
     pushLine('ai', GREETING);
     go('speaking');
-    await speak(GREETING);
+    await player().play(GREETING);
     if (!activeRef.current) return;
     if (!mic || !recognitionConstructor()) {
       setMicDenied(!mic);
@@ -458,7 +425,7 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
     if (activeRef.current && shouldAutoFinish(seconds)) void finishCall();
   }, [seconds]);
 
-  // Ушли со страницы — гасим микрофон и синтез, чтобы телефон не «звонил» в кармане.
+  // Ушли со страницы — гасим микрофон и звук, чтобы телефон не «звонил» в кармане.
   useEffect(
     () => () => {
       activeRef.current = false;
@@ -469,7 +436,9 @@ export function PhoneCallPage({ api }: PhoneCallPageProps): JSX.Element {
       } catch {
         /* уже остановлено */
       }
-      window.speechSynthesis?.cancel();
+      // dispose освобождает object-URL кэша фраз — на выгрузке они не нужны.
+      playerRef.current?.dispose();
+      playerRef.current = null;
       streamRef.current?.getTracks().forEach((track) => track.stop());
     },
     [],

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { LlmPort } from '@ugra/core';
 import type { CallLine, CallRecord, CallStore } from './calls';
 import { dialogTurn } from './dialog';
+import { ticketNumberWords } from './format';
 
 /** Кто звонит: подпись устройства со страницы звонка («iPhone», «Android», «Компьютер»). Только для экрана диспетчера. */
 const Caller = z
@@ -76,10 +77,12 @@ export interface VoiceServiceDeps {
 export const NO_TEXT_FAREWELL = 'Не удалось разобрать обращение. Перезвоните, пожалуйста, или напишите в чат поддержки.';
 export const INTAKE_FAILED_FAREWELL = 'Спасибо. Обращение записано, диспетчер перезвонит вам.';
 
+/** Прощание: номер заявки произносим словами — «заявка шестьсот два», а не по цифрам. */
 export function farewell(ticketNumber: string, emergency: boolean): string {
+  const spoken = ticketNumberWords(ticketNumber);
   return emergency
-    ? `Заявка ${ticketNumber} передана дежурному инженеру. Спасибо, до свидания.`
-    : `Заявка ${ticketNumber} принята, диспетчер уже видит её. Спасибо, до свидания.`;
+    ? `Заявка ${spoken} передана дежурному инженеру. Спасибо, до свидания.`
+    : `Заявка ${spoken} принята, диспетчер уже видит её. Спасибо, до свидания.`;
 }
 
 function callerText(lines: readonly CallLine[]): string {

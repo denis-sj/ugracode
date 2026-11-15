@@ -3,6 +3,7 @@ import type { AppealMessage, MetaResponse, TicketResponse } from '@ugra/contract
 import { MemoryStore } from '@ugra/core';
 import { CALLS_PER_MINUTE as CALLS_LIMIT } from '../../../modules/voice-call/server/index';
 import { CALL_APPLICANT } from '../../../modules/voice-call/server/intake';
+import { ticketNumberWords } from '../../../modules/voice-call/server/format';
 import { serverModules } from '../../../modules/registry.server';
 import { buildServer, type AppContext } from '../src/server';
 import { seedUsers, testPorts, testReferenceData } from './helpers';
@@ -83,7 +84,10 @@ describe('звонок ИИ-оператору по QR-коду', () => {
     expect(finished.response.statusCode).toBe(200);
     expect(finished.body.ticketId).toEqual(expect.any(String));
     expect(finished.body.ticketNumber).toMatch(/^З-/);
-    expect(finished.body.say).toContain(String(finished.body.ticketNumber));
+    // Номер в прощании звучит словами: «Заявка шестьсот два принята…».
+    expect(finished.body.say).toBe(
+      `Заявка ${ticketNumberWords(String(finished.body.ticketNumber))} принята, диспетчер уже видит её. Спасибо, до свидания.`,
+    );
 
     const ticket = await ctx.app.inject({
       method: 'GET',

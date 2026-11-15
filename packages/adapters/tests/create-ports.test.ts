@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createPorts } from '@ugra/adapters';
+import { RouterAiTts, StubTts, createPorts } from '@ugra/adapters';
 
 const MinimalSchema = z.object({ fields: z.array(z.unknown()), aspects: z.object({}) });
 
@@ -33,6 +33,17 @@ describe('createPorts', () => {
 
   it('явный stub сильнее ключа', () => {
     const ports = createPorts({ AI_MODE: 'stub', POLZA_API_KEY: 'test-key' });
+    expect(ports.aiMode).toBe('stub');
+  });
+
+  it('без ключа RouterAI озвучка — заглушка', () => {
+    const ports = createPorts({});
+    expect(ports.tts).toBeInstanceOf(StubTts);
+  });
+
+  it('с ключом RouterAI озвучка облачная, режим Polza не меняется', () => {
+    const ports = createPorts({ ROUTERAI_API_KEY: 'test-key' });
+    expect(ports.tts).toBeInstanceOf(RouterAiTts);
     expect(ports.aiMode).toBe('stub');
   });
 });

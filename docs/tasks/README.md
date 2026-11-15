@@ -74,7 +74,6 @@ PR: —
 
 **Код, после чекпоинта 1:**
 
-- [039-voice-tts-routerai.md](039-voice-tts-routerai.md) — озвучка реплик ИИ-оператора моделью gemini-3.8-flash-lite-tts через RouterAI (ждёт только ключ RouterAI в .env)
 - [038-ui-polish-round2.md](038-ui-polish-round2.md) — правки интерфейса по 17 скриншотам: чат, стикер заявки, шапка, «Мои заявки», очередь-доска, аварии, журнал
 - [037-staff-management.md](037-staff-management.md) — **MUST:** руководитель добавляет сотрудника и правит навыки, смену, доступность; журнал и подбор исполнителя читают из БД
 - [036-phone-ai-operator.md](036-phone-ai-operator.md) — звонок по QR-коду: живой ИИ-оператор в браузере телефона (Web Speech + deepseek через Polza), заявка у диспетчера вживую

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_SPOKEN_NUMBER,
+  digitsToWords,
+  numberToWords,
+  ticketNumberWords,
+} from '../server/format';
+import {
   activeCall,
   callUrlOf,
   callerLabel,
@@ -77,5 +83,39 @@ describe('формат экрана звонков', () => {
     expect(statusText(call({ status: 'active' }))).toBe('Идёт разговор');
     expect(statusText(call({ ticketNumber: 'З-1' }))).toBe('Заявка З-1');
     expect(statusText(call({}))).toBe('Звонок завершён');
+  });
+});
+
+describe('номер заявки словами', () => {
+  it('читает число 0..9999 по-русски', () => {
+    expect(numberToWords(0)).toBe('ноль');
+    expect(numberToWords(7)).toBe('семь');
+    expect(numberToWords(21)).toBe('двадцать один');
+    expect(numberToWords(111)).toBe('сто одиннадцать');
+    expect(numberToWords(602)).toBe('шестьсот два');
+    expect(numberToWords(1000)).toBe('тысяча');
+    expect(numberToWords(1201)).toBe('тысяча двести один');
+    expect(numberToWords(2000)).toBe('две тысячи');
+    expect(numberToWords(5000)).toBe('пять тысяч');
+    expect(numberToWords(9999)).toBe('девять тысяч девятьсот девяносто девять');
+  });
+
+  it('вне диапазона — исключение', () => {
+    expect(() => numberToWords(-1)).toThrow(RangeError);
+    expect(() => numberToWords(MAX_SPOKEN_NUMBER + 1)).toThrow(RangeError);
+    expect(() => numberToWords(1.5)).toThrow(RangeError);
+  });
+
+  it('берёт последнюю группу цифр номера заявки', () => {
+    expect(ticketNumberWords('З-20261114-0602')).toBe('шестьсот два');
+    expect(ticketNumberWords('№ 602')).toBe('шестьсот два');
+    expect(ticketNumberWords('  312 ')).toBe('триста двенадцать');
+  });
+
+  it('длинное число и текст без цифр читает по цифрам', () => {
+    expect(ticketNumberWords('З-20261114-12345')).toBe('один два три четыре пять');
+    expect(digitsToWords('0602')).toBe('ноль шесть ноль два');
+    expect(ticketNumberWords('без номера')).toBe('без номера');
+    expect(ticketNumberWords('   ')).toBe('');
   });
 });

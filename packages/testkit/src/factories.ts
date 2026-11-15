@@ -93,6 +93,12 @@ export function makePorts(): Ports {
         return notConfigured('speech');
       },
     },
+    tts: {
+      available: false,
+      async speak(): Promise<never> {
+        return notConfigured('tts');
+      },
+    },
     vision: {
       async describe(): Promise<never> {
         return notConfigured('vision');

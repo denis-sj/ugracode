@@ -9,6 +9,7 @@ import {
   NO_TEXT_FAREWELL,
   TurnInput,
   createVoiceService,
+  farewell,
   type CallAppeal,
   type CallIntake,
 } from '../server/service';
@@ -54,6 +55,15 @@ const ask = '{"say":"В каком кабинете?","done":false,"emergency":f
 const thanks = '{"say":"Спасибо, записала.","done":true,"emergency":false}';
 
 describe('сервис звонка', () => {
+  it('называет номер заявки словами', () => {
+    expect(farewell('З-20261114-0602', false)).toBe(
+      'Заявка шестьсот два принята, диспетчер уже видит её. Спасибо, до свидания.',
+    );
+    expect(farewell('З-20261114-0602', true)).toBe(
+      'Заявка шестьсот два передана дежурному инженеру. Спасибо, до свидания.',
+    );
+  });
+
   it('полный путь: реплики → итог → заявка с каналом звонка', async () => {
     const { service, calls, intake } = setup([ask, thanks]);
     const first = await service.turn(TurnInput.parse({ callId: 'c-1', from: 'iPhone', text: 'не печатает принтер' }));
@@ -63,7 +73,7 @@ describe('сервис звонка', () => {
 
     const end = await service.end(EndInput.parse({ callId: 'c-1' }));
     expect(end.ticketNumber).toBe('З-20261114-0001');
-    expect(end.say).toContain('З-20261114-0001');
+    expect(end.say).toBe('Заявка один принята, диспетчер уже видит её. Спасибо, до свидания.');
     expect(intake.submitted[0]).toMatchObject({ from: 'iPhone', text: 'не печатает принтер\n312, корпус Б', emergency: false });
     expect(intake.submitted[0]?.lines).toHaveLength(4);
     expect(calls.get('c-1')?.status).toBe('ended');
