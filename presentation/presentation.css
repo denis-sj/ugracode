@@ -988,3 +988,5 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 /* ---------- 8. Экономия: формула ниже таблицы, не под ней ---------- */
 .s-save .formula { bottom: 112px; }
 .s-save .caveat { bottom: 74px; }
+
+.demo-hint { margin: 24px 0 0; font-size: 22px; color: var(--dim); }

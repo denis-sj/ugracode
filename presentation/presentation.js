@@ -379,7 +379,21 @@ const SHOW = {
       return;
     }
     if (state.i === slides.length - 1) return;
+    // браузер заблокировал окно — остаёмся на демо-слайде и показываем подсказку
+    if (slides[state.i].dataset.demo !== undefined && !openDemoTab()) return;
     show(state.i + 1, 0);
+  }
+
+  /* Демо открывается отдельной вкладкой один раз: имя окна фиксирует вкладку,
+     повторные нажатия её не плодят. Если браузер заблокировал всплывающее окно —
+     показываем подсказку на слайде. */
+  const DEMO_WINDOW = 'ugra-demo';
+  function openDemoTab() {
+    let opened = null;
+    try { opened = window.open(SHOW.demoUrl, DEMO_WINDOW); } catch (e) { opened = null; }
+    const hint = document.querySelector('.demo-hint');
+    if (hint) hint.hidden = Boolean(opened);
+    return Boolean(opened);
   }
 
   function prev() {
@@ -481,10 +495,21 @@ const SHOW = {
   const NEXT = new Set(['PageDown', 'ArrowRight', 'ArrowDown', ' ', 'Spacebar', 'Enter']);
   const PREV = new Set(['PageUp', 'ArrowLeft', 'ArrowUp', 'Backspace']);
 
+  // Кликер и разные браузеры присылают клавиши по-разному: name → канон, иначе keyCode.
+  const KEY_ALIAS = { Next: 'PageDown', Prior: 'PageUp', Esc: 'Escape', Spacebar: ' ',
+    Left: 'ArrowLeft', Right: 'ArrowRight', Up: 'ArrowUp', Down: 'ArrowDown' };
+  const KEY_CODE = { 8: 'Backspace', 13: 'Enter', 27: 'Escape', 32: ' ', 33: 'PageUp', 34: 'PageDown',
+    35: 'End', 36: 'Home', 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 116: 'F5' };
+  function keyName(e) {
+    if (e.key && e.key !== 'Unidentified') return KEY_ALIAS[e.key] !== undefined ? KEY_ALIAS[e.key] : e.key;
+    return KEY_CODE[e.keyCode] !== undefined ? KEY_CODE[e.keyCode] : '';
+  }
+
   function onKey(e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    const k = e.key;
-    const code = e.code;
+    const k = keyName(e);
+    const code = e.code || '';
+    const letter = k.length === 1 ? k.toLowerCase() : '';
 
     // «старт показа»: F5 / Shift+F5 → полный экран, перезагрузку перехватываем
     if (k === 'F5') {
@@ -494,7 +519,7 @@ const SHOW = {
     }
 
     // «чёрный экран»: «.» или B (в любой раскладке)
-    if (k === '.' || code === 'Period' || code === 'KeyB' || k === 'b' || k === 'B') {
+    if (k === '.' || letter === 'b' || code === 'Period' || code === 'KeyB' || e.keyCode === 190 || e.keyCode === 66) {
       e.preventDefault();
       toggleBlack();
       return;
@@ -508,7 +533,7 @@ const SHOW = {
     }
 
     if (demoOpen()) {
-      if (k === 'Escape' || code === 'KeyV' || PREV.has(k)) {
+      if (k === 'Escape' || letter === 'v' || code === 'KeyV' || PREV.has(k)) {
         e.preventDefault();
         closeDemoVideo();
       }
@@ -527,12 +552,12 @@ const SHOW = {
     }
     if (k === 'Home') { e.preventDefault(); goTo(0, true); return; }
     if (k === 'End') { e.preventDefault(); goTo(slides.length - 1, true); return; }
-    if (code === 'KeyF') {
+    if (letter === 'f' || code === 'KeyF' || e.keyCode === 70) {
       e.preventDefault();
       if (isFull()) exitFull(); else enterFull();
       return;
     }
-    if (code === 'KeyV' && slides[state.i].dataset.demo !== undefined) {
+    if ((letter === 'v' || code === 'KeyV' || e.keyCode === 86) && slides[state.i].dataset.demo !== undefined) {
       e.preventDefault();
       openDemoVideo();
     }
