@@ -28,11 +28,17 @@ export const IntakeClarify = z.object({
 });
 export type IntakeClarify = z.infer<typeof IntakeClarify>;
 
+/** Сколько вопросов модель готовит заранее: чат задаёт их по одному, по порядку важности. */
+export const MAX_QUESTIONS = 4;
+
 /** Итог агента `intake` — то, что агент сдаёт через `submit`. */
 export const IntakeResult = z.object({
   fields: z.array(IntakeField),
   emergency: IntakeEmergency,
-  clarify: IntakeClarify.nullable(),
+  /** Устаревшая форма: один вопрос. Новый промпт сдаёт `questions`, первый из них — главный. */
+  clarify: IntakeClarify.nullable().optional(),
+  /** Вопросы по недостающим полям в порядке важности — по одному на поле. */
+  questions: z.array(IntakeClarify).max(MAX_QUESTIONS).optional(),
   summary: z.string().max(300),
   /** Статьи базы знаний, которые агент выбрал инструментом `kb_search`. */
   articles: z.array(z.object({ id: z.string().min(1), title: z.string().optional() })).max(5).optional(),
@@ -50,6 +56,7 @@ export type EquipmentCriticality = z.infer<typeof EquipmentCriticality>;
 export const ExtractionExtras = z.object({
   summary: z.string().optional(),
   clarify: IntakeClarify.nullable().optional(),
+  questions: z.array(IntakeClarify).optional(),
   emergency: IntakeEmergency.optional(),
   cmdb: z
     .object({
@@ -60,6 +67,21 @@ export const ExtractionExtras = z.object({
     .optional(),
 });
 export type ExtractionExtras = z.infer<typeof ExtractionExtras>;
+
+/**
+ * Вопросы модели в порядке важности: новый список `questions`, а если его нет — старый `clarify`.
+ * Повтор поля отбрасываем: по одному полю — один вопрос.
+ */
+export function intakeQuestions(result: Pick<IntakeResult, 'clarify' | 'questions'>): IntakeClarify[] {
+  let all: IntakeClarify[] = result.questions ?? [];
+  if (all.length === 0 && result.clarify) all = [result.clarify];
+  const seen = new Set<string>();
+  return all.filter((question) => {
+    if (seen.has(question.fieldKey)) return false;
+    seen.add(question.fieldKey);
+    return true;
+  });
+}
 
 export function readExtractionExtras(ext: Record<string, unknown> | undefined): ExtractionExtras | null {
   const parsed = ExtractionExtras.safeParse(ext?.extraction);

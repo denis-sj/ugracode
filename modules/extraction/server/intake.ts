@@ -1,10 +1,10 @@
-import type { AgentContext, AgentProfile, ReferenceData } from '@ugra/core';
+import type { AgentContext, AgentProfile, ApplicantProfile, ReferenceData } from '@ugra/core';
 import { dictionaryOptions, findField } from '@ugra/core';
 import type { FieldValue, SourceFragment } from '@ugra/contracts';
-import { IntakeResult, type IntakeResult as IntakeResultType } from '../contracts';
+import { IntakeResult, intakeQuestions, type IntakeClarify, type IntakeResult as IntakeResultType } from '../contracts';
 import { sourceFor, valueProblem, quoteInText } from './rules';
 
-export const INTAKE_PROMPT_ID = 'modules/extraction/prompts/intake.v1.md';
+export const INTAKE_PROMPT_ID = 'modules/extraction/prompts/intake.v2.md';
 export const INTAKE_STEP_ID = 'agent.intake';
 
 /** Шаг кладёт в контекст склеенный текст источников: проверять цитаты нужно по нему, а не только по оригиналу. */
@@ -37,6 +37,25 @@ function stateOf(data: ReferenceData): Record<string, unknown> {
     })),
     dictionaries,
   };
+}
+
+/** Вопрос по полю из реестра, которое ещё не заполнено; варианты справочника — только его коды. */
+function questionProblems(
+  question: IntakeClarify,
+  ctx: AgentContext,
+  filled: ReadonlySet<string>,
+  known: boolean,
+): string[] {
+  const def = findField(ctx.data, question.fieldKey);
+  if (known && !def) return [`вопрос задан по полю «${question.fieldKey}», которого нет в реестре`];
+  if (filled.has(question.fieldKey)) {
+    return [`вопрос по полю «${question.fieldKey}», которое уже заполнено из текста, — спроси о другом`];
+  }
+  if (!def?.dictionary) return [];
+  const codes = dictionaryOptions(ctx.data, def.dictionary).map((option) => option.value);
+  return question.options
+    .filter((option) => !codes.includes(option))
+    .map((option) => `вариант «${option}» не из справочника ${def.dictionary}: ${codes.join(', ')}`);
 }
 
 /**
@@ -73,21 +92,45 @@ export function checkIntake(result: IntakeResultType, ctx: AgentContext): string
     }
   }
 
-  if (result.clarify) {
-    const def = findField(ctx.data, result.clarify.fieldKey);
-    if (known && !def) {
-      problems.push(`вопрос задан по полю «${result.clarify.fieldKey}», которого нет в реестре`);
-    } else if (def?.dictionary) {
-      const codes = dictionaryOptions(ctx.data, def.dictionary).map((option) => option.value);
-      for (const option of result.clarify.options) {
-        if (!codes.includes(option)) {
-          problems.push(`вариант «${option}» не из справочника ${def.dictionary}: ${codes.join(', ')}`);
-        }
-      }
-    }
+  const filled = new Set(result.fields.filter((field) => field.value !== null).map((field) => field.key));
+  for (const question of intakeQuestions(result)) {
+    problems.push(...questionProblems(question, ctx, filled, known));
   }
 
   return problems.slice(0, 20);
+}
+
+/** Сколько единиц техники кабинета показываем модели: больше — шум в контексте. */
+const MAX_WORKPLACE_EQUIPMENT = 8;
+
+/**
+ * Кто пишет и что у него на рабочем месте: профиль и техника кабинета из CMDB.
+ * Модель видит, что система подставит сама, и не спрашивает об этом заявителя.
+ * Профиля или CMDB нет — отдаём то, что есть: разбор от этого не падает.
+ */
+export async function applicantState(ctx: AgentContext): Promise<Record<string, unknown>> {
+  const user = ctx.user;
+  const state: Record<string, unknown> = { fullName: user.fullName, position: user.position };
+  let profile: ApplicantProfile | null = null;
+  try {
+    profile = await ctx.db.getApplicantProfile(user.id);
+  } catch {
+    profile = null;
+  }
+  if (!profile) return state;
+  state.workplace = { building: profile.building, floor: profile.floor, cabinet: profile.cabinet };
+  if (profile.cabinet === null) return state;
+  try {
+    const items = await ctx.ports.cmdb.findEquipment(
+      profile.building === null ? { cabinet: profile.cabinet } : { building: profile.building, cabinet: profile.cabinet },
+    );
+    state.workplaceEquipment = items
+      .slice(0, MAX_WORKPLACE_EQUIPMENT)
+      .map((item) => ({ type: item.type, model: item.model, main: item.id === profile.equipmentId }));
+  } catch {
+    // CMDB недоступна — модель спросит о технике сама
+  }
+  return state;
 }
 
 /** Профиль агента разбора обращения. Инструменты — только чтение ядра: справочники и CMDB. */
@@ -107,6 +150,7 @@ export const intakeAgent: AgentProfile<IntakeResultType> = {
     return {
       now: ctx.clock.now().toISOString(),
       appeal: ctx.appeal ? { channel: ctx.appeal.channel, authorId: ctx.appeal.authorId } : undefined,
+      applicant: await applicantState(ctx),
       ...stateOf(ctx.data),
     };
   },

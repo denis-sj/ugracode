@@ -311,3 +311,45 @@ describe('шаг clarify.missing', () => {
     expect(patch?.missing?.map((field) => field.key)).toEqual(['building', 'cabinet']);
   });
 });
+
+describe('шаг clarify.missing: вопросы модели', () => {
+  const cabinetQuestion = { fieldKey: 'cabinet', question: 'В каком кабинете стоит принтер?', options: [] };
+  const buildingQuestion = { fieldKey: 'building', question: 'Принтер в главном корпусе или в Б?', options: ['Б'] };
+
+  it('спрашивает сначала то, что модель считает важнее, а не первое по реестру', async () => {
+    const { ctx, store } = await context({
+      draft: draft({ ext: { extraction: { questions: [cabinetQuestion, buildingQuestion] } } }),
+    });
+
+    const patch = await clarifyMissing(ctx);
+
+    expect(patch?.missing?.map((item) => item.key)).toEqual(['cabinet', 'building']);
+    expect(patch?.missing?.[0]).toMatchObject({ question: cabinetQuestion.question, source: 'ai' });
+    expect(patch?.missing?.[1]).toMatchObject({ question: buildingQuestion.question, source: 'ai' });
+    const [message] = await store.listAppealMessages(appeal.id);
+    expect(message?.fieldKey).toBe('cabinet');
+    expect(message?.card?.payload.plan).toEqual([cabinetQuestion, buildingQuestion]);
+  });
+
+  it('после ответа задаёт следующий вопрос модели из плана, а не шаблон', async () => {
+    const { ctx: first, store } = await context({
+      draft: draft({ ext: { extraction: { questions: [cabinetQuestion, buildingQuestion] } } }),
+    });
+    await clarifyMissing(first);
+    await store.saveAppealMessage({
+      id: 'answer-1',
+      appealId: appeal.id,
+      direction: 'in',
+      kind: 'answer',
+      body: '312',
+      fieldKey: 'cabinet',
+      createdAt: at,
+    });
+
+    // Повторный разбор идёт с validate: черновик без вопросов модели, кабинет уже отвечен.
+    const { ctx: rerun } = await context({ db: store, draft: draft({ fields: { cabinet: fieldValue('312') } }) });
+    const patch = await clarifyMissing(rerun);
+
+    expect(patch?.missing?.[0]).toMatchObject({ key: 'building', question: buildingQuestion.question, source: 'ai' });
+  });
+});

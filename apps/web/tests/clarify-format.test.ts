@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DictionaryItem, FieldDef } from '@ugra/contracts';
 import {
+  CHAT_EXAMPLES,
   buildAiSummary,
   buildQuestions,
   clampIndex,
@@ -394,5 +395,15 @@ describe('questionCounter и clampIndex', () => {
     expect(clampIndex(-1, 2)).toBe(1);
     expect(clampIndex(2, 2)).toBe(0);
     expect(clampIndex(3, 0)).toBe(0);
+  });
+});
+
+describe('CHAT_EXAMPLES', () => {
+  it('три живых примера с короткой подписью и подробным текстом', () => {
+    expect(CHAT_EXAMPLES).toHaveLength(3);
+    for (const example of CHAT_EXAMPLES) {
+      expect(example.label.length).toBeLessThanOrEqual(26);
+      expect(example.text.length).toBeGreaterThan(example.label.length * 2);
+    }
   });
 });

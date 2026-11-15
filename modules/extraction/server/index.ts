@@ -5,6 +5,7 @@ import { INTAKE_STEP_ID, fieldsFromIntake, intakeAgent } from './intake';
 import { GROUND_STEP_ID, groundDraft } from './ground';
 import { evaluateFields } from './evaluate';
 import { sourcesText } from './rules';
+import { intakeQuestions } from '../contracts';
 
 /** Харнесс и часть окружения могут передать в шаг пользователя и хранилище (в ядре их пока нет). */
 interface RuntimeStepContext extends StepContext {
@@ -98,6 +99,7 @@ const intakeStep: PipelineStep = {
     }
 
     const at = ctx.ports.clock.now().toISOString();
+    const questions = intakeQuestions(run.result);
     const fields = fieldsFromIntake(run.result, ctx.draft.sources, ctx.data, at, ctx.appeal.id);
     reportFields(ctx, fields);
     // Модель не всегда зовёт kb_search сама — подстрахуем кодом: статья нужна инженеру и оценщику.
@@ -130,7 +132,8 @@ const intakeStep: PipelineStep = {
         ...ctx.draft.ext,
         extraction: {
           summary: run.result.summary,
-          clarify: run.result.clarify,
+          clarify: questions[0] ?? null,
+          questions,
           emergency: run.result.emergency,
         },
       },

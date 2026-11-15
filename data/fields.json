@@ -57,7 +57,7 @@
       "label": "Оборудование",
       "group": "equipment",
       "type": "cmdbRef",
-      "required": true,
+      "required": { "whenCategory": ["printer", "pc", "network", "server", "peripheral"] },
       "extractHint": "Название или модель оборудования, если заявитель его назвал: «принтер HP LaserJet», «МФУ Kyocera». Инвентарный номер и IP подставляет код из CMDB.",
       "ask": {
         "question": "Какое оборудование используется?",

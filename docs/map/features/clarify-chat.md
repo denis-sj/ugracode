@@ -15,9 +15,10 @@
 | --- | --- |
 | `modules/clarify-chat/server/index.ts` | `defineModule`: id `clarify-chat`, `enabledByDefault: true`, шаг `clarify.missing`, `seed()` — no-op |
 | `modules/clarify-chat/server/clarify.ts` | шаг: недостающие поля по реестру (черновик + сохранённые поля заявки), круги по полю, сообщение `question_card`, событие `message.sent`, статус `waiting_applicant` |
-| `modules/clarify-chat/server/question.ts` | вопрос модели из `draft.ext.extraction.clarify` или шаблон `FieldDef.ask`; варианты только из справочника; содержимое карточки |
+| `modules/clarify-chat/server/question.ts` | план вопросов модели (`draft.ext.extraction.questions`, старый `clarify`; после ответа — `plan` из первой карточки), порядок по плану (`orderByPlan`), шаблон `FieldDef.ask` — только запасной; варианты справочника — только его коды; карточка с `plan` |
 | `modules/clarify-chat/README.md` | пять строк: что делает, правила, точки расширения, флаг, момент демо |
 | `modules/clarify-chat/tests/clarify.test.ts` | шаг: есть/нет missing, лимит кругов, «Не знаю», нет `db`, вопрос модели |
+| `modules/clarify-chat/tests/plan.test.ts` | план вопросов: чтение из разбора и истории, порядок, `plan` в карточке |
 | `modules/clarify-chat/tests/contract.test.ts` | тест-контракт модуля |
 | `modules/registry.server.ts` | **одна строка регистрации — не добавлена** (файл чужой для задачи), см. «Не поддержано» |
 | `packages/contracts/src/api.ts` | `PostAppealMessageInput`, `AppealMessagesResponse`, `PostAppealMessageResponse` |
@@ -35,7 +36,10 @@
    Вход — черновик **и уже сохранённые поля заявки**: повторный разбор с `validate` начинается
    с пустого черновика, а отвеченные поля терять нельзя.
 2. Поля, на которые ответили «Не знаю» (след `no_answer`), больше не спрашиваем.
-3. Берём первое недостающее поле по порядку реестра, у которого:
+3. Недостающие поля сортируем **по плану модели** (что важнее для заявки), поля вне плана — в конце по реестру.
+   План — `draft.ext.extraction.questions`; на повторном разборе после ответа его нет в черновике, поэтому
+   план хранится в `card.payload.plan` первой карточки и читается из истории чата.
+   Берём первое поле, у которого:
    - вопросов в истории меньше `maxClarifyRounds` (настройка, по умолчанию 2);
    - нет ожидающего ответа (последнее сообщение по полю — `question_card`).
 4. Текст вопроса: `draft.ext.extraction.clarify`, если модель предложила вопрос по этому же полю,
@@ -98,3 +102,11 @@ npx eslint modules/clarify-chat apps/api/src/server.ts apps/api/tests/clarify-ch
   неизменен (`appeal` не меняется); повторный разбор всего диалога с `extract` — следующий шаг.
 - **Варианты из CMDB** (кабинеты корпуса, техника кабинета) не строятся: шаг берёт справочник
   и варианты модели. Инструменты CMDB есть у агента `intake`, так что варианты приходят оттуда.
+
+## Вопросы по смыслу (2026-11-14, ветка `feature/smart-clarify`)
+
+- Шаг возвращает в `missing` **все** недостающие поля в порядке плана: заданный вопрос первым, формулировки модели
+  у каждого. Финализация ядра (`keepAsked` в `packages/core/src/core-steps.ts`) больше не заменяет их шаблонами.
+- Шаблон реестра остаётся запасным: если модель не спросила о поле, а оно обязательно.
+- `equipment` обязателен только для «железных» категорий (`required.whenCategory` в `data/fields.json`):
+  на «Нет доступа к 1С» об оборудовании не спрашиваем.

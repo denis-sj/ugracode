@@ -1,4 +1,4 @@
-import type { ChatCard, FieldDef, MissingField } from '@ugra/contracts';
+import type { AppealMessage, ChatCard, FieldDef, MissingField } from '@ugra/contracts';
 import type { ReferenceData } from '@ugra/core';
 
 /** Больше пяти вариантов в карточке не показываем: остальное — «свой ответ». */
@@ -17,20 +17,64 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-/**
- * Вопрос модели по конкретному полю. Читаем только данные `draft.ext.extraction`
- * (схема живёт в модуле `extraction`), код чужого модуля не импортируем.
- */
-export function aiQuestionFor(ext: Record<string, unknown> | undefined, fieldKey: string): AiQuestion | null {
-  const clarify = asRecord(asRecord(ext?.extraction).clarify);
-  if (clarify.fieldKey !== fieldKey) return null;
-  const question = typeof clarify.question === 'string' ? clarify.question.trim() : '';
-  if (question === '') return null;
-  const rawOptions = Array.isArray(clarify.options) ? clarify.options : [];
+function questionOf(value: unknown): AiQuestion | null {
+  const item = asRecord(value);
+  const fieldKey = typeof item.fieldKey === 'string' ? item.fieldKey : '';
+  const question = typeof item.question === 'string' ? item.question.trim() : '';
+  if (fieldKey === '' || question === '') return null;
+  const rawOptions = Array.isArray(item.options) ? item.options : [];
   const options = rawOptions
-    .filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    .filter((option): option is string => typeof option === 'string' && option.trim() !== '')
     .slice(0, MAX_OPTIONS);
   return { fieldKey, question, options };
+}
+
+function questionsOf(value: unknown): AiQuestion[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(questionOf).filter((item): item is AiQuestion => item !== null);
+}
+
+/**
+ * Вопросы модели в порядке важности из `draft.ext.extraction`: список `questions`,
+ * а если его нет — старый одиночный `clarify`. Схема живёт в модуле `extraction`,
+ * код чужого модуля не импортируем — читаем только данные.
+ */
+export function aiQuestionsOf(ext: Record<string, unknown> | undefined): AiQuestion[] {
+  const extraction = asRecord(ext?.extraction);
+  const list = questionsOf(extraction.questions);
+  if (list.length > 0) return list;
+  const single = questionOf(extraction.clarify);
+  return single ? [single] : [];
+}
+
+/**
+ * План вопросов из истории чата: повторный разбор после ответа идёт с `validate`
+ * и черновик без вопросов модели — план хранится в первой карточке-вопросе.
+ */
+export function planFromHistory(messages: readonly AppealMessage[]): AiQuestion[] {
+  for (const message of messages) {
+    if (message.kind !== 'question_card') continue;
+    const plan = questionsOf(message.card?.payload.plan);
+    if (plan.length > 0) return plan;
+  }
+  return [];
+}
+
+/** Вопрос модели по конкретному полю. */
+export function aiQuestionFor(plan: readonly AiQuestion[], fieldKey: string): AiQuestion | null {
+  return plan.find((item) => item.fieldKey === fieldKey) ?? null;
+}
+
+/** Недостающие поля в порядке важности по модели; поля, о которых она не спросила, — в конце по реестру. */
+export function orderByPlan<T extends { key: string }>(missing: readonly T[], plan: readonly AiQuestion[]): T[] {
+  const rank = (key: string): number => {
+    const index = plan.findIndex((item) => item.fieldKey === key);
+    return index === -1 ? plan.length : index;
+  };
+  return missing
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => rank(a.item.key) - rank(b.item.key) || a.index - b.index)
+    .map(({ item }) => item);
 }
 
 /** Вариант карточки: `validated` — значение проверено справочником или CMDB. */
@@ -74,9 +118,9 @@ export function buildQuestion(
   missing: MissingField,
   field: FieldDef | undefined,
   data: ReferenceData,
-  ext: Record<string, unknown> | undefined,
+  plan: readonly AiQuestion[],
 ): MissingField {
-  const ai = aiQuestionFor(ext, missing.key);
+  const ai = aiQuestionFor(plan, missing.key);
   const options = optionsFor(field, data, ai?.options ?? []);
   return {
     ...missing,
@@ -88,8 +132,8 @@ export function buildQuestion(
   };
 }
 
-/** Содержимое карточки для хранения и интерфейса. */
-export function questionCard(question: MissingField): ChatCard {
+/** Содержимое карточки для хранения и интерфейса; `plan` — вопросы модели для следующих раундов. */
+export function questionCard(question: MissingField, plan: readonly AiQuestion[] = []): ChatCard {
   return {
     cardType: 'question',
     payload: {
@@ -101,6 +145,7 @@ export function questionCard(question: MissingField): ChatCard {
       allowUnknown: question.allowUnknown,
       allowFreeText: question.allowFreeText,
       source: question.source,
+      plan: plan.map((item) => ({ ...item, options: [...item.options] })),
     },
   };
 }
