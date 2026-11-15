@@ -835,12 +835,7 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
   font-size: 26px;
   color: var(--mute);
 }
-.stages-col {
-  position: absolute;
-  left: 1180px;
-  top: 300px;
-  width: 644px;
-}
+
 .stg {
   display: flex;
   justify-content: space-between;
@@ -862,3 +857,82 @@ html.is-print, html.is-print body { overflow: visible; height: auto; background:
 
 /* ---------- 7. Время на заявку: одна строка без выхода за край ---------- */
 .s-act .big-wrap-md { font-size: 230px; }
+
+/* ---------- фон: спокойные «невидимые» блоки под содержимым ---------- */
+
+.tasks, .acc-side, .save-table, .team-col, .stages-col {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 0 28px;
+}
+
+/* ---------- 3. Стек: граф компонентов ---------- */
+
+.stack {
+  position: absolute;
+  left: 96px;
+  top: 290px;
+  width: 1728px;
+  height: 560px;
+}
+.stack-svg { width: 1728px; height: 560px; overflow: visible; }
+.stack-svg .box {
+  fill: rgba(255, 255, 255, 0.72);
+  stroke: rgba(15, 18, 34, 0.12);
+  stroke-width: 1.5px;
+}
+.stack-svg .box-core { stroke: #5A49E0; stroke-width: 2px; }
+.stack-svg .box-dash { fill: transparent; stroke-dasharray: 8 8; }
+.stack-svg .n-title { font-family: Manrope, sans-serif; font-weight: 700; font-size: 30px; fill: #0F1222; }
+.stack-svg .n-sub { font-family: Manrope, sans-serif; font-weight: 500; font-size: 20px; fill: #5B6178; }
+.stack-svg .edge {
+  fill: none;
+  stroke: rgba(15, 18, 34, 0.28);
+  stroke-width: 2.5px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.stack-svg .edge-dash { stroke-dasharray: 1; }
+.chips-row {
+  position: absolute;
+  left: 96px;
+  top: 880px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.chip {
+  display: inline-block;
+  padding: 8px 18px;
+  border: 1px solid rgba(15, 18, 34, 0.14);
+  border-radius: 999px;
+  font-size: 20px;
+  color: var(--mute);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- 10. Команда: фото и люди ---------- */
+
+.team-photo {
+  position: absolute;
+  left: 1240px;
+  top: 300px;
+  width: 584px;
+  height: 560px;
+  border-radius: 24px;
+  background: #E6E8F2 url('media/team.jpg') center / cover no-repeat;
+  overflow: hidden;
+}
+.photo-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--dim);
+}
+.team-col { position: absolute; left: 96px; top: 300px; width: 520px; }
+.stages-col { position: absolute; left: 680px; top: 300px; width: 480px; }
+
+.stg b { font-size: 30px; }

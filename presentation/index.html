@@ -26,7 +26,7 @@
 
       <!-- 2. Боль -->
       <section class="slide s-pain" data-title="Боль" data-section="Боль">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Боль</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Боль</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Каждое обращение — вручную</h2></div></div>
         <p class="pain-time" data-a>03:12 · ночная смена · диспетчер один</p>
         <div class="bubble" data-a>
@@ -37,70 +37,52 @@
           <p class="bubble-text">«У меня опять ничего не работает»</p>
         </div>
         <ul class="tasks" data-a>
-          <li>перезвонить</li>
-          <li>найти кабинет</li>
-          <li>найти инженера</li>
-          <li class="tasks-alarm">не пропустить аварию</li>
+          <li class="from-right">перезвонить</li>
+          <li class="from-right">найти кабинет</li>
+          <li class="from-right">найти инженера</li>
+          <li class="tasks-alarm from-right">не пропустить аварию</li>
         </ul>
       </section>
 
-      <!-- 3. Просил → сделали -->
-      <section class="slide s-know" data-title="Просил → сделали" data-section="Просил → сделали" data-steps="5">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Просил → сделали</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Просил → сделали</h2></div></div>
-        <div class="ktable">
-          <div class="krow" data-step="1">
-            <span class="kid">К1</span>
-            <span class="kreq">5–10 тестовых обращений</span>
-            <span class="kdone"><span data-num="testCases">10</span> обращений с эталоном</span>
-            <svg class="sketch kcheck" viewBox="0 0 60 50" aria-hidden="true"><path pathLength="1" d="M 6 28 C 14 34 20 40 24 44 C 32 30 44 14 56 4"/></svg>
-          </div>
-          <div class="krow" data-step="2">
-            <span class="kid">К2</span>
-            <span class="kreq">ИИ верно заполняет поля и исполнителя</span>
-            <span class="kdone"><span class="pill">84 % — см. слайд 5</span></span>
-            <span></span>
-          </div>
-          <div class="krow" data-step="3">
-            <span class="kid">К3</span>
-            <span class="kreq">Диспетчер исправляет и подтверждает</span>
-            <span class="kdone">Подсветка сомнений, правка, Enter</span>
-            <svg class="sketch kcheck" viewBox="0 0 60 50" aria-hidden="true"><path pathLength="1" d="M 6 28 C 14 34 20 40 24 44 C 32 30 44 14 56 4"/></svg>
-          </div>
-          <div class="krow" data-step="4">
-            <span class="kid">К4</span>
-            <span class="kreq">Ручные действия с ИИ и без</span>
-            <span class="kdone">Сравнение — ориентир, см. слайд 7</span>
-            <svg class="sketch kcheck" viewBox="0 0 60 50" aria-hidden="true"><path pathLength="1" d="M 6 28 C 14 34 20 40 24 44 C 32 30 44 14 56 4"/></svg>
-          </div>
-          <div class="krow" data-step="5">
-            <span class="kid">К5</span>
-            <span class="kreq">Стабильность и архитектура</span>
-            <span class="kdone">Ядро, модули, SonarQube без замечаний — слайд 9</span>
-            <svg class="sketch kcheck" viewBox="0 0 60 50" aria-hidden="true"><path pathLength="1" d="M 6 28 C 14 34 20 40 24 44 C 32 30 44 14 56 4"/></svg>
-          </div>
-        </div>
-      </section>
+      <!-- 3. Стек -->
+      <section class="slide s-stack" data-title="Стек" data-section="Стек">
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Стек</span></div>
+        <div class="head"><div class="mask"><h2 class="h2 mask-in">Из чего сделано и как работает</h2></div></div>
+        <div class="stack" data-a>
+          <svg class="stack-svg" viewBox="0 0 1728 560" aria-hidden="true">
+            <defs>
+              <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 z" fill="rgba(15,18,34,0.35)"/>
+              </marker>
+            </defs>
+            <path class="edge" pathLength="1" d="M300 228 L357 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M657 228 L714 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1014 228 L1071 228" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 58 1428 58" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 L1428 208" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M1371 228 C1400 228 1400 358 1428 358" marker-end="url(#arr)"/>
+            <path class="edge edge-dash" pathLength="1" d="M1371 228 C1400 228 1400 502 1428 502" marker-end="url(#arr)"/>
+            <path class="edge" pathLength="1" d="M864 286 L864 438 C864 438 1000 438 1071 438" marker-end="url(#arr)"/>
 
-      <!-- 4. Как работает -->
-      <section class="slide s-how" data-title="Как работает" data-section="Как работает">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Как работает</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Шесть шагов от текста до заявки</h2></div></div>
-        <div class="chain" data-a>
-          <div class="tl-line"><span class="tl-fill"></span></div>
-          <span class="pt pt-start" style="--i:0"><i></i><b>Текст</b></span>
-          <span class="pt" style="--i:1"><i></i><b>Поля</b></span>
-          <span class="pt" style="--i:2"><i></i><b>Приоритет</b></span>
-          <span class="pt" style="--i:3"><i></i><b>Исполнитель</b></span>
-          <span class="pt" style="--i:4"><i></i><b>База</b></span>
-          <span class="pt pt-end pt-human" style="--i:5"><i></i><b>Человек</b></span>
+            <g transform="translate(0,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Веб-интерфейс</text><text class="n-sub" x="24" y="84">React 19 · Vite 7</text></g></g>
+            <g transform="translate(357,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">API</text><text class="n-sub" x="24" y="84">Fastify 5 · Node.js</text></g></g>
+            <g transform="translate(714,170)"><g class="pop"><rect class="box box-core" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Ядро</text><text class="n-sub" x="24" y="84">TypeScript · пайплайн</text></g></g>
+            <g transform="translate(1071,170)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Порты</text><text class="n-sub" x="24" y="84">адаптеры внешнего мира</text></g></g>
+            <g transform="translate(1428,0)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Модель ИИ</text><text class="n-sub" x="24" y="84">облако Polza · OpenAI SDK</text></g></g>
+            <g transform="translate(1428,150)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">CMDB и история</text><text class="n-sub" x="24" y="84">справочник · 600 заявок</text></g></g>
+            <g transform="translate(1428,300)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Уведомления</text><text class="n-sub" x="24" y="84">дежурные инженеры</text></g></g>
+            <g transform="translate(1428,444)"><g class="pop"><rect class="box box-dash" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">Речь</text><text class="n-sub" x="24" y="84">порт, пока не подключено</text></g></g>
+            <g transform="translate(1071,380)"><g class="pop"><rect class="box" width="300" height="116" rx="18"/><text class="n-title" x="24" y="50">База данных</text><text class="n-sub" x="24" y="84">PostgreSQL · Drizzle ORM</text></g></g>
+          </svg>
         </div>
-        <p class="how-note" data-a>у каждого поля — цитата из текста и уверенность</p>
+        <div class="chips-row" data-a>
+          <span class="chip pop">TypeScript</span><span class="chip pop">Node.js</span><span class="chip pop">Fastify 5</span><span class="chip pop">React 19 + Vite</span><span class="chip pop">PostgreSQL + Drizzle</span><span class="chip pop">Polza · OpenAI SDK</span><span class="chip pop">Vitest · SonarQube</span><span class="chip pop">Docker Compose</span>
+        </div>
       </section>
 
       <!-- 5. Точность -->
       <section class="slide s-acc" data-title="Точность" data-section="Точность">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Точность</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Точность</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Точность на&nbsp;<span data-num="testCases">10</span> обращениях</h2></div></div>
 
         <div class="acc-main" data-a>
@@ -113,17 +95,16 @@
         </div>
 
         <div class="acc-side" data-a>
-          <div class="trow"><span class="tn" data-num="assigneeTop3">100 %</span><span class="tt">исполнитель в&nbsp;топ-3</span></div>
-          <div class="trow"><span class="tn" data-num="fieldsByAi">84 %</span><span class="tt">полей заполнил ИИ</span></div>
+          <div class="trow from-right"><span class="tn" data-num="assigneeTop3">100 %</span><span class="tt">исполнитель в&nbsp;топ-3</span></div>
+          <div class="trow from-right"><span class="tn" data-num="fieldsByAi">84 %</span><span class="tt">полей заполнил ИИ</span></div>
         </div>
 
         <p class="foot" data-a><span data-num="inventedFields">9</span> выдуманных полей — все подсвечены, без&nbsp;диспетчера заявка не&nbsp;уходит. <span data-num="falseAlarms">1</span> ложная тревога.</p>
-        <p class="source">Источник · <span data-src="testCases,missedEmergencies,assigneeTop3"></span></p>
       </section>
 
       <!-- 6. Авария -->
       <section class="slide s-alarm" data-title="Авария" data-section="Авария">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Авария</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Авария</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Авария — раньше диспетчера</h2></div></div>
 
         <div class="nb nb-main" data-a>
@@ -146,32 +127,30 @@
           <p class="tl-note">раньше, чем диспетчер открыл заявку</p>
         </div>
 
-        <p class="source">Источник · <span data-src="emergencyNotified,dutyNotified"></span></p>
       </section>
 
       <!-- 7. Разбор заявки -->
       <section class="slide s-act" data-title="Разбор заявки" data-section="Разбор заявки">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Разбор заявки</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Разбор заявки</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Разбор одной заявки</h2></div></div>
         <div class="act-main" data-a>
           <div class="act-pair">
-            <div class="act-col">
+            <div class="act-col pop">
               <div class="big-wrap big-wrap-md"><span class="big">1–1,5 мин</span></div>
               <p class="cap">вручную · ориентир, не замер</p>
             </div>
             <span class="act-arrow">→</span>
-            <div class="act-col">
+            <div class="act-col pop">
               <div class="big-wrap big-wrap-md"><span class="big">≈ 0</span></div>
               <p class="cap">с ИИ · ориентир, не замер</p>
             </div>
           </div>
         </div>
-        <p class="source">Ориентир · twig.so: ручной разбор 60–90 с, с ИИ — около нуля (вендорская оценка, методика не раскрыта)</p>
       </section>
 
       <!-- 8. Экономия -->
       <section class="slide s-save" data-title="Экономия" data-section="Экономия">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Экономия</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Экономия</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Экономия времени диспетчера</h2></div></div>
         <div class="save-main" data-a>
           <div class="big-wrap big-wrap-md">
@@ -186,47 +165,29 @@
         </div>
         <p class="formula" data-a>(разбор вручную − разбор с ИИ: 1–1,5 мин) × заявок в день × 22 / 3600; смена 8 ч</p>
         <p class="caveat" data-a>только этап разбора, ориентир из открытых источников, не замер; реальная нагрузка заказчика неизвестна</p>
-        <p class="source">Ориентир · twig.so (ручной разбор 60–90 с, с ИИ — около нуля)</p>
-      </section>
-
-      <!-- 9. Надёжность -->
-      <section class="slide s-rel" data-title="Надёжность" data-section="Надёжность">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Надёжность</span></div>
-        <div class="head"><div class="mask"><h2 class="h2 mask-in">Надёжность и качество кода</h2></div></div>
-        <div class="rel-stat rel-stat-a" data-a>
-          <div class="big-wrap big-wrap-md"><span class="big" data-num="sonarIssues">0</span></div>
-          <p class="cap">замечаний SonarQube</p>
-        </div>
-        <div class="rel-stat rel-stat-b" data-a>
-          <div class="big-wrap big-wrap-md"><span class="big" data-num="coverage">83 %</span></div>
-          <p class="cap">покрытие тестами</p>
-        </div>
-        <p class="rel-tests" data-a data-if="tests"><span data-num="tests">—</span> тестов · вывод pnpm check</p>
-        <p class="scheme" data-a>Веб → API → ядро → модули → порты</p>
-        <p class="rel-note" data-a>облако сейчас → локальные модели в контуре заказчика — замена адаптера</p>
-        <p class="source">Источник · <span data-src="sonarIssues,coverage"></span></p>
       </section>
 
       <!-- 10. Команда и внедрение -->
       <section class="slide s-team" data-title="Команда и внедрение" data-section="Команда">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Команда</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Команда</span></div>
         <div class="head"><div class="mask"><h2 class="h2 mask-in">Команда и внедрение</h2></div></div>
+        <div class="team-photo" data-a><span class="photo-note">место для фото команды · media/team.jpg</span></div>
         <div class="team-col" data-a>
-          <div class="person"><b>Денис</b><span>капитан и продукт</span></div>
-          <div class="person"><b>Данкония</b><span>архитектор</span></div>
-          <div class="person"><b>Семён</b><span>код и тесты</span></div>
+          <div class="person from-right"><b>Денис</b><span>капитан и продукт</span></div>
+          <div class="person from-right"><b>Данкония</b><span>архитектор</span></div>
+          <div class="person from-right"><b>Семён</b><span>код и тесты</span></div>
         </div>
         <div class="stages-col" data-a>
-          <div class="stg"><b>Пилот на одной линии</b><span>4 недели</span></div>
-          <div class="stg"><b>Расширение</b><span>2–3 месяца</span></div>
-          <div class="stg"><b>Эксплуатация в контуре заказчика</b><span></span></div>
+          <div class="stg from-right"><b>Пилот на одной линии</b><span>4 недели</span></div>
+          <div class="stg from-right"><b>Расширение</b><span>2–3 месяца</span></div>
+          <div class="stg from-right"><b>Эксплуатация в контуре заказчика</b><span></span></div>
         </div>
         <p class="limits" data-a>данные синтетические · одна облачная модель · речь не подключена · набор маленький — перемерим в пилоте</p>
       </section>
 
       <!-- 11. Смотрим вживую -->
       <section class="slide s-bridge" data-title="Смотрим вживую" data-section="Демо">
-        <div class="frame"><span class="brand">Диспетчерская с ИИ<span class="dot">.</span></span><span class="section">Демо</span></div>
+        <div class="frame"><span class="brand">команда «1+∞»<span class="dot">.</span></span><span class="section">Демо</span></div>
         <div class="bridge">
           <div class="mask"><h2 class="bridge-h mask-in">Смотрим<br><span class="hand">вживую<svg class="sketch wipe" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M 6 15 C 120 6 250 20 394 9"/></svg></span><span class="dot">.</span></h2></div>
           <p class="bridge-sub" data-a>следующее нажатие → <span data-demo-host>localhost:5173</span></p>

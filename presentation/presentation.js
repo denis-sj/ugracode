@@ -205,11 +205,17 @@ const SHOW = {
     const wipes = Array.from(el.querySelectorAll('.sketch.wipe'));
     const fills = Array.from(el.querySelectorAll('.tl-fill'));
     const pts = Array.from(el.querySelectorAll('.pt'));
+    const edges = Array.from(el.querySelectorAll('.edge'));
+    const pops = Array.from(el.querySelectorAll('.pop'));
+    const sides = Array.from(el.querySelectorAll('.from-right'));
     if (!animate || reduced) {
       if (paths.length) gsap.set(paths, { strokeDashoffset: 0 });
       if (wipes.length) gsap.set(wipes, { scaleX: 1 });
       if (fills.length) gsap.set(fills, { scaleX: 1 });
       if (pts.length) gsap.set(pts, { autoAlpha: 1, y: 0 });
+      if (edges.length) gsap.set(edges, { strokeDashoffset: 0 });
+      if (pops.length) gsap.set(pops, { autoAlpha: 1, scale: 1 });
+      if (sides.length) gsap.set(sides, { autoAlpha: 1, x: 0 });
       finishCounts(el);
       return;
     }
@@ -228,6 +234,24 @@ const SHOW = {
     if (pts.length) {
       gsap.fromTo(pts, { autoAlpha: 0, y: 10 }, {
         autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out', stagger: 0.22, delay: delay + 0.5,
+      });
+    }
+    if (edges.length) {
+      // связи графа дорисовываются по очереди
+      gsap.fromTo(edges, { strokeDashoffset: 1 }, {
+        strokeDashoffset: 0, duration: 0.7, ease: 'power1.inOut', stagger: 0.1, delay: delay + 0.4,
+      });
+    }
+    if (pops.length) {
+      // узлы и карточки всплывают с пружинкой
+      gsap.fromTo(pops, { autoAlpha: 0, scale: 0.55 }, {
+        autoAlpha: 1, scale: 1, duration: 0.6, ease: 'back.out(1.7)', stagger: 0.12, delay: delay + 0.2,
+      });
+    }
+    if (sides.length) {
+      // строки и люди влетают справа
+      gsap.fromTo(sides, { autoAlpha: 0, x: 70 }, {
+        autoAlpha: 1, x: 0, duration: 0.7, ease: 'power3.out', stagger: 0.12, delay: delay + 0.2,
       });
     }
     countUp(el);
@@ -529,6 +553,10 @@ const SHOW = {
   /* ---------- старт ---------- */
 
   renderData();
+
+  const teamImg = new Image();
+  teamImg.onload = () => { const note = document.querySelector('.photo-note'); if (note) note.remove(); };
+  teamImg.src = 'media/team.jpg';
 
   if (PRINT) {
     // ?print: все слайды стоят по одному на страницу, шаги и цифры в финальном виде (CSS).
