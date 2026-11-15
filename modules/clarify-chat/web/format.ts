@@ -586,6 +586,20 @@ export const RUN_STEP_LABELS: Readonly<Record<string, string>> = {
   finalize: 'Готовим итог разбора',
 };
 
+/**
+ * Одно название шага — одна строка: агент может повторять подпись в каждом вызове,
+ * в раскрытом журнале она должна встречаться один раз (побеждает последний статус).
+ */
+export function uniqueStepsByLabel(steps: readonly { label: string }[]): { label: string }[] {
+  const seen = new Map<string, { label: string }>();
+  for (const step of steps) {
+    const key = step.label.trim().toLowerCase();
+    if (key === '') continue;
+    seen.set(key, step);
+  }
+  return [...seen.values()];
+}
+
 export function runStepLabel(stepId: string | undefined): string {
   if (!stepId) return 'Разбираем обращение';
   return RUN_STEP_LABELS[stepId] ?? 'Обрабатываем обращение';

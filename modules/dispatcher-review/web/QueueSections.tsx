@@ -1,11 +1,21 @@
 import type { Ticket } from '@ugra/contracts';
-import type { JSX, ReactNode } from 'react';
-import { Button, Card, PersonAvatar, PriorityMark, Timer, cx } from '@ugra/ui';
+import type { JSX, Ref, ReactNode } from 'react';
+import {
+  Button,
+  Card,
+  DetailRow,
+  PersonAvatar,
+  Timer,
+  formatTicketNumber,
+  cx,
+} from '@ugra/ui';
 import { CONFIDENCE_THRESHOLD } from './format';
+import { DeadlineChips, Kbd } from './parts';
 
 /**
- * Части экрана «Очередь» (вариант A макета): закреплённая полоса аварии, группа строк
- * и строка заявки. Всё оформление — классы `queue-*` из `review.css`.
+ * Части доски «Очередь»: полоса аварии, колонка карточек, карточка заявки,
+ * свёрнутая полоса ожидания и карточка-деталь. Оформление — классы `queue-*`
+ * из `review.css`; цвета только из токенов `@ugra/ui`.
  */
 
 export interface QueueAlarmProps {
@@ -15,7 +25,7 @@ export interface QueueAlarmProps {
   onOpen: () => void;
 }
 
-/** Пульсирующая красная полоса аварии над очередью: заголовок, место, таймер и «Открыть». */
+/** Пульсирующая полоса аварии над доской: заголовок, место, таймер и «Открыть». */
 export function QueueAlarm({ ticket, title, place, onOpen }: QueueAlarmProps): JSX.Element {
   return (
     <Card className="queue-alarm" padded={false} as="section">
@@ -26,7 +36,7 @@ export function QueueAlarm({ ticket, title, place, onOpen }: QueueAlarmProps): J
           <span className="queue-alarm__title">{title}</span>
         </div>
         <div className="queue-alarm__meta">
-          № {ticket.number} · {place}
+          {formatTicketNumber(ticket.number)} · {place}
         </div>
       </div>
       <Timer from={ticket.createdAt} className="queue-alarm__timer" />
@@ -37,42 +47,7 @@ export function QueueAlarm({ ticket, title, place, onOpen }: QueueAlarmProps): J
   );
 }
 
-export interface QueueGroupProps {
-  title: string;
-  count: number;
-  /** Пояснение справа от заголовка. */
-  note?: ReactNode;
-  /** Жёлтая полоса слева: «нужно ваше решение». */
-  decision?: boolean;
-  /** Кнопка массового действия справа. */
-  action?: ReactNode;
-  children: ReactNode;
-}
-
-/** Стеклянная группа строк с заголовком, счётчиком и действием. */
-export function QueueGroup({
-  title,
-  count,
-  note,
-  decision = false,
-  action,
-  children,
-}: QueueGroupProps): JSX.Element {
-  return (
-    <Card className={cx('queue-group', decision && 'queue-group--decision')} padded={false} as="section">
-      <header className="queue-group__head">
-        <h2 className="queue-group__title">{title}</h2>
-        <span className="queue-group__count">{count}</span>
-        <span className="queue-group__spacer" />
-        {note && <span className="queue-group__note">{note}</span>}
-        {action}
-      </header>
-      {children}
-    </Card>
-  );
-}
-
-export type QueueStateTone = 'accent' | 'info' | 'warn' | 'muted';
+export type QueueStateTone = 'accent' | 'info' | 'warn' | 'muted' | 'danger' | 'ok' | 'neutral';
 
 export interface QueueStateView {
   tone: QueueStateTone;
@@ -80,11 +55,11 @@ export interface QueueStateView {
 }
 
 /** Статус строки точкой и текстом — без заливки (правило дизайн-системы). */
-export function QueueState({ tone, text }: QueueStateView): JSX.Element {
+export function QueueState({ tone, text, className }: QueueStateView & { className?: string }): JSX.Element {
   return (
-    <span className={cx('queue-state', `queue-state--${tone}`)}>
+    <span className={cx('queue-state', `queue-state--${tone}`, className)}>
       <i className="queue-state__dot" aria-hidden="true" />
-      {text}
+      <span className="queue-state__text">{text}</span>
     </span>
   );
 }
@@ -103,80 +78,107 @@ export function QueueConfidence({ value }: { value: number | null }): JSX.Elemen
   );
 }
 
-export interface QueueRowProps {
-  ticket: Ticket;
+export interface QueueColumnProps {
   title: string;
-  meta: string;
-  /** Причина, почему нужен диспетчер: «Не ясно: категория, срочность». */
-  why?: string | null;
-  /** Шкала уверенности; не передаём для строк без уверенности. */
-  confidence?: number | null;
-  /** Точка-статус вместо уверенности. */
-  state?: QueueStateView | null;
-  wait: string;
+  count: number;
+  /** Пояснение под заголовком колонки. */
+  note?: string;
+  /** Действие колонки: «Подтвердить все» у готовых. */
   action?: ReactNode;
-  /** Исполнитель справа вместо действия. */
-  engineer?: string | null;
-  selectable?: boolean;
-  selected?: boolean;
-  fresh?: boolean;
-  onSelect?: () => void;
-  variant?: 'decision' | 'ready' | 'engineer' | 'waiting';
+  /** Текст пустой колонки. */
+  empty: string;
+  /** Контейнер карточек — для `useListMotion`. */
+  listRef?: Ref<HTMLDivElement>;
+  children?: ReactNode;
 }
 
-/** Одна строка очереди: шар приоритета, заголовок, уверенность/статус, ожидание и действие. */
-export function QueueRow({
-  ticket,
+/** Колонка доски: заголовок со счётчиком и стопка карточек с отступами. */
+export function QueueColumn({
   title,
-  meta,
-  why,
-  confidence,
-  state,
-  wait,
+  count,
+  note,
   action,
-  engineer,
-  selectable = false,
-  selected = false,
-  fresh = false,
-  onSelect,
-  variant = 'ready',
-}: QueueRowProps): JSX.Element {
+  empty,
+  listRef,
+  children,
+}: QueueColumnProps): JSX.Element {
   return (
-    <div
-      className={cx(
-        'queue-row',
-        `queue-row--${variant}`,
-        selectable && 'queue-row--selectable',
-        selected && 'queue-row--selected',
-        fresh && 'queue-row--fresh',
-      )}
-      aria-current={selected ? 'true' : undefined}
-      onClick={selectable ? onSelect : undefined}
-    >
-      <span className="queue-row__priority">
-        <PriorityMark priority={ticket.priority} isEmergency={ticket.isEmergency} />
-      </span>
-      <div className="queue-row__text">
-        <b className="queue-row__title">{title}</b>
-        <small className="queue-row__meta">{meta}</small>
-        {why && <span className="queue-row__why">{why}</span>}
+    <section className="queue-column" aria-label={`${title}: ${count}`}>
+      <header className="queue-column__head">
+        <h2 className="queue-column__title">{title}</h2>
+        <span className="queue-column__count">{count}</span>
+        {note && <span className="queue-column__note">{note}</span>}
+        <span className="queue-column__spacer" />
+        {action}
+      </header>
+      <div className="queue-column__list" ref={listRef}>
+        {count === 0 ? <p className="queue-column__empty">{empty}</p> : children}
       </div>
-      <div className="queue-row__middle">
-        {state ? (
-          <QueueState {...state} />
-        ) : confidence !== undefined ? (
-          <QueueConfidence value={confidence} />
-        ) : null}
-      </div>
-      <span className="queue-row__wait">{wait}</span>
-      <div className="queue-row__action">
-        {action ?? (engineer ? <QueueEngineer name={engineer} /> : null)}
-      </div>
-    </div>
+    </section>
   );
 }
 
-/** Исполнитель строкой: аватар-рожица и имя (шапка, расширенная группа «Ждут инженера»). */
+export interface QueueCardProps {
+  ticket: Ticket;
+  title: string;
+  place: string;
+  /** «Что сделать»: точка-статус и фраза. */
+  state: QueueStateView;
+  confidence: number | null;
+  /** Сколько ждёт: «1 ч 14 мин». */
+  wait: string;
+  fresh?: boolean;
+  selected?: boolean;
+  onOpen: () => void;
+}
+
+/** Карточка заявки на доске: номер, заголовок, место, «что сделать» и уверенность. */
+export function QueueCard({
+  ticket,
+  title,
+  place,
+  state,
+  confidence,
+  wait,
+  fresh = false,
+  selected = false,
+  onOpen,
+}: QueueCardProps): JSX.Element {
+  const number = formatTicketNumber(ticket.number);
+  return (
+    <Card
+      as="article"
+      padded={false}
+      className={cx(
+        'queue-card',
+        ticket.isEmergency && 'queue-card--emergency',
+        selected && 'queue-card--selected',
+        fresh && 'queue-card--fresh',
+      )}
+    >
+      <button
+        type="button"
+        className="queue-card__hit"
+        aria-label={`Открыть карточку ${number}: ${title}`}
+        onClick={onOpen}
+      />
+      <div className="queue-card__top">
+        <span className="queue-card__num">{number}</span>
+        <span className="queue-card__place">{place}</span>
+        <span className="queue-card__wait" title={`Ждёт с ${ticket.createdAt}`}>
+          {wait}
+        </span>
+      </div>
+      <h3 className="queue-card__title">{title}</h3>
+      <div className="queue-card__foot">
+        <QueueState {...state} className="queue-card__state" />
+        <QueueConfidence value={confidence} />
+      </div>
+    </Card>
+  );
+}
+
+/** Исполнитель строкой: аватар-рожица и имя. */
 export function QueueEngineer({ name }: { name: string }): JSX.Element {
   return (
     <span className="queue-engineer">
@@ -188,33 +190,243 @@ export function QueueEngineer({ name }: { name: string }): JSX.Element {
   );
 }
 
-export interface QueueFoldProps {
+export interface QueueQuietItem {
+  id: string;
+  title: string;
+  /** Номер заявки как есть: «З-20261114-0601». */
+  number: string;
+  /** Подпись справа: исполнитель или статус. */
+  note?: string | null;
+  onOpen: () => void;
+}
+
+export interface QueueQuietGroupView {
+  key: string;
   title: string;
   count: number;
-  /** Одна строка-перечисление, когда группа свёрнута. */
   summary: string;
   open: boolean;
   onToggle: () => void;
-  children: ReactNode;
+  items: QueueQuietItem[];
+  listRef?: Ref<HTMLDivElement>;
 }
 
-/** Свёрнутая группа: заголовок и перечисление в одну строку, по клику раскрывается. */
-export function QueueFold({ title, count, summary, open, onToggle, children }: QueueFoldProps): JSX.Element {
+export interface QueueQuietProps {
+  groups: QueueQuietGroupView[];
+}
+
+/**
+ * Компактная полоса под доской: «Ждут инженера / заявителя / ИИ разбирает».
+ * Каждая строка свёрнута в одну линию и раскрывается по клику.
+ */
+export function QueueQuiet({ groups }: QueueQuietProps): JSX.Element | null {
+  const visible = groups.filter((group) => group.count > 0);
+  if (visible.length === 0) return null;
   return (
-    <Card className="queue-group" padded={false} as="section">
-      <button type="button" className="queue-fold__head" aria-expanded={open} onClick={onToggle}>
-        <span className="queue-fold__chevron" aria-hidden="true">
-          ›
-        </span>
-        <span className="queue-fold__title">{title}</span>
-        <span className="queue-fold__count">{count}</span>
-        {!open && summary !== '' && <span className="queue-fold__summary">{summary}</span>}
-      </button>
-      {open && (
-        <div className="queue-fold__body" data-reveal>
-          {children}
+    <Card className="queue-quiet" padded={false} as="section">
+      <h2 className="queue-quiet__caption">Дальше по очереди</h2>
+      {visible.map((group) => (
+        <div className="queue-quiet__group" key={group.key}>
+          <button
+            type="button"
+            className="queue-quiet__head"
+            aria-expanded={group.open}
+            onClick={group.onToggle}
+          >
+            <span className="queue-quiet__chevron" aria-hidden="true">
+              ›
+            </span>
+            <span className="queue-quiet__title">{group.title}</span>
+            <span className="queue-quiet__count">{group.count}</span>
+            {!group.open && group.summary !== '' && (
+              <span className="queue-quiet__summary">{group.summary}</span>
+            )}
+          </button>
+          {group.open && (
+            <div className="queue-quiet__list" ref={group.listRef}>
+              {group.items.map((item) => (
+                <button
+                  type="button"
+                  className="queue-quiet__item"
+                  key={item.id}
+                  onClick={item.onOpen}
+                >
+                  <span className="queue-quiet__item-num">{formatTicketNumber(item.number)}</span>
+                  <span className="queue-quiet__item-title">{item.title}</span>
+                  {item.note && <span className="queue-quiet__item-note">{item.note}</span>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      ))}
     </Card>
+  );
+}
+
+export interface QueueDetailField {
+  key: string;
+  label: string;
+  value: string | null;
+  /** Поле помечено «на проверку». */
+  review: boolean;
+}
+
+export interface QueueCandidateView {
+  name: string;
+  /** Почему ИИ предлагает этого инженера. */
+  reasons: string[];
+}
+
+export interface QueueDetailAction {
+  label: string;
+  onClick: () => void;
+  loading?: boolean;
+}
+
+export interface QueueDetailProps {
+  ticket: Ticket;
+  title: string;
+  place: string;
+  state: QueueStateView;
+  /** «Ждёт 1 ч 14 мин». */
+  wait: string;
+  /** Когда создана: «14 ноя, 09:12». */
+  created: string;
+  /** Почему нужен диспетчер: «Не ясно: категория, срочность». */
+  note?: string | null;
+  fields: QueueDetailField[];
+  /** Уже назначенный исполнитель. */
+  assignee: string | null;
+  /** Предложенный ИИ исполнитель. */
+  candidate: QueueCandidateView | null;
+  now: number;
+  primary?: QueueDetailAction;
+  secondary?: QueueDetailAction;
+  /** Подсказка про Enter доступна только для готовой к подтверждению заявки. */
+  canConfirm: boolean;
+  onClose: () => void;
+  /** Фокус переносится в панель при открытии. */
+  panelRef?: Ref<HTMLDivElement>;
+}
+
+/** Карточка-деталь: поля заявки, предложение исполнителя и кнопки действий. */
+export function QueueDetail({
+  ticket,
+  title,
+  place,
+  state,
+  wait,
+  created,
+  note,
+  fields,
+  assignee,
+  candidate,
+  now,
+  primary,
+  secondary,
+  canConfirm,
+  onClose,
+  panelRef,
+}: QueueDetailProps): JSX.Element {
+  return (
+    <aside
+      className="queue-detail"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Заявка ${formatTicketNumber(ticket.number)}`}
+      ref={panelRef}
+      tabIndex={-1}
+    >
+      <div className="queue-detail__head">
+        <span className="queue-detail__num">{formatTicketNumber(ticket.number)}</span>
+        <QueueState {...state} />
+        <button type="button" className="queue-detail__close" aria-label="Закрыть карточку" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+
+      <div className="queue-detail__intro">
+        <h2 className="queue-detail__title">{title}</h2>
+        <p className="queue-detail__meta">
+          {place} · создана {created} · ждёт {wait}
+        </p>
+        {note && <p className="queue-detail__note">{note}</p>}
+      </div>
+
+      <DeadlineChips ticket={ticket} now={now} className="queue-detail__deadlines" />
+
+      {fields.length > 0 && (
+        <section className="queue-detail__section">
+          <h3 className="queue-detail__label">Поля заявки</h3>
+          <div className="queue-detail__fields">
+            {fields.map((field) => (
+              <DetailRow
+                key={field.key}
+                label={field.label}
+                value={field.value ?? '—'}
+                tone={field.review ? 'warn' : 'default'}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="queue-detail__section">
+        <h3 className="queue-detail__label">
+          Исполнитель
+          {candidate && !assignee && <span className="queue-detail__tag">предложен ИИ</span>}
+        </h3>
+        {assignee ? (
+          <div className="queue-detail__candidate">
+            <PersonAvatar name={assignee} size={36} />
+            <span className="queue-detail__candidate-name">{assignee}</span>
+            <span className="queue-detail__candidate-pct">назначен</span>
+          </div>
+        ) : candidate ? (
+          <div className="queue-detail__candidate">
+            <PersonAvatar name={candidate.name} size={36} />
+            <span className="queue-detail__candidate-text">
+              <span className="queue-detail__candidate-name">{candidate.name}</span>
+              <span className="queue-detail__candidate-note">
+                {candidate.reasons.length > 0 ? candidate.reasons.join(' · ') : 'подобран по навыкам и загрузке'}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <p className="queue-detail__empty">Исполнитель не подобран — выберите на проверке.</p>
+        )}
+      </section>
+
+      <div className="queue-detail__actions">
+        {primary && (
+          <Button
+            variant="primary"
+            onClick={primary.onClick}
+            loading={primary.loading}
+            disabled={primary.loading}
+          >
+            {primary.label}
+          </Button>
+        )}
+        {secondary && (
+          <Button variant="secondary" onClick={secondary.onClick}>
+            {secondary.label}
+          </Button>
+        )}
+      </div>
+
+      <p className="queue-detail__hint">
+        {canConfirm ? (
+          <>
+            <Kbd>Enter</Kbd> — подтвердить
+          </>
+        ) : (
+          <>
+            <Kbd>Esc</Kbd> — закрыть
+          </>
+        )}
+      </p>
+    </aside>
   );
 }

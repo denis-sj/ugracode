@@ -2,6 +2,7 @@ import type { MetaResponse, TicketResponse, User } from '@ugra/contracts';
 import type { JSX } from 'react';
 import {
   DetailRow,
+  formatTicketNumber,
   ProgressScale,
   TICKET_STAGES,
   formatDayTime,
@@ -54,7 +55,7 @@ export function TicketSticker({
   const emergency = emergencyBadge(analysis);
   const numberText = DRAFT_STATUSES.has(ticket.status)
     ? `Черновик · ${formatDayTime(ticket.createdAt)}`
-    : `№ ${ticket.number} · ${formatDayTime(ticket.createdAt)}`;
+    : `${formatTicketNumber(ticket.number)} · ${formatDayTime(ticket.createdAt)}`;
 
   return (
     <aside
@@ -70,6 +71,9 @@ export function TicketSticker({
           </span>
         </div>
         <div className="chat-sticker__title">{title}</div>
+        <div className="chat-sticker__sent">
+          <span aria-hidden="true">✓</span> Отправлено
+        </div>
         <div className="chat-sticker__number">{numberText}</div>
         {emergency && (
           <div className="chat-sticker__emergency" title={emergency.title}>

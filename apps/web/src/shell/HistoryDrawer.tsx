@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import type { MetaResponse, Ticket, TicketListResponse } from '@ugra/contracts';
-import { formatDayMonth, formatTicketStatus, groupHistory, ticketStatusTone, useListMotion } from '@ugra/ui';
+import {
+  formatDayMonth,
+  formatTicketNumber,
+  formatTicketStatus,
+  groupHistory,
+  ticketStatusTone,
+  useListMotion,
+} from '@ugra/ui';
 import type { ApiClient } from '@ugra/ui';
 import { matchesQuery } from './lib';
 
@@ -94,7 +101,8 @@ export function HistoryDrawer({
         <span className="history-item__date">{formatDayMonth(ticket.createdAt)}</span>
       </span>
       <span className="history-item__meta">
-        № {ticket.number} · <span className={statusClass(ticket)}>{formatTicketStatus(ticket.status)}</span>
+        {formatTicketNumber(ticket.number)} ·{' '}
+        <span className={statusClass(ticket)}>{formatTicketStatus(ticket.status)}</span>
       </span>
     </button>
   );

@@ -2,12 +2,20 @@ import './journal.css';
 import type { EventsResponse, TicketListResponse, UsersResponse } from '@ugra/contracts';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, EmptyState, Icon, PersonAvatar, Segmented, fillBar, useListMotion } from '@ugra/ui';
-import type { IconName, WebPageProps } from '@ugra/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  PersonAvatar,
+  Segmented,
+  fillBar,
+  formatTicketNumber,
+  useListMotion,
+} from '@ugra/ui';
+import type { WebPageProps } from '@ugra/ui';
 import {
   DEFAULT_JOURNAL_FILTERS,
-  REST_IN_BLOCK,
-  actorSuffix,
+  EVENTS_IN_BLOCK,
   correctedCaption,
   correctedFieldLabel,
   correctedSummary,
@@ -20,7 +28,6 @@ import {
   relativeTime,
   serviceEventCount,
   shortPersonName,
-  shortTicketNumber,
   splitJournal,
   toJournalRows,
   topCorrectedFields,
@@ -44,28 +51,6 @@ const PERIODS: ReadonlyArray<{ value: JournalPeriod; label: string }> = [
   { value: 'today', label: 'Сегодня' },
   { value: 'week', label: '7 дней' },
 ];
-
-/** Иконка строки события: набор `@ugra/ui`, нового SVG на экране нет. */
-const EVENT_ICONS: Record<string, IconName> = {
-  'appeal.created': 'chat',
-  'message.sent': 'chat',
-  'analysis.started': 'reports',
-  'analysis.completed': 'reports',
-  'ticket.field.set': 'reports',
-  'ticket.field.corrected': 'tasks',
-  'ticket.confirmed': 'tasks',
-  'ticket.assigned': 'tasks',
-  'ticket.status.changed': 'tasks',
-  'emergency.detected': 'incidents',
-  'mass-incident.opened': 'incidents',
-  'ticket.deadline.extended': 'journal',
-  'ticket.returned': 'journal',
-  'setting.changed': 'journal',
-};
-
-function eventIcon(type: string): IconName {
-  return EVENT_ICONS[type] ?? 'journal';
-}
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -91,7 +76,7 @@ function Segments({ segments }: { segments: readonly DiffSegment[] }): JSX.Eleme
 
 interface DiffProps {
   diff: JournalDiff;
-  /** `fix` — правка поля (старое красным, новое зелёным), `plain` — статус без цветных плашек. */
+  /** `fix` — правка поля (старое красным, новое зелёным), `plain` — спокойная строка таблицы. */
   tone: 'fix' | 'plain';
 }
 
@@ -118,11 +103,16 @@ interface RowProps {
   onNavigate: () => void;
 }
 
-/** Одна правка в верхнем блоке: автор, поле, «было → стало», время и номер заявки. */
+/** Одна правка в блоке «ИИ предложил → человек исправил»: автор, поле, «было → стало», время. */
 function FixRow({ row, now, onNavigate }: RowProps): JSX.Element {
+  const ticket =
+    row.ticketId === null || row.ticketNumber === null
+      ? null
+      : { id: row.ticketId, label: formatTicketNumber(row.ticketNumber) };
+
   return (
     <article className="journal-fix">
-      <PersonAvatar name={row.actor} size={44} />
+      <PersonAvatar name={row.actor} size={30} />
       <div className="journal-fix__body">
         <h3 className="journal-fix__title">
           {shortPersonName(row.actor)}
@@ -134,14 +124,14 @@ function FixRow({ row, now, onNavigate }: RowProps): JSX.Element {
         <time className="journal-fix__time" dateTime={row.at ?? undefined} title={fullTime(row.at)}>
           {relativeTime(row.at, now)}
         </time>
-        {row.ticketId !== null && row.ticketNumber !== null && (
+        {ticket !== null && (
           <a
             className="journal-fix__num"
-            href={`#/review?id=${encodeURIComponent(row.ticketId)}`}
-            title={`Заявка № ${row.ticketNumber}`}
+            href={`#/review?id=${encodeURIComponent(ticket.id)}`}
+            title={`Открыть заявку ${ticket.label}`}
             onClick={onNavigate}
           >
-            № {shortTicketNumber(row.ticketNumber)}
+            {ticket.label}
           </a>
         )}
       </div>
@@ -149,55 +139,50 @@ function FixRow({ row, now, onNavigate }: RowProps): JSX.Element {
   );
 }
 
-/** Номер заявки и подробность события — вторая строка списка. */
-function EventMeta({ row, onNavigate }: { row: JournalRow; onNavigate: () => void }): JSX.Element | null {
-  const number = row.ticketNumber;
-  const hasNumber = row.ticketId !== null && number !== null;
-  if (!hasNumber && row.description === null) return null;
+/** Строка журнала: когда, кто, что изменилось, заявка — по колонкам с заголовками. */
+function JournalTableRow({ row, now, onNavigate }: RowProps): JSX.Element {
+  const ticket =
+    row.ticketId === null || row.ticketNumber === null
+      ? null
+      : { id: row.ticketId, label: formatTicketNumber(row.ticketNumber) };
+
   return (
-    <small className="journal-event__meta">
-      {hasNumber && (
-        <>
+    <tr className="journal-row">
+      <td className="journal-cell journal-cell--time">
+        <time dateTime={row.at ?? undefined} title={fullTime(row.at)}>
+          {relativeTime(row.at, now)}
+        </time>
+      </td>
+      <td className="journal-cell journal-cell--who">
+        <span className="journal-person">
+          <PersonAvatar name={row.actor} size={26} />
+          <span className="journal-who">{shortPersonName(row.actor)}</span>
+        </span>
+      </td>
+      <td className="journal-cell journal-cell--what">
+        <b className="journal-what">{row.title}</b>
+        {row.description !== null && <span className="journal-what__note">{row.description}</span>}
+        {row.diff !== null && <Diff diff={row.diff} tone="plain" />}
+      </td>
+      <td className="journal-cell journal-cell--ticket">
+        {ticket === null ? (
+          <span className="journal-ticket journal-ticket--none">—</span>
+        ) : (
           <a
-            className="journal-event__num"
-            href={`#/review?id=${encodeURIComponent(row.ticketId ?? '')}`}
-            title={`Заявка № ${number}`}
+            className="journal-ticket"
+            href={`#/review?id=${encodeURIComponent(ticket.id)}`}
+            title={`Открыть заявку ${ticket.label}`}
             onClick={onNavigate}
           >
-            № {shortTicketNumber(number)}
+            {ticket.label}
           </a>
-          {row.description !== null && <span aria-hidden="true"> · </span>}
-        </>
-      )}
-      {row.description}
-    </small>
+        )}
+      </td>
+    </tr>
   );
 }
 
-/** Строка «Остальные события»: иконка типа, человеческая подпись, автор, подробность и время. */
-function EventRow({ row, now, onNavigate }: RowProps): JSX.Element {
-  const who = actorSuffix(row);
-  return (
-    <article className="journal-event">
-      <span className={`journal-event__icon journal-event__icon--${row.tone}`} aria-hidden="true">
-        <Icon name={eventIcon(row.type)} size={18} />
-      </span>
-      <div className="journal-event__body">
-        <b className="journal-event__title">
-          {row.title}
-          {who !== null && <span className="journal-event__actor"> · {who}</span>}
-        </b>
-        {row.diff !== null && <Diff diff={row.diff} tone="plain" />}
-        <EventMeta row={row} onNavigate={onNavigate} />
-      </div>
-      <time className="journal-event__time" dateTime={row.at ?? undefined} title={fullTime(row.at)}>
-        {relativeTime(row.at, now)}
-      </time>
-    </article>
-  );
-}
-
-/** Полоска «что чаще исправляют»: ширина — доля от самого частого поля, наполнение через `fillBar`. */
+/** Полоска «что чаще исправляют»: ширина — доля поля от всех правок, наполнение через `fillBar`. */
 function FieldBar({ field, index }: { field: CorrectedField; index: number }): JSX.Element {
   const fillRef = useRef<HTMLSpanElement | null>(null);
 
@@ -218,9 +203,13 @@ function FieldBar({ field, index }: { field: CorrectedField; index: number }): J
         role="img"
         aria-label={`${field.label}: ${field.count}, ${field.percent}% правок`}
       >
-        <span className="journal-bar__fill" ref={fillRef} style={{ width: `${field.share}%` }} />
+        <span className="journal-bar__fill" ref={fillRef} style={{ width: `${field.percent}%` }} />
       </span>
-      {hint !== null && <small className="journal-bar__hint">{hint}</small>}
+      {hint !== null && (
+        <small className="journal-bar__hint" title={hint}>
+          {hint}
+        </small>
+      )}
     </div>
   );
 }
@@ -232,7 +221,7 @@ interface TopFieldsProps {
   loading: boolean;
 }
 
-/** Правая карточка «Что чаще исправляют»: топ полей и одна строка вывода. */
+/** Правая карточка «Что чаще исправляют»: компактный топ и одна строка вывода. */
 function TopFields({ fields, summary, period, loading }: TopFieldsProps): JSX.Element {
   return (
     <Card as="aside" className="journal-aside">
@@ -241,8 +230,7 @@ function TopFields({ fields, summary, period, loading }: TopFieldsProps): JSX.El
         <p className="journal-aside__lead">Считаем правки…</p>
       ) : fields.length === 0 ? (
         <p className="journal-aside__empty">
-          {periodLabel(period)} правок не было. Как только диспетчер поправит поле, которое предложил ИИ, здесь
-          появится топ — что модель путает чаще всего.
+          {periodLabel(period)} правок не было — здесь появится топ полей, которые ИИ путает чаще всего.
         </p>
       ) : (
         <>
@@ -291,7 +279,7 @@ function emptyCopy(hasAny: boolean, inPeriod: number, service: number, period: J
   };
 }
 
-/** Журнал действий (экран 07): правки ИИ, остальные события, топ исправляемых полей. */
+/** Журнал действий (экран 07): правки ИИ, таблица событий, топ исправляемых полей. */
 export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Element {
   const [events, setEvents] = useState<readonly unknown[]>([]);
   const [users, setUsers] = useState<UsersResponse['users']>([]);
@@ -303,7 +291,7 @@ export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
   const [showAllEvents, setShowAllEvents] = useState(false);
 
   const fixesRef = useRef<HTMLDivElement | null>(null);
-  const restRef = useRef<HTMLDivElement | null>(null);
+  const tableRef = useRef<HTMLTableSectionElement | null>(null);
   const now = useNow();
 
   useEffect(() => {
@@ -355,7 +343,7 @@ export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
   );
 
   useListMotion(fixesRef, feed.fixes.length > 0);
-  useListMotion(restRef, feed.rest.length > 0);
+  useListMotion(tableRef, feed.rest.length > 0);
 
   const groupOptions = useMemo(
     () =>
@@ -390,10 +378,9 @@ export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
 
   const empty = emptyCopy(rows.length > 0, baseRows.length, hiddenService, filters.period);
   const showFixes = filters.group === 'all' || filters.group === 'edits';
-  /** Один «лишний» ряд лучше показать сразу, чем кнопкой «Показать ещё 1». */
-  const restRows =
-    showAllEvents || feed.rest.length <= REST_IN_BLOCK + 1 ? feed.rest : feed.rest.slice(0, REST_IN_BLOCK);
-  const restHidden = feed.rest.length - restRows.length;
+  /** Пять последних событий в таблице; остальные — по кнопке «Показать ещё». */
+  const tableRows = showAllEvents ? feed.rest : feed.rest.slice(0, EVENTS_IN_BLOCK);
+  const hiddenRows = feed.rest.length - tableRows.length;
 
   return (
     <div className="journal-page">
@@ -473,8 +460,8 @@ export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
                         </div>
                         {feed.hiddenFixes > 0 && (
                           <p className="journal-sec__more">
-                            Ещё {feed.hiddenFixes}{' '}
-                            {plural(feed.hiddenFixes, 'правка', 'правки', 'правок')} — ниже, в остальных событиях
+                            Ещё {feed.hiddenFixes} {plural(feed.hiddenFixes, 'правка', 'правки', 'правок')} —
+                            в журнале ниже
                           </p>
                         )}
                       </>
@@ -482,41 +469,68 @@ export function JournalPage({ meta, api, trackAction }: WebPageProps): JSX.Eleme
                   </Card>
                 )}
 
-                <Card padded={false} className="journal-card">
-                  <h2 className="journal-sec">Остальные события</h2>
-                  <div className="journal-event-list" ref={restRef}>
-                    {restRows.map((row) => (
-                      <EventRow
-                        key={row.id}
-                        row={row}
-                        now={now}
-                        onNavigate={() => trackAction?.('navigate')}
-                      />
-                    ))}
-                  </div>
-                  {restHidden > 0 && (
-                    <div className="journal-event-more">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setShowAllEvents(true);
-                          trackAction?.('click');
-                        }}
-                      >
-                        Показать ещё {restHidden}
-                      </Button>
+                {feed.rest.length > 0 && (
+                  <Card padded={false} className="journal-card journal-feed">
+                    <div className="journal-feed__head">
+                      <h2 className="journal-sec">Журнал действий</h2>
+                      <span className="journal-feed__total">Всего событий: {visible.length}</span>
                     </div>
-                  )}
-                  {hiddenService > 0 && (
-                    <p
-                      className="journal-rest__note"
-                      title="Шаги разбора, шаги агента и заполнение полей ИИ"
-                    >
-                      Скрыто служебных событий: {hiddenService}
-                    </p>
-                  )}
-                </Card>
+                    <div className="journal-table-scroll">
+                      <table className="journal-table" aria-label="События журнала">
+                        <colgroup>
+                          <col className="journal-col-time" />
+                          <col className="journal-col-who" />
+                          <col />
+                          <col className="journal-col-ticket" />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th scope="col">Когда</th>
+                            <th scope="col">Кто</th>
+                            <th scope="col">Что изменилось</th>
+                            <th scope="col">Заявка</th>
+                          </tr>
+                        </thead>
+                        <tbody ref={tableRef}>
+                          {tableRows.map((row) => (
+                            <JournalTableRow
+                              key={row.id}
+                              row={row}
+                              now={now}
+                              onNavigate={() => trackAction?.('navigate')}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {(hiddenRows > 0 || hiddenService > 0) && (
+                      <div className="journal-feed__foot">
+                        {hiddenService > 0 ? (
+                          <p
+                            className="journal-feed__note"
+                            title="Шаги разбора, шаги агента и заполнение полей ИИ"
+                          >
+                            Скрыто служебных событий: {hiddenService}
+                          </p>
+                        ) : (
+                          <span />
+                        )}
+                        {hiddenRows > 0 && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setShowAllEvents(true);
+                              trackAction?.('click');
+                            }}
+                          >
+                            Показать ещё {hiddenRows}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                )}
               </>
             )}
           </div>

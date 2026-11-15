@@ -115,14 +115,6 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
             route.navigate(firstTab(user.role).path);
           }}
         >
-          <svg className="shell-brand__mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="9" fill="currentColor" />
-            <g fill="var(--color-graphite-contrast)">
-              <rect x="8" y="8" width="6" height="16" rx="2" />
-              <rect x="18" y="8" width="6" height="6" rx="2" opacity="0.5" />
-              <rect x="18" y="18" width="6" height="6" rx="2" />
-            </g>
-          </svg>
           Диспетчерская
         </button>
 
@@ -177,7 +169,7 @@ export function AppShell({ user, meta, api, route, onLogout }: AppShellProps): J
               route.navigate('/profile');
             }}
           >
-            <PersonAvatar name={user.fullName} size={36} />
+            <PersonAvatar name={user.fullName} size={40} />
             <span className="shell-account__text">
               <strong>{shortName(user.fullName)}</strong>
               <span>{roleLabel(user.role)}</span>

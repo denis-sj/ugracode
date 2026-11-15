@@ -124,6 +124,8 @@
 .profile-device__name {
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
+  /* Длинная модель не должна вылезать из карточки. */
+  overflow-wrap: anywhere;
 }
 
 .profile-device__note {

@@ -153,3 +153,31 @@ export function groupHistory<T extends HistoryTicket>(tickets: readonly T[]): Hi
   closed.sort(byRecent);
   return { active, closed };
 }
+
+/**
+ * Короткий номер заявки: «З-20261114-0601» → «0601», «З-20261112-t-1» → «1».
+ * Берём последнюю группу цифр: она и есть сквозной номер, дата и префикс не нужны.
+ */
+export function ticketNumberDigits(raw: string | null | undefined): string {
+  const text = (raw ?? '').trim();
+  if (text === '') return '—';
+  const groups = text.match(/\d+/g);
+  if (!groups || groups.length === 0) return text;
+  const tail = groups[groups.length - 1] ?? '';
+  // Ведущие нули не нужны: 0601 → 601, 0001 → 1.
+  return String(Number(tail));
+}
+
+/** Как номер показывается на экране: «№ 601». Единственная функция для всех экранов. */
+export function formatTicketNumber(raw: string | null | undefined): string {
+  const digits = ticketNumberDigits(raw);
+  return digits === '—' ? '—' : `№ ${digits}`;
+}
+
+/** Поиск по номеру: принимает «602», «№ 602» и полный вид «З-20261114-0602». */
+export function matchesTicketNumber(query: string, raw: string | null | undefined): boolean {
+  const digits = (query.match(/\d+/g) ?? []).join('');
+  if (digits === '') return false;
+  const tail = ticketNumberDigits(raw);
+  return tail !== '—' && tail.includes(digits);
+}
