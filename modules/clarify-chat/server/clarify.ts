@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import type { AppealMessage, MissingField, Ticket, TicketField } from '@ugra/contracts';
+import type { AppealMessage, Ticket, TicketField } from '@ugra/contracts';
 import type { DraftPatch, KernelStore, StepContext } from '@ugra/core';
 import { findField, missingFields, settingNumber } from '@ugra/core';
-import { buildQuestion, questionCard } from './question';
+import { aiQuestionsOf, buildQuestion, orderByPlan, planFromHistory, questionCard } from './question';
 
 export const CLARIFY_STEP_ID = 'clarify.missing';
 /** Ключ данных модуля в `draft.ext`. */
@@ -90,13 +90,19 @@ export async function clarifyMissing(ctx: StepContext): Promise<DraftPatch | voi
     history = [];
   }
 
+  // Порядок и формулировки — модели: из текущего разбора или из плана в первой карточке.
+  const fresh = aiQuestionsOf(ctx.draft.ext);
+  const plan = fresh.length > 0 ? fresh : planFromHistory(history);
+  const ordered = orderByPlan(candidates, plan).map((field) =>
+    buildQuestion(field, findField(ctx.data, field.key), ctx.data, plan),
+  );
+
   const maxRounds = settingNumber(ctx.data, 'maxClarifyRounds', DEFAULT_MAX_ROUNDS);
-  const next = candidates.find(
+  const question = ordered.find(
     (field) => askedRounds(history, field.key) < maxRounds && !awaitingAnswer(history, field.key),
   );
-  if (!next) return { missing };
+  if (!question) return { missing: ordered };
 
-  const question: MissingField = buildQuestion(next, findField(ctx.data, next.key), ctx.data, ctx.draft.ext);
   const at = ctx.ports.clock.now().toISOString();
   const message: AppealMessage = {
     id: randomUUID(),
@@ -105,7 +111,7 @@ export async function clarifyMissing(ctx: StepContext): Promise<DraftPatch | voi
     kind: 'question_card',
     body: question.question,
     fieldKey: question.key,
-    card: questionCard(question),
+    card: questionCard(question, plan),
     createdAt: at,
   };
   await db.saveAppealMessage(message);
@@ -132,7 +138,8 @@ export async function clarifyMissing(ctx: StepContext): Promise<DraftPatch | voi
   });
 
   return {
-    missing: [question],
+    // Заданный вопрос первым, дальше — остальные недостающие в порядке модели: их покажет чат.
+    missing: [question, ...ordered.filter((field) => field.key !== question.key)],
     ext: {
       ...ctx.draft.ext,
       [CLARIFY_EXT_KEY]: {

@@ -23,7 +23,7 @@ export default defineConfig({
     port: 5173,
     // Телефон жюри открывает страницу по адресу туннеля. cloudflared — основной путь;
     // pinggy — запасной, когда сеть режет UDP-DNS и cloudflared не регистрируется.
-    allowedHosts: ['.trycloudflare.com', '.pinggy-free.link', '.pinggy.net', '.pinggy.online'],
+    allowedHosts: ['.trycloudflare.com', '.loca.lt', '.pinggy-free.link', '.pinggy.net', '.pinggy.online'],
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3001',

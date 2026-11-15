@@ -9,7 +9,7 @@ export const PROFILE_CONFIDENCE = 0.8;
 /** Тип техники в CMDB и слова, которыми заявитель называет её в тексте. */
 const EQUIPMENT_WORDS: ReadonlyArray<{ type: string; words: readonly string[] }> = [
   { type: 'printer', words: ['принтер'] },
-  { type: 'pc', words: ['пк', 'компьютер', 'ноутбук'] },
+  { type: 'pc', words: ['пк', 'комп', 'ноутбук'] },
   { type: 'mfu', words: ['мфу'] },
   { type: 'network', words: ['свитч', 'коммутатор'] },
   { type: 'server', words: ['сервер'] },

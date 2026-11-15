@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { StubCmdb, parseEquipment } from '@ugra/adapters';
 
@@ -48,5 +50,19 @@ describe('StubCmdb', () => {
     expect(items[0]).toMatchObject({ id: 'x', criticality: 'medium', serial: null });
     await expect(cmdb.findEquipment({})).resolves.toHaveLength(1);
     expect(await new StubCmdb(items).findEquipment({ cabinet: '101' })).toHaveLength(1);
+  });
+
+  it('принимает файл data/cmdb.json как объект с locations и equipment', async () => {
+    const raw = JSON.parse(readFileSync(join(process.cwd(), 'data/cmdb.json'), 'utf8')) as { equipment: unknown[] };
+    const items = parseEquipment(raw);
+
+    expect(items).toHaveLength(raw.equipment.length);
+    const pcs = await new StubCmdb(items).findEquipment({ building: 'Б', cabinet: '311', type: 'pc' });
+    expect(pcs.map((item) => item.model)).toEqual(['Dell OptiPlex 7010']);
+  });
+
+  it('битый файл — ошибка разбора, а не тихая подмена', () => {
+    expect(() => parseEquipment({ equipment: [{ id: 'x' }] })).toThrow();
+    expect(() => parseEquipment({ locations: [] })).toThrow();
   });
 });

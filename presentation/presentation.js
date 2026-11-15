@@ -201,7 +201,7 @@ const SHOW = {
   /* Появление блока/шага: рукописные линии дорисовываются, полоска таймлайна растёт,
      цифры досчитываются. animate=false — сразу финальное состояние. */
   function enter(el, delay, animate) {
-    const paths = Array.from(el.querySelectorAll('.sketch:not(.wipe) path'));
+    const paths = Array.from(el.querySelectorAll('.sketch:not(.wipe):not(.fx) path'));
     const wipes = Array.from(el.querySelectorAll('.sketch.wipe'));
     const fills = Array.from(el.querySelectorAll('.tl-fill'));
     const pts = Array.from(el.querySelectorAll('.pt'));
@@ -268,11 +268,12 @@ const SHOW = {
     gsap.fromTo(ms, { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'power3.out' });
   }
 
-  /* Особые эффекты, которые зависят от шага: ничего лишнего, всё через enter(). */
 
   /* Анимация появления шага k (вперёд). */
   function playStep(slide, k) {
     const els = stepEls(slide, k);
+    const f = fxOf(slide);
+    if (f) f.step(slide, k, !reduced);
     if (reduced) {
       gsap.set(els, { autoAlpha: 1, y: 0 });
       els.forEach((el) => enter(el, 0, false));
@@ -286,12 +287,342 @@ const SHOW = {
   /* Откат шага k (назад) — коротко, без рывка. */
   function rewindStep(slide, k) {
     const els = stepEls(slide, k);
+    const f = fxOf(slide);
+    if (f) f.step(slide, k - 1, false);
     if (reduced) {
       gsap.set(els, { autoAlpha: 0 });
       return;
     }
     gsap.killTweensOf(els);
     gsap.to(els, { autoAlpha: 0, y: 20, duration: 0.25, ease: 'power2.in' });
+  }
+
+  /* ---------- 4. Стек: одно обращение проходит весь путь, по клику облако → локальная модель ---------- */
+
+  const stackRuns = new WeakMap();
+
+  function stackSwap(slide, on, animate) {
+    const cloud = slide.querySelector('.ai-cloud');
+    const local = slide.querySelector('.ai-local');
+    if (!cloud || !local) return;
+    gsap.killTweensOf([cloud, local]);
+    if (!animate || reduced) {
+      gsap.set(cloud, { autoAlpha: on ? 0 : 1, scaleY: 1, transformOrigin: '50% 50%' });
+      gsap.set(local, { autoAlpha: on ? 1 : 0, scaleY: 1, transformOrigin: '50% 50%' });
+      return;
+    }
+    if (!on) return;
+    const portGlow = slide.querySelector('[data-node="ports"] .glow');
+    const aiGlow = slide.querySelector('[data-node="ai"] .glow');
+    gsap.timeline()
+      .fromTo(portGlow, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: 'power1.out' }, 0)
+      .to(cloud, { scaleY: 0, autoAlpha: 0, duration: 0.3, ease: 'power2.in', transformOrigin: '50% 50%' }, 0.1)
+      .fromTo(local, { scaleY: 0, autoAlpha: 0 }, {
+        scaleY: 1, autoAlpha: 1, duration: 0.55, ease: 'back.out(2.2)', transformOrigin: '50% 50%',
+      }, 0.4)
+      .fromTo(aiGlow, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.6)
+      .to([portGlow, aiGlow], { opacity: 0, duration: 0.7, ease: 'power1.in' }, 1.2);
+  }
+
+  function stackReset(slide, step) {
+    const run = stackRuns.get(slide);
+    if (run) run.kill();
+    stackRuns.delete(slide);
+    slide.querySelectorAll('.hot').forEach((path) => {
+      const len = path.getTotalLength();
+      gsap.set(path, { strokeDasharray: len, strokeDashoffset: len, opacity: 0 });
+    });
+    gsap.set(slide.querySelectorAll('.glow, .pill-hot, .packet'), { opacity: 0 });
+    stackSwap(slide, step >= 1, false);
+  }
+
+  function stackPlay(slide) {
+    const glow = (key) => slide.querySelector(`[data-node="${key}"] .glow`);
+    const route = (name) => Array.from(slide.querySelectorAll(`.hot[data-route="${name}"]`));
+    const packets = Array.from(slide.querySelectorAll('.packet'));
+    const main = packets[0];
+    const tl = gsap.timeline({ delay: 1.4 });
+
+    // точка-пакет едет по проводу, провод за ней загорается
+    function travel(pkt, path, dur, at) {
+      const len = path.getTotalLength();
+      const p0 = path.getPointAtLength(0);
+      const o = { t: 0 };
+      tl.set(pkt, { opacity: 1, x: p0.x, y: p0.y }, at);
+      tl.set(path, { opacity: 1 }, at);
+      tl.to(path, { strokeDashoffset: 0, duration: dur, ease: 'power1.inOut' }, at);
+      tl.to(o, {
+        t: 1,
+        duration: dur,
+        ease: 'power1.inOut',
+        onUpdate: () => {
+          const pt = path.getPointAtLength(o.t * len);
+          gsap.set(pkt, { x: pt.x, y: pt.y });
+        },
+      }, at);
+      tl.set(pkt, { opacity: 0 }, at + dur);
+    }
+    // рамка узла вспыхивает, когда до него дошёл пакет
+    function pulse(el, at, hold) {
+      tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: 'power1.out' }, at);
+      tl.to(el, { opacity: 0, duration: 0.6, ease: 'power1.in' }, at + (hold || 0.35));
+    }
+
+    pulse(glow('phone'), 0);
+    travel(main, route('in')[0], 0.55, 0.1);
+    pulse(glow('api'), 0.65);
+    travel(main, route('api')[0], 0.35, 0.85);
+    // ядро: модули загораются по очереди — разбор, приоритет, исполнитель, авария, база знаний, отчёты
+    pulse(glow('core'), 1.2, 1.3);
+    tl.fromTo(slide.querySelectorAll('.pill-hot'), { opacity: 0 }, {
+      opacity: 1, duration: 0.16, ease: 'power1.out', stagger: 0.14,
+    }, 1.3);
+    tl.set(route('db')[0], { opacity: 1 }, 2.1);
+    tl.to(route('db')[0], { strokeDashoffset: 0, duration: 0.3, ease: 'power1.inOut' }, 2.1);
+    pulse(glow('db'), 2.4);
+    travel(main, route('out')[0], 0.35, 2.25);
+    pulse(glow('ports'), 2.6);
+    route('ext').forEach((path, n) => travel(packets[n + 1], path, 0.6, 2.8));
+    ['ai', 'voice', 'cmdb', 'notify'].forEach((key) => pulse(glow(key), 3.4, 0.5));
+    // после прохода остаётся тихий след: путь виден, модули гаснут
+    tl.to(slide.querySelectorAll('.hot'), { opacity: 0.35, duration: 0.8, ease: 'power1.inOut' }, 4.1);
+    tl.to(slide.querySelectorAll('.pill-hot'), { opacity: 0, duration: 0.8, ease: 'power1.inOut' }, 4.1);
+    stackRuns.set(slide, tl);
+  }
+
+  const FX = {
+    stack: {
+      enter(slide, step, animate) {
+        stackReset(slide, step);
+        if (animate && step === 0) stackPlay(slide);
+      },
+      step(slide, k, animate) { stackSwap(slide, k >= 1, animate); },
+      leave(slide) {
+        const run = stackRuns.get(slide);
+        if (run) run.kill();
+      },
+    },
+  };
+  const fxOf = (slide) => FX[slide.dataset.fx];
+
+  /* ---------- режиссура слайдов: свой сценарий у каждого слайда (data-fx) ----------
+     CSS хранит финальное состояние. enter(slide, step, animate): animate=false → финал сразу
+     (печать, «уменьшить движение», Home/End); иначе таймлайн из начального состояния. */
+
+  const fxRuns = new WeakMap();
+  const $1 = (slide, sel) => slide.querySelector(sel);
+  const $all = (slide, sel) => Array.from(slide.querySelectorAll(sel));
+
+  function fxStop(slide) {
+    const run = fxRuns.get(slide);
+    if (run) run.kill();
+    fxRuns.delete(slide);
+  }
+
+  // финальное состояние: снять всё, что выставил GSAP, — дальше решает CSS
+  function fxFinal(slide) {
+    fxStop(slide);
+    const els = $all(slide, '.fxa');
+    if (els.length) gsap.set(els, { clearProps: 'transform,opacity,visibility,strokeDashoffset' });
+    $all(slide, '[data-count]').forEach((el) => { el.textContent = countText(el, Number(el.dataset.count)); });
+  }
+
+  function countText(el, v) {
+    const dec = Number(el.dataset.dec || 0);
+    const num = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
+    return (el.dataset.pre || '').replace(' ', NBSP) + num + (el.dataset.post || '').replace(' ', NBSP);
+  }
+
+  // цифра досчитывается от нуля внутри таймлайна
+  function countIn(tl, el, at, dur) {
+    const to = Number(el.dataset.count);
+    const o = { v: 0 };
+    tl.call(() => { el.textContent = countText(el, 0); }, null, Math.max(0, at - 0.01));
+    tl.to(o, {
+      v: to,
+      duration: dur,
+      ease: 'power3.out',
+      onUpdate: () => { el.textContent = countText(el, o.v); },
+      onComplete: () => { el.textContent = countText(el, to); },
+    }, at);
+  }
+
+  // рукописная линия дорисовывается
+  function drawIn(tl, paths, at, dur) {
+    tl.fromTo(paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dur, ease: 'power1.inOut' }, at);
+  }
+
+  // три волны расходятся от точки (один раз)
+  function rippleIn(tl, host, at) {
+    const rings = host ? host.querySelectorAll('.rip i') : [];
+    if (!rings.length) return;
+    tl.fromTo(rings, { scale: 1, opacity: 0.6 }, {
+      scale: 3.4, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.28,
+    }, at);
+  }
+
+  // буквы взлетают из маски
+  function lettersIn(tl, chars, at) {
+    tl.fromTo(chars, { yPercent: 115, rotate: 7, opacity: 0 }, {
+      yPercent: 0, rotate: 0, opacity: 1, duration: 0.7, ease: 'power3.out', stagger: 0.03,
+    }, at);
+  }
+
+  // буквы печатаются
+  function typeIn(tl, chars, at, step) {
+    tl.fromTo(chars, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.08, ease: 'none', stagger: step }, at);
+  }
+
+  // пружинка: точка, клавиша, иконка
+  function popIn(tl, els, at, stagger) {
+    tl.fromTo(els, { scale: 0, opacity: 0 }, {
+      scale: 1, opacity: 1, duration: 0.55, ease: 'back.out(2.4)', stagger: stagger || 0, transformOrigin: '50% 50%',
+    }, at);
+  }
+
+  function shake(tl, el, at, amp) {
+    tl.fromTo(el, { x: 0 }, { x: amp, duration: 0.05, ease: 'none', yoyo: true, repeat: 5 }, at);
+  }
+
+  const DIRECTOR = {
+    // 1. Титул: буквы взлетают, точка пружинит со всплеском, прорисовывается «∞»
+    title(slide, tl) {
+      lettersIn(tl, $all(slide, '.hero .ch'), 0.05);
+      drawIn(tl, $all(slide, '.inf path'), 0.2, 2.2);
+      popIn(tl, $1(slide, '.hero .dot-pop'), 0.62);
+      tl.fromTo($1(slide, '.splash'), { scale: 0.3, opacity: 0.7 }, { scale: 4, opacity: 0, duration: 0.8, ease: 'power2.out' }, 0.7);
+      tl.fromTo($1(slide, '.arrow-fly'), { x: -46, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, 1.0);
+    },
+
+    // 2. Боль: часы щёлкают 03:11 → 03:12, цитата печатается, облачко вздрагивает, авария пульсирует
+    pain(slide, tl) {
+      tl.fromTo($1(slide, '.roll-in'), { y: 0, yPercent: 0 }, { y: 0, yPercent: -50, duration: 0.45, ease: 'back.out(2)' }, 0.8);
+      typeIn(tl, $all(slide, '.bubble-text .ch'), 0.9, 0.022);
+      shake(tl, $1(slide, '.bubble'), 1.75, 7);
+      drawIn(tl, $all(slide, '.tasks-alarm .sketch path'), 1.55, 0.55);
+      rippleIn(tl, $1(slide, '.tasks .adot'), 1.7);
+    },
+
+    // 3. Решение: обращение бежит по цепочке, ИИ раскладывает поля, человек жмёт Enter
+    solution(slide, tl) {
+      const flow = $1(slide, '.flow');
+      const nodes = $all(slide, '.flow-node');
+      const token = $1(slide, '.token');
+      const midY = (n) => n.offsetTop + n.offsetHeight / 2;
+      const hop = (from, to, at) => {
+        tl.set(token, { opacity: 1, x: from.offsetLeft + from.offsetWidth, y: midY(from) }, at);
+        tl.to(token, { x: to.offsetLeft, duration: 0.42, ease: 'power2.inOut' }, at);
+        tl.set(token, { opacity: 0 }, at + 0.42);
+      };
+      if (!flow || nodes.length < 3) return;
+      popIn(tl, $1(slide, '.mini-msg'), 0.55);
+      hop(nodes[0], nodes[1], 0.95);
+      tl.fromTo(nodes[1].querySelector('.nglow'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.35);
+      popIn(tl, $all(slide, '.mini-f i'), 1.4, 0.13);
+      tl.to(nodes[1].querySelector('.nglow'), { opacity: 0, duration: 0.5 }, 2.0);
+      hop(nodes[1], nodes[2], 1.9);
+      tl.fromTo(nodes[2].querySelector('.nglow'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 2.3);
+      popIn(tl, $1(slide, '.kbd-big'), 2.3);
+      tl.to($1(slide, '.kbd-big'), { y: 4, scale: 0.92, duration: 0.09, yoyo: true, repeat: 1, ease: 'power1.inOut' }, 2.75);
+      drawIn(tl, $all(slide, '.chk path'), 2.85, 0.35);
+      tl.to(nodes[2].querySelector('.nglow'), { opacity: 0, duration: 0.6 }, 3.3);
+      rippleIn(tl, $1(slide, '.alarm-line .alarm-dot'), 1.0);
+    },
+
+    // 5. Авария: таймлайн добегает, экран вспыхивает, цифра вздрагивает, дежурные появляются по одному
+    alarm(slide, tl) {
+      popIn(tl, $all(slide, '.duty i'), 0.7, 0.2);
+      rippleIn(tl, $1(slide, '.tl-dot'), 1.25);
+      tl.fromTo($1(slide, '.tl-tag'), { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'back.out(2)' }, 1.3);
+      tl.fromTo($1(slide, '.flash'), { opacity: 0 }, { opacity: 1, duration: 0.14, ease: 'power1.out' }, 1.2);
+      tl.to($1(slide, '.flash'), { opacity: 0, duration: 0.9, ease: 'power1.in' }, 1.36);
+      shake(tl, $1(slide, '.alarm-big'), 1.25, 8);
+    },
+
+    // 6. Разбор: полторы минуты набегают и зачёркиваются, «≈ 0» падает с отскоком и обводится
+    act(slide, tl) {
+      const old = $1(slide, '.act-old .big');
+      tl.set(old, { opacity: 1 }, 0);
+      countIn(tl, old, 0.3, 0.9);
+      drawIn(tl, $all(slide, '.strike path'), 1.3, 0.45);
+      tl.to(old, { opacity: 0.4, duration: 0.4 }, 1.6);
+      tl.fromTo($1(slide, '.act-arrow'), { x: -70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, 1.6);
+      tl.fromTo($1(slide, '.act-new .big'), { y: -180, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: 'bounce.out' }, 1.85);
+      drawIn(tl, $all(slide, '.oval-act path'), 2.55, 0.7);
+    },
+
+    // 7. Экономия: часы набегают и обводятся, колонка 50 подсвечивается, таблица досчитывается
+    save(slide, tl) {
+      countIn(tl, $1(slide, '.save-main .big'), 0.3, 1.0);
+      drawIn(tl, $all(slide, '.oval-save path'), 1.15, 0.7);
+      tl.fromTo($1(slide, '.col-hl'), { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: 1, duration: 0.5, ease: 'power3.out' }, 0.9);
+      $all(slide, '.save-table [data-count]').forEach((el, n) => countIn(tl, el, 0.75 + (n % 3) * 0.08, 0.8));
+    },
+
+    // 8. Команда: шторка открывает фото, дорожная карта прорисовывается по точкам
+    team(slide, tl) {
+      tl.fromTo($1(slide, '.curtain'), { scaleX: 1 }, { scaleX: 0, duration: 0.8, ease: 'power3.inOut' }, 0.25);
+      tl.fromTo($1(slide, '.photo-img'), { scale: 1.18 }, { scale: 1, duration: 1.3, ease: 'power2.out' }, 0.25);
+      tl.fromTo($1(slide, '.rail-fill'), { scaleY: 0 }, { scaleY: 1, duration: 1.0, ease: 'power1.inOut' }, 0.5);
+      popIn(tl, $all(slide, '.sdot'), 0.5, 0.42);
+      tl.fromTo($1(slide, '.inf-note'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.9);
+    },
+
+    // 9. Смотрим вживую: свечение, буквы каскадом, адрес печатается с курсором
+    bridge(slide, tl) {
+      tl.fromTo($1(slide, '.glow-bg'), { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.4, ease: 'power2.out' }, 0);
+      lettersIn(tl, $all(slide, '.bridge-h .ch'), 0.1);
+      popIn(tl, $1(slide, '.bridge-h .dot-pop'), 0.75);
+      typeIn(tl, $all(slide, '[data-demo-host] .ch'), 1.0, 0.035);
+      tl.fromTo($1(slide, '.caret'), { opacity: 1 }, { opacity: 0, duration: 0.3, ease: 'steps(1)', yoyo: true, repeat: 5 }, 1.5);
+    },
+  };
+
+  Object.keys(DIRECTOR).forEach((name) => {
+    FX[name] = {
+      enter(slide, step, animate) {
+        if (!animate) {
+          fxFinal(slide);
+          return;
+        }
+        fxStop(slide);
+        const tl = gsap.timeline();
+        DIRECTOR[name](slide, tl);
+        fxRuns.set(slide, tl);
+      },
+      step() {},
+      leave(slide) { fxStop(slide); },
+    };
+  });
+
+  // текст → буквы (.ch): заголовки, цитата, адрес демо. Вложенные элементы и SVG не трогаем.
+  function splitChars(el) {
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        // слово — неразрывный блок, иначе буквы-блоки переносятся посреди слова
+        const frag = document.createDocumentFragment();
+        node.textContent.split(/(\s+)/).forEach((part) => {
+          if (!part) return;
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part));
+            return;
+          }
+          const word = document.createElement('span');
+          word.className = 'w';
+          Array.from(part).forEach((c) => {
+            const span = document.createElement('span');
+            span.className = 'ch fxa';
+            span.textContent = c;
+            word.appendChild(span);
+          });
+          frag.appendChild(word);
+        });
+        node.replaceWith(frag);
+      } else if (node.nodeType === Node.ELEMENT_NODE && node.namespaceURI === 'http://www.w3.org/1999/xhtml'
+        && !node.classList.contains('dot-pop')) {
+        splitChars(node);
+      }
+    });
   }
 
   /* Показ слайда i на шаге step. animate=false — мгновенно (перезагрузка, Home/End). */
@@ -319,6 +650,8 @@ const SHOW = {
     const animate = o.animate && !reduced;
 
     if (changed) {
+      const prevFx = fxOf(prev);
+      if (prevFx) prevFx.leave(prev);
       killSlide(prev);
       if (animate) {
         gsap.to(prev, { autoAlpha: 0, duration: 0.35, ease: 'power1.out' });
@@ -330,6 +663,8 @@ const SHOW = {
     }
     gsap.set(next, { zIndex: 2 });
     killSlide(next);
+    const nextFx = fxOf(next);
+    if (nextFx) nextFx.enter(next, step, animate);
 
     const blocks = blocksOf(next);
     const steps = allStepEls(next);
@@ -378,9 +713,13 @@ const SHOW = {
       playStep(slides[state.i], state.step);
       return;
     }
+    // демо-слайд: «›» открывает вкладку демо. Если браузер заблокировал окно — подсказка на слайде.
+    // Проверка идёт до «последнего слайда»: демо стоит в конце показа.
+    if (slides[state.i].dataset.demo !== undefined) {
+      const opened = openDemoTab();
+      if (!opened || state.i === slides.length - 1) return;
+    }
     if (state.i === slides.length - 1) return;
-    // браузер заблокировал окно — остаёмся на демо-слайде и показываем подсказку
-    if (slides[state.i].dataset.demo !== undefined && !openDemoTab()) return;
     show(state.i + 1, 0);
   }
 
@@ -573,6 +912,7 @@ const SHOW = {
   /* ---------- старт ---------- */
 
   renderData();
+  document.querySelectorAll('.split, .type, [data-demo-host]').forEach(splitChars);
 
   const teamImg = new Image();
   teamImg.onload = () => { const note = document.querySelector('.photo-note'); if (note) note.remove(); };

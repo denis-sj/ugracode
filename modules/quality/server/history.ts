@@ -11,7 +11,7 @@ import type { EvalRun } from './run';
  */
 
 /** Путь к промпту агента `intake` — по его содержимому считается версия. */
-export const PROMPT_FILE = 'modules/extraction/prompts/intake.v1.md';
+export const PROMPT_FILE = 'modules/extraction/prompts/intake.v2.md';
 
 /** 11 оценщиков из раздела 5.2 в порядке таблицы отчёта. */
 export const HISTORY_METRICS: readonly { key: string; title: string }[] = [

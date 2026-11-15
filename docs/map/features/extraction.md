@@ -17,7 +17,7 @@
 | `modules/extraction/server/ground.ts`     | шаг `extraction.ground`: повторные проверки, порог уверенности, сверка с CMDB, инвентарный номер/IP, `equipmentId`/`locationId` |
 | `modules/extraction/server/evaluate.ts`   | точность по полям эталона (`evalMode`), метрики для оценщика 014                                                                |
 | `modules/extraction/server/index.ts`      | `defineModule`: шаги `agent.intake` и `extraction.ground`, регистрация агента                                                   |
-| `modules/extraction/prompts/intake.v1.md` | промпт агента: роль, реестр полей, правило цитаты, CMDB, авария, вопрос заявителю                                               |
+| `modules/extraction/prompts/intake.v2.md` | промпт агента: роль, реестр полей, правило цитаты, CMDB, авария, вопрос заявителю                                               |
 | `modules/extraction/tests/`               | успешный сценарий, выдуманная цитата, значение вне справочника, CMDB, порог, `evaluate`, тест-контракт                          |
 
 ## Как работает
@@ -45,7 +45,7 @@
 
 | Что                                                                                 | Где                                                                       |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Агент `intake` (`promptId: modules/extraction/prompts/intake.v1.md`, `maxSteps: 6`) | `modules/extraction/server/intake.ts`                                     |
+| Агент `intake` (`promptId: modules/extraction/prompts/intake.v2.md`, `maxSteps: 6`) | `modules/extraction/server/intake.ts`                                     |
 | Шаг `agent.intake` (`reads: sources`, `writes: fields, ext`)                        | `modules/extraction/server/index.ts`                                      |
 | Шаг `extraction.ground` (`reads: fields`, `writes: fields, ext`)                    | `modules/extraction/server/index.ts`, логика в `ground.ts`                |
 | Данные модуля `draft.ext.extraction`                                                | `contracts.ts` (`ExtractionExtras`), читаются другими модулями как данные |
@@ -71,3 +71,14 @@ npx vitest run modules/extraction
 - `evaluate()` не получает `ctx.data`, поэтому режим сравнения задан списком точных ключей; базовую
   сверку по реестру делает модуль `quality`.
 - Кэша, повторов и запасного пути нет: ошибка модели — шаг «не выполнен», заявка уходит диспетчеру.
+
+## Промпт v2 и контекст заявителя (2026-11-14, ветка `feature/smart-clarify`)
+
+- Промпт `intake.v2.md`: вместо одного `clarify` модель сдаёт `questions` — до 4 вопросов по важности (одно поле —
+  один вопрос), словами заявителя и с вариантами из справочника или техники кабинета. Правила «плохо / хорошо»
+  — в разделе «Вопросы заявителю». Старый `clarify` схема ещё принимает (`intakeQuestions` в `contracts.ts`).
+- Состояние агента: `applicant` (`applicantState` в `server/intake.ts`) — ФИО, должность, рабочее место из профиля
+  и техника кабинета из CMDB (`main: true` — основной ПК). Нет профиля или CMDB — разбор не падает.
+- Проверка `check()`: вопрос по полю вне реестра, по полю, уже заполненному из текста, и вариант вне справочника —
+  ошибки, модель исправляет `submit`.
+- `draft.ext.extraction`: `questions` (весь план) и `clarify` (первый вопрос, для старых читателей).

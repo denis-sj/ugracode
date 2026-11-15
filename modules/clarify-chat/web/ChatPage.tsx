@@ -16,6 +16,7 @@ import {
   buildAiSummary,
   clampIndex,
   fieldValues,
+  CHAT_EXAMPLES,
   parseAnalysis,
   parseEmphasis,
   questionsFor,
@@ -547,16 +548,17 @@ export function ChatPage({ meta, api, trackAction }: WebPageProps): JSX.Element 
           </form>
           {!started && (
             <div className="chat-examples" aria-label="Примеры обращений">
-              {['Не печатает принтер', 'Нет доступа к 1С', 'Не работает интернет'].map((example) => (
+              {CHAT_EXAMPLES.map((example) => (
                 <button
                   type="button"
-                  key={example}
+                  key={example.label}
+                  title={example.text}
                   onClick={() => {
-                    setComposerText(example);
+                    setComposerText(example.text);
                     document.getElementById('chat-input')?.focus();
                   }}
                 >
-                  {example}
+                  {example.label}
                 </button>
               ))}
             </div>

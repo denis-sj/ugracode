@@ -32,9 +32,14 @@ const EquipmentSchema = z.object({
   criticality: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
 });
 
-/** Разбор JSON-массива оборудования (файл data/cmdb.json). */
+/**
+ * Разбор оборудования из `data/cmdb.json`: файл — объект `{ locations, equipment }`,
+ * старый формат — просто массив. Оба понимаем, иначе API молча уходит на запасную CMDB.
+ */
 export function parseEquipment(raw: unknown): Equipment[] {
-  return z.array(EquipmentSchema).parse(raw);
+  const list =
+    typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? (raw as { equipment?: unknown }).equipment : raw;
+  return z.array(EquipmentSchema).parse(list);
 }
 
 function floorOf(cabinet: string): string {

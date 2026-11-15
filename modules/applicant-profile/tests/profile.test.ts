@@ -263,6 +263,8 @@ describe('equipmentTypeInText', () => {
   it('узнаёт типы техники по словам заявителя', () => {
     expect(equipmentTypeInText('принтер не печатает')).toBe('printer');
     expect(equipmentTypeInText('ПК не включается')).toBe('pc');
+    expect(equipmentTypeInText('комп не включается')).toBe('pc');
+    expect(equipmentTypeInText('компьютер завис')).toBe('pc');
     expect(equipmentTypeInText('замятие в МФУ')).toBe('mfu');
     expect(equipmentTypeInText('не работает свитч')).toBe('network');
     expect(equipmentTypeInText('сервер недоступен')).toBe('server');
